@@ -1,3 +1,8 @@
+# Files
+.ipynb_checkpoints/
+*.ipynb
+DPPy/approximate_sampling.py
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
