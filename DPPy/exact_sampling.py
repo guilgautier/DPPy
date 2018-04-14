@@ -1,3 +1,5 @@
+# coding: utf-8
+
 import numpy as np
 from numpy.core.umath_tests import inner1d
 
@@ -407,29 +409,29 @@ def dpp_sampler_eig_GS(eig_vals, eig_vecs):
     # use Gram-Schmidt recursion aka Base x Height formula.
 
     ### Matrix of the contribution of remaining vectors V_i onto the orthonormal basis {e_j}_Y of V_Y
-    # <V_i,∏_{V_Y}^{orthog} V_j>
+    # <V_i,P_{V_Y}^{orthog} V_j>
     contrib = np.zeros((N,k))
 
     ### Residual square norm 
-    # ||∏_{V_Y}^{orthog} V_j||^2
+    # ||P_{V_Y}^{orthog} V_j||^2
     norms_2 = inner1d(V, V)
 
     for it in range(k):
         
         # Pick an item proportionally to the residual square norm 
-        # ||∏_{V_Y}^{orthog} V_j||^2
+        # ||P_{V_Y}^{orthog} V_j||^2
         j = np.random.choice(ground_set[rem_set], 1, p=norms_2[rem_set]/(k-it))[0] 
         
         ### Update the residual square norm
         #
-        # |∏_{V_Y+j}^{orthog} V_i|^2        
-        #                                    <V_i,∏_{V_Y}^{orthog} V_j>^2
-        #     =  |∏_{V_Y}^{orthog} V_i|^2 -  ----------------------------
-        #                                      |∏_{V_Y}^{orthog} V_j|^2
+        # |P_{V_Y+j}^{orthog} V_i|^2        
+        #                                    <V_i,P_{V_Y}^{orthog} V_j>^2
+        #     =  |P_{V_Y}^{orthog} V_i|^2 -  ----------------------------
+        #                                      |P_{V_Y}^{orthog} V_j|^2
         
 
         ## 1) Orthogonalize V_j w.r.t. orthonormal basis of Span(V_Y)
-        #    V'_j = ∏_{V_Y}^{orthog} V_j
+        #    V'_j = P_{V_Y}^{orthog} V_j
         #         = V_j - <V_j,∑_Y V'_k>V"_k
         # Note V'_j is not normalized
         V[j,:] -= contrib[j,:it].dot(V[Y,:])
@@ -437,27 +439,27 @@ def dpp_sampler_eig_GS(eig_vals, eig_vecs):
         # Make the item selected unavailable
         rem_set[j] = False
         
-        ## 2) Compute <V_i,V'_j> = <V_i,∏_{V_Y}^{orthog} V_j>
+        ## 2) Compute <V_i,V'_j> = <V_i,P_{V_Y}^{orthog} V_j>
         contrib[rem_set,it] = V[rem_set,:].dot(V[j,:])
         
         ## 3) Normalize V'_j with norm^2 and not norm
-        #              V'_j         ∏_{V_Y}^{orthog} V_j
+        #              V'_j         P_{V_Y}^{orthog} V_j
         #    V"_j  =  -------  =  --------------------------
-        #             |V'j|^2      |∏_{V_Y}^{orthog} V_j|^2
+        #             |V'j|^2      |P_{V_Y}^{orthog} V_j|^2
         V[j,:] /= norms_2[j]
         # for next orthogonalization in 1) 
-        #                                 <V_i,∏_{V_Y}^{orthog} V_j> ∏_{V_Y}^{orthog} V_j 
+        #                                 <V_i,P_{V_Y}^{orthog} V_j> P_{V_Y}^{orthog} V_j 
         #  V_i - <V_i,V'_j>V"_j =  V_i -   ----------------------------------------------
-        #                                           |∏_{V_Y}^{orthog} V_j|^2
+        #                                           |P_{V_Y}^{orthog} V_j|^2
 
 
         ## 4) Update the residual square norm by cancelling the contribution of V_i onto V_j
         #                                
-        #  |∏_{V_Y+j}^{orthog} V_i|^2 = |∏_{V_Y}^{orthog} V_i|^2 - <V_i,V'_j>^2 / |V'j|^2    
+        #  |P_{V_Y+j}^{orthog} V_i|^2 = |P_{V_Y}^{orthog} V_i|^2 - <V_i,V'_j>^2 / |V'j|^2    
         #
-        #                                                            <V_i,∏_{V_Y}^{orthog} V_j>^2
-        #                             =  |∏_{V_Y}^{orthog} V_i|^2 -  ----------------------------
-        #                                                              |∏_{V_Y}^{orthog} V_j|^2
+        #                                                            <V_i,P_{V_Y}^{orthog} V_j>^2
+        #                             =  |P_{V_Y}^{orthog} V_i|^2 -  ----------------------------
+        #                                                              |P_{V_Y}^{orthog} V_j|^2
 
         norms_2[rem_set] -= (contrib[rem_set,it]**2)/norms_2[j]
         
