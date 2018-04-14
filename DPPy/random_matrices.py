@@ -1,14 +1,18 @@
 # coding: utf-8
 
 import numpy as np
-from scipy.linalg import eigvalsh, eigvalsh_tridiagonal
+from scipy.linalg import eig, eigh, eigvals, eigvalsh, eigvalsh_tridiagonal
 
 ##########################
 ### Full matrix models ###
 ##########################
 
+#############
+### Real line
+#############
+
 ###### Hermite
-def beta_124_Hermite(N, beta=2):
+def beta_12_Hermite(N, beta=2):
     
     # if beta==1:
     #     A = np.random.randn(N,N)
@@ -32,13 +36,13 @@ def beta_124_Hermite(N, beta=2):
         A[np.triu_indices_from(A, k=+1)] = random_var.conj()
         A[np.diag_indices_from(A)] = np.random.randn(N)
         
-    # elif beta==4:
-    #     X = np.random.randn(N,N) + 1j*np.random.randn(N,N)
-    #     Y = np.random.randn(N,N) + 1j*np.random.randn(N,N)
-    #     A = np.block([\
-    #         [X,           Y         ],\
-    #         [-Y.conj(), X.conj()]\
-    #         ])
+    elif beta==4:
+        X = np.random.randn(N,N) + 1j*np.random.randn(N,N)
+        Y = np.random.randn(N,N) + 1j*np.random.randn(N,N)
+        A = np.block([\
+            [X,           Y         ],\
+            [-Y.conj(), X.conj()]\
+            ])
         
     else:
         raise ValueError("beta coefficient must be equal to 1 or 2")
@@ -46,7 +50,7 @@ def beta_124_Hermite(N, beta=2):
     return eigvalsh(A)
 
 ###### Laguerre
-def beta_124_Laguerre(M, N, beta=2):
+def beta_12_Laguerre(M, N, beta=2):
     
     if beta==1:
         A = np.random.randn(N,M)
@@ -63,13 +67,13 @@ def beta_124_Laguerre(M, N, beta=2):
             ])
         
     else:
-        raise ValueError("beta coefficient must be equal to 1, 2 or 4")
+        raise ValueError("beta coefficient must be equal to 1 or 2")
 
     return eigvalsh(A.dot(A.conj().T))
 
 
 ###### Jacobi
-def beta_124_Jacobi(M_1, M_2, N, beta=2):
+def beta_12_Jacobi(M_1, M_2, N, beta=2):
     
     if beta==1:
         X = np.random.randn(N,M_1)
@@ -105,10 +109,9 @@ def beta_124_Jacobi(M_1, M_2, N, beta=2):
         Y_tmp = Y.dot(Y.conj().T)
 
     else:
-        raise ValueError("beta coefficient must be equal to 1, 2 or 4")
+        raise ValueError("beta coefficient must be equal to 1 or 2")
 
     return eigvalsh(X_tmp.dot(np.linalg.inv(X_tmp + Y_tmp)))
-
 
 
 ##########################
@@ -185,4 +188,69 @@ def sc_law(x, R=1):
 def MP_law(x, M, N, sigma=1.0):
     c = N/M
     Lm, Lp = (sigma*(1-np.sqrt(c)))**2, (sigma*(1+np.sqrt(c)))**2
-    return np.sqrt(np.maximum((Lp - x)*(x-Lm),0)) / (2*pi*c*sigma**2*x) 
+
+    return np.sqrt(np.maximum((Lp - x)*(x-Lm),0)) / (2*np.pi*c*sigma**2*x) 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+###############
+### Disk/Circle
+###############
+def Ginibre(N=10):
+
+    A = np.random.randn(N,N) + 1j*np.random.randn(N,N)
+
+    return eigvals(A)/np.sqrt(2)
+
+def beta_12_Circular(N=10, beta=2, gen_from="Ginibre"):
+    
+    if gen_from == "Ginibre":
+        # https://arxiv.org/pdf/math-ph/0609050.pdf
+        # From Ginibre
+        
+        if beta == 1: #COE
+            A = np.random.randn(N,N)
+            
+        elif beta == 2: #CUE
+            A = (np.random.randn(N,N) + 1j*np.random.randn(N,N))/sqrt(2.0)
+
+        #U, _ = np.linalg.qr(A)
+        Q, R = np.linalg.qr(A)
+        d = np.diagonal(R)
+        U = np.multiply(Q, d/np.abs(d), Q)
+        
+    elif gen_from == "Hermite":
+
+        if beta == 1:#COE
+            A = np.zeros((N,N))
+            random_var = np.random.randn(int(N*(N-1)/2))
+            
+            A[np.tril_indices_from(A, k=-1)] = random_var
+            A[np.triu_indices_from(A, k=+1)] = random_var
+            A[np.diag_indices_from(A)] = np.random.randn(N)
+            
+        elif beta == 2:#CUE
+            A = np.zeros((N,N), dtype=complex_)
+            random_var = np.random.randn(int(N*(N-1)/2)) + 1j*np.random.randn(int(N*(N-1)/2))
+
+            A[np.tril_indices_from(A, k=-1)] = random_var
+            A[np.triu_indices_from(A, k=+1)] = random_var.conj()
+            A[np.diag_indices_from(A)] = np.random.randn(N)
+
+        _, U = eigh(A)
+        
+    else:
+        raise ValueError("gen_from = 'Ginibre' or 'Hermite'")
+    
+    return eigvals(U)
