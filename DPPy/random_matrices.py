@@ -267,6 +267,19 @@ def beta_tridiag_Jacobi(a, b, N, beta=2):
 ### Quindiagonal models ###
 ###########################
 
+def block_diag(arrs):
+
+    shapes = np.array([a.shape for a in arrs])
+    out = np.zeros(np.sum(shapes, axis=0), dtype=np.complex_)
+
+    r, c = 0, 0
+    for i, (rr, cc) in enumerate(shapes):
+        out[r:r + rr, c:c + cc] = arrs[i]
+        r += rr
+        c += cc
+
+    return out
+
 def beta_quindiag_Circular(N, beta=2):
     # Killip Nenciu https://arxiv.org/abs/math/0410034
 
