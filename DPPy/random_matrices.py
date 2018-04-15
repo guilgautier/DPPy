@@ -1,7 +1,9 @@
 # coding: utf-8
 
 import numpy as np
-from scipy.linalg import eig, eigh, eigvals, eigvalsh, eigvalsh_tridiagonal, block_diag
+from scipy.linalg import eig, eigh, \
+						 eigvals, eigvalsh, eigvalsh_tridiagonal, \
+						 block_diag
 
 ##########################
 ### Full matrix models ###
@@ -23,8 +25,16 @@ def MP_law(x, M, N, sigma=1.0):
 
     return np.sqrt(np.maximum((Lp - x)*(x-Lm),0)) / (2*np.pi*c*sigma**2*x) 
 
+# Wachter law
+def Wachter_law(x, M_1, M_2, N):
+    # M_1,M_2>=N
+    Lm = ((np.sqrt(M_1*(M_1+M_2-N)) - np.sqrt(M_2*N))/(M_1+M_2))**2
+    Lp = ((np.sqrt(M_1*(M_1+M_2-N)) + np.sqrt(M_2*N))/(M_1+M_2))**2
+
+    return 1/(2*np.pi) * (M_1+M_2)/N * 1/(x*(1-x)) * np.sqrt(np.maximum((Lp - x)*(x-Lm),0))  
+
 ###### Hermite
-def beta_12_Hermite(N, beta=2):
+def beta_124_Hermite(N, beta=2):
     
     # if beta==1:
     #     A = np.random.randn(N,N)
@@ -57,12 +67,12 @@ def beta_12_Hermite(N, beta=2):
             ])
         
     else:
-        raise ValueError("beta coefficient must be equal to 1 or 2")
+        raise ValueError("beta coefficient must be equal to 1, 2 or 4")
 
     return eigvalsh(A)
 
 ###### Laguerre
-def beta_12_Laguerre(M, N, beta=2):
+def beta_124_Laguerre(M, N, beta=2):
     
     if beta==1:
         A = np.random.randn(N,M)
@@ -79,13 +89,13 @@ def beta_12_Laguerre(M, N, beta=2):
             ])
         
     else:
-        raise ValueError("beta coefficient must be equal to 1 or 2")
+        raise ValueError("beta coefficient must be equal to 1, 2 or 4")
 
     return eigvalsh(A.dot(A.conj().T))
 
 
 ###### Jacobi
-def beta_12_Jacobi(M_1, M_2, N, beta=2):
+def beta_124_Jacobi(M_1, M_2, N, beta=2):
     
     if beta==1:
         X = np.random.randn(N,M_1)
@@ -121,9 +131,9 @@ def beta_12_Jacobi(M_1, M_2, N, beta=2):
         Y_tmp = Y.dot(Y.conj().T)
 
     else:
-        raise ValueError("beta coefficient must be equal to 1 or 2")
+        raise ValueError("beta coefficient must be equal to 1, 2 or 4")
 
-    return eigvalsh(X_tmp.dot(np.linalg.inv(X_tmp + Y_tmp)))
+    return eigvals(X_tmp.dot(np.linalg.inv(X_tmp + Y_tmp))).real
 
 
 ###############
