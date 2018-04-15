@@ -1,7 +1,7 @@
 # coding: utf-8
 
 import numpy as np
-from scipy.linalg import eig, eigh, eigvals, eigvalsh, eigvalsh_tridiagonal
+from scipy.linalg import eig, eigh, eigvals, eigvalsh, eigvalsh_tridiagonal, block_diag
 
 ##########################
 ### Full matrix models ###
@@ -10,6 +10,18 @@ from scipy.linalg import eig, eigh, eigvals, eigvalsh, eigvalsh_tridiagonal
 #############
 ### Real line
 #############
+
+# Semi-circle law
+def sc_law(x, R=1):
+    return 2/(np.pi*R**2) * np.sqrt(R**2 - x**2)
+
+# Marcenko Pastur law
+def MP_law(x, M, N, sigma=1.0):
+	# M>=N
+    c = N/M
+    Lm, Lp = (sigma*(1-np.sqrt(c)))**2, (sigma*(1+np.sqrt(c)))**2
+
+    return np.sqrt(np.maximum((Lp - x)*(x-Lm),0)) / (2*np.pi*c*sigma**2*x) 
 
 ###### Hermite
 def beta_12_Hermite(N, beta=2):
@@ -29,7 +41,7 @@ def beta_12_Hermite(N, beta=2):
         A[np.diag_indices_from(A)] = np.random.randn(N)
 
     elif beta==2:
-        A = np.zeros((N,N), dtype=complex_)
+        A = np.zeros((N,N), dtype=np.complex_)
         random_var = np.random.randn(int(N*(N-1)/2)) + 1j*np.random.randn(int(N*(N-1)/2))
 
         A[np.tril_indices_from(A, k=-1)] = random_var
@@ -114,6 +126,65 @@ def beta_12_Jacobi(M_1, M_2, N, beta=2):
     return eigvalsh(X_tmp.dot(np.linalg.inv(X_tmp + Y_tmp)))
 
 
+###############
+### Disk/Circle
+###############
+def Ginibre(N=10):
+
+    A = np.random.randn(N,N) + 1j*np.random.randn(N,N)
+
+    return eigvals(A)/np.sqrt(2)
+
+def beta_12_Circular(N=10, beta=2, gen_from="Ginibre"):
+    
+    if gen_from == "Ginibre":
+        # https://arxiv.org/pdf/math-ph/0609050.pdf
+        
+        if beta == 1: #COE
+            A = np.random.randn(N,N)
+            
+        elif beta == 2: #CUE
+            A = (np.random.randn(N,N) + 1j*np.random.randn(N,N))/np.sqrt(2.0)
+
+        #U, _ = np.linalg.qr(A)
+        Q, R = np.linalg.qr(A)
+        d = np.diagonal(R)
+        U = np.multiply(Q, d/np.abs(d), Q)
+        
+    elif gen_from == "Hermite":
+
+        if beta == 1:#COE
+            A = np.zeros((N,N))
+            random_var = np.random.randn(int(N*(N-1)/2))
+            
+            A[np.tril_indices_from(A, k=-1)] = random_var
+            A[np.triu_indices_from(A, k=+1)] = random_var
+            A[np.diag_indices_from(A)] = np.random.randn(N)
+            
+        elif beta == 2:#CUE
+            A = np.zeros((N,N), dtype=np.complex_)
+            random_var = np.random.randn(int(N*(N-1)/2)) + 1j*np.random.randn(int(N*(N-1)/2))
+
+            A[np.tril_indices_from(A, k=-1)] = random_var
+            A[np.triu_indices_from(A, k=+1)] = random_var.conj()
+            A[np.diag_indices_from(A)] = np.random.randn(N)
+
+        _, U = eigh(A)
+        
+    else:
+        raise ValueError("gen_from = 'Ginibre' or 'Hermite'")
+    
+    return eigvals(U)
+
+
+
+
+
+
+
+
+
+
 ##########################
 ### Tridiagonal models ###
 ##########################
@@ -180,77 +251,49 @@ def beta_tridiag_Jacobi(a, b, N, beta=2):
     return eigvalsh_tridiagonal(alpha_coef, np.sqrt(beta_coef))
 
 
-# Semi-circle law
-def sc_law(x, R=1):
-    return 2/(pi*R**2) * np.sqrt(R**2 - x**2)
-
-# Marcenko Pastur law
-def MP_law(x, M, N, sigma=1.0):
-    c = N/M
-    Lm, Lp = (sigma*(1-np.sqrt(c)))**2, (sigma*(1+np.sqrt(c)))**2
-
-    return np.sqrt(np.maximum((Lp - x)*(x-Lm),0)) / (2*np.pi*c*sigma**2*x) 
 
 
+###########################
+### Quindiagonal models ###
+###########################
 
+def beta_quindiag_Circular(N, beta=2):
+    # Killip Nenciu https://arxiv.org/abs/math/0410034
 
+    if not ((beta > 0) & isinstance(beta,int)):
+        raise ValueError("beta must be positive integer")
 
+    # Xi_-1 = [1]
+    Xi_1 = np.array([1], ndmin=2, dtype=np.complex_)
+    # Xi_0,1,...,N-2
+    Xi_list = np.zeros((N-1,2,2), dtype=np.complex_) 
+    # Xi_N-1 = [alpha_N-1.conj()]
+    vec_N_1 = np.random.randn(2)
+    vec_N_1 /= np.linalg.norm(vec_N_1)
+    Xi_N_1 = np.array([vec_N_1[0]-1j*vec_N_1[1]], ndmin=2, dtype=np.complex_)
 
+    nu_s = beta*np.arange(N-1, 0, step=-1, dtype=int) + 1
 
+    for ind, nu in enumerate(nu_s):
 
+        vec = np.random.randn(nu+1)
+        vec /= np.linalg.norm(vec)
 
+        alpha = vec[0] + 1j* vec[1]
+        rho = np.sqrt(1-np.abs(alpha)**2)
 
-
-
-
-
-###############
-### Disk/Circle
-###############
-def Ginibre(N=10):
-
-    A = np.random.randn(N,N) + 1j*np.random.randn(N,N)
-
-    return eigvals(A)/np.sqrt(2)
-
-def beta_12_Circular(N=10, beta=2, gen_from="Ginibre"):
-    
-    if gen_from == "Ginibre":
-        # https://arxiv.org/pdf/math-ph/0609050.pdf
-        # From Ginibre
+        Xi_list[ind,:,:] = [[alpha.conj(), rho],
+                            [rho         , -alpha]]
         
-        if beta == 1: #COE
-            A = np.random.randn(N,N)
-            
-        elif beta == 2: #CUE
-            A = (np.random.randn(N,N) + 1j*np.random.randn(N,N))/sqrt(2.0)
+    # L = diag(Xi_0,Xi_2,\dots)
+    L = block_diag(Xi_list[::2,:,:])
+    # M = diag(Xi_-1,Xi_1,\Xi_3\dots)
+    M = block_diag(Xi_list[1::2,:,:])
+    M = block_diag([Xi_1, M])
 
-        #U, _ = np.linalg.qr(A)
-        Q, R = np.linalg.qr(A)
-        d = np.diagonal(R)
-        U = np.multiply(Q, d/np.abs(d), Q)
-        
-    elif gen_from == "Hermite":
-
-        if beta == 1:#COE
-            A = np.zeros((N,N))
-            random_var = np.random.randn(int(N*(N-1)/2))
-            
-            A[np.tril_indices_from(A, k=-1)] = random_var
-            A[np.triu_indices_from(A, k=+1)] = random_var
-            A[np.diag_indices_from(A)] = np.random.randn(N)
-            
-        elif beta == 2:#CUE
-            A = np.zeros((N,N), dtype=complex_)
-            random_var = np.random.randn(int(N*(N-1)/2)) + 1j*np.random.randn(int(N*(N-1)/2))
-
-            A[np.tril_indices_from(A, k=-1)] = random_var
-            A[np.triu_indices_from(A, k=+1)] = random_var.conj()
-            A[np.diag_indices_from(A)] = np.random.randn(N)
-
-        _, U = eigh(A)
-        
+    if N%2==1:
+        L = block_diag([L, Xi_N_1])
     else:
-        raise ValueError("gen_from = 'Ginibre' or 'Hermite'")
-    
-    return eigvals(U)
+        M = block_diag([M, Xi_N_1])
+        
+    return eigvals(L.dot(M))
