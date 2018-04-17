@@ -1,7 +1,9 @@
 # Files
-*.DS_Store
+.DS_Store
+
 .ipynb_checkpoints/
 *.ipynb
+!beta_OPEs.ipynb
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

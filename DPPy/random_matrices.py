@@ -14,7 +14,7 @@ from scipy.linalg import eig, eigh, \
 #############
 
 # Semi-circle law
-def sc_law(x, R=1):
+def sc_law(x, R=2):
     return 2/(np.pi*R**2) * np.sqrt(R**2 - x**2)
 
 # Marcenko Pastur law
@@ -200,10 +200,10 @@ def beta_12_Circular(N=10, beta=2, gen_from="Ginibre"):
 ##########################
 
 ###### Hermite
-def beta_triadiag_Hermite(N, beta=2):
+def beta_tridiag_Hermite(N, beta=2):
 
-    alpha_coef = np.random.randn(N)
-    beta_coef = 0.5*np.random.chisquare(beta*np.arange(N-1,0,step=-1))
+    alpha_coef = np.sqrt(2)*np.random.randn(N)
+    beta_coef = np.random.chisquare(beta*np.arange(N-1,0,step=-1))
 
     return eigvalsh_tridiagonal(alpha_coef, np.sqrt(beta_coef))
 
@@ -268,13 +268,15 @@ def beta_tridiag_Jacobi(a, b, N, beta=2):
 ###########################
 
 def block_diag(arrs):
+    # adapted from scipy.linalg.block_diag
+    # https://docs.scipy.org/doc/scipy-0.14.0/reference/generated/scipy.linalg.block_diag.html
 
     shapes = np.array([a.shape for a in arrs])
     out = np.zeros(np.sum(shapes, axis=0), dtype=np.complex_)
 
     r, c = 0, 0
-    for i, (rr, cc) in enumerate(shapes):
-        out[r:r + rr, c:c + cc] = arrs[i]
+    for (rr, cc), blck in zip(shapes, arrs):
+        out[r:r + rr, c:c + cc] = blck
         r += rr
         c += cc
 

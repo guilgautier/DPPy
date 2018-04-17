@@ -172,6 +172,3 @@ texinfo_documents = [
      author, 'DPPy', 'One line description of project.',
      'Miscellaneous'),
 ]
-
-
-
