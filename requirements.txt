@@ -1,2 +1,6 @@
 numpy
+scipy
 cvxopt
+# for the documentation
+sphinxcontrib-bibtex
+sphinx_rtd_theme
