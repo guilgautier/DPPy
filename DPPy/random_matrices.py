@@ -1,58 +1,30 @@
 # coding: utf-8
 
 import numpy as np
-from scipy.linalg import eig, eigh, \
-						 eigvals, eigvalsh, eigvalsh_tridiagonal, \
+from scipy.linalg import eig, eigh,\
+						 eigvals, eigvalsh, eigvalsh_tridiagonal,\
 						 block_diag
 
-##########################
-### Full matrix models ###
-##########################
+###############
+### Hermite ###
+###############
 
-#############
-### Real line
-#############
+# Hermite, full matrix model
+def hermite_sampler_matrix_model(N, beta=2):
 
-# Semi-circle law
-def sc_law(x, R=2):
-    return 2/(np.pi*R**2) * np.sqrt(R**2 - x**2)
-
-# Marcenko Pastur law
-def MP_law(x, M, N, sigma=1.0):
-	# M>=N
-    c = N/M
-    Lm, Lp = (sigma*(1-np.sqrt(c)))**2, (sigma*(1+np.sqrt(c)))**2
-
-    return np.sqrt(np.maximum((Lp - x)*(x-Lm),0)) / (2*np.pi*c*sigma**2*x) 
-
-# Wachter law
-def Wachter_law(x, M_1, M_2, N):
-    # M_1,M_2>=N
-    Lm = ((np.sqrt(M_1*(M_1+M_2-N)) - np.sqrt(M_2*N))/(M_1+M_2))**2
-    Lp = ((np.sqrt(M_1*(M_1+M_2-N)) + np.sqrt(M_2*N))/(M_1+M_2))**2
-
-    return 1/(2*np.pi) * (M_1+M_2)/N * 1/(x*(1-x)) * np.sqrt(np.maximum((Lp - x)*(x-Lm),0))  
-
-###### Hermite
-def beta_124_Hermite(N, beta=2):
-    
-    # if beta==1:
-    #     A = np.random.randn(N,N)
-
-    # elif beta==2:
-    #     A = np.random.randn(N,N) + 1j*np.random.randn(N,N)
+    size_sym_mat = int(N*(N-1)/2)
 
     if beta==1:
-        A = np.zeros((N,N))
-        random_var = np.random.randn(int(N*(N-1)/2))
+        A = np.zeros((N,)*2)
+        random_var = np.random.randn(size_sym_mat)
 
         A[np.tril_indices_from(A, k=-1)] = random_var
         A[np.triu_indices_from(A, k=+1)] = random_var
         A[np.diag_indices_from(A)] = np.random.randn(N)
 
     elif beta==2:
-        A = np.zeros((N,N), dtype=np.complex_)
-        random_var = np.random.randn(int(N*(N-1)/2)) + 1j*np.random.randn(int(N*(N-1)/2))
+        A = np.zeros((N,)*2, dtype=np.complex_)
+        random_var = np.random.randn(size_sym_mat) + 1j*np.random.randn(size_sym_mat)
 
         A[np.tril_indices_from(A, k=-1)] = random_var
         A[np.triu_indices_from(A, k=+1)] = random_var.conj()
@@ -71,8 +43,39 @@ def beta_124_Hermite(N, beta=2):
 
     return eigvalsh(A)
 
-###### Laguerre
-def beta_124_Laguerre(M, N, beta=2):
+## Hermite tridiag
+def hermite_sampler_tridiag_model(beta=2, N=10):
+
+    alpha_coef = np.sqrt(2)*np.random.randn(N)
+    beta_coef = np.random.chisquare(beta*np.arange(N-1, 0, step=-1))
+
+    return eigvalsh_tridiagonal(alpha_coef, np.sqrt(beta_coef))
+
+# Semi-circle law
+def semi_circle_law(x, R=2):
+    # https://en.wikipedia.org/wiki/Wigner_semicircle_distribution
+    return 2/(np.pi*R**2) * np.sqrt(R**2 - x**2)
+
+## mu_ref == normal
+def muref_normal_sampler_tridiag_model(loc=0.0, scale=1.0, beta=2, size=10):
+
+    # beta/2*[N-1, N-2, ..., 1]
+    b_2_Ni = 0.5*beta*np.arange(size-1, 0, step=-1)
+
+    alpha_coef = np.random.normal(loc=loc, scale=scale, size=size)
+    beta_coef = np.random.gamma(shape=b_2_Ni, scale=scale**2)
+
+    return eigvalsh_tridiagonal(alpha_coef, np.sqrt(beta_coef))
+
+
+
+
+################
+### Laguerre ###
+################
+
+# Laguerre, full matrix model
+def laguerre_sampler_matrix_model(M, N, beta=2):
     
     if beta==1:
         A = np.random.randn(N,M)
@@ -87,15 +90,71 @@ def beta_124_Laguerre(M, N, beta=2):
             [X,           Y     ],\
             [-Y.conj(), X.conj()]\
             ])
-        
     else:
         raise ValueError("beta coefficient must be equal to 1, 2 or 4")
 
     return eigvalsh(A.dot(A.conj().T))
 
+## Laguerre, tridiagonal model
+def laguerre_sampler_tridiag_model(M, N, beta=2):
+    # M=>N
 
-###### Jacobi
-def beta_124_Jacobi(M_1, M_2, N, beta=2):
+    # xi_odd = xi_1, ... , xi_2N-1
+    xi_odd = np.random.chisquare(beta*np.arange(M, M-N, step=-1)) # odd
+
+    # xi_even = xi_0=0, xi_2, ... ,xi_2N-2
+    xi_even = np.zeros(N)
+    xi_even[1:] = np.random.chisquare(beta*np.arange(N-1, 0, step=-1)) # even
+
+    # alpha_i = xi_2i-2 + xi_2i-1
+    # alpha_1 = xi_0 + xi_1 = xi_1
+    alpha_coef = xi_even + xi_odd
+    # beta_i+1 = xi_2i-1 * xi_2i
+    beta_coef = xi_odd[:-1] * xi_even[1:]
+    
+    return eigvalsh_tridiagonal(alpha_coef, np.sqrt(beta_coef))
+
+# Marcenko Pastur law
+def marcenko_pastur_law(x, M, N, sigma=1.0):
+    # https://en.wikipedia.org/wiki/Marchenko-Pastur_distribution
+    # M>=N
+    c = N/M
+    Lm, Lp = (sigma*(1-np.sqrt(c)))**2, (sigma*(1+np.sqrt(c)))**2
+
+    return 1.0/(2*np.pi*sigma**2) * 1/(c*x) *np.sqrt(np.maximum((Lp-x)*(x-Lm),0)) 
+
+## mu_ref == Gamma 
+def mu_ref_gamma_sampler_tridiag_model(shape=1.0, scale=1.0, beta=2, size=10):
+
+    # beta/2*[N-1, N-2, ..., 1, 0]
+    b_2_Ni = 0.5*beta*np.arange(size-1,-1,step=-1)
+
+    # xi_odd = xi_1, ... , xi_2N-1
+    xi_odd = np.random.gamma(shape=b_2_Ni + shape, scale=scale) # odd
+
+    # xi_even = xi_0=0, xi_2, ... ,xi_2N-2
+    xi_even = np.zeros(size)
+    xi_even[1:] = np.random.gamma(shape=b_2_Ni[:-1], scale=scale) # even
+
+    # alpha_i = xi_2i-2 + xi_2i-1
+    # alpha_1 = xi_0 + xi_1 = xi_1
+    alpha_coef = xi_even + xi_odd
+    # beta_i+1 = xi_2i-1 * xi_2i
+    beta_coef = xi_odd[:-1] * xi_even[1:]
+    
+    return eigvalsh_tridiagonal(alpha_coef, np.sqrt(beta_coef))
+
+
+
+
+
+
+##############
+### Jacobi ###
+##############
+
+# Jacobi, full matrix model
+def jacobi_sampler_matrix_model(M_1, M_2, N, beta=2):
     
     if beta==1:
         X = np.random.randn(N,M_1)
@@ -135,114 +194,19 @@ def beta_124_Jacobi(M_1, M_2, N, beta=2):
 
     return eigvals(X_tmp.dot(np.linalg.inv(X_tmp + Y_tmp))).real
 
-
-###############
-### Disk/Circle
-###############
-def Ginibre(N=10):
-
-    A = np.random.randn(N,N) + 1j*np.random.randn(N,N)
-
-    return eigvals(A)/np.sqrt(2)
-
-def beta_12_Circular(N=10, beta=2, gen_from="Ginibre"):
-    
-    if gen_from == "Ginibre":
-        # https://arxiv.org/pdf/math-ph/0609050.pdf
-        
-        if beta == 1: #COE
-            A = np.random.randn(N,N)
-            
-        elif beta == 2: #CUE
-            A = (np.random.randn(N,N) + 1j*np.random.randn(N,N))/np.sqrt(2.0)
-
-        #U, _ = np.linalg.qr(A)
-        Q, R = np.linalg.qr(A)
-        d = np.diagonal(R)
-        U = np.multiply(Q, d/np.abs(d), Q)
-        
-    elif gen_from == "Hermite":
-
-        if beta == 1:#COE
-            A = np.zeros((N,N))
-            random_var = np.random.randn(int(N*(N-1)/2))
-            
-            A[np.tril_indices_from(A, k=-1)] = random_var
-            A[np.triu_indices_from(A, k=+1)] = random_var
-            A[np.diag_indices_from(A)] = np.random.randn(N)
-            
-        elif beta == 2:#CUE
-            A = np.zeros((N,N), dtype=np.complex_)
-            random_var = np.random.randn(int(N*(N-1)/2)) + 1j*np.random.randn(int(N*(N-1)/2))
-
-            A[np.tril_indices_from(A, k=-1)] = random_var
-            A[np.triu_indices_from(A, k=+1)] = random_var.conj()
-            A[np.diag_indices_from(A)] = np.random.randn(N)
-
-        _, U = eigh(A)
-        
-    else:
-        raise ValueError("gen_from = 'Ginibre' or 'Hermite'")
-    
-    return eigvals(U)
-
-
-
-
-
-
-
-
-
-
-##########################
-### Tridiagonal models ###
-##########################
-
-###### Hermite
-def beta_tridiag_Hermite(N, beta=2):
-
-    alpha_coef = np.sqrt(2)*np.random.randn(N)
-    beta_coef = np.random.chisquare(beta*np.arange(N-1,0,step=-1))
-
-    return eigvalsh_tridiagonal(alpha_coef, np.sqrt(beta_coef))
-
-###### Laguerre
-def beta_tridiag_Laguerre(M, N, beta=2):
-
-    # xi_odd = xi_1, ... , xi_2i-1
-    xi_odd = np.random.chisquare(beta*np.arange(M,M-N,step=-1)) # odd
-
-    # xi_even = xi_0=0, xi_2, ... ,xi_2N-2
-    xi_even = np.zeros(N)
-    xi_even[1:] = np.random.chisquare(beta*np.arange(N-1,0,step=-1)) # even
-
-    # alpha_i = xi_2i-2 + xi_2i-1
-    # alpha_1 = xi_0 + xi_1 = xi_1
-    alpha_coef = xi_even + xi_odd
-    # beta_i+1 = xi_2i-1 * xi_2i
-    beta_coef = xi_odd[:-1] * xi_even[1:]
-
-    eigvalsh_tridiagonal(alpha_coef, np.sqrt(beta_coef))
-    
-    return eigvalsh_tridiagonal(alpha_coef, np.sqrt(beta_coef))
-
-###### Jacobi
-def beta_tridiag_Jacobi(a, b, N, beta=2):
-
-    # beta/2*[N-1, N-2, ..., 1, 0]
-    b_2_Ni = beta/2*np.arange(N-1,-1,step=-1)
+## Jacobi, tridiagonal model
+def jacobi_sampler_tridiag_model(M_1, M_2, N, beta=2):
 
     # c_odd = c_1, c_2, ..., c_2N-1
     c_odd = np.random.beta(
-                b_2_Ni + a,
-                b_2_Ni + b)
+                0.5*beta*np.arange(M_1, M_1-N, step=-1),
+                0.5*beta*np.arange(M_2, M_2-N, step=-1))
 
     # c_even = c_0, c_2, c_2N-2
     c_even = np.zeros(N)
     c_even[1:] = np.random.beta(
-                    b_2_Ni[:-1],
-                    b_2_Ni[1:] + a + b)
+                    0.5*beta*np.arange(N-1, 0, step=-1),
+                    0.5*beta*np.arange(M_1+M_2-N, M_1+M_2-2*N+1,step=-1))
 
     # xi_odd = xi_2i-1 = (1-c_2i-2) c_2i-1
     xi_odd = (1-c_even)*c_odd
@@ -260,16 +224,102 @@ def beta_tridiag_Jacobi(a, b, N, beta=2):
 
     return eigvalsh_tridiagonal(alpha_coef, np.sqrt(beta_coef))
 
+# Wachter law
+def wachter_law(x, M_1, M_2, N):
+    # M_1, M_2>=N
+    Lm = ((np.sqrt(M_1*(M_1+M_2-N)) - np.sqrt(M_2*N))/(M_1+M_2))**2
+    Lp = ((np.sqrt(M_1*(M_1+M_2-N)) + np.sqrt(M_2*N))/(M_1+M_2))**2
+
+    return 1/(2*np.pi) * (M_1+M_2)/N * 1/(x*(1-x)) * np.sqrt(np.maximum((Lp-x)*(x-Lm),0))  
+
+def mu_ref_beta_sampler_tridiag_model(a, b, beta=2, size=10):
+
+    # beta/2*[N-1, N-2, ..., 1, 0]
+    b_2_Ni = 0.5*beta*np.arange(size-1,-1,step=-1)
+
+    # c_odd = c_1, c_2, ..., c_2N-1
+    c_odd = np.random.beta(
+                b_2_Ni + a,
+                b_2_Ni + b)
+
+    # c_even = c_0, c_2, c_2N-2
+    c_even = np.zeros(size)
+    c_even[1:] = np.random.beta(
+                    b_2_Ni[:-1],
+                    b_2_Ni[1:] + a + b)
+
+    # xi_odd = xi_2i-1 = (1-c_2i-2) c_2i-1
+    xi_odd = (1-c_even)*c_odd
+    
+    # xi_even = xi_0=0, xi_2, xi_2N-2
+    # xi_2i = (1-c_2i-1)*c_2i
+    xi_even = np.zeros(size)
+    xi_even[1:] = (1-c_odd[:-1])*c_even[1:]
+    
+    # alpha_i = xi_2i-2 + xi_2i-1
+    # alpha_1 = xi_0 + xi_1 = xi_1
+    alpha_coef = xi_even + xi_odd
+    # beta_i+1 = xi_2i-1 * xi_2i
+    beta_coef = xi_odd[:-1] * xi_even[1:]
+
+    return eigvalsh_tridiagonal(alpha_coef, np.sqrt(beta_coef))
 
 
 
-###########################
-### Quindiagonal models ###
-###########################
 
+#########################
+### Circular ensemble ###
+#########################
+
+# Full matrix model
+def circular_sampler_matrix_model(beta=2, size=10, gen_from="Ginibre"):
+    
+    if gen_from == "Ginibre":
+        # https://arxiv.org/pdf/math-ph/0609050.pdf
+        
+        if beta == 1: #COE
+            A = np.random.randn(size, size)
+            
+        elif beta == 2: #CUE
+            A = (np.random.randn(size, size) + 1j*np.random.randn(size, size))/np.sqrt(2.0)
+
+        #U, _ = np.linalg.qr(A)
+        Q, R = np.linalg.qr(A)
+        d = np.diagonal(R)
+        U = np.multiply(Q, d/np.abs(d), Q)
+        
+    elif gen_from == "Hermite":
+
+        size_sym_mat = int(size*(size-1)/2)
+        if beta == 1:#COE
+            A = np.zeros((size,)*2)
+            random_var = np.random.randn(size_sym_mat)
+            
+            A[np.tril_indices_from(A, k=-1)] = random_var
+            A[np.triu_indices_from(A, k=+1)] = random_var
+            A[np.diag_indices_from(A)] = np.random.randn(size)
+            
+        elif beta == 2:#CUE
+            A = np.zeros((size,)*2, dtype=np.complex_)
+            random_var = np.random.randn(size_sym_mat) \
+                         + 1j*np.random.randn(size_sym_mat)
+
+            A[np.tril_indices_from(A, k=-1)] = random_var
+            A[np.triu_indices_from(A, k=+1)] = random_var.conj()
+            A[np.diag_indices_from(A)] = np.random.randn(size)
+
+        _, U = eigh(A)
+        
+    else:
+        raise ValueError("gen_from = 'Ginibre' or 'Hermite'")
+    
+    return eigvals(U)
+
+# Circular, quindiagonal model
 def block_diag(arrs):
-    # adapted from scipy.linalg.block_diag
-    # https://docs.scipy.org/doc/scipy-0.14.0/reference/generated/scipy.linalg.block_diag.html
+    # adapted from semi_circleipy.linalg.block_diag
+    # https://docs.semi_circleipy.org/doc/semi_circleipy-0.14.0/
+    # reference/generated/semi_circleipy.linalg.block_diag.html
 
     shapes = np.array([a.shape for a in arrs])
     out = np.zeros(np.sum(shapes, axis=0), dtype=np.complex_)
@@ -282,43 +332,57 @@ def block_diag(arrs):
 
     return out
 
-def beta_quindiag_Circular(N, beta=2):
-    # Killip Nenciu https://arxiv.org/abs/math/0410034
+def mu_ref_unif_unit_circle_sampler_quindiag_model(beta=2, size=10):
+    # [Killip Nenciu, Theorem 1] https://arxiv.org/abs/math/0410034
 
-    if not ((beta > 0) & isinstance(beta,int)):
+    if not ((beta > 0) & isinstance(beta, int)):
         raise ValueError("beta must be positive integer")
 
     # Xi_-1 = [1]
-    Xi_1 = np.array([1], ndmin=2, dtype=np.complex_)
-    # Xi_0,1,...,N-2
-    Xi_list = np.zeros((N-1,2,2), dtype=np.complex_) 
-    # Xi_N-1 = [alpha_N-1.conj()]
+    xi_1 = np.array([1], ndmin=2, dtype=np.complex_)
+    # xi_0,1,...,N-2
+    xi_list = np.zeros((size-1, 2, 2), dtype=np.complex_) 
+    # xi_N-1 = [alpha_N-1.conj()] i.e. 
+    # conjugate of a point uniformly distributed on the unit circle
     vec_N_1 = np.random.randn(2)
     vec_N_1 /= np.linalg.norm(vec_N_1)
-    Xi_N_1 = np.array([vec_N_1[0]-1j*vec_N_1[1]], ndmin=2, dtype=np.complex_)
+    xi_N_1 = np.array([vec_N_1[0]-1j*vec_N_1[1]], ndmin=2, dtype=np.complex_)
 
-    nu_s = beta*np.arange(N-1, 0, step=-1, dtype=int) + 1
+    nu_s = beta*np.arange(size-1, 0, step=-1, dtype=int) + 1
 
     for ind, nu in enumerate(nu_s):
 
+        # Pick a point on the unit sphere S^nu in R^nu+1
         vec = np.random.randn(nu+1)
         vec /= np.linalg.norm(vec)
 
         alpha = vec[0] + 1j* vec[1]
         rho = np.sqrt(1-np.abs(alpha)**2)
 
-        Xi_list[ind,:,:] = [[alpha.conj(), rho],
+        xi_list[ind,:,:] = [[alpha.conj(), rho],
                             [rho         , -alpha]]
         
-    # L = diag(Xi_0,Xi_2,\dots)
-    L = block_diag(Xi_list[::2,:,:])
-    # M = diag(Xi_-1,Xi_1,\Xi_3\dots)
-    M = block_diag(Xi_list[1::2,:,:])
-    M = block_diag([Xi_1, M])
+    # L = diag(xi_0,xi_2,\dots)
+    L = block_diag(xi_list[::2,:,:])
+    # M = diag(xi_-1,xi_1,\xi_3\dots)
+    M = block_diag(xi_list[1::2,:,:])
+    M = block_diag([xi_1, M])
 
-    if N%2==1:
-        L = block_diag([L, Xi_N_1])
+    if size%2==1:
+        L = block_diag([L, xi_N_1])
     else:
-        M = block_diag([M, Xi_N_1])
-        
+        M = block_diag([M, xi_N_1])
+
     return eigvals(L.dot(M))
+
+
+
+###############
+### Ginibre ###
+###############
+
+def ginibre(beta=2, size=10):
+
+    A = np.random.randn(size, size) + 1j*np.random.randn(size, size)
+
+    return eigvals(A)/np.sqrt(2)
