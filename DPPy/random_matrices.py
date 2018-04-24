@@ -10,7 +10,7 @@ from scipy.linalg import eig, eigh,\
 ###############
 
 # Hermite, full matrix model
-def hermite_sampler_matrix_model(N, beta=2):
+def hermite_sampler_full(N, beta=2):
 
     size_sym_mat = int(N*(N-1)/2)
 
@@ -44,7 +44,7 @@ def hermite_sampler_matrix_model(N, beta=2):
     return eigvalsh(A)
 
 ## Hermite tridiag
-def hermite_sampler_tridiag_model(beta=2, N=10):
+def hermite_sampler_tridiag(N, beta=2):
 
     alpha_coef = np.sqrt(2)*np.random.randn(N)
     beta_coef = np.random.chisquare(beta*np.arange(N-1, 0, step=-1))
@@ -57,7 +57,7 @@ def semi_circle_law(x, R=2):
     return 2/(np.pi*R**2) * np.sqrt(R**2 - x**2)
 
 ## mu_ref == normal
-def muref_normal_sampler_tridiag_model(loc=0.0, scale=1.0, beta=2, size=10):
+def muref_normal_sampler_tridiag(loc=0.0, scale=1.0, beta=2, size=10):
 
     # beta/2*[N-1, N-2, ..., 1]
     b_2_Ni = 0.5*beta*np.arange(size-1, 0, step=-1)
@@ -75,7 +75,7 @@ def muref_normal_sampler_tridiag_model(loc=0.0, scale=1.0, beta=2, size=10):
 ################
 
 # Laguerre, full matrix model
-def laguerre_sampler_matrix_model(M, N, beta=2):
+def laguerre_sampler_full(M, N, beta=2):
     
     if beta==1:
         A = np.random.randn(N,M)
@@ -96,7 +96,7 @@ def laguerre_sampler_matrix_model(M, N, beta=2):
     return eigvalsh(A.dot(A.conj().T))
 
 ## Laguerre, tridiagonal model
-def laguerre_sampler_tridiag_model(M, N, beta=2):
+def laguerre_sampler_tridiag(M, N, beta=2):
     # M=>N
 
     # xi_odd = xi_1, ... , xi_2N-1
@@ -124,7 +124,7 @@ def marcenko_pastur_law(x, M, N, sigma=1.0):
     return 1.0/(2*np.pi*sigma**2) * 1/(c*x) *np.sqrt(np.maximum((Lp-x)*(x-Lm),0)) 
 
 ## mu_ref == Gamma 
-def mu_ref_gamma_sampler_tridiag_model(shape=1.0, scale=1.0, beta=2, size=10):
+def mu_ref_gamma_sampler_tridiag(shape=1.0, scale=1.0, beta=2, size=10):
 
     # beta/2*[N-1, N-2, ..., 1, 0]
     b_2_Ni = 0.5*beta*np.arange(size-1,-1,step=-1)
@@ -154,7 +154,7 @@ def mu_ref_gamma_sampler_tridiag_model(shape=1.0, scale=1.0, beta=2, size=10):
 ##############
 
 # Jacobi, full matrix model
-def jacobi_sampler_matrix_model(M_1, M_2, N, beta=2):
+def jacobi_sampler_full(M_1, M_2, N, beta=2):
     
     if beta==1:
         X = np.random.randn(N,M_1)
@@ -195,7 +195,7 @@ def jacobi_sampler_matrix_model(M_1, M_2, N, beta=2):
     return eigvals(X_tmp.dot(np.linalg.inv(X_tmp + Y_tmp))).real
 
 ## Jacobi, tridiagonal model
-def jacobi_sampler_tridiag_model(M_1, M_2, N, beta=2):
+def jacobi_sampler_tridiag(M_1, M_2, N, beta=2):
 
     # c_odd = c_1, c_2, ..., c_2N-1
     c_odd = np.random.beta(
@@ -232,7 +232,7 @@ def wachter_law(x, M_1, M_2, N):
 
     return 1/(2*np.pi) * (M_1+M_2)/N * 1/(x*(1-x)) * np.sqrt(np.maximum((Lp-x)*(x-Lm),0))  
 
-def mu_ref_beta_sampler_tridiag_model(a, b, beta=2, size=10):
+def mu_ref_beta_sampler_tridiag(a, b, beta=2, size=10):
 
     # beta/2*[N-1, N-2, ..., 1, 0]
     b_2_Ni = 0.5*beta*np.arange(size-1,-1,step=-1)
@@ -272,46 +272,57 @@ def mu_ref_beta_sampler_tridiag_model(a, b, beta=2, size=10):
 #########################
 
 # Full matrix model
-def circular_sampler_matrix_model(beta=2, size=10, gen_from="Ginibre"):
+def circular_sampler_full(N, beta=2, mode="QR"):
     
-    if gen_from == "Ginibre":
-        # https://arxiv.org/pdf/math-ph/0609050.pdf
+    if mode == "hermite":
+
+        size_sym_mat = int(N*(N-1)/2)
+        if beta == 1:#COE
+            A = np.zeros((N,)*2)
+            random_var = np.random.randn(size_sym_mat)
+            
+            A[np.tril_indices_from(A, k=-1)] = random_var
+            A[np.triu_indices_from(A, k=+1)] = random_var
+            A[np.diag_indices_from(A)] = np.random.randn(N)
+            
+        elif beta == 2:#CUE
+            A = np.zeros((N,)*2, dtype=np.complex_)
+            random_var = np.random.randn(size_sym_mat) \
+                         + 1j*np.random.randn(size_sym_mat)
+
+            A[np.tril_indices_from(A, k=-1)] = random_var
+            A[np.triu_indices_from(A, k=+1)] = random_var.conj()
+            A[np.diag_indices_from(A)] = np.random.randn(N)
+
+        elif beta==4:#CSE 
+            X = np.random.randn(N,N) + 1j*np.random.randn(N,N)
+            Y = np.random.randn(N,N) + 1j*np.random.randn(N,N)
+            A = np.block([\
+                [X,           Y         ],\
+                [-Y.conj(), X.conj()]\
+                ])
+
+            _, U = eigh(A)
+        else:
+            raise ValueError("In hermite mode, only beta = 1, 2, 4 are available")
+
+    if mode == "QR": # [Mezzadri, Sec 5] https://arxiv.org/pdf/math-ph/0609050.pdf
         
         if beta == 1: #COE
-            A = np.random.randn(size, size)
-            
+            A = np.random.randn(N, N)
         elif beta == 2: #CUE
-            A = (np.random.randn(size, size) + 1j*np.random.randn(size, size))/np.sqrt(2.0)
+            A = (np.random.randn(N, N) + 1j*np.random.randn(N, N))\
+                    /np.sqrt(2.0)
+        else:
+            raise ValueError("In QR mode, only beta = 1, 2 are available")
 
         #U, _ = np.linalg.qr(A)
         Q, R = np.linalg.qr(A)
         d = np.diagonal(R)
         U = np.multiply(Q, d/np.abs(d), Q)
         
-    elif gen_from == "Hermite":
-
-        size_sym_mat = int(size*(size-1)/2)
-        if beta == 1:#COE
-            A = np.zeros((size,)*2)
-            random_var = np.random.randn(size_sym_mat)
-            
-            A[np.tril_indices_from(A, k=-1)] = random_var
-            A[np.triu_indices_from(A, k=+1)] = random_var
-            A[np.diag_indices_from(A)] = np.random.randn(size)
-            
-        elif beta == 2:#CUE
-            A = np.zeros((size,)*2, dtype=np.complex_)
-            random_var = np.random.randn(size_sym_mat) \
-                         + 1j*np.random.randn(size_sym_mat)
-
-            A[np.tril_indices_from(A, k=-1)] = random_var
-            A[np.triu_indices_from(A, k=+1)] = random_var.conj()
-            A[np.diag_indices_from(A)] = np.random.randn(size)
-
-        _, U = eigh(A)
-        
     else:
-        raise ValueError("gen_from = 'Ginibre' or 'Hermite'")
+        raise ValueError("mode = 'hermite' or 'QR'")
     
     return eigvals(U)
 
@@ -332,7 +343,7 @@ def block_diag(arrs):
 
     return out
 
-def mu_ref_unif_unit_circle_sampler_quindiag_model(beta=2, size=10):
+def mu_ref_unif_unit_circle_sampler_quindiag(beta=2, size=10):
     # [Killip Nenciu, Theorem 1] https://arxiv.org/abs/math/0410034
 
     if not ((beta > 0) & isinstance(beta, int)):
@@ -381,8 +392,11 @@ def mu_ref_unif_unit_circle_sampler_quindiag_model(beta=2, size=10):
 ### Ginibre ###
 ###############
 
-def ginibre(beta=2, size=10):
+def ginibre_sampler_full(N):
 
-    A = np.random.randn(size, size) + 1j*np.random.randn(size, size)
+    # if beta == 1:
+    #     A = np.random.randn(N, N)
 
-    return eigvals(A)/np.sqrt(2)
+    A = np.random.randn(N, N) + 1j*np.random.randn(N, N)
+
+    return eigvals(A)/np.sqrt(2.0)
