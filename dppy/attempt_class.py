@@ -1,6 +1,10 @@
 from .random_matrices import *
 import matplotlib.pyplot as plt
 
+
+
+
+
 class ReferenceMeasure:
 
 	def __init__(self, name, **params):
@@ -106,7 +110,7 @@ class BetaOPE:
 		self.list_of_samples.append(sampl)
 
 	def flush_samples(self):
-			self.list_of_samples = []
+		self.list_of_samples = []
 
 	def kernel(self, list_of_points):
 		# return the matrix [K(x,y)]_x,y in list_of_points
@@ -234,7 +238,7 @@ class ClassicalOPE:
 		self.list_of_samples.append(sampl)
 
 	def flush_samples(self):
-			self.list_of_samples = []
+		self.list_of_samples = []
 
 	def plot(self, normalization=True):
 
@@ -246,22 +250,18 @@ class ClassicalOPE:
 
 		if not normalization:
 
-			if self.name == "circular":
-				unit_circle = plt.Circle((0,0), 1, color='r', fill=False) 
-				ax.add_artist(unit_circle) 
+			if (self.name == "circular") | (self.name == "ginibre"):
+				if self.name == "circular":
+					unit_circle = plt.Circle((0,0), 1, color='r', fill=False) 
+					ax.add_artist(unit_circle) 
 
-				plt.xlim([-1.1, 1.1])
-				plt.ylim([-1.1, 1.1])
-
-				ax.scatter(points.real, points.imag, c='blue', label="sample")
-				plt.axis("square")
-				
-			elif self.name == "ginibre":
-				plt.xlim([-1.1, 1.1])
-				plt.ylim([-1.1, 1.1])
 
 				ax.scatter(points.real, points.imag, c='blue', label="sample")
-				plt.axis("square")
+
+				ax.set_xlim([-1.3, 1.3])
+				ax.set_ylim([-1.3, 1.3])
+
+				ax.set_aspect('equal')
 
 			else:
 				ax.scatter(points, np.zeros(len(points)), c='blue', label="sample")
@@ -299,20 +299,19 @@ class ClassicalOPE:
 								'r-', lw=2, alpha=0.6, 
 								label='Wachter Law')
 
-			else:
+			elif (self.name == "circular") | (self.name == "ginibre"):
 				unit_circle = plt.Circle((0,0), 1, color='r', fill=False) 
 				ax.add_artist(unit_circle) 
 
-				plt.xlim([-1.1, 1.1])
-				plt.ylim([-1.1, 1.1])
-
-				if self.name == "circular":
-					pass
 				if self.name == "ginibre":
 					points /= np.sqrt(self.params['N'])
 
 				ax.scatter(points.real, points.imag, c='blue', label="sample")
-				plt.axis("square")
+
+				ax.set_xlim([-1.3, 1.3])
+				ax.set_ylim([-1.3, 1.3])
+
+				ax.set_aspect('equal')
 
 		ax.legend(loc='best', frameon=False)
 		plt.show()
@@ -413,7 +412,9 @@ class ClassicalOPE:
 		supported_beta = (1, 2, 4)
 
 		if self.name == "ginibre":
-			pass
+			if self.beta !=2:
+				raise ValueError("Invalid beta parameter, only beta=2 available.\n"
+												"Given {}".format(self.beta))
 		if self.beta not in supported_beta:
 			raise ValueError("Invalid beta parameter, "
 											"must be equal to 1, 2 or 4.")
