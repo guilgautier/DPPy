@@ -6,16 +6,16 @@ class ReferenceMeasure:
 	def __init__(self, name, **params):
 
 		self.name = name.lower()
-		self.__test_ref_measure_validity()
+		self.__check_ref_measure_validity()
 
 		self.params = params
-		self.__test_params_validity()
+		self.__check_params_validity()
 
 	def info(self):
 		print("ReferenceMeasure = {}, "
 			  "with parameters = {}".format(self.name, self.params))
 
-	def __test_ref_measure_validity(self):
+	def __check_ref_measure_validity(self):
 
 		supported_ref_meas = ("normal", "gaussian",
 													"gamma", 
@@ -26,7 +26,7 @@ class ReferenceMeasure:
 			str_list = ["- {}".format(meas) for meas in supported_ref_meas]
 			raise ValueError("\n".join(["Supported reference measures:"] + str_list))
 
-	def __test_params_validity(self):
+	def __check_params_validity(self):
 
 			if self.name in ("normal", "gaussian"):
 				if ("loc" not in self.params) | ("scale" not in self.params):
@@ -58,8 +58,6 @@ class ReferenceMeasure:
 			elif self.name == "unif_unit_circle":
 				pass
 
-
-
 class BetaOPE:
 	"""docstring for OPE"""
 
@@ -68,34 +66,47 @@ class BetaOPE:
 		self.ref_meas = ref_meas
 
 		self.beta = beta
-		self.__test_beta_validity()
+		self.__check_beta_validity()
+
+		self.params = {}
+		self.list_of_samples = []
 
 	def info(self):
 		self.ref_meas.info()
+		info_str = "\n".join(["beta coefficient = {}",
+												"Current number of samples = {}"])
+
+		print(info_str.format(self.beta,
+													len(self.list_of_samples)))
 
 	def sample(self, nb_points):
 		
 		if self.ref_meas.name in ("normal", "gaussian"):
-			return muref_normal_sampler_tridiag(loc=self.ref_meas.params["loc"], 
+			sampl = muref_normal_sampler_tridiag(loc=self.ref_meas.params["loc"], 
 																					scale=self.ref_meas.params["scale"], 
 																					beta=self.beta, 
 																					size=nb_points)
 
 		elif self.ref_meas.name == "gamma":
-			return mu_ref_gamma_sampler_tridiag(shape=self.ref_meas.params["shape"], 
-																					scale=self.ref_meas.params["scale"], 
+			sampl = mu_ref_gamma_sampler_tridiag(shape=self.ref_meas.params["shape"],
+																					scale=self.ref_meas.params["scale"],
 																					beta=self.beta, 
 																					size=nb_points)					
 
 		elif self.ref_meas.name == "beta":
-			return mu_ref_beta_sampler_tridiag(a=self.ref_meas.params["a"], 
+			sampl = mu_ref_beta_sampler_tridiag(a=self.ref_meas.params["a"], 
 																				b=self.ref_meas.params["b"], 
 																				beta=self.beta, 
 																				size=nb_points)
 
 		elif self.ref_meas.name == "unif_unit_circle":
-			return mu_ref_unif_unit_circle_sampler_quindiag(beta=self.beta, 
+			sampl = mu_ref_unif_unit_circle_sampler_quindiag(beta=self.beta, 
 																  										size=nb_points)
+
+		self.list_of_samples.append(sampl)
+
+	def flush_samples(self):
+			self.list_of_samples = []
 
 	def kernel(self, list_of_points):
 		# return the matrix [K(x,y)]_x,y in list_of_points
@@ -104,9 +115,34 @@ class BetaOPE:
 			raise ValueError("beta parameter {} != 2, the OPE is not a DPP"
 							 				"there is no notion of kernel".format(self.beta))
 
-	def __test_beta_validity(self):
+	def __check_beta_validity(self):
 		if not (self.beta > 0):
 			raise ValueError("beta must be positive")
+
+		if self.ref_meas.name == "unif_unit_circle":
+			if not isinstance(self.beta, int):
+				raise ValueError("Invalid beta parameter. "
+												"beta must be positive integer.\n"
+												"Given beta={}".format(self.beta))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 class ClassicalOPE:
@@ -115,25 +151,29 @@ class ClassicalOPE:
 	def __init__(self, name, beta=2):
 
 		self.name = name.lower()
-		self.__test_name_validity()
+		self.__check_name_validity()
 
 		self.beta = beta
-		self.__test_beta_validity()
+		self.__check_beta_validity()
 
 		self.params = {}
 		self.list_of_samples = []
 
 	def info(self):
-		print("OPE name = {}, "
-			  "beta coefficient = {}".format(self.name, self.beta))
+		info_str = "\n".join(["Classical OPE name = {}",
+													"beta coefficient = {}",
+													"params = {}",
+													"Current number of samples = {}"])
 
-	def sample(self, flush_samples=False, matrix_model="banded", **params):
-		if flush_samples:
-			self.list_of_samples = []
+		return print(info_str.format(self.name, 
+																self.beta,
+																self.params,
+																len(self.list_of_samples)))
+
+	def sample(self, matrix_model="banded", **params):
 
 		self.params = params
-		self.__test_params_validity()
-
+		self.__check_params_validity()
 
 		if matrix_model == "banded":
 
@@ -191,8 +231,10 @@ class ClassicalOPE:
 											"'banded'(default) or 'full'.\n"
 											"Given {}".format(matrix_model))
 
-
 		self.list_of_samples.append(sampl)
+
+	def flush_samples(self):
+			self.list_of_samples = []
 
 	def plot(self, normalization=True):
 
@@ -200,14 +242,34 @@ class ClassicalOPE:
 			raise ValueError("List of samples is empty, you must sample first")
 
 		fig, ax = plt.subplots(1, 1)
-		points = self.list_of_samples[-1]
+		points = self.list_of_samples[-1].copy()
 
 		if not normalization:
-			ax.scatter(points, np.zeros(len(points)), c='blue', label="sample")
+
+			if self.name == "circular":
+				unit_circle = plt.Circle((0,0), 1, color='r', fill=False) 
+				ax.add_artist(unit_circle) 
+
+				plt.xlim([-1.1, 1.1])
+				plt.ylim([-1.1, 1.1])
+
+				ax.scatter(points.real, points.imag, c='blue', label="sample")
+				plt.axis("square")
+				
+			elif self.name == "ginibre":
+				plt.xlim([-1.1, 1.1])
+				plt.ylim([-1.1, 1.1])
+
+				ax.scatter(points.real, points.imag, c='blue', label="sample")
+				plt.axis("square")
+
+			else:
+				ax.scatter(points, np.zeros(len(points)), c='blue', label="sample")
 
 		else:
+
 			if self.name == "hermite":
-				points /= np.sqrt(self.beta * self.params['N'])
+				points/= np.sqrt(self.beta * self.params['N'])
 				ax.scatter(points, np.zeros(len(points)), c='blue', label="sample")
 
 				x=np.linspace(-2,2,100)
@@ -219,7 +281,7 @@ class ClassicalOPE:
 				points /= self.beta * self.params['M']
 				ax.scatter(points, np.zeros(len(points)), c='blue', label="sample")
 
-				x=np.linspace(0.001,3,100)
+				x=np.linspace(1e-3,3.5,100)
 				ax.plot(x, marcenko_pastur_law(x,
 																			self.params['M'], 
 																			self.params['N']),
@@ -259,14 +321,20 @@ class ClassicalOPE:
 		if not self.list_of_samples:
 			raise ValueError("Empty list of samples, you must sample first!")
 
-		if self.name in ("circular", "ginibre"):
-			raise ValueError("No 'hist' method for "
-											"Circular and Ginibre ensembles.")
+		if self.name == "ginibre":
+			raise ValueError("No 'hist' method for Ginibre.")
 
+		fig, ax = plt.subplots(1, 1)
+		points = np.array(self.list_of_samples).flatten()
+
+		if self.name == "circular":
+			ax.hist(np.angle(points), 
+							bins=50, 
+							density=1, 
+							facecolor='blue', alpha=0.5, 
+							label='hist')
+			ax.axhline(y=1/(2*np.pi), color='r', label=r"$\frac{1}{2\pi}$")
 		else:
-			fig, ax = plt.subplots(1, 1)
-			points = np.array(self.list_of_samples).flatten()
-
 			if not normalization:
 				ax.hist(points, 
 								bins=50, 
@@ -296,7 +364,7 @@ class ClassicalOPE:
 									facecolor='blue', alpha=0.5, 
 									label='hist')
 					
-					x=np.linspace(0.001,3,100)
+					x=np.linspace(1e-3,3.5,100)
 					ax.plot(x, marcenko_pastur_law(x,
 																				self.params['M'], 
 																				self.params['N']),
@@ -318,8 +386,8 @@ class ClassicalOPE:
 									'r-', lw=2, alpha=0.6, 
 									label='Wachter Law')
 
-				ax.legend(loc='best', frameon=False)
-				plt.show()
+		ax.legend(loc='best', frameon=False)
+		plt.show()
 		
 	def kernel(self, list_of_points):
 		# return the matrix [K(x,y)]_x,y in list_of_points
@@ -331,7 +399,7 @@ class ClassicalOPE:
 		else:
 			pass
 
-	def __test_name_validity(self):
+	def __check_name_validity(self):
 
 		supported_classical_OPE = ("hermite, laguerre, jacobi,\
 															circular,\
@@ -341,14 +409,16 @@ class ClassicalOPE:
 			str_list = ["- {}".format(OPE) for OPE in supported_classical_OPE]
 			raise ValueError("\n".join(["Supported OPEs:"] + str_list))
 
-	def __test_beta_validity(self):
+	def __check_beta_validity(self):
 		supported_beta = (1, 2, 4)
 
+		if self.name == "ginibre":
+			pass
 		if self.beta not in supported_beta:
 			raise ValueError("Invalid beta parameter, "
 											"must be equal to 1, 2 or 4.")
 
-	def __test_params_validity(self):
+	def __check_params_validity(self):
 
 		if self.name == "hermite":
 			if "N" not in self.params:
@@ -379,22 +449,22 @@ class ClassicalOPE:
 												"Given {}".format(self.params))
 
 			elif (self.params['M_1'] < self.params['N']) |\
-				 (self.params['M_2'] < self.params['N']):
+					(self.params['M_2'] < self.params['N']):
 				raise ValueError("beta(=1,2,4) jacobi ensemble has two sampling"
-								 "parameters that must satisfy M_1,2 >= N.\n"
-								 "Given {}".format(self.params))
+												"parameters that must satisfy M_1,2 >= N.\n"
+												"Given {}".format(self.params))
 
 		elif self.name == "circular":
 			if "mode" not in self.params:
 				self.params["mode"] = "hermite"
 			if "N" not in self.params:
 				raise ValueError("beta(=1,2,4) circular ensemble has two sampling"
-								 "parameters passed via a dict with keys "
-								 "'N' and 'mode'(default='hermite' or 'QR').\n"
-								 "Given {}".format(self.params))
+												"parameters passed via a dict with keys "
+												"'N' and 'mode'(default='hermite' or 'QR').\n"
+												"Given {}".format(self.params))
 
 		elif self.name == "ginibre":
 			if "N" not in self.params:
 				raise ValueError("ginibre ensemble has one sampling"
-								 "parameter passed via a dict with key 'N'.\n"
-								 "Given {}".format(self.params))
+												"parameter passed via a dict with key 'N'.\n"
+												"Given {}".format(self.params))

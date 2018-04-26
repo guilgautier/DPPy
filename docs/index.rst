@@ -4,6 +4,8 @@ Exact Sampling
 ==============
 
     .. autofunction:: dpp_sampler
+    
+    .. autofunction:: dpp_sampler
 
 Projection :math:`\operatorname{DPP}`
 -------------------------------------
