@@ -15,12 +15,14 @@ For now, only the discrete case is tackled.
 
 ## Requirements
 
-DPPy works with Python 2.7+
+DPPy works with Python 3.4+
 
 ### Dependencies:
  - [NumPy](http://www.numpy.org)
+ - [SciPy](http://www.scipy.org/)
+ - [Matplotlib](http://matplotlib.org/)
 
-The `zono_sampling` approximate sampler introduced in [1] requires CVXOPT which itself requires GCC
+The `zono_sampling` approximate sampler introduced requires CVXOPT which itself requires GCC
  - [CVXOPT](http://cvxopt.org)
  - [GCC](http://gcc.gnu.org)
     - On MAC it comes with Xcode

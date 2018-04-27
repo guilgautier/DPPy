@@ -1,10 +1,6 @@
 from .random_matrices import *
 import matplotlib.pyplot as plt
 
-
-
-
-
 class ReferenceMeasure:
 
 	def __init__(self, name, **params):

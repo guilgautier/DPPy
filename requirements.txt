@@ -1,5 +1,6 @@
 numpy
 scipy
+matplotlib
 cvxopt
 # for the documentation
 sphinxcontrib-bibtex
