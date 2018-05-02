@@ -3,7 +3,7 @@
 
 .ipynb_checkpoints/
 *.ipynb
-!beta_OPEs.ipynb
+!beta_ensembles.ipynb
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
