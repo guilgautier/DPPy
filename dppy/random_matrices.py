@@ -1,9 +1,7 @@
 # coding: utf-8
 
 import numpy as np
-from scipy.linalg import eig, eigh,\
-												eigvals, eigvalsh, eigvalsh_tridiagonal,\
-												block_diag
+import scipy.linalg as la 
 
 ###############
 ### Hermite ###
@@ -32,8 +30,8 @@ def hermite_sampler_full(N, beta=2):
 						"beta coefficient must be equal to 1, 2 or 4"
 						"Given beta={}".format(beta))
 
-	# return eigvalsh(A+A.conj().T)
-	return eigvalsh(A+A.conj().T)/np.sqrt(2.0)
+	# return la.eigvalsh(A+A.conj().T)
+	return la.eigvalsh(A+A.conj().T)/np.sqrt(2.0)
 
 ## Hermite tridiag
 def hermite_sampler_tridiag(N, beta=2):
@@ -41,7 +39,7 @@ def hermite_sampler_tridiag(N, beta=2):
 	alpha_coef = np.sqrt(2)*np.random.randn(N)
 	beta_coef = np.random.chisquare(beta*np.arange(N-1, 0, step=-1))
 
-	return eigvalsh_tridiagonal(alpha_coef, np.sqrt(beta_coef))
+	return la.eigvalsh_tridiagonal(alpha_coef, np.sqrt(beta_coef))
 
 # Semi-circle law
 def semi_circle_law(x, R=2.0):
@@ -58,7 +56,7 @@ def muref_normal_sampler_tridiag(loc=0.0, scale=1.0, beta=2, size=10):
 	alpha_coef = np.random.normal(loc=loc, scale=scale, size=size)
 	beta_coef = np.random.gamma(shape=b_2_Ni, scale=scale**2)
 
-	return eigvalsh_tridiagonal(alpha_coef, np.sqrt(beta_coef))
+	return la.eigvalsh_tridiagonal(alpha_coef, np.sqrt(beta_coef))
 
 
 
@@ -87,7 +85,7 @@ def laguerre_sampler_full(M, N, beta=2):
 						"beta coefficient must be equal to 1, 2 or 4"
 						"Given beta={}".format(beta))
 
-	return eigvalsh(A.dot(A.conj().T))
+	return la.eigvalsh(A.dot(A.conj().T))
 
 ## Laguerre, tridiagonal model
 def laguerre_sampler_tridiag(M, N, beta=2):
@@ -106,7 +104,7 @@ def laguerre_sampler_tridiag(M, N, beta=2):
 	# beta_i+1 = xi_2i-1 * xi_2i
 	beta_coef = xi_odd[:-1] * xi_even[1:]
 	
-	return eigvalsh_tridiagonal(alpha_coef, np.sqrt(beta_coef))
+	return la.eigvalsh_tridiagonal(alpha_coef, np.sqrt(beta_coef))
 
 # Marcenko Pastur law
 def marcenko_pastur_law(x, M, N, sigma=1.0):
@@ -136,7 +134,7 @@ def mu_ref_gamma_sampler_tridiag(shape=1.0, scale=1.0, beta=2, size=10):
 	# beta_i+1 = xi_2i-1 * xi_2i
 	beta_coef = xi_odd[:-1] * xi_even[1:]
 	
-	return eigvalsh_tridiagonal(alpha_coef, np.sqrt(beta_coef))
+	return la.eigvalsh_tridiagonal(alpha_coef, np.sqrt(beta_coef))
 
 
 
@@ -178,7 +176,7 @@ def jacobi_sampler_full(M_1, M_2, N, beta=2):
 	X_tmp = X.dot(X.conj().T)
 	Y_tmp = Y.dot(Y.conj().T)
 
-	return eigvals(X_tmp.dot(np.linalg.inv(X_tmp + Y_tmp))).real
+	return la.eigvals(X_tmp.dot(np.linalg.inv(X_tmp + Y_tmp))).real
 
 ## Jacobi, tridiagonal model
 def jacobi_sampler_tridiag(M_1, M_2, N, beta=2):
@@ -208,7 +206,7 @@ def jacobi_sampler_tridiag(M_1, M_2, N, beta=2):
 	# beta_i+1 = xi_2i-1 * xi_2i
 	beta_coef = xi_odd[:-1] * xi_even[1:]
 
-	return eigvalsh_tridiagonal(alpha_coef, np.sqrt(beta_coef))
+	return la.eigvalsh_tridiagonal(alpha_coef, np.sqrt(beta_coef))
 
 # Wachter law
 def wachter_law(x, M_1, M_2, N):
@@ -256,7 +254,7 @@ def mu_ref_beta_sampler_tridiag(a, b, beta=2, size=10):
 	# beta_i+1 = xi_2i-1 * xi_2i
 	beta_coef = xi_odd[:-1] * xi_even[1:]
 
-	return eigvalsh_tridiagonal(alpha_coef, np.sqrt(beta_coef))
+	return la.eigvalsh_tridiagonal(alpha_coef, np.sqrt(beta_coef))
 
 
 
@@ -289,7 +287,7 @@ def circular_sampler_full(N, beta=2, mode="QR"):
 							"Only beta = 1, 2, 4 are available.\n"
 							"Given {}".format(beta))
 
-		_, U = eigh(A+A.conj().T)
+		_, U = la.eigh(A+A.conj().T)
 
 	elif mode == "QR": 
 	#[Mezzadri, Sec 5] https://arxiv.org/pdf/math-ph/0609050.pdf	
@@ -315,7 +313,7 @@ def circular_sampler_full(N, beta=2, mode="QR"):
 	else:
 		raise ValueError("mode = 'hermite' or 'QR'")
 	
-	return eigvals(U)
+	return la.eigvals(U)
 
 # Circular, quindiagonal model
 def block_diag(arrs):
@@ -384,7 +382,7 @@ def mu_ref_unif_unit_circle_sampler_quindiag(beta=2, size=10):
 	else:
 		M = block_diag([M, xi_N_1])
 
-	return eigvals(L.dot(M))
+	return la.eigvals(L.dot(M))
 
 
 ###############
@@ -398,4 +396,4 @@ def ginibre_sampler_full(N):
 
 	A = np.random.randn(N, N) + 1j*np.random.randn(N, N)
 
-	return eigvals(A)/np.sqrt(2.0)
+	return la.eigvals(A)/np.sqrt(2.0)
