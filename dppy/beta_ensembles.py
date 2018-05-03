@@ -14,18 +14,20 @@ class BetaEnsemble:
 		self.sampling_mode = None
 		self.sampling_params = {}
 		self.list_of_samples = []
+		# self.nb_of_samples = len(self.list_of_samples)
 
 	def info(self):
-		str_info = ["Ensemble name = {}.",\
+		str_info = ["ensemble name = {}.",\
 								"beta parameter = {}.",\
 								"sampling mode = {}.",\
-								"sampling parameters = {}."]
-								# "list of samples = {}."]
+								"sampling parameters = {}.",\
+								"number of samples = {}."]
 
 		print("\n".join(str_info).format(self.name,
 																		self.beta,
 																		self.sampling_mode,
-																		self.sampling_params))
+																		self.sampling_params,
+																		len(self.list_of_samples)))
 
 	def flush_samples(self):
 		self.list_of_samples = []
@@ -289,13 +291,13 @@ class BetaEnsemble:
 		ax.legend(loc='best', frameon=False)
 		plt.show()
 		
-	def kernel(self, list_of_points):
-		# return the matrix [K(x,y)]_x,y in list_of_points
-		# maybe plot the heatmap
-		if self.beta != 2:
-			raise ValueError("Invalid beta parameter, {} != 2. The OPE is not a DPP, there is no notion of kernel".format(self.beta))
-		else:
-			pass
+	# def kernel(self, list_of_points):
+	# 	# return the matrix [K(x,y)]_x,y in list_of_points
+	# 	# maybe plot the heatmap
+	# 	if self.beta != 2:
+	# 		raise ValueError("Invalid beta parameter, {} != 2. The OPE is not a DPP, there is no notion of kernel".format(self.beta))
+	# 	else:
+	# 		pass
 
 	def __check_name_validity(self):
 
