@@ -1,7 +1,7 @@
 # coding: utf-8
 
 import numpy as np
-import scipy.linalg as la 
+import scipy.linalg as la
 
 ###############
 ### Hermite ###
@@ -236,9 +236,7 @@ def mu_ref_beta_sampler_tridiag(a, b, beta=2, size=10):
 
 	# c_even = c_0, c_2, c_2N-2
 	c_even = np.zeros(size)
-	c_even[1:] = np.random.beta(
-					b_2_Ni[:-1],
-					b_2_Ni[1:] + a + b)
+	c_even[1:] = np.random.beta(b_2_Ni[:-1], b_2_Ni[1:] + a + b)
 
 	# xi_odd = xi_2i-1 = (1-c_2i-2) c_2i-1
 	xi_odd = (1-c_even)*c_odd

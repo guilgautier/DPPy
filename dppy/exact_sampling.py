@@ -2,6 +2,7 @@
 
 import numpy as np
 from numpy.core.umath_tests import inner1d
+import scipy.linalg as la
 
 ########################################
 ################# DPPs #################
@@ -69,14 +70,13 @@ def dpp_sampler(K, ortho_proj_K=False, update_rule="GS"):
 			Y = projection_dpp_sampler_Schur(K)
 
 		else:
-			raise ValueError("Invalid update rule for orthogonal projection kernels, \
-							choose among:\n\
-							- 'GS' (default),\n\
-							- 'Schur'")
+			raise ValueError("Invalid update rule for orthogonal projection kernels, choose among:\n\
+				- 'GS' (default),\n\
+				- 'Schur'")
 	else:
 		### Phase 1: 
 		# Eigen-decompose the kernel (the symmetry was checked earlier)
-		eig_vals, eig_vecs = np.linalg.eigh(K)
+		eig_vals, eig_vecs = la.eigh(K)
 
 		# Check that the eigen-values lie in [0,1]
 		if not np.where((0 <= eig_vals) & (eig_vals <= 1)).all():
@@ -160,7 +160,8 @@ def projection_dpp_sampler_GS(K, k=None):
 		rem_set[j], Y[it] = False, j
 
 		###### Update the Cholesky factor
-		c[rem_set, it] = (K[rem_set,j] - c[rem_set,:it].dot(c[j,:it]))/np.sqrt(d_2[j])
+		c[rem_set, it] = (K[rem_set,j] - c[rem_set,:it].dot(c[j,:it]))\
+										/np.sqrt(d_2[j])
 		d_2[rem_set] -= c[rem_set,it]**2
 
 	return Y
