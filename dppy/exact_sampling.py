@@ -79,7 +79,7 @@ def dpp_sampler(K, ortho_proj_K=False, update_rule="GS"):
 		eig_vals, eig_vecs = la.eigh(K)
 
 		# Check that the eigen-values lie in [0,1]
-		if not np.where((0 <= eig_vals) & (eig_vals <= 1)).all():
+		if not np.all((0 <= eig_vals) & (eig_vals <= 1)):
 			raise ValueError("Invalid Kernel: eigen-values are not in [0,1]")
 
 		### Phase 2: 
@@ -155,7 +155,9 @@ def projection_dpp_sampler_GS(K, k=None):
 
 	for it in range(k):
 
-		j = np.random.choice(ground_set[rem_set], 1, p=d_2[rem_set]/(r-it))[0]
+		j = np.random.choice(ground_set[rem_set], 
+												size=1, 
+												p=np.fabs(d_2[rem_set])/(r-it))[0]
 		# Add the item to the sample
 		rem_set[j], Y[it] = False, j
 
@@ -216,7 +218,9 @@ def projection_dpp_sampler_Schur(K, k=None):
 	for it in range(k):
 		
 		# Pick a new item
-		j = np.random.choice(ground_set[rem_set], 1, p=abs(schur_comp[rem_set])/(r-it))[0]
+		j = np.random.choice(ground_set[rem_set], 
+												size=1, 
+												p=np.fabs(schur_comp[rem_set])/(r-it))[0]
 
 		#### Update Schur complements K_ii - K_iY (K_Y)^-1 K_Yi for Y <- Y+j
 		#
@@ -336,7 +340,9 @@ def dpp_sampler_eig_Cholesky(eig_vals, eig_vecs):
 	for it in range(k):
 
 		# Pick an item \propto this squred distance
-		j = np.random.choice(ground_set[rem_set], 1, p=norms_2[rem_set]/(k-it))[0]
+		j = np.random.choice(ground_set[rem_set], 
+												size=1, 
+												p=norms_2[rem_set]/(k-it))[0]
 
 		# Add the item just picked    
 		rem_set[j], Y[it] = False, j
@@ -425,7 +431,9 @@ def dpp_sampler_eig_GS(eig_vals, eig_vecs):
 		
 		# Pick an item proportionally to the residual square norm 
 		# ||P_{V_Y}^{orthog} V_j||^2
-		j = np.random.choice(ground_set[rem_set], 1, p=norms_2[rem_set]/(k-it))[0] 
+		j = np.random.choice(ground_set[rem_set], 
+												size=1, 
+												p=np.fabs(norms_2[rem_set])/(k-it))[0] 
 		
 		### Update the residual square norm
 		#
@@ -511,7 +519,7 @@ def dpp_sampler_KuTa12(eig_vals, eig_vecs):
 	# Initialize the sample
 	norms_2 = inner1d(V,V)
 	# Pick an item
-	i = np.random.choice(N, 1, p=norms_2/k)[0] 
+	i = np.random.choice(N, size=1, p=np.fabs(norms_2)/k)[0] 
 	# Add the item just picked
 	Y = np.zeros(k,dtype=int)
 	Y[0]=i
@@ -530,7 +538,7 @@ def dpp_sampler_KuTa12(eig_vals, eig_vecs):
 
 		norms_2 = inner1d(V,V) 
 		# Pick an item
-		i = np.random.choice(N, 1, p=norms_2/(r-it))[0]
+		i = np.random.choice(N, size=1, p=np.fabs(norms_2)/(r-it))[0]
 		# Add the item just picked
 		Y[it] = i
 
@@ -633,17 +641,18 @@ def k_dpp_sampler(K, k=1, ortho_proj_K=False, update_rule="GS"):
 			Y = projection_dpp_sampler_Schur(K, k)
 
 		else:
-			raise ValueError("Invalid update rule for orthogonal projection kernels, \
-							choose among:\n\
-							- 'GS' (default),\n\
-							- 'Schur'")
+			str_list = ["Invalid update_rule for orthogonal projection kernels, choose among:",
+				"- 'GS' (default)",
+				"- 'Schur'",
+				"Given 'update_rule' = {}"]
+			raise ValueError('\n'.join(str_list).format(update_rule))
 	else:
 		### Phase 1: 
 		# Eigen-decompose the kernel (the symmetry was checked earlier)
 		eig_vals, eig_vecs = np.linalg.eigh(K)
 
 		# Check that the eigen-values lie in [0,1]
-		if not np.where((0 <= eig_vals) & (eig_vals <= 1)).all():
+		if not np.all((0 <= eig_vals) & (eig_vals <= 1)):
 			raise ValueError("Invalid Kernel: eigen-values are not in [0,1]")
 
 		eig_vals = select_eig_vec(eig_val, k)

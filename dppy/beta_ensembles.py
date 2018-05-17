@@ -17,10 +17,10 @@ class BetaEnsemble:
 		# self.nb_of_samples = len(self.list_of_samples)
 
 	def info(self):
-		str_info = ["ensemble name = {}.",\
-								"beta parameter = {}.",\
-								"sampling mode = {}.",\
-								"sampling parameters = {}.",\
+		str_info = ["ensemble name = {}.",
+								"beta parameter = {}.",
+								"sampling mode = {}.",
+								"sampling parameters = {}.",
 								"number of samples = {}."]
 
 		print("\n".join(str_info).format(self.name,
