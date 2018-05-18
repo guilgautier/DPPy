@@ -16,8 +16,6 @@ class Discrete_DPP:
 		self.projection_kernel = projection_kernel
 		self.__check_projection_kernel_validity()
 
-
-
 		self.__eigen_decomposition_available = False
 		self.eig_vals = None
 		self.eig_vecs = None
@@ -96,7 +94,6 @@ class Discrete_DPP:
 																		"Yes" if self.projection_kernel else "No",
 																		self.sampling_mode,
 																		len(self.list_of_samples))
-
 
 	def info(self):
 		print(self.__str__())

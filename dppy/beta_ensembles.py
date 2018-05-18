@@ -16,18 +16,21 @@ class BetaEnsemble:
 		self.list_of_samples = []
 		# self.nb_of_samples = len(self.list_of_samples)
 
-	def info(self):
+	def __str__(self):
 		str_info = ["ensemble name = {}.",
 								"beta parameter = {}.",
 								"sampling mode = {}.",
 								"sampling parameters = {}.",
 								"number of samples = {}."]
 
-		print("\n".join(str_info).format(self.name,
-																		self.beta,
-																		self.sampling_mode,
-																		self.sampling_params,
-																		len(self.list_of_samples)))
+		return "\n".join(str_info).format(self.name,
+																			self.beta,
+																			self.sampling_mode,
+																			self.sampling_params,
+																			len(self.list_of_samples))
+
+	def info(self):
+		print(self.__str__())
 
 	def flush_samples(self):
 		self.list_of_samples = []
@@ -143,7 +146,7 @@ class BetaEnsemble:
 
 					points /= self.beta * M
 
-					x = np.linspace(1e-3, 3.5 , 200)
+					x = np.linspace(1e-3, np.max(points)+0.3, 200)
 					ax.plot(x, marcenko_pastur_law(x, M, N),
 									'r-', lw=2, alpha=0.6,
 									label=r'$f_{MP}$')
@@ -207,7 +210,8 @@ class BetaEnsemble:
 			raise ValueError("list_of_samples is empty, you must sample first")
 
 		fig, ax = plt.subplots(1, 1)
-		points = np.array(self.list_of_samples).flatten()
+		points = self.list_of_samples[-1].copy()
+		# points = np.array(self.list_of_samples).flatten()
 
 		if self.name == "hermite":
 
@@ -245,7 +249,7 @@ class BetaEnsemble:
 
 				points /= self.beta * M
 
-				x = np.linspace(1e-3,3.5,100)
+				x = np.linspace(1e-3,np.max(points)+0.3,100)
 				ax.plot(x, marcenko_pastur_law(x, M, N),
 								'r-', lw=2, alpha=0.6,
 								label=r'$f_{MP}$')
@@ -264,7 +268,8 @@ class BetaEnsemble:
 					M_1 = self.sampling_params['M_1']
 					M_2 = self.sampling_params['M_2']
 
-				x=np.linspace(1e-5,1-1e-3,100)
+				eps = 1e-5
+				x = np.linspace(eps,1.0-eps,500)
 				ax.plot(x, wachter_law(x, M_1, M_2, N),
 								'r-', lw=2, alpha=0.6, 
 								label='Wachter Law')
@@ -284,7 +289,7 @@ class BetaEnsemble:
 			raise ValueError("No 'hist' method for Ginibre.")
 
 		ax.hist(points, 
-						bins=50, density=1, 
+						bins=30, density=1, 
 						facecolor='blue', alpha=0.5, 
 						label='hist')
 
