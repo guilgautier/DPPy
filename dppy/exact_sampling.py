@@ -1,7 +1,7 @@
 # coding: utf-8
 
 import numpy as np
-from numpy.core.umath_tests import inner1d
+from numpy.core.umath_tests import inner1d as np_inner1d
 import scipy.linalg as la
 
 ########################################
@@ -239,10 +239,7 @@ def projection_dpp_sampler_Schur(K, k=None):
 			schur_j = K[j,j] - K[j,Y].dot(K_inv.dot(K[Y,j]))
 			temp = K_inv.dot(K[Y,j])
 
-			K_inv = np.lib.pad(K_inv, 
-							(0,1), 
-							'constant', 
-							constant_values=1.0/schur_j)
+			K_inv = np.lib.pad(K_inv, (0,1), 'constant', constant_values=1.0/schur_j)
 
 			K_inv[:-1,:-1] += np.outer(temp, temp/schur_j)
 			K_inv[:-1,-1] *= -temp
@@ -255,8 +252,8 @@ def projection_dpp_sampler_Schur(K, k=None):
 		# 2) update Schur complements
 		# K_ii - K_iY (K_Y)^-1 K_Yi for Y <- Y+j
 		schur_comp[rem_set] = K_diag[rem_set]\
-													- inner1d(K[np.ix_(rem_set,Y)],
-																		K[np.ix_(rem_set,Y)].dot(K_inv))
+													- np_inner1d(K[np.ix_(rem_set,Y)],
+																			K[np.ix_(rem_set,Y)].dot(K_inv))
 		
 	return Y
 
@@ -335,7 +332,7 @@ def dpp_sampler_eig_Cholesky(eig_vals, eig_vecs):
 
 	# Initially this corresponds to the squared norm of the feature vectors
 	c = np.zeros((N,k))
-	norms_2 = inner1d(V, V)
+	norms_2 = np_inner1d(V, V)
 
 	for it in range(k):
 
@@ -425,7 +422,7 @@ def dpp_sampler_eig_GS(eig_vals, eig_vecs):
 
 	### Residual square norm 
 	# ||P_{V_Y}^{orthog} V_j||^2
-	norms_2 = inner1d(V, V)
+	norms_2 = np_inner1d(V, V)
 
 	for it in range(k):
 		
@@ -517,7 +514,7 @@ def dpp_sampler_KuTa12(eig_vals, eig_vecs):
 
 	#### Phase 2: Chain rule
 	# Initialize the sample
-	norms_2 = inner1d(V,V)
+	norms_2 = np_inner1d(V,V)
 	# Pick an item
 	i = np.random.choice(N, size=1, p=np.fabs(norms_2)/k)[0] 
 	# Add the item just picked
@@ -536,7 +533,7 @@ def dpp_sampler_KuTa12(eig_vals, eig_vecs):
 		# V_:j is set to 0 so we delete it and we can derive an orthononormal basis of the subspace under consideration
 		V, _ = np.linalg.qr(np.delete(V, j, axis=1)) 
 
-		norms_2 = inner1d(V,V) 
+		norms_2 = np_inner1d(V,V) 
 		# Pick an item
 		i = np.random.choice(N, size=1, p=np.fabs(norms_2)/(r-it))[0]
 		# Add the item just picked
