@@ -70,17 +70,18 @@ class Discrete_DPP:
 		if not self.projection_kernel: 
 		# Compute eigendecomposition of the (symmetric) kernel
 			self.eigen_decompose()
-
+			eps = 1e-8
 			# If K-ensemble
 			if self.ensemble_type == 'K': 
 				# Check 0 <= K <= I
-				if not np.all((0.0<=self.eig_vals) & (self.eig_vals<=1.0)):
+				
+				if not np.all((-eps<=self.eig_vals) & (self.eig_vals<=1.0+eps)):
 					raise ValueError("Invalid kernel for K-ensemble. Eigen values are not in [0,1]")
 
 			# If L-ensemble
 			elif self.ensemble_type == 'L':
 				# Check L >= 0
-				if not np.all(self.eig_vals>=0.0):
+				if not np.all(self.eig_vals>=-eps):
 					raise ValueError("Invalid kernel for L-ensemble. Eigen values are not >= 0")
 
 	def _str_info(self, size=False):
