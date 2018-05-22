@@ -112,7 +112,7 @@ class Discrete_DPP:
 		elif self.ensemble_type == 'L':
 			self.ber_params_sampling = self.eig_vals/(1.0+self.eig_vals)
 
-	def sample(self, sampling_mode="GS"):
+	def sample_exact(self, sampling_mode="GS"):
 
 		if self.sampling_mode == "GS":# Gram Schmidt update
 
@@ -196,7 +196,7 @@ class Discrete_kDPP(Discrete_DPP):
 	def info(self):
 		print(self.__str__())
 		
-	def sample(self, sampling_mode="GS"):
+	def sample_exact(self, sampling_mode="GS"):
 
 		if self.sampling_mode == "GS":# Gram Schmidt update
 
