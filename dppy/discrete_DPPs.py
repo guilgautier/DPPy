@@ -24,8 +24,16 @@ class Discrete_DPP:
 		# for L-ensemble = eig_vals/(1+eigvals)
 		self.__check_kernel_for_dpp_validity() # If valid, diagonalization is performed only for non projection kernel.
 
-		self.sampling_mode = "GS" # 'GS' for Gram-Schmidt, 'Schur' for Schur complement and 'KuTa12' for Kulesza (Algo 1).
+		self.sampling_mode = "GS" 
+		### Exact sampling
+		# 'GS' for Gram-Schmidt, 
+		# 'Schur' for Schur complement 
+		# 'KuTa12' for Kulesza (Algo 1).
+		### Approx sampling
+		# 'AED' 'AD' 'E' A=Add E=Exchange D=Delete
 		self.list_of_samples = []
+
+
 
 	def __str__(self):
 		return self._str_info()
@@ -141,6 +149,36 @@ class Discrete_DPP:
 			str_list = ["Invalid sampling_mode parameter, choose among:",
 									"- 'GS' (default)",
 									"- 'Schur'"]
+			raise ValueError("\n".join(str_list))
+
+		self.list_of_samples.append(sampl)
+
+	def sample_approx(self, sampling_mode="AED", nb_iter=10, T_max=None):
+
+		if self.ensemble_type == 'K:
+			if self.__eigen_decomposition_available:
+				self.
+
+		if self.sampling_mode == "AED":# Add-Exchange-Delete
+
+			if not self.projection_kernel:
+				sampl = add_exchange_delete_sampler(kernel, nb_it_max, T_max)
+
+			else:
+				raise ValueError("Invalid sampling_mode parameter for proje")
+
+		elif self.sampling_mode == "AD":# Add-Delete
+
+			sampl = add_delete_sampler(kernel, nb_it_max, T_max)
+
+		elif self.sampling_mode == "E":# (Basis) Exchange
+
+		else:
+			str_list = ["Invalid sampling_mode parameter, choose among:",
+									"- 'AED' (default) Add-Exchange-Delete",
+									"- 'AD', Add-Delete",
+									"- 'E', Exchange",
+									"Given: sampling_mode = {}".format(sampling_mode)]
 			raise ValueError("\n".join(str_list))
 
 		self.list_of_samples.append(sampl)

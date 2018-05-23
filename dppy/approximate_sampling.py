@@ -24,6 +24,7 @@ def add_exchange_delete_sampler(kernel, nb_it_max = 10, T_max=10):
 
 	:param nb_it_max:
 		Maximum number of iterations performed by the the algorithm.
+		Default is 10.
 	:type nb_it_max: 
 		int
 
@@ -109,10 +110,10 @@ def add_exchange_delete_sampler(kernel, nb_it_max = 10, T_max=10):
 			samples.append(S0)
 		
 		if nb_it_max:
-				it += 1
-				flag = it < nb_it_max
-		else:
-				flag = (time.time()-t_start) < T_max
+			it += 1
+			flag = it < nb_it_max
+		elif T_max:
+			flag = (time.time()-t_start) < T_max
 
 	return samples
 
@@ -191,7 +192,7 @@ def add_delete_sampler(kernel, s_init, nb_it_max = 10, T_max=10):
 		if nb_it_max:
 			it += 1
 			flag = it < nb_it_max
-		else:
+		elif T_max:
 			flag = (time.time()-t_start) < T_max
 
 	return samples
@@ -274,7 +275,7 @@ def basis_exchange_sampler(kernel, s_init, nb_it_max = 10, T_max=10):
 		if nb_it_max:
 			it += 1
 			flag = it < nb_it_max
-		else:
+		elif T_max:
 			flag = (time.time()-t_start) < T_max
 
 	return samples
@@ -314,9 +315,9 @@ def extract_basis(y_sol, eps=1e-5):
 				- :func:`zono_sampling <zono_sampling>`
 		"""
 
-		basis = np.where((eps<y_sol)&(y_sol<1-eps))[0]
-		
-		return basis.tolist()
+	basis = np.where((eps<y_sol)&(y_sol<1-eps))[0]
+	
+	return basis.tolist()
 
 def zono_sampling(Vectors, c=None, nb_it_max = 10, T_max=10):
 	""" MCMC based sampler for projection DPPs.
@@ -385,7 +386,7 @@ def zono_sampling(Vectors, c=None, nb_it_max = 10, T_max=10):
 	#########################################################
 	# Then B_x = \{ i ; y_i^* \in ]0,1[ \}
 	if c is None:
-			c = matrix(np.random.randn(n))
+		c = matrix(np.random.randn(n))
 
 	A = spmatrix(0.0, [], [], (r, n))
 	A[:,:] = Vectors
@@ -461,21 +462,21 @@ def zono_sampling(Vectors, c=None, nb_it_max = 10, T_max=10):
 
 		# Accept/Reject the move with proba Vol(B1)/Vol(B0)
 		if len(B_x1) != r: # In case extract_basis returned smtg ill conditioned
-				Bases.append(B_x0)
+			Bases.append(B_x0)
 		else:
-				det_B_x1 = np.linalg.det(Vectors[:,B_x1])
-				if np.random.rand() < abs(det_B_x1/det_B_x0):
-						x0, B_x0, det_B_x0 = x1, B_x1, det_B_x1
-						Bases.append(B_x1)
-				else:
-						Bases.append(B_x0)
+			det_B_x1 = np.linalg.det(Vectors[:,B_x1])
+			if np.random.rand() < abs(det_B_x1/det_B_x0):
+					x0, B_x0, det_B_x0 = x1, B_x1, det_B_x1
+					Bases.append(B_x1)
+			else:
+					Bases.append(B_x0)
 
 		if nb_it_max is not None:
-				it += 1
-				flag = it < nb_it_max
-		else:
-				flag = (time.time() - t_start) < T_max
+			it += 1
+			flag = it < nb_it_max
+		elif T_max:
+			flag = (time.time() - t_start) < T_max
 
-	print("Time enlapsed", time.time()-t_start)
+		print("Time enlapsed", time.time()-t_start)
 
 	return np.array(Bases)
