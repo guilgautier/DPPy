@@ -3,7 +3,6 @@ from .exact_sampling import *
 from .approximate_sampling import *
 import matplotlib.pyplot as plt
 
-
 class Discrete_kDPP:
 
 	def __init__(self, size, kernel, projection_kernel=False):
@@ -11,7 +10,7 @@ class Discrete_kDPP:
 		self.nb_items = kernel.shape[0]
 
 		self.size = size
-		self.__check_size_validity()
+		self.__check_size_param_validity()
 
 		self.L = kernel
 		self.projection_kernel = projection_kernel
@@ -20,14 +19,14 @@ class Discrete_kDPP:
 		# If valid kernel, diagonalization only for non projection kernel.
 		self.eig_vals = None
 		self.eig_vecs = None
-		self.__check_kernel_for_k_dpp_validity(kernel) 
+		self.__check_kernel_for_k_dpp_validity() 
 
 		if self.projection_kernel:
 			self.el_sym_pol_eval = None
 		else:
 			self.el_sym_pol_eval = elem_symm_poly(self.eig_vals, self.size)
 		
-		self.sampling_mode = "GS" 
+		self.sampling_mode = None # Default 'GS'
 		### Exact sampling
 		# 'GS' for Gram-Schmidt, 
 		# 'Schur' for Schur complement 
@@ -47,7 +46,7 @@ class Discrete_kDPP:
 																		self.sampling_mode,
 																		len(self.list_of_samples))
 
-	def __check_size_validity(self):
+	def __check_size_param_validity(self):
 		if (self.size <= 0) & (not isinstance(self.size, int)):
 			raise ValueError("Invalid size parameter: must be a positive integer.\nGiven size = {}".format(self.size))
 
@@ -59,7 +58,7 @@ class Discrete_kDPP:
 									"Given projection_kernel={}".format(self.projection_kernel)]
 			raise ValueError("\n".join(str_list))
 
-	def __check_kernel_for_k_dpp_validity(self, kernel):
+	def __check_kernel_for_k_dpp_validity(self):
 		"""Check symmetry, projection, and validity:
 		- For K-ensemble 0<=K<=I
 		- For L-ensemble L>=0"""
@@ -102,8 +101,6 @@ class Discrete_kDPP:
 	def sample_exact(self, sampling_mode="GS"):
 
 		self.sampling_mode = sampling_mode
-
-
 		if self.projection_kernel: 
 			# No need for eigendecomposition, update conditional via Gram-Schmidt on columns (equiv on rows) of K
 			sampl = proj_k_dpp_sampler_kernel(self.L,
