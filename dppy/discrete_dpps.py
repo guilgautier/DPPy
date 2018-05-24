@@ -1,7 +1,9 @@
 # coding: utf-8
 from .exact_sampling import *
 from .approximate_sampling import *
+import warnings
 import matplotlib.pyplot as plt
+
 
 class Discrete_DPP:
 
@@ -61,8 +63,9 @@ class Discrete_DPP:
 		if not np.allclose(kernel, kernel.T):
 			raise ValueError("Invalid kernel: not symmetric")
 
-		# Check orthogonal projection kernel^2 = kernel kernel.T = K
-		if self.projection_kernel:
+		# Check if 'K' kernel is orthogonal projection K^2 = K K.T = K
+		# Only case for which eigendecomposition is not necessary
+		if (self.ensemble_type == 'K') & (self.projection_kernel):
 			# Cheap test checking reproducing property
 			nb_tmp = 5
 			items_to_check = np.arange(nb_tmp)
@@ -70,16 +73,7 @@ class Discrete_DPP:
 			K_ii = kernel[items_to_check, items_to_check]
 
 			if np.allclose(np_inner1d(K_i_, K_i_), K_ii):
-
-				if self.ensemble_type == 'K': # Eigendecomposition not necessary
 					self.K = kernel
-
-				elif self.ensemble_type == 'L': # Eigendecomposition is necessary
-					self.L = kernel
-					self.eig_vals_L, self.eig_vecs = la.eigh(self.L)# 0 or 1
-					self.eigendecomposition_available = True
-
-					self.eig_vals_K = self.eig_vals_L/(1.0 + self.eig_vals_L) # 0 or 1/2
 
 			else:
 				raise ValueError("Invalid kernel: kernel doesn't seem to be a projection")
@@ -95,9 +89,20 @@ class Discrete_DPP:
 				# Check 0 <= K <= I
 				if np.all((-tol <= eig_vals) & (eig_vals <= 1.0+tol)):
 					self.K = kernel
-					self.eig_vals_K = eigvals
-					self.eig_vals_L = self.eig_vals_K/(1.0 - self.eig_vals_K)
+					self.eig_vals_K = eig_vals
 					self.eig_vecs = eig_vecs
+
+					try:
+						np.seterr(divide='raise')
+						self.eig_vals_L = self.eig_vals_K/(1.0 - self.eig_vals_K)
+
+					except FloatingPointError as e:
+						str_list = ["WARNING: {}.".format(e),
+												"Eigenvalues of 'L' kernel (L=K(I-K)^-1) cannot be computed.",
+												"'K' kernel has some eigenvalues equal are very close to 1.",
+												"Hint: 'K' kernel might be a projection."]
+						print("\n".join(str_list))
+					
 				else:
 					raise ValueError("Invalid kernel for K-ensemble. Eigen values are not in [0,1]")
 
@@ -106,9 +111,10 @@ class Discrete_DPP:
 				# Check L >= 0
 				if np.all(eig_vals >= -tol):
 					self.L = kernel
-					self.eig_vals_L = eigvals
-					self.eig_vals_K = self.eig_vals_L/(1.0 + self.eig_vals_L)
+					self.eig_vals_L = eig_vals
 					self.eig_vecs = eig_vecs
+
+					self.eig_vals_K = self.eig_vals_L/(1.0 + self.eig_vals_L)
 				else:
 					raise ValueError("Invalid kernel for L-ensemble. Eigen values !>= 0")
 
