@@ -1,9 +1,7 @@
 # coding: utf-8
 from .exact_sampling import *
 from .approximate_sampling import *
-import warnings
 import matplotlib.pyplot as plt
-
 
 class Discrete_DPP:
 
@@ -15,7 +13,7 @@ class Discrete_DPP:
 		self.__check_ensemble_type_validity()
 
 		self.projection_kernel = projection_kernel
-		self.__check_projection_kernel_validity(kernel)
+		self.__check_projection_kernel_validity()
 
 		self.K = None 
 		self.L = None
@@ -23,7 +21,6 @@ class Discrete_DPP:
 		self.eig_vals_K = None
 		self.eig_vals_L = None
 		self.eig_vecs = None
-		self.eigendecomposition_available = False
 		self.__check_kernel_for_dpp_validity(kernel) 
 
 		self.sampling_mode = "GS" 
@@ -36,7 +33,16 @@ class Discrete_DPP:
 		self.list_of_samples = []
 
 	def __str__(self):
-		return self._str_info()
+		str_info = ["Discrete DPP defined by:", 
+								"- {}-ensemble on {} items",
+								"- Projection kernel: {}",
+								"- sampling mode = {}",
+								"- number of samples = {}"]
+
+		return "\n".join(str_info).format(self.ensemble_type, self.nb_items,
+																		"Yes" if self.projection_kernel else "No",
+																		self.sampling_mode,
+																		len(self.list_of_samples))
 
 	def __check_ensemble_type_validity(self):
 
@@ -44,15 +50,17 @@ class Discrete_DPP:
 			str_list = ["Invalid ensemble_type parameter, use:",
 									"- 'K' for inclusion probability kernel",
 									"- 'L' for marginal kernel.",
-									"Given: ensemble_type = '{}'".format(self.ensemble_type)]
+									"Given {}".format(self.ensemble_type)]
 
 			raise ValueError("\n".join(str_list))
 
-	def __check_projection_kernel_validity(self, kernel):
+	def __check_projection_kernel_validity(self):
 		# Recall we first checked the kernel to be symmetric (K=K.T), here we check the reproducing property of the (orthogonal) projection kernel.
 		# For this we perform a cheap test to check K^2 = K K.T = K
 		if not isinstance(self.projection_kernel, bool):
-			raise ValueError("Invalid projection_kernel argument: must be True/False.\nGiven projection_kernel = {}".format(self.projection_kernel))
+			str_list = ["Invalid projection_kernel argument: must be True/False",
+									"Given projection_kernel={}".format(self.projection_kernel)]
+			raise ValueError("\n".join(str_list))
 
 	def __check_kernel_for_dpp_validity(self, kernel):
 		"""Check symmetry, projection, and validity:
@@ -74,14 +82,12 @@ class Discrete_DPP:
 
 			if np.allclose(np_inner1d(K_i_, K_i_), K_ii):
 					self.K = kernel
-
 			else:
-				raise ValueError("Invalid kernel: kernel doesn't seem to be a projection")
+				raise ValueError("Invalid kernel: doesn't seem to be a projection")
 
 		else:
 			# Eigendecomposition necessary for non projection kernels
 			eig_vals, eig_vecs = la.eigh(kernel)
-			self.eigendecomposition_available = True
 			tol = 1e-8 # tolerance on the eigenvalues
 
 			# If K-ensemble
@@ -92,7 +98,7 @@ class Discrete_DPP:
 					self.eig_vals_K = eig_vals
 					self.eig_vecs = eig_vecs
 
-					try:
+					try: # to compute eigenvalues of kernel L = K(I-K)^-1
 						np.seterr(divide='raise')
 						self.eig_vals_L = self.eig_vals_K/(1.0 - self.eig_vals_K)
 
@@ -118,41 +124,30 @@ class Discrete_DPP:
 				else:
 					raise ValueError("Invalid kernel for L-ensemble. Eigen values !>= 0")
 
-	def _str_info(self, size=False):
-
-		str_info = ["Discrete {} defined by:".format("k-DPP with k={}".format(size) 																					if size else "DPP"), 
-								"- {}-ensemble on {} items",
-								"- Projection kernel: {}",
-								"- sampling mode = {}",
-								"- number of samples = {}"]
-
-		return "\n".join(str_info).format(self.ensemble_type, self.nb_items,
-																		"Yes" if self.projection_kernel else "No",
-																		self.sampling_mode,
-																		len(self.list_of_samples))
-
 	def info(self):
 		print(self.__str__())
 
 	def _compute_K_kernel(self):
 		"""K = L(I+L)^-1 = I - (I+L)^-1"""
-		if self.K:
+		if self.ensemble_type == 'K':
 			raise ValueError("'K' kernel is already available")
 
-		elif self.L: # Diagonalization was already performed
+		elif self.eig_vals_K is not None:
 			self.K = (self.eig_vecs * self.eig_vals_K).dot(self.eig_vecs.T)
 
 	def _compute_L_kernel(self):
 		"""L = K(I-K)^-1 = (I-K)^-1 - I"""
-		if self.L:
+		if self.ensemble_type == 'L':
 			raise ValueError("'L' kernel is already available")
 
-		elif self.K:
-			if self.projection_kernel:
-				raise ValueError("Cannot compute L=K(I-K)^-1 kernel from K since K is projection kernel => I-K not invertible")
+		elif self.eig_vals_L is not None: # Diagonalization was already performed
+			self.L = (self.eig_vecs * self.eig_vals_L).dot(self.eig_vecs.T)
 
-			else:
-				self.L = (self.eig_vecs * self.eig_vals_L).dot(self.eig_vecs.T)
+		else:
+			str_list =["Error: 'L' kernel (L=K(I-K)^-1) cannot be computed.",
+								"'K' kernel has some eigenvalues equal are very close to 1 => cannot compute eigenvalues of L",
+								"Hint: 'K' kernel might be a projection."]
+			print("\n".join(str_list))
 
 	def flush_samples(self):
 		self.list_of_samples = []
@@ -162,10 +157,11 @@ class Discrete_DPP:
 
 		self.sampling_mode = sampling_mode
 
-		if self.eigendecomposition_available: # If eigendecomposition available use it!
+		if self.eig_vals_K is not None: # If eigendecomposition available use it!
 			sampl = dpp_sampler_eig(self.eig_vals_K, 
 															self.eig_vecs, 
 															self.sampling_mode)
+
 		elif (self.ensemble_type == 'K') & (self.projection_kernel): 
 			# If K is orthogonal projection no need for eigendecomposition, update conditional via Gram-Schmidt on columns (equiv on rows) of K
 			sampl = proj_dpp_sampler_kernel(self.K, 
@@ -173,8 +169,6 @@ class Discrete_DPP:
 
 		else:
 			raise ValueError("WARNING sampling!!")
-
-
 
 		self.list_of_samples.append(sampl)
 
@@ -186,9 +180,12 @@ class Discrete_DPP:
 	def plot(self):
 		"""Display a heatmap of the kernel provided, either K- or L-ensemble"""
 
+		print("Heat map of '{}'-kernel".format('K' if self.ensemble_type == 'K'\
+																							else 'L'))
 		fig, ax = plt.subplots(1,1)
 
-		heatmap = ax.pcolor(self.K, cmap='jet')
+		heatmap = ax.pcolor(self.K if self.ensemble_type == 'K' else self.L, 
+												cmap='jet')
 
 		ax.set_aspect('equal')
 
@@ -206,64 +203,3 @@ class Discrete_DPP:
 
 		plt.colorbar(heatmap)
 		plt.show()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-class Discrete_kDPP(Discrete_DPP):
-	"""docstring for DiscretekDPP"""
-	def __init__(self, size, kernel, ensemble_type, projection_kernel=False):
-
-		super().__init__(kernel, ensemble_type, projection_kernel)
-
-		self.size = size
-		self.__check_size_validity()
-		self.el_sym_pol_eval = None
-
-	def __str__(self):
-		return self._str_info(self.size)
-
-	def __check_size_validity(self):
-		if (self.size <= 0) & (not isinstance(self.size, int)):
-			raise ValueError("Invalid size parameter: must be a positive integer.\nGiven size = {}".format(self.size))
-
-	def info(self):
-		print(self.__str__())
-		
-	### Exact sampling
-	def sample_exact(self, sampling_mode="GS"):
-
-		self.sampling_mode = sampling_mode
-
-		if self.eigendecomposition_available: # Use it!
-			sampl = k_dpp_sampler_eig(self.eig_vals_L, 
-															self.eig_vecs,
-															self.size, 
-															self.sampling_mode)
-			
-		elif (self.ensemble_type == 'K') & (self.projection_kernel): 
-			# No need for eigendecomposition, update conditional via Gram-Schmidt on columns (equiv on rows) of K
-			sampl = proj_k_dpp_sampler_kernel(self.K,
-																			self.size, 
-																			self.sampling_mode)
-
-		else:
-			raise ValueError("WARNING sampling!!")
-
-		self.list_of_samples.append(sampl)
-
-	### Approximate sampling
-	def sample_approx(self, sampling_mode="AED", nb_iter=10, T_max=None):
-
-		self.list_of_samples.append(sampl)

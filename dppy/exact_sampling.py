@@ -616,7 +616,8 @@ def proj_k_dpp_sampler(kernel, size, update_rule="GS"):
 ### Generic kernel ###
 ######################
 
-def k_dpp_sampler_eig(eig_vals, eig_vecs, size, update_rule="GS"):
+def k_dpp_sampler_eig(eig_vals, eig_vecs, size, update_rule="GS",
+											el_sym_pol_eval=None):
 	"""
 		.. seealso::
 			
@@ -631,7 +632,8 @@ def k_dpp_sampler_eig(eig_vals, eig_vecs, size, update_rule="GS"):
 			- :func:`proj_dpp_sampler_eig_KuTa12 <proj_dpp_sampler_eig_KuTa12>`
 	"""	
 	#### Phase 1: Select eigenvectors
-	eig_vecs_selected = k_dpp_eig_vecs_select(eig_vals, eig_vecs, size)
+	eig_vecs_selected = k_dpp_eig_vecs_select(eig_vals, eig_vecs, size,
+																						el_sym_pol_eval)
 
 	#### Phase 2: Sample from projection kernel VV.T
 	# Chain rule, conditionals are updated using:
@@ -639,10 +641,10 @@ def k_dpp_sampler_eig(eig_vals, eig_vecs, size, update_rule="GS"):
 		sampl = proj_dpp_sampler_eig_GS(eig_vecs_selected)
 
 	elif update_rule == "Chol": # Cholesky (equivalent to "GS")
-		sampl = proj_dpp_sampler_eig_GS(eig_vecs_selected)
+		sampl = proj_dpp_sampler_eig_Chol(eig_vecs_selected)
 
 	elif update_rule == "KuTa12": # cf Kulesza-Taskar
-		sampl = proj_dpp_sampler_eig_GS(eig_vecs_selected)
+		sampl = proj_dpp_sampler_eig_KuTa12(eig_vecs_selected)
 
 	else:
 		str_list = ["Invalid 'update_rule' parameter, choose among:",
