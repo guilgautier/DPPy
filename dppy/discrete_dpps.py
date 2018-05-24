@@ -1,28 +1,27 @@
 # coding: utf-8
 from .exact_sampling import *
+from .approximate_sampling import *
 import matplotlib.pyplot as plt
 
 class Discrete_DPP:
 
 	def __init__(self, kernel, ensemble_type, projection_kernel=False):
 
+		self.nb_items = kernel.shape[0]
+
 		self.ensemble_type = ensemble_type
 		self.__check_ensemble_type_validity()
 
 		self.projection_kernel = projection_kernel
-		self.__check_projection_kernel_validity()
+		self.__check_projection_kernel_validity(kernel)
 
-		self.K = None
+		self.K = None 
 		self.L = None
-
 		# If valid kernel, diagonalization only for non projection kernel.
-		self.__eigen_decomposition_available = False
-		self.eig_vals = None
+		self.eig_vals_K = None
+		self.eig_vals_L = None
 		self.eig_vecs = None
-
-		self.ber_params_sampling = None
-		# for K-ensemble = eig_vals
-		# for L-ensemble = eig_vals/(1+eigvals)
+		self.eigendecomposition_available = False
 		self.__check_kernel_for_dpp_validity(kernel) 
 
 		self.sampling_mode = "GS" 
@@ -64,40 +63,54 @@ class Discrete_DPP:
 
 		# Check orthogonal projection kernel^2 = kernel kernel.T = K
 		if self.projection_kernel:
-			nb_tmp = 3
+			# Cheap test checking reproducing property
+			nb_tmp = 5
 			items_to_check = np.arange(nb_tmp)
 			K_i_ = kernel[items_to_check, :]
 			K_ii = kernel[items_to_check, items_to_check]
 
-			if not np.allclose(np_inner1d(K_i_, K_i_), K_ii):
+			if np.allclose(np_inner1d(K_i_, K_i_), K_ii):
+
+				if self.ensemble_type == 'K': # Eigendecomposition not necessary
+					self.K = kernel
+
+				elif self.ensemble_type == 'L': # Eigendecomposition is necessary
+					self.L = kernel
+					self.eig_vals_L, self.eig_vecs = la.eigh(self.L)# 0 or 1
+					self.eigendecomposition_available = True
+
+					self.eig_vals_K = self.eig_vals_L/(1.0 + self.eig_vals_L) # 0 or 1/2
+
+			else:
 				raise ValueError("Invalid kernel: kernel doesn't seem to be a projection")
 
-		else: # If not orthogonal projection kernel compute eigendecomposition
-			self.__eigen_decompose(kernel)
-			tol = 1e-8
+		else:
+			# Eigendecomposition necessary for non projection kernels
+			eig_vals, eig_vecs = la.eigh(kernel)
+			self.eigendecomposition_available = True
+			tol = 1e-8 # tolerance on the eigenvalues
 
 			# If K-ensemble
 			if self.ensemble_type == 'K': 
 				# Check 0 <= K <= I
-				if np.all((-tol <= self.eig_vals) & (self.eig_vals <= 1.0+tol)):
+				if np.all((-tol <= eig_vals) & (eig_vals <= 1.0+tol)):
 					self.K = kernel
-					self.ber_params_sampling = self.eigvals
+					self.eig_vals_K = eigvals
+					self.eig_vals_L = self.eig_vals_K/(1.0 - self.eig_vals_K)
+					self.eig_vecs = eig_vecs
 				else:
 					raise ValueError("Invalid kernel for K-ensemble. Eigen values are not in [0,1]")
 
 			# If L-ensemble
 			elif self.ensemble_type == 'L':
 				# Check L >= 0
-				if np.all(self.eig_vals >= -tol):
+				if np.all(eig_vals >= -tol):
 					self.L = kernel
-					self.ber_params_sampling = self.eigvals/(1.0+self.eigvals)
+					self.eig_vals_L = eigvals
+					self.eig_vals_K = self.eig_vals_L/(1.0 + self.eig_vals_L)
+					self.eig_vecs = eig_vecs
 				else:
-					raise ValueError("Invalid kernel for L-ensemble. Eigen values are not >= 0")
-
-	def __eigen_decompose(self, kernel):
-
-		self.eig_vals, self.eig_vecs = la.eigh(kernel)
-		self.__eigen_decomposition_available = True
+					raise ValueError("Invalid kernel for L-ensemble. Eigen values !>= 0")
 
 	def _str_info(self, size=False):
 
@@ -115,93 +128,52 @@ class Discrete_DPP:
 	def info(self):
 		print(self.__str__())
 
-	def compute_K_kernel(self):
+	def _compute_K_kernel(self):
 		"""K = L(I+L)^-1 = I - (I+L)^-1"""
-		if self.L:
-			if not self.__eigen_decomposition_available:
-				self.eigen_decompose(self.L)
-				tmp = self.eigvals/(1.0+self.eig_vals)
-
-			self.K = (self.eig_vecs * tmp).dot(self.eig_vecs.T)
-
-		else:
-			raise ValueError("'L' kernel not available => cannot compute 'K' kernel")
-
-	def compute_L_kernel(self):
-		"""L = K(I-K)^-1 = (I-K)^-1 - I"""
 		if self.K:
-			if not self.__eigen_decomposition_available:
-				self.eigen_decompose(self.K)
-				tmp = self.eigvals/(1.0-self.eig_vals)
+			raise ValueError("'K' kernel is already available")
 
-			self.L = (self.eig_vecs * tmp).dot(self.eig_vecs.T)
+		elif self.L: # Diagonalization was already performed
+			self.K = (self.eig_vecs * self.eig_vals_K).dot(self.eig_vecs.T)
 
-		else:
-			raise ValueError("'K' kernel not available => cannot compute 'K' kernel")
+	def _compute_L_kernel(self):
+		"""L = K(I-K)^-1 = (I-K)^-1 - I"""
+		if self.L:
+			raise ValueError("'L' kernel is already available")
+
+		elif self.K:
+			if self.projection_kernel:
+				raise ValueError("Cannot compute L=K(I-K)^-1 kernel from K since K is projection kernel => I-K not invertible")
+
+			else:
+				self.L = (self.eig_vecs * self.eig_vals_L).dot(self.eig_vecs.T)
 
 	def flush_samples(self):
 		self.list_of_samples = []
 
+	### Exact sampling
 	def sample_exact(self, sampling_mode="GS"):
 
-		if self.sampling_mode == "GS":# Gram Schmidt update
+		self.sampling_mode = sampling_mode
 
-			if self.projection_kernel:
-				sampl = projection_dpp_sampler_GS(self.K)
-
-			else:
-				sampl = dpp_sampler_eig_GS(self.ber_params_sampling, self.eig_vecs)
-
-		elif self.sampling_mode == "Schur":# Schur complement update
-
-			if self.projection_kernel:
-				sampl = projection_dpp_sampler_Schur(self.K)
-
-			else:
-				raise ValueError("sampling_mode='Schur' is not available for non projection kernel.\nChoose 'GS' or 'KuTa12'.")
-
-		elif self.sampling_mode == "KuTa12":
-
-			if (self.projection_kernel) & (not self.__eigen_decomposition_available):
-				self.eigen_decompose()
-
-			sampl = dpp_sampler_KuTa12(self.ber_params_sampling, self.eig_vecs)
+		if self.eigendecomposition_available: # If eigendecomposition available use it!
+			sampl = dpp_sampler_eig(self.eig_vals_K, 
+															self.eig_vecs, 
+															self.sampling_mode)
+		elif (self.ensemble_type == 'K') & (self.projection_kernel): 
+			# If K is orthogonal projection no need for eigendecomposition, update conditional via Gram-Schmidt on columns (equiv on rows) of K
+			sampl = proj_dpp_sampler_kernel(self.K, 
+																			self.sampling_mode)
 
 		else:
-			str_list = ["Invalid sampling_mode parameter, choose among:",
-									"- 'GS' (default)",
-									"- 'Schur'"]
-			raise ValueError("\n".join(str_list))
+			raise ValueError("WARNING sampling!!")
+
+
 
 		self.list_of_samples.append(sampl)
 
+	### Approximate sampling
 	def sample_approx(self, sampling_mode="AED", nb_iter=10, T_max=None):
-
-		if self.ensemble_type == 'K':
-			if self.__eigen_decomposition_available:
-				self.
-
-		if self.sampling_mode == "AED":# Add-Exchange-Delete
-
-			if not self.projection_kernel:
-				sampl = add_exchange_delete_sampler(kernel, nb_it_max, T_max)
-
-			else:
-				raise ValueError("Invalid sampling_mode parameter for proje")
-
-		elif self.sampling_mode == "AD":# Add-Delete
-
-			sampl = add_delete_sampler(kernel, nb_it_max, T_max)
-
-		elif self.sampling_mode == "E":# (Basis) Exchange
-
-		else:
-			str_list = ["Invalid sampling_mode parameter, choose among:",
-									"- 'AED' (default) Add-Exchange-Delete",
-									"- 'AD', Add-Delete",
-									"- 'E', Exchange",
-									"Given: sampling_mode = {}".format(sampling_mode)]
-			raise ValueError("\n".join(str_list))
 
 		self.list_of_samples.append(sampl)
 
@@ -237,6 +209,12 @@ class Discrete_DPP:
 
 
 
+
+
+
+
+
+
 class Discrete_kDPP(Discrete_DPP):
 	"""docstring for DiscretekDPP"""
 	def __init__(self, size, kernel, ensemble_type, projection_kernel=False):
@@ -245,6 +223,7 @@ class Discrete_kDPP(Discrete_DPP):
 
 		self.size = size
 		self.__check_size_validity()
+		self.el_sym_pol_eval = None
 
 	def __str__(self):
 		return self._str_info(self.size)
@@ -256,37 +235,29 @@ class Discrete_kDPP(Discrete_DPP):
 	def info(self):
 		print(self.__str__())
 		
+	### Exact sampling
 	def sample_exact(self, sampling_mode="GS"):
 
-		if self.sampling_mode == "GS":# Gram Schmidt update
+		self.sampling_mode = sampling_mode
 
-			if self.projection_kernel:
-				sampl = projection_dpp_sampler_GS(self.K, self.size)
-
-			else:
-				self.ber_params_sampling = select_eig_vec(self.eig_vals, self.size)
-				sampl = dpp_sampler_eig_GS(self.ber_params_sampling, self.eig_vecs)
-
-		elif self.sampling_mode == "Schur":# Schur complement update
-
-			if self.projection_kernel:
-				sampl = projection_dpp_sampler_Schur(self.K, self.size)
-
-			else:
-				raise ValueError("sampling_mode='Schur' is not available for non projection kernel.\nChoose 'GS' or 'KuTa12'.")
-
-		elif self.sampling_mode == "KuTa12":
-
-			if (self.projection_kernel) & (not self.__eigen_decomposition_available):
-				self.eigen_decompose()
-
-			self.ber_params_sampling = select_eig_vec(self.eig_vals, self.size)
-			sampl = dpp_sampler_KuTa12(self.ber_params_sampling, self.eig_vecs)
+		if self.eigendecomposition_available: # Use it!
+			sampl = k_dpp_sampler_eig(self.eig_vals_L, 
+															self.eig_vecs,
+															self.size, 
+															self.sampling_mode)
+			
+		elif (self.ensemble_type == 'K') & (self.projection_kernel): 
+			# No need for eigendecomposition, update conditional via Gram-Schmidt on columns (equiv on rows) of K
+			sampl = proj_k_dpp_sampler_kernel(self.K,
+																			self.size, 
+																			self.sampling_mode)
 
 		else:
-			str_list = ["Invalid sampling_mode parameter, choose among:",
-									"- 'GS' (default)",
-									"- 'Schur'"]
-			raise ValueError("\n".join(str_list))
+			raise ValueError("WARNING sampling!!")
+
+		self.list_of_samples.append(sampl)
+
+	### Approximate sampling
+	def sample_approx(self, sampling_mode="AED", nb_iter=10, T_max=None):
 
 		self.list_of_samples.append(sampl)

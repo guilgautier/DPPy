@@ -50,7 +50,7 @@ def add_exchange_delete_sampler(kernel, nb_it_max = 10, T_max=10):
 
 	# Build the initial sample
 	nb_init_max = 100
-	for _ in range(nb_init_max)
+	for _ in range(nb_init_max):
 		r0 = np.random.choice(2*N, size=N, replace=False)
 		S0 = np.intersect1d(s_init, ground_set)
 		det_S0 = np.linalg.det(K[np.ix_(S0, S0)])
@@ -68,7 +68,7 @@ def add_exchange_delete_sampler(kernel, nb_it_max = 10, T_max=10):
 
 	while flag:
 
-		S1 = S0.copy()
+		S1 = S0.copy() # S1 = S0
 		s = np.random.choice(sampl_size, size=1) # Uniform s in S_0 by index
 		t = np.random.choice(np.delete(ground_set, S0), size=1) # Unif t in [N]-S_0
 
@@ -77,7 +77,7 @@ def add_exchange_delete_sampler(kernel, nb_it_max = 10, T_max=10):
 
 		# Add: S1 = S0 + t
 		if unif_01 < 0.5*(1-ratio)**2:
-			S1.append(t) # S0 + t
+			S1.append(t) # S1 = S0 + t
 			# Accept_reject the move
 			det_S1 = np.linalg.det(K[np.ix_(S1, S1)]) # det K_S1
 			if np.random.rand() < (det_S1/det_S0 * (sampl_size+1)/(N-sampl_size)):
@@ -87,8 +87,8 @@ def add_exchange_delete_sampler(kernel, nb_it_max = 10, T_max=10):
 
 		# Exchange: S1 = S0 - s + t
 		elif (0.5*(1-ratio)**2 <= unif_01) & (unif_01 < 0.5*(1-ratio)):
-			S1.pop(s) # S0 - s
-			S1.append(t) # S0 - s + t
+			del S1[s] # S1 = S0 - s
+			S1.append(t) # S1 = S1 + t = S0 - s + t
 			# Accept_reject the move
 			det_S1 = np.linalg.det(K[np.ix_(S1, S1)]) # det K_S1
 			if np.random.rand() < (det_S1/det_S0):
@@ -98,10 +98,10 @@ def add_exchange_delete_sampler(kernel, nb_it_max = 10, T_max=10):
 
 		# Delete: S1 = S0 - s
 		elif (0.5*(1-ratio) <= unif_01) & (unif_01 < 0.5*(ratio**2+(1-ratio))):
-			S1.pop(s) # S0 - s
+			del S1[s] # S0 - s
 			# Accept_reject the move
 			det_S1 = np.linalg.det(K[np.ix_(S1, S1)]) # det K_S1
-			if np.random.rand() < (det_S1/det_S0 * sampl_size/(N-(sampl_size-1)))
+			if np.random.rand() < (det_S1/det_S0 * sampl_size/(N-(sampl_size-1))):
 				S0, det_S0 = S1, det_S1
 				samples.append(S1)
 				sampl_size -= 1
@@ -170,12 +170,12 @@ def add_delete_sampler(kernel, s_init, nb_it_max = 10, T_max=10):
 		if np.random.rand() < 0.5: 
 
 			# Perform the potential add/delete move S1 = S0 +/- s
-			S1 = S0.copy()
+			S1 = S0.copy() # S1 = S0
 			s = np.random.choice(N, size=1) # Uniform item in [N]
-			if s in S0: # S1 = S0 - s
-				S1.remove(s)
-			else: # S1 = SO + s
-				S1.append(s)
+			if s in S0: 
+				S1.remove(s) # S1 = S0 - s
+			else: 
+				S1.append(s) # S1 = SO + s
 
 			# Accept_reject the move
 			det_S1 = np.linalg.det(K[np.ix_(S1, S1)]) # det K_S1
@@ -253,7 +253,7 @@ def basis_exchange_sampler(kernel, s_init, nb_it_max = 10, T_max=10):
 		if np.random.rand() < 0.5: 
 
 			# Perform the potential exchange move S1 = S0 - s + t
-			S1 = S0.copy()
+			S1 = S0.copy() # S1 = S0
 			rnd_ind = np.random.choice(k, size=1) # Uniform element of S_0 by index
 			t = np.random.choice(np.delete(ground_set, S0), size=1) # t in [N]\S_0
 			S1[rnd_ind] = t # S_1 = S_0 - S_0[rnd_ind] + t
@@ -288,32 +288,32 @@ def basis_exchange_sampler(kernel, s_init, nb_it_max = 10, T_max=10):
 ######################
 
 def extract_basis(y_sol, eps=1e-5):
-		""" Subroutine of zono_sampling to extract the tile of the zonotope 
-		in which a point lies. It extracts the indices of entries of the solution 
-		of LP :eq:`Px` that are in (0,1).
+	""" Subroutine of zono_sampling to extract the tile of the zonotope 
+	in which a point lies. It extracts the indices of entries of the solution 
+	of LP :eq:`Px` that are in (0,1).
 
-		:param y_sol: 
-				Optimal solution of LP :eq:`Px`
-		:type y_sol: 
-				list
-						
-		:param eps: 
-				Tolerance :math:`y_i^* \in (\epsilon, 1-\epsilon), \quad \epsilon \geq 0`
-		:eps type: 
-				float
+	:param y_sol: 
+			Optimal solution of LP :eq:`Px`
+	:type y_sol: 
+			list
+					
+	:param eps: 
+			Tolerance :math:`y_i^* \in (\epsilon, 1-\epsilon), \quad \epsilon \geq 0`
+	:eps type: 
+			float
 
-		:return: 
-				Indices of the feature vectors spanning the tile in which the point is lies. 
-				:math:`B_{x} = \left\{ i \, ; \, y_i^* \in (0,1) \\right\}`
-		:rtype: 
-				list         
-						
-		.. seealso::
+	:return: 
+			Indices of the feature vectors spanning the tile in which the point is lies. 
+			:math:`B_{x} = \left\{ i \, ; \, y_i^* \in (0,1) \\right\}`
+	:rtype: 
+			list         
+					
+	.. seealso::
 
-				Algorithm 3 in :cite:`GaBaVa17`
+			Algorithm 3 in :cite:`GaBaVa17`
 
-				- :func:`zono_sampling <zono_sampling>`
-		"""
+			- :func:`zono_sampling <zono_sampling>`
+	"""
 
 	basis = np.where((eps<y_sol)&(y_sol<1-eps))[0]
 	
