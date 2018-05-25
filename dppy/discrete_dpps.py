@@ -8,29 +8,31 @@ class Discrete_DPP:
 	def __init__(self, kernel, ensemble_type, projection_kernel=False):
 
 		self.nb_items = kernel.shape[0]
-
-		self.ensemble_type = ensemble_type
-		self.__check_ensemble_type_param_validity()
-
 		self.projection_kernel = projection_kernel
-		self.__check_projection_kernel_param_validity()
+		self.__check_projection_kernel(kernel)
 
-		self.K = None 
+		self.K = None
 		self.L = None
-		# If valid kernel, diagonalization only for non projection kernel.
+		self.ensemble_type = ensemble_type
+		self.__check_ensemble_type(kernel)
+
+		self.list_of_samples = []
+		self.sampling_mode = None # Default 'GS'
+		### Exact sampling: eigendecomposition may be required
+		# 'GS' for Gram-Schmidt, 
+		# 'Schur' for Schur complement 
+		# 'KuTa12' for Kulesza (Algo 1).
+		self.eigen_decomposition_available = False
 		self.eig_vals_K = None
 		self.eig_vals_L = None
 		self.eig_vecs = None
 		self.__check_kernel_for_dpp_validity(kernel) 
 
-		self.sampling_mode = None # Default 'GS'
-		### Exact sampling
-		# 'GS' for Gram-Schmidt, 
-		# 'Schur' for Schur complement 
-		# 'KuTa12' for Kulesza (Algo 1).
-		### Approx sampling
-		# 'AED' 'AD' 'E' A=Add E=Exchange D=Delete
-		self.list_of_samples = []
+		### Approx sampling: eigendecomposition not required
+		# 'AED' Add-Exchange-Delete
+		# 'AD' Add-Delete
+		# 'E' Exchange
+
 
 	def __str__(self):
 		str_info = ["Discrete DPP defined by:", 
@@ -44,9 +46,29 @@ class Discrete_DPP:
 																		self.sampling_mode,
 																		len(self.list_of_samples))
 
-	def __check_ensemble_type_param_validity(self):
+	def __check_projection_kernel(self):
+		if not isinstance(self.projection_kernel, bool):
+			str_list = ["Invalid projection_kernel argument: must be True/False",
+									"Given projection_kernel={}".format(self.projection_kernel)]
+			raise ValueError("\n".join(str_list))
 
-		if self.ensemble_type not in ('K', 'L'):
+		elif self.projection_kernel:
+			# Cheap test checking reproducing property
+			nb_tmp = 5
+			items_to_check = np.arange(nb_tmp)
+			K_i_ = kernel[items_to_check, :]
+			K_ii = kernel[items_to_check, items_to_check]
+
+			if not np.allclose(np_inner1d(K_i_, K_i_), K_ii):
+				raise ValueError("Invalid kernel: doesn't seem to be a projection")
+
+	def __check_ensemble_type(self, kernel):
+
+		if self.ensemble_type == 'K':
+			self.K = kernel
+		elif self.ensemble_type == 'L':
+			self.L = kernel
+		else:
 			str_list = ["Invalid ensemble_type parameter, use:",
 									"- 'K' for inclusion probability kernel",
 									"- 'L' for marginal kernel.",
@@ -54,62 +76,29 @@ class Discrete_DPP:
 
 			raise ValueError("\n".join(str_list))
 
-	def __check_projection_kernel_param_validity(self):
-		# Recall we first checked the kernel to be symmetric (K=K.T), here we check the reproducing property of the (orthogonal) projection kernel.
-		# For this we perform a cheap test to check K^2 = K K.T = K
-		if not isinstance(self.projection_kernel, bool):
-			str_list = ["Invalid projection_kernel argument: must be True/False",
-									"Given projection_kernel={}".format(self.projection_kernel)]
-			raise ValueError("\n".join(str_list))
-
-	def __check_kernel_for_dpp_validity(self, kernel):
+	def __eigendecompose(self):
 		"""Check symmetry, projection, and validity:
 		- For K-ensemble 0<=K<=I
 		- For L-ensemble L>=0"""
-
-		# Check symmetry: kernel.T = kernel
-		if not np.allclose(kernel, kernel.T):
-			raise ValueError("Invalid kernel: not symmetric")
-
-		# Check if 'K' kernel is orthogonal projection K^2 = K K.T = K
-		# Only case for which eigendecomposition is not necessary
-		if (self.ensemble_type == 'K') & (self.projection_kernel):
-			# Cheap test checking reproducing property
-			nb_tmp = 5
-			items_to_check = np.arange(nb_tmp)
-			K_i_ = kernel[items_to_check, :]
-			K_ii = kernel[items_to_check, items_to_check]
-
-			if np.allclose(np_inner1d(K_i_, K_i_), K_ii):
-					self.K = kernel
-			else:
-				raise ValueError("Invalid kernel: doesn't seem to be a projection")
-
+		if self.eigen_decomposition_available:
+			pass
 		else:
-			# Eigendecomposition necessary for non projection kernels
-			eig_vals, eig_vecs = la.eigh(kernel)
+			# Eigendecomposition necessary for non projection kernel
 			tol = 1e-8 # tolerance on the eigenvalues
+			self.eigendecomposition = True
 
 			# If K-ensemble
-			if self.ensemble_type == 'K': 
+			if self.ensemble_type == 'K':
+				self.eig_vals_K, self.eig_vecs = la.eigh(self.K)
 				# Check 0 <= K <= I
-				if np.all((-tol <= eig_vals) & (eig_vals <= 1.0+tol)):
-					self.K = kernel
-					self.eig_vals_K = eig_vals
-					self.eig_vecs = eig_vecs
-					
-				else:
+				if not np.all((-tol<=self.eig_vals_K) & (self.eig_vals_K<=1.0+tol)):
 					raise ValueError("Invalid kernel for K-ensemble. Eigen values are not in [0,1]")
 
 			# If L-ensemble
 			elif self.ensemble_type == 'L':
+				self.eig_vals_L, self.eig_vecs = la.eigh(self.L)
 				# Check L >= 0
-				if np.all(eig_vals >= -tol):
-					self.L = kernel
-					self.eig_vals_L = eig_vals
-					self.eig_vecs = eig_vecs
-
-				else:
+				if not np.all(eig_vals >= -tol):
 					raise ValueError("Invalid kernel for L-ensemble. Eigen values !>= 0")
 
 	def info(self):
@@ -117,19 +106,24 @@ class Discrete_DPP:
 
 	def compute_K_kernel(self):
 		"""K = L(I+L)^-1 = I - (I+L)^-1"""
-		if self.ensemble_type == 'K':
+		if self.K is not None:
 			raise ValueError("'K' kernel is already available")
 
-		else:
+		elif self.eigen_decomposition_available:
 			self.eig_vals_K = self.eig_vals_L/(1.0 + self.eig_vals_L)
 			self.K = (self.eig_vecs * self.eig_vals_K).dot(self.eig_vecs.T)
 
+		else:
+			print("Eigendecomposition performed")
+			self.__eigendecompose()
+			self.compute_K_kernel()
+
 	def compute_L_kernel(self):
 		"""L = K(I-K)^-1 = (I-K)^-1 - I"""
-		if self.ensemble_type == 'L':
+		if self.L is not None:
 			raise ValueError("'L' kernel is already available")
 
-		else:
+		elif self.eigen_decomposition_available:
 			try: # to compute eigenvalues of kernel L = K(I-K)^-1
 				np.seterr(divide='raise')
 				self.eig_vals_L = self.eig_vals_K/(1.0 - self.eig_vals_K)
@@ -141,6 +135,11 @@ class Discrete_DPP:
 										"'K' kernel has some eigenvalues equal are very close to 1.",
 										"Hint: 'K' kernel might be a projection."]
 				print("\n".join(str_list))
+
+		else:
+			print("Eigendecomposition performed")
+			self.__eigendecompose()
+			self.compute_L_kernel()
 
 	def flush_samples(self):
 		self.list_of_samples = []
