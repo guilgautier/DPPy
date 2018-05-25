@@ -90,7 +90,7 @@ def proj_dpp_sampler_kernel(kernel, update_rule="GS"):
 
 	return sampl
 
-def proj_dpp_sampler_kernel_GS(K, k=None):
+def proj_dpp_sampler_kernel_GS(K, size=None):
 	""" Sample from :math:`\operatorname{DPP}(K)` with :math:`K` orthogonal projection matrix.
 	It performs sequential Gram-Schmidt orthogonalization or equivalently Cholesky decomposition updates of K.
 
@@ -109,34 +109,36 @@ def proj_dpp_sampler_kernel_GS(K, k=None):
 	:rtype: 
 		list
 
-	.. seealso::
-		- :func:`proj_dpp_sampler_kernel_Schur <proj_dpp_sampler_kernel_Schur>`
+	# .. seealso::
+	# 	- :func:`proj_dpp_sampler_kernel_Schur <proj_dpp_sampler_kernel_Schur>`
 	"""
 
 	# Size of the ground set
 	N = K.shape[0]
 	# Maximal size of the sample: Tr(K)=rank(K)
-	r = int(np.round(np.trace(K)))
-	# Size of the sample = k
-	if k is None: # Full projection DPP
-		k=r
-	# else k-DPP(K) with K orthogonal projection
+	rank = int(np.round(np.trace(K)))
+	# Size of the sample
+	if size is None: 
+		size = rank # Full projection DPP
+	else:
+		pass # projection k-DPP
 
 	# Initialization
 	ground_set, rem_set = np.arange(N), np.full(N, True)
 	# Sample 
-	Y = np.zeros(k, dtype=int)
+	Y = []
 
-	c = np.zeros((N,k))
+	c = np.zeros((N, size))
 	d_2 = K.diagonal().copy()
 
-	for it in range(k):
+	for it in range(size):
 
 		j = np.random.choice(ground_set[rem_set], 
 												size=1, 
-												p=np.fabs(d_2[rem_set])/(r-it))[0]
+												p=np.fabs(d_2[rem_set])/(rank-it))[0]
 		# Add the item to the sample
-		rem_set[j], Y[it] = False, j
+		rem_set[j] = False
+		Y.append(j)
 
 		###### Update the Cholesky factor
 		c[rem_set, it] = K[rem_set,j] - c[rem_set,:it].dot(c[j,:it])
@@ -184,7 +186,7 @@ def proj_dpp_sampler_kernel_GS(K, k=None):
 # 	# Initialization
 # 	ground_set, rem_set = np.arange(N), np.full(N, True)
 # 	# Sample 
-# 	Y = np.zeros(k, dtype=int)
+# 	Y = []
 
 # 	K_diag = K.diagonal() # Used to compute the first term of Schur complement
 # 	schur_comp = K_diag.copy() # Initialize the f
@@ -220,7 +222,8 @@ def proj_dpp_sampler_kernel_GS(K, k=None):
 # 			# K_inv[-1,-1] = 1.0/schur_j
 
 # 		# Add the item to the sample
-# 		rem_set[j], Y[it] = False, j
+# 		rem_set[j] = False
+# 		Y.append(j)
 		
 # 		# 2) update Schur complements
 # 		# K_ii - K_iY (K_Y)^-1 K_Yi for Y <- Y+j
@@ -253,24 +256,27 @@ def dpp_sampler_eig(eig_vals, eig_vecs, update_rule="GS"):
 	#### Phase 1: Select eigenvectors
 	eig_vecs_selected = dpp_eig_vecs_select(eig_vals, eig_vecs)
 
+	if eig_vecs_selected.shape[1]:
 	#### Phase 2: Sample from projection kernel VV.T
 	# Chain rule, conditionals are updated using:
-	if update_rule == "GS": # Gram-Schmidt
-		sampl = proj_dpp_sampler_eig_GS(eig_vecs_selected)
+		if update_rule == "GS": # Gram-Schmidt
+			sampl = proj_dpp_sampler_eig_GS(eig_vecs_selected)
 
-	elif update_rule == "Chol": # Cholesky (equivalent to "GS")
-		sampl = proj_dpp_sampler_eig_Chol(eig_vecs_selected)
+		elif update_rule == "Chol": # Cholesky (equivalent to "GS")
+			sampl = proj_dpp_sampler_eig_Chol(eig_vecs_selected)
 
-	elif update_rule == "KuTa12": # cf Kulesza-Taskar
-		sampl = proj_dpp_sampler_eig_KuTa12(eig_vecs_selected)
+		elif update_rule == "KuTa12": # cf Kulesza-Taskar
+			sampl = proj_dpp_sampler_eig_KuTa12(eig_vecs_selected)
 
+		else:
+			str_list = ["Invalid 'update_rule' parameter, choose among:",
+									"- 'GS' (default)",
+									"- 'Chol'",
+									"- 'KuTa12'",
+									"Given 'update_rule' = {}".format(update_rule)]
+			raise ValueError("\n".join(str_list))
 	else:
-		str_list = ["Invalid 'update_rule' parameter, choose among:",
-								"- 'GS' (default)",
-								"- 'Chol'",
-								"- 'KuTa12'",
-								"Given 'update_rule' = {}".format(update_rule)]
-		raise ValueError("\n".join(str_list))
+		sampl = []
 
 	return sampl
 
@@ -304,7 +310,7 @@ def dpp_eig_vecs_select(eig_vals, eig_vecs):
 ##### Phase 2
 
 # Using Gram-Schmidt orthogonalization
-def proj_dpp_sampler_eig_GS(eig_vecs):
+def proj_dpp_sampler_eig_GS(eig_vecs, size=None):
 	""" Sample from projection :math:`\operatorname{DPP}(K)` using the eigendecomposition of the projection kernel :math:`K=VV^{\top}` where :math:`V^{\top}V = I`.
 	It performs sequential Gram-Schmidt orthogonalization of the rows of the eigenvectors.
 
@@ -327,7 +333,12 @@ def proj_dpp_sampler_eig_GS(eig_vecs):
 	"""
 
 	V = eig_vecs # Eigenvectors
-	N, k = V.shape # ground set, sample sizes (=rank=Trace of VV.T)
+	N, rank = V.shape 
+	# Size of the sample
+	if size is None: 
+		size = rank # Full projection DPP
+	else:
+		pass # projection k-DPP
 	ground_set, rem_set = np.arange(N), np.full(N, True)
 	Y = [] # sample
 
@@ -337,19 +348,19 @@ def proj_dpp_sampler_eig_GS(eig_vecs):
 
 	### Matrix of the contribution of remaining vectors V_i onto the orthonormal basis {e_j}_Y of V_Y
 	# <V_i,P_{V_Y}^{orthog} V_j>
-	contrib = np.zeros((N,k))
+	contrib = np.zeros((N, size))
 
 	### Residual square norm 
 	# ||P_{V_Y}^{orthog} V_j||^2
 	norms_2 = np_inner1d(V, V)
 
-	for it in range(k):
+	for it in range(size):
 		
 		# Pick an item proportionally to the residual square norm 
 		# ||P_{V_Y}^{orthog} V_j||^2
 		j = np.random.choice(ground_set[rem_set], 
 												size=1, 
-												p=np.fabs(norms_2[rem_set])/(k-it))[0] 
+												p=np.fabs(norms_2[rem_set])/(rank-it))[0] 
 		
 		### Update the residual square norm
 		#
@@ -398,7 +409,7 @@ def proj_dpp_sampler_eig_GS(eig_vecs):
 	return Y
 
 # Very similar Gram-Schmidt above
-def proj_dpp_sampler_eig_Chol(eig_vecs):
+def proj_dpp_sampler_eig_Chol(eig_vecs, size=None):
 	""" Sample from projection :math:`\operatorname{DPP}(K)` using the eigendecomposition of the projection kernel :math:`K=VV^{\top}` where :math:`V^{\top}V = I`.
 	It performs sequential update of Cholesky decomposition, which is equivalent to Gram-Schmidt orthogonalization of the rows of the eigenvectors.
 
@@ -423,27 +434,35 @@ def proj_dpp_sampler_eig_Chol(eig_vecs):
 	##### Phase 1: Select eigenvectors with Bernoulli variables with parameter the eigenvalues
 
 	V = eig_vecs # Eigenvectors
-	N, k = V.shape # ground set, sample sizes (=rank=Trace of VV.T)
+	N, rank = V.shape 
+
+	# Size of the sample
+	if size is None: 
+		size = rank # Full projection DPP
+	else:
+		pass # projection k-DPP
+
 	ground_set, rem_set = np.arange(N), np.full(N, True)
-	Y = np.zeros(k, dtype=int)
+	Y = [] # sample
 
 	##### Phase 2: Chain rule
 	# To compute the squared volume of the parallelepiped spanned by the feature vectors defining the sample
 	# use Gram-Schmidt recursion aka Base x Height formula.
 
 	# Initially this corresponds to the squared norm of the feature vectors
-	c = np.zeros((N,k))
+	c = np.zeros((N, size))
 	norms_2 = np_inner1d(V, V)
 
-	for it in range(k):
+	for it in range(size):
 
 		# Pick an item \propto this squred distance
 		j = np.random.choice(ground_set[rem_set], 
 												size=1, 
-												p=norms_2[rem_set]/(k-it))[0]
+												p=np.fabs(norms_2[rem_set])/(rank-it))[0]
 
 		# Add the item just picked    
-		rem_set[j], Y[it] = False, j
+		rem_set[j] = False
+		Y.append(j)
 
 		# Cancel the contribution of V_j to the remaining feature vectors
 		c[rem_set, it] = V[rem_set,:].dot(V[j,:]) - c[rem_set,:it].dot(c[j,:it])
@@ -454,7 +473,7 @@ def proj_dpp_sampler_eig_Chol(eig_vecs):
 
 	return Y
 
-def proj_dpp_sampler_eig_KuTa12(eig_vecs):
+def proj_dpp_sampler_eig_KuTa12(eig_vecs, size=None):
 	""" Sample from :math:`\operatorname{DPP}(K)` using the eigendecomposition of the similarity kernel :math:`K`. 
 	It is based on the orthogonalization of the selected eigenvectors.
 
@@ -482,19 +501,25 @@ def proj_dpp_sampler_eig_KuTa12(eig_vecs):
 
 
 	# N = size of the ground set, n = size of the sample
-	N, k = V.shape 
+	V = eig_vecs
+	N, rank = V.shape 
+	# Size of the sample
+	if size is None: 
+		size = rank # Full projection DPP
+	else:
+		pass # projection k-DPP
+	Y = [] # sample
 
 	#### Phase 2: Chain rule
 	# Initialize the sample
 	norms_2 = np_inner1d(V,V)
 	# Pick an item
-	i = np.random.choice(N, size=1, p=np.fabs(norms_2)/k)[0] 
+	i = np.random.choice(N, size=1, p=np.fabs(norms_2)/rank)[0] 
 	# Add the item just picked
-	Y = np.zeros(k,dtype=int)
-	Y[0]=i
+	Y.append(i) # sample
 	
 	# Following [Algo 1, KuTa12], the aim is to compute the orhto complement of the subspace spanned by the selected eigenvectors to the canonical vectors \{e_i ; i \in Y\}. We proceed recursively.
-	for it in range(1,k):
+	for it in range(1, size):
 		
 		# Cancel the contribution of e_i to the remaining vectors that is, find the subspace of V that is orthogonal to \{e_i ; i \in Y\}
 
@@ -505,11 +530,11 @@ def proj_dpp_sampler_eig_KuTa12(eig_vecs):
 		# V_:j is set to 0 so we delete it and we can derive an orthononormal basis of the subspace under consideration
 		V, _ = np.linalg.qr(np.delete(V, j, axis=1)) 
 
-		norms_2 = np_inner1d(V,V) 
+		norms_2 = np_inner1d(V, V) 
 		# Pick an item
-		i = np.random.choice(N, size=1, p=np.fabs(norms_2)/(r-it))[0]
+		i = np.random.choice(N, size=1, p=np.fabs(norms_2)/(rank-it))[0]
 		# Add the item just picked
-		Y[it] = i
+		Y.append(i)
 
 	return Y
 
@@ -533,7 +558,7 @@ def proj_dpp_sampler_eig_KuTa12(eig_vecs):
 ################# k-DPPs #################
 ##########################################
 
-def k_dpp_sampler(kernel, proj_kernel=False, update_rule="GS"):
+def k_dpp_sampler(kernel, size, proj_kernel=False, update_rule="GS"):
 	""" Sample from :math:`\operatorname{DPP}(K)`, where :math:`K` is real symmetric with eigenvalues in :math:`[0,1]`.
 
 	:param kernel: Real symmetric kernel with eigenvalues in :math:`[0,1]`
@@ -571,7 +596,7 @@ def k_dpp_sampler(kernel, proj_kernel=False, update_rule="GS"):
 	"""
 
 	if proj_kernel:
-		sampl = proj_k_dpp_sampler(kernel, size, update_rule)
+		sampl = proj_k_dpp_sampler_kernel(kernel, size, update_rule)
 
 	else:
 		eig_vecs, eig_vals = la.eigh(kernel)
@@ -582,11 +607,11 @@ def k_dpp_sampler(kernel, proj_kernel=False, update_rule="GS"):
 #########################
 ### Projection kernel ###
 #########################
-def proj_k_dpp_sampler(kernel, size, update_rule="GS"):
+def proj_k_dpp_sampler_kernel(kernel, size, update_rule="GS"):
 	"""
 		.. seealso::
 			- :func:`proj_dpp_sampler_kernel_GS <proj_dpp_sampler_kernel_GS>`
-			- :func:`proj_dpp_sampler_kernel_Schur <proj_dpp_sampler_kernel_Schur>`
+			# - :func:`proj_dpp_sampler_kernel_Schur <proj_dpp_sampler_kernel_Schur>`
 	"""
 
 	#### Phase 1: Select eigenvectors
@@ -597,13 +622,13 @@ def proj_k_dpp_sampler(kernel, size, update_rule="GS"):
 	if update_rule == "GS": # Gram-Schmidt equiv Cholesky
 		sampl = proj_dpp_sampler_kernel_GS(kernel, size)
 
-	elif update_rule == "Shur": # Schur complement 
-		sampl = proj_dpp_sampler_kernel_Schur(kernel, size)
+	# elif update_rule == "Shur": # Schur complement 
+	# 	sampl = proj_dpp_sampler_kernel_Schur(kernel, size)
 
 	else:
 		str_list = ["Invalid 'update_rule' parameter, choose among:",
 								"- 'GS' (default)",
-								"- 'Schur'",
+								# "- 'Schur'",
 								"Given 'update_rule' = {}".format(update_rule)]
 		raise ValueError("\n".join(str_list))
 

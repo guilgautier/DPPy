@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 
 class Discrete_kDPP:
 
-	def __init__(self, size, kernel, projection_kernel=False):
+	def __init__(self, kernel, size, projection_kernel=False):
 
 		self.nb_items = kernel.shape[0]
 
@@ -106,13 +106,10 @@ class Discrete_kDPP:
 			sampl = proj_k_dpp_sampler_kernel(self.L,
 																				self.size, 
 																				self.sampling_mode)
-		if self.el_sym_pol_eval is not None: 
-		# If eigen decomposition available use it!
+		else: #if self.el_sym_pol_eval is not None: i.e. if eigen decomposition available use it!
 			sampl = k_dpp_sampler_eig(self.eig_vals, self.eig_vecs,	self.size, 
 																self.sampling_mode,
 																self.el_sym_pol_eval)
-		else:
-			raise ValueError("WARNING sampling!!")
 
 		self.list_of_samples.append(sampl)
 

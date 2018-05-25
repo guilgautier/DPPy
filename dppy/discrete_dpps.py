@@ -155,13 +155,10 @@ class Discrete_DPP:
 			sampl = proj_dpp_sampler_kernel(self.K, 
 																			self.sampling_mode)
 
-		elif self.eig_vals_K is None: 
-			# Compute eig_vals_K from eig_vals_L
-			self.eig_vals_K = self.eig_vals_L/(1.0 + self.eig_vals_L)
-			# And then sample
-			self.sample_exact(sampling_mode)
+		else:
+			if self.eig_vals_K is None: # Compute eig_vals_K from eig_vals_L
+				self.eig_vals_K = self.eig_vals_L/(1.0 + self.eig_vals_L)
 
-		else:# If eigendecomposition available use it!
 			sampl = dpp_sampler_eig(self.eig_vals_K, 
 															self.eig_vecs, 
 															self.sampling_mode)
