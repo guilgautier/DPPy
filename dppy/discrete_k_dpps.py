@@ -3,7 +3,7 @@ from .exact_sampling import *
 from .approximate_sampling import *
 import matplotlib.pyplot as plt
 
-class Discrete_kDPP:
+class Discrete_k_DPP:
 
 	def __init__(self, kernel, size, projection_kernel=False):
 
@@ -19,7 +19,7 @@ class Discrete_kDPP:
 		# If valid kernel, diagonalization only for non projection kernel.
 		self.eig_vals = None
 		self.eig_vecs = None
-		self.__check_kernel_for_k_dpp_validity() 
+		self.__check_kernel_for_k_dpp_validity(kernel) 
 
 		if self.projection_kernel:
 			self.el_sym_pol_eval = None
@@ -41,7 +41,7 @@ class Discrete_kDPP:
 								"- sampling mode = {}",
 								"- number of samples = {}"]
 
-		return "\n".join(str_info).format(self.ensemble_type, self.nb_items,
+		return "\n".join(str_info).format(self.nb_items,
 																		"Yes" if self.projection_kernel else "No",
 																		self.sampling_mode,
 																		len(self.list_of_samples))
@@ -58,7 +58,7 @@ class Discrete_kDPP:
 									"Given projection_kernel={}".format(self.projection_kernel)]
 			raise ValueError("\n".join(str_list))
 
-	def __check_kernel_for_k_dpp_validity(self):
+	def __check_kernel_for_k_dpp_validity(self, kernel):
 		"""Check symmetry, projection, and validity:
 		- For K-ensemble 0<=K<=I
 		- For L-ensemble L>=0"""
@@ -82,7 +82,7 @@ class Discrete_kDPP:
 				raise ValueError("Invalid kernel: doesn't seem to be a projection")
 
 		else:
-			# Eigendecomposition necessary for non projection kernels
+			# Eigendecomposition necessary for non projection kernel
 			eig_vals, eig_vecs = la.eigh(kernel)
 			tol = 1e-8 # tolerance on the eigenvalues
 
@@ -96,6 +96,9 @@ class Discrete_kDPP:
 
 	def info(self):
 		print(self.__str__())
+
+	def flush_samples(self):
+		self.list_of_samples = []
 		
 	### Exact sampling
 	def sample_exact(self, sampling_mode="GS"):
@@ -106,7 +109,8 @@ class Discrete_kDPP:
 			sampl = proj_k_dpp_sampler_kernel(self.L,
 																				self.size, 
 																				self.sampling_mode)
-		else: #if self.el_sym_pol_eval is not None: i.e. if eigen decomposition available use it!
+		else: #if self.el_sym_pol_eval is not None: 
+		# i.e. if eigen decomposition available use it!
 			sampl = k_dpp_sampler_eig(self.eig_vals, self.eig_vecs,	self.size, 
 																self.sampling_mode,
 																self.el_sym_pol_eval)
@@ -118,27 +122,27 @@ class Discrete_kDPP:
 
 		self.list_of_samples.append(sampl)
 
+	def plot(self):
+		"""Display a heatmap of the kernel provided, either K- or L-ensemble"""
 
+		print("Heat map of L-kernel")
+		fig, ax = plt.subplots(1,1)
 
+		heatmap = ax.pcolor(self.L, cmap='jet')
 
+		ax.set_aspect('equal')
 
+		ticks = np.arange(self.nb_items)
+		ticks_label = [r'${}$'.format(tic) for tic in ticks]
 
+		ax.xaxis.tick_top()
+		ax.set_xticks(ticks+0.5, minor=False)
 
+		ax.invert_yaxis()
+		ax.set_yticks(ticks+0.5, minor=False)
 
+		ax.set_xticklabels(ticks_label, minor=False)
+		ax.set_yticklabels(ticks_label, minor=False)
 
-
-
-
-
-
-
-
-class Discrete_kDPP(Discrete_DPP):
-	"""docstring for DiscretekDPP"""
-	def __init__(self, size, kernel, ensemble_type='L', projection_kernel=False):
-
-		super().__init__(kernel, ensemble_type, projection_kernel)
-
-
-
-	
+		plt.colorbar(heatmap)
+		plt.show()

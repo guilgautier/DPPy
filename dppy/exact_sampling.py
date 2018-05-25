@@ -25,15 +25,15 @@ def dpp_sampler_exact(kernel, proj_kernel=False, update_rule="GS"):
 		Indicate how the conditional probabilities i.e. the ratio of 2 determinants must be updated.
 
 		If ``proj_kernel=True``:
-			- 'GS' (default): Gram-Schmidt on the columns of :math:`K` equiv Cholesky updates
+			- "GS" (default): Gram-Schmidt on the columns of :math:`K` equiv GSesky updates
 			- 'Schur': Schur complement updates
 		
 		If ``proj_kernel=False``:
-			- 'GS': (default) Gram-Schmidt on the rows of eigenvectors, equivalent to 'Chol' updates	
-			- 'Chol': Cholesky update
+			- 'GS_bis': (default) Gram-Schmidt on the rows of eigenvectors, equivalent to 'GS' updates	
+			- 'GS': GSesky update
 			- 'KuTa12': Algorithm 1 in :cite:`KuTa12`
 	:type update_rule:
-		string, default 'GS'
+		string, default 'GS_bis'
 		
 	:return:
 		A sample from :math:`\operatorname{DPP}(K)`.
@@ -66,7 +66,7 @@ def dpp_sampler_exact(kernel, proj_kernel=False, update_rule="GS"):
 def proj_dpp_sampler_kernel(kernel, update_rule="GS"):
 	"""
 		.. seealso::
-			- :func:`proj_dpp_sampler_kernel_GS <proj_dpp_sampler_kernel_GS>`
+			- :func:`proj_dpp_sampler_kernel_GS_bis <proj_dpp_sampler_kernel_GS_bis>`
 			- :func:`proj_dpp_sampler_kernel_Schur <proj_dpp_sampler_kernel_Schur>`
 	"""
 
@@ -75,7 +75,7 @@ def proj_dpp_sampler_kernel(kernel, update_rule="GS"):
 
 	#### Phase 2: Sample from orthogonal projection kernel K = K^2 = K.T K
 	# Chain rule, conditionals are updated using:
-	if update_rule == "GS": # Gram-Schmidt equiv Cholesky
+	if update_rule == "GS": # Gram-Schmidt equiv GSesky
 		sampl = proj_dpp_sampler_kernel_GS(kernel)
 
 	# elif update_rule == "Schur": # Schur complement 
@@ -92,7 +92,7 @@ def proj_dpp_sampler_kernel(kernel, update_rule="GS"):
 
 def proj_dpp_sampler_kernel_GS(K, size=None):
 	""" Sample from :math:`\operatorname{DPP}(K)` with :math:`K` orthogonal projection matrix.
-	It performs sequential Gram-Schmidt orthogonalization or equivalently Cholesky decomposition updates of K.
+	It performs sequential Gram-Schmidt orthogonalization or equivalently GSesky decomposition updates of K.
 
 	:param K: 
 		Orthogonal projection kernel.
@@ -140,7 +140,7 @@ def proj_dpp_sampler_kernel_GS(K, size=None):
 		rem_set[j] = False
 		Y.append(j)
 
-		###### Update the Cholesky factor
+		###### Update the GSesky factor
 		c[rem_set, it] = K[rem_set,j] - c[rem_set,:it].dot(c[j,:it])
 		c[rem_set, it] /=	np.sqrt(d_2[j])
 
@@ -171,7 +171,7 @@ def proj_dpp_sampler_kernel_GS(K, size=None):
 # 	:rtype: 
 # 		list
 # 	.. seealso::
-# 		- :func:`projection_dpp_sampler_GS <projection_dpp_sampler_GS>`
+# 		- :func:`projection_dpp_sampler_GS_bis <projection_dpp_sampler_GS_bis>`
 # 	"""
 
 # 	# Size of the ground set
@@ -248,8 +248,8 @@ def dpp_sampler_eig(eig_vals, eig_vecs, update_rule="GS"):
 		
 		Phase 2:
 
+		- :func:`proj_dpp_sampler_eig_GS_bis <proj_dpp_sampler_eig_GS_bis>`
 		- :func:`proj_dpp_sampler_eig_GS <proj_dpp_sampler_eig_GS>`
-		- :func:`proj_dpp_sampler_eig_Chol <proj_dpp_sampler_eig_Chol>`
 		- :func:`proj_dpp_sampler_eig_KuTa12 <proj_dpp_sampler_eig_KuTa12>`
 	"""	
 
@@ -260,10 +260,10 @@ def dpp_sampler_eig(eig_vals, eig_vecs, update_rule="GS"):
 	#### Phase 2: Sample from projection kernel VV.T
 	# Chain rule, conditionals are updated using:
 		if update_rule == "GS": # Gram-Schmidt
-			sampl = proj_dpp_sampler_eig_GS(eig_vecs_selected)
+			sampl = proj_dpp_sampler_eig_GS_bis(eig_vecs_selected)
 
-		elif update_rule == "Chol": # Cholesky (equivalent to "GS")
-			sampl = proj_dpp_sampler_eig_Chol(eig_vecs_selected)
+		elif update_rule == "GS_bis": # Slight modif of "GS"
+			sampl = proj_dpp_sampler_eig_GS(eig_vecs_selected)
 
 		elif update_rule == "KuTa12": # cf Kulesza-Taskar
 			sampl = proj_dpp_sampler_eig_KuTa12(eig_vecs_selected)
@@ -271,7 +271,7 @@ def dpp_sampler_eig(eig_vals, eig_vecs, update_rule="GS"):
 		else:
 			str_list = ["Invalid 'update_rule' parameter, choose among:",
 									"- 'GS' (default)",
-									"- 'Chol'",
+									"- 'GS_bis'",
 									"- 'KuTa12'",
 									"Given 'update_rule' = {}".format(update_rule)]
 			raise ValueError("\n".join(str_list))
@@ -312,6 +312,72 @@ def dpp_eig_vecs_select(eig_vals, eig_vecs):
 # Using Gram-Schmidt orthogonalization
 def proj_dpp_sampler_eig_GS(eig_vecs, size=None):
 	""" Sample from projection :math:`\operatorname{DPP}(K)` using the eigendecomposition of the projection kernel :math:`K=VV^{\top}` where :math:`V^{\top}V = I`.
+	It performs sequential update of GSesky decomposition, which is equivalent to Gram-Schmidt orthogonalization of the rows of the eigenvectors.
+
+	:param eig_vecs: 
+		Eigenvectors used to form projection kernel :math:`K=VV^{\top}`.
+	:type eig_vecs: 
+		array_type
+		
+	:return: 
+		A sample from projection :math:`\operatorname{DPP}(K)`.
+	:rtype: 
+		list, array_type
+  
+	:Example:
+
+	.. seealso::
+
+		- :func:`proj_dpp_sampler_eig_GS_bis <proj_dpp_sampler_eig_GS_bis>`
+		- :func:`proj_dpp_sampler_eig_KuTa12 <proj_dpp_sampler_eig_KuTa12>`
+	"""
+
+	##### Phase 1: Select eigenvectors with Bernoulli variables with parameter the eigenvalues
+
+	V = eig_vecs # Eigenvectors
+	N, rank = V.shape 
+
+	# Size of the sample
+	if size is None: 
+		size = rank # Full projection DPP
+	else:
+		pass # projection k-DPP
+
+	ground_set, rem_set = np.arange(N), np.full(N, True)
+	Y = [] # sample
+
+	##### Phase 2: Chain rule
+	# To compute the squared volume of the parallelepiped spanned by the feature vectors defining the sample
+	# use Gram-Schmidt recursion aka Base x Height formula.
+
+	# Initially this corresponds to the squared norm of the feature vectors
+	c = np.zeros((N, size))
+	norms_2 = np_inner1d(V, V)
+
+	for it in range(size):
+
+		# Pick an item \propto this squred distance
+		j = np.random.choice(ground_set[rem_set], 
+												size=1, 
+												p=np.fabs(norms_2[rem_set])/(rank-it))[0]
+
+		# Add the item just picked    
+		rem_set[j] = False
+		Y.append(j)
+
+		# Cancel the contribution of V_j to the remaining feature vectors
+		c[rem_set, it] = V[rem_set,:].dot(V[j,:]) - c[rem_set,:it].dot(c[j,:it])
+		c[rem_set, it] /= np.sqrt(norms_2[j])
+
+		# Compute the square distance of the feature vectors to Span(V_Y:)
+		norms_2[rem_set] -= c[rem_set,it]**2
+
+	return Y
+
+
+# Slight modif of Gram-Schmidt above
+def proj_dpp_sampler_eig_GS_bis(eig_vecs, size=None):
+	""" Sample from projection :math:`\operatorname{DPP}(K)` using the eigendecomposition of the projection kernel :math:`K=VV^{\top}` where :math:`V^{\top}V = I`.
 	It performs sequential Gram-Schmidt orthogonalization of the rows of the eigenvectors.
 
 	:param eig_vecs: 
@@ -328,7 +394,7 @@ def proj_dpp_sampler_eig_GS(eig_vecs, size=None):
 
 	.. seealso::
 
-		- :func:`proj_dpp_sampler_Chol_eig <proj_dpp_sampler_Chol_eig>`
+		- :func:`proj_dpp_sampler_eig_GS <proj_dpp_sampler_eig_GS>`
 		- :func:`proj_dpp_sampler_KuTa12_eig <proj_dpp_sampler_KuTa12_eig>`
 	"""
 
@@ -408,70 +474,6 @@ def proj_dpp_sampler_eig_GS(eig_vecs, size=None):
 		
 	return Y
 
-# Very similar Gram-Schmidt above
-def proj_dpp_sampler_eig_Chol(eig_vecs, size=None):
-	""" Sample from projection :math:`\operatorname{DPP}(K)` using the eigendecomposition of the projection kernel :math:`K=VV^{\top}` where :math:`V^{\top}V = I`.
-	It performs sequential update of Cholesky decomposition, which is equivalent to Gram-Schmidt orthogonalization of the rows of the eigenvectors.
-
-	:param eig_vecs: 
-		Eigenvectors used to form projection kernel :math:`K=VV^{\top}`.
-	:type eig_vecs: 
-		array_type
-		
-	:return: 
-		A sample from projection :math:`\operatorname{DPP}(K)`.
-	:rtype: 
-		list, array_type
-  
-	:Example:
-
-	.. seealso::
-
-		- :func:`proj_dpp_sampler_eig_GS <proj_dpp_sampler_eig_GS>`
-		- :func:`proj_dpp_sampler_eig_KuTa12 <proj_dpp_sampler_eig_KuTa12>`
-	"""
-
-	##### Phase 1: Select eigenvectors with Bernoulli variables with parameter the eigenvalues
-
-	V = eig_vecs # Eigenvectors
-	N, rank = V.shape 
-
-	# Size of the sample
-	if size is None: 
-		size = rank # Full projection DPP
-	else:
-		pass # projection k-DPP
-
-	ground_set, rem_set = np.arange(N), np.full(N, True)
-	Y = [] # sample
-
-	##### Phase 2: Chain rule
-	# To compute the squared volume of the parallelepiped spanned by the feature vectors defining the sample
-	# use Gram-Schmidt recursion aka Base x Height formula.
-
-	# Initially this corresponds to the squared norm of the feature vectors
-	c = np.zeros((N, size))
-	norms_2 = np_inner1d(V, V)
-
-	for it in range(size):
-
-		# Pick an item \propto this squred distance
-		j = np.random.choice(ground_set[rem_set], 
-												size=1, 
-												p=np.fabs(norms_2[rem_set])/(rank-it))[0]
-
-		# Add the item just picked    
-		rem_set[j] = False
-		Y.append(j)
-
-		# Cancel the contribution of V_j to the remaining feature vectors
-		c[rem_set, it] = V[rem_set,:].dot(V[j,:]) - c[rem_set,:it].dot(c[j,:it])
-		c[rem_set, it] /= np.sqrt(norms_2[j])
-
-		# Compute the square distance of the feature vectors to Span(V_Y:)
-		norms_2[rem_set] -= c[rem_set,it]**2
-
-	return Y
 
 def proj_dpp_sampler_eig_KuTa12(eig_vecs, size=None):
 	""" Sample from :math:`\operatorname{DPP}(K)` using the eigendecomposition of the similarity kernel :math:`K`. 
@@ -496,7 +498,7 @@ def proj_dpp_sampler_eig_KuTa12(eig_vecs, size=None):
 
 		- Algorithm 1 in :cite:`KuTa12`
 		- :func:`proj_dpp_sampler_eig_GS <proj_dpp_sampler_eig_GS>`
-		- :func:`proj_dpp_sampler_eig_Chol <proj_dpp_sampler_eig_Chol>`
+		- :func:`proj_dpp_sampler_eig_GS_bis <proj_dpp_sampler_eig_GS_bis>`
 	"""
 
 
@@ -575,14 +577,15 @@ def k_dpp_sampler(kernel, size, proj_kernel=False, update_rule="GS"):
 		Indicate how the conditional probabilities i.e. the ratio of 2 determinants must be updated.
 
 		If ``proj_kernel=True``:
-			- "GS" (default): Gram-Schmidt on the columns of :math:`K` equiv Cholesky updates
-			- "Schur": Schur complement updates
+			- "GS" (default): Gram-Schmidt on the columns of :math:`K` equiv GSesky updates
+			# - "Schur": Schur complement updates
 		
 		If ``proj_kernel=False``:
-			- 'GS' (default): Gram-Schmidt on the columns of :math:`K` equiv Cholesky updates
+			- "GS" (default): Gram-Schmidt on the columns of :math:`K` equiv 
+			- "GS_bis": Slight modif of "GS"
 			- "KuTa12": Algorithm 1 in :cite:`KuTa12`
 	:type update_rule:
-		string, default 'GS'
+		string, default 'GS_bis'
 		
 	:return:
 		A sample from :math:`\operatorname{DPP}(K)`.
@@ -610,7 +613,7 @@ def k_dpp_sampler(kernel, size, proj_kernel=False, update_rule="GS"):
 def proj_k_dpp_sampler_kernel(kernel, size, update_rule="GS"):
 	"""
 		.. seealso::
-			- :func:`proj_dpp_sampler_kernel_GS <proj_dpp_sampler_kernel_GS>`
+			- :func:`proj_dpp_sampler_kernel_GS_bis <proj_dpp_sampler_kernel_GS_bis>`
 			# - :func:`proj_dpp_sampler_kernel_Schur <proj_dpp_sampler_kernel_Schur>`
 	"""
 
@@ -619,7 +622,7 @@ def proj_k_dpp_sampler_kernel(kernel, size, update_rule="GS"):
 
 	#### Phase 2: Sample from orthogonal projection kernel K = K^2 = K.T K
 	# Chain rule, conditionals are updated using:
-	if update_rule == "GS": # Gram-Schmidt equiv Cholesky
+	if update_rule == "GS": # Gram-Schmidt equiv GSesky
 		sampl = proj_dpp_sampler_kernel_GS(kernel, size)
 
 	# elif update_rule == "Shur": # Schur complement 
@@ -652,8 +655,8 @@ def k_dpp_sampler_eig(eig_vals, eig_vecs, size, update_rule="GS",
 			
 			Phase 2:
 
+			- :func:`proj_dpp_sampler_eig_GS_bis <proj_dpp_sampler_eig_GS_bis>`
 			- :func:`proj_dpp_sampler_eig_GS <proj_dpp_sampler_eig_GS>`
-			- :func:`proj_dpp_sampler_eig_Chol <proj_dpp_sampler_eig_Chol>`
 			- :func:`proj_dpp_sampler_eig_KuTa12 <proj_dpp_sampler_eig_KuTa12>`
 	"""	
 	#### Phase 1: Select eigenvectors
@@ -662,11 +665,12 @@ def k_dpp_sampler_eig(eig_vals, eig_vecs, size, update_rule="GS",
 
 	#### Phase 2: Sample from projection kernel VV.T
 	# Chain rule, conditionals are updated using:
+
 	if update_rule == "GS": # Gram-Schmidt
 		sampl = proj_dpp_sampler_eig_GS(eig_vecs_selected)
 
-	elif update_rule == "Chol": # Cholesky (equivalent to "GS")
-		sampl = proj_dpp_sampler_eig_Chol(eig_vecs_selected)
+	elif update_rule == "GS_bis": # Slight modif of "GS"
+		sampl = proj_dpp_sampler_eig_GS_bis(eig_vecs_selected)
 
 	elif update_rule == "KuTa12": # cf Kulesza-Taskar
 		sampl = proj_dpp_sampler_eig_KuTa12(eig_vecs_selected)
@@ -674,7 +678,7 @@ def k_dpp_sampler_eig(eig_vals, eig_vecs, size, update_rule="GS",
 	else:
 		str_list = ["Invalid 'update_rule' parameter, choose among:",
 								"- 'GS' (default)",
-								"- 'Chol'",
+								"- 'GS_bis'",
 								"- 'KuTa12'",
 								"Given 'update_rule' = {}".format(update_rule)]
 		raise ValueError("\n".join(str_list))
@@ -708,7 +712,10 @@ def k_dpp_eig_vecs_select(eig_vals, eig_vecs, size, el_sym_pol_eval=None):
 	nb_items = eig_vecs.shape[0]
 
 	# Evaluate the elem symm polys in the eigenvalues 
-	E = el_sym_pol_eval if el_sym_pol_eval else elem_symm_poly(eig_vals, size)
+	if el_sym_pol_eval is None:
+		E = elem_symm_poly(eig_vals, size)
+	else:
+		E = el_sym_pol_eval 
 
 	ind_selected = []
 	for n in range(nb_items,0,-1):

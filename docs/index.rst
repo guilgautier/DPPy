@@ -1,16 +1,13 @@
 .. automodule:: exact_sampling
+.. automodule:: approximate_sampling
+
+.. automodule:: discrete_dpps
+.. automodule:: discrete_k_dpps
 
 Exact Sampling
-==============
-
-    .. autofunction:: dpp_sampler
-    
-    .. autofunction:: dpp_sampler
 
 Projection :math:`\operatorname{DPP}`
 -------------------------------------
-
-    .. autofunction:: projection_dpp_sampler_GS
 
     .. math::
 
@@ -19,24 +16,15 @@ Projection :math:`\operatorname{DPP}`
             &= \|\Pi_{\operatorname{Span}K_{:Y+j}^{\perp}} K_{:i}\|^2 \\
             &= \|\Pi_{\operatorname{Span}K_{:Y}^{\perp}} K_{:i}\|^2 - \|\Pi_{\operatorname{Span}K_{:j}} K_{:i}\|^2
 
-    .. autofunction:: projection_dpp_sampler_Schur
 
 Generic :math:`\operatorname{DPP}`
 -------------------------------------
 
-    .. autofunction:: dpp_sampler_eig_GS
-    .. autofunction:: dpp_sampler_eig_Cholesky
-    .. autofunction:: dpp_sampler_KuTa12
 
 :math:`\operatorname{k-DPP}`
 ----------------------------
 
-    .. autofunction:: k_dpp_sampler
-
-    .. autofunction:: elem_symm_poly
-
-    .. autofunction:: select_eig_vec
-
+Approximate Sampling
 
 References
 ==========

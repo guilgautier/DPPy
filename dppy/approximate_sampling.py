@@ -9,7 +9,29 @@ solvers.options['glpk'] = dict(msg_lev='GLP_MSG_OFF')
 ############## Approximate samplers for projection DPPs #######
 ###############################################################
 
-def add_exchange_delete_sampler(kernel, nb_it_max = 10, T_max=10):
+def dpp_sampler_approx(kernel, s_init=None, 
+											nb_it_max = 10, T_max=10,
+											sampling_mode="AED"):
+
+	if sampling_mode == "AED":
+		if s_init is None:
+			
+		sampl = add_exchange_delete_sampler(kernel, s_init, nb_it_max, T_max)
+
+	elif sampling_mode == "AD":
+		if s_init is None:
+			
+		sampl = add_delete_sampler(kernel, s_init, nb_it_max, T_max)
+
+	elif sampling_mode == "E":
+		if s_init is None:
+			
+		sampl = basis_exchange_sampler(kernel, s_init, nb_it_max, T_max)
+
+
+	
+
+def add_exchange_delete_sampler(kernel, s_init=None, nb_it_max = 10, T_max=10):
 	""" MCMC sampler for generic DPPs, it is a mix of add/delete and basis exchange MCMC samplers.
 
 	:param kernel:
@@ -17,10 +39,10 @@ def add_exchange_delete_sampler(kernel, nb_it_max = 10, T_max=10):
 	:type kernel:
 			array_type
 
-	# :param s_init:
-	# 		Initial sample.
-	# :type s_init: 
-	# 		list
+	:param s_init:
+			Initial sample.
+	:type s_init: 
+			list
 
 	:param nb_it_max:
 		Maximum number of iterations performed by the the algorithm.
@@ -35,7 +57,7 @@ def add_exchange_delete_sampler(kernel, nb_it_max = 10, T_max=10):
 			float
 
 	:return:
-		list of `nb_it_max` approximate samples of DPP(kernel)
+		list of `nb_it_max` approximate sample of DPP(kernel)
 	:rtype:
 		array_type
 
@@ -48,19 +70,9 @@ def add_exchange_delete_sampler(kernel, nb_it_max = 10, T_max=10):
 	N = kernel.shape[0]
 	ground_set = np.arange(N)
 
-	# Build the initial sample
-	nb_init_max = 100
-	for _ in range(nb_init_max):
-		r0 = np.random.choice(2*N, size=N, replace=False)
-		S0 = np.intersect1d(s_init, ground_set)
-		det_S0 = np.linalg.det(K[np.ix_(S0, S0)])
-		if det_S0 > 1e-8:
-			break
-	else:
-		raise ValueError("Problem of initilization!")
-
-	sampl_size = len(S0) # Size of the current
-	samples = [S0] # Initialize the collection (list) of samples
+	S0 = s_init
+	sampl_size = len(S0) # Size of the current sample
+	sample = [S0] # Initialize the collection (list) of sample
 	
 	# Evaluate running time...
 	flag = True
@@ -82,7 +94,7 @@ def add_exchange_delete_sampler(kernel, nb_it_max = 10, T_max=10):
 			det_S1 = np.linalg.det(K[np.ix_(S1, S1)]) # det K_S1
 			if np.random.rand() < (det_S1/det_S0 * (sampl_size+1)/(N-sampl_size)):
 				S0, det_S0 = S1, det_S1
-				samples.append(S1)
+				sample.append(S1)
 				sampl_size += 1
 
 		# Exchange: S1 = S0 - s + t
@@ -93,7 +105,7 @@ def add_exchange_delete_sampler(kernel, nb_it_max = 10, T_max=10):
 			det_S1 = np.linalg.det(K[np.ix_(S1, S1)]) # det K_S1
 			if np.random.rand() < (det_S1/det_S0):
 				S0, det_S0 = S1, det_S1
-				samples.append(S1)
+				sample.append(S1)
 				# sampl_size stays the same
 
 		# Delete: S1 = S0 - s
@@ -103,11 +115,11 @@ def add_exchange_delete_sampler(kernel, nb_it_max = 10, T_max=10):
 			det_S1 = np.linalg.det(K[np.ix_(S1, S1)]) # det K_S1
 			if np.random.rand() < (det_S1/det_S0 * sampl_size/(N-(sampl_size-1))):
 				S0, det_S0 = S1, det_S1
-				samples.append(S1)
+				sample.append(S1)
 				sampl_size -= 1
 
 		else:
-			samples.append(S0)
+			sample.append(S0)
 		
 		if nb_it_max:
 			it += 1
@@ -115,7 +127,7 @@ def add_exchange_delete_sampler(kernel, nb_it_max = 10, T_max=10):
 		elif T_max:
 			flag = (time.time()-t_start) < T_max
 
-	return samples
+	return sample
 
 def add_delete_sampler(kernel, s_init, nb_it_max = 10, T_max=10):
 	""" MCMC sampler for generic DPP(kernel), it performs local moves by removing/adding one element at a time.
@@ -143,7 +155,7 @@ def add_delete_sampler(kernel, s_init, nb_it_max = 10, T_max=10):
 			float
 
 	:return:
-		list of `nb_it_max` approximate samples of DPP(kernel)
+		list of `nb_it_max` approximate sample of DPP(kernel)
 	:rtype:
 		array_type
 
@@ -157,8 +169,7 @@ def add_delete_sampler(kernel, s_init, nb_it_max = 10, T_max=10):
 
 	S0 = s_init # Initial sample
 	det_S0 = np.linalg.det(K[np.ix_(S0, S0)]) # det K_S0
-
-	samples = [S0] # Initialize the collection (list) of samples
+	sample = [S0] # Initialize the collection (list) of sample
 	
 	# Evaluate running time...
 	flag = True
@@ -181,13 +192,13 @@ def add_delete_sampler(kernel, s_init, nb_it_max = 10, T_max=10):
 			det_S1 = np.linalg.det(K[np.ix_(S1, S1)]) # det K_S1
 			if np.random.rand() < det_S1/det_S0:
 				S0, det_S0 = S1, det_S1
-				samples.append(S1)
+				sample.append(S1)
 
 			else:
-				samples.append(S0)
+				sample.append(S0)
 
 		else:
-			samples.append(S0)
+			sample.append(S0)
 		
 		if nb_it_max:
 			it += 1
@@ -195,7 +206,7 @@ def add_delete_sampler(kernel, s_init, nb_it_max = 10, T_max=10):
 		elif T_max:
 			flag = (time.time()-t_start) < T_max
 
-	return samples
+	return sample
 
 def basis_exchange_sampler(kernel, s_init, nb_it_max = 10, T_max=10):
 	""" MCMC sampler for projection DPPs, based on the basis exchange property.
@@ -224,7 +235,7 @@ def basis_exchange_sampler(kernel, s_init, nb_it_max = 10, T_max=10):
 			float
 
 	:return:
-			MCMC chain of approximate samples (stacked row_wise i.e. nb_it_max rows).
+			MCMC chain of approximate sample (stacked row_wise i.e. nb_it_max rows).
 	:rtype: 
 			array_type
 
@@ -237,11 +248,11 @@ def basis_exchange_sampler(kernel, s_init, nb_it_max = 10, T_max=10):
 	N = kernel.shape[0] # Number of elements
 	ground_set = np.arange(N) # Ground set
 
-	k = len(s_init) # Size of the samples (only exchange: cardinality is fixed)
+	sampl_size = len(s_init) # Size of the sample (cardinality is fixed)
 	S0 = s_init # Initial sample
 	det_S0 = np.linalg.det(K[np.ix_(S0, S0)]) # det K_S0
 
-	samples = [S0] # Initialize the collection (list) of samples
+	sample = [S0] # Initialize the collection (list) of sample
 	
 	# Evaluate running time...
 	flag = True
@@ -254,8 +265,10 @@ def basis_exchange_sampler(kernel, s_init, nb_it_max = 10, T_max=10):
 
 			# Perform the potential exchange move S1 = S0 - s + t
 			S1 = S0.copy() # S1 = S0
-			rnd_ind = np.random.choice(k, size=1) # Uniform element of S_0 by index
-			t = np.random.choice(np.delete(ground_set, S0), size=1) # t in [N]\S_0
+			# Pick one element in S_0 by index uniformly at random
+			rnd_ind = np.random.choice(sampl_size, size=1) 
+			# Pick one element t in [N]\S_0 uniformly at random
+			t = np.random.choice(np.delete(ground_set, S0), size=1) 
 			S1[rnd_ind] = t # S_1 = S_0 - S_0[rnd_ind] + t
 			
 			det_S1 = np.linalg.det(K[np.ix_(S1, S1)]) # det K_S1
@@ -263,13 +276,13 @@ def basis_exchange_sampler(kernel, s_init, nb_it_max = 10, T_max=10):
 			# Accept_reject the move w. proba
 			if np.random.rand() < det_S1/det_S0:
 				S0, det_S0 = S1, det_S1
-				samples.append(S1)
+				sample.append(S1)
 
 			else: # if reject, stay in the same state
-				samples.append(S0)	
+				sample.append(S0)	
 
 		else:
-			samples.append(S0)
+			sample.append(S0)
 
 		
 		if nb_it_max:
@@ -278,7 +291,7 @@ def basis_exchange_sampler(kernel, s_init, nb_it_max = 10, T_max=10):
 		elif T_max:
 			flag = (time.time()-t_start) < T_max
 
-	return samples
+	return sample
 
 
 
@@ -323,7 +336,7 @@ def zono_sampling(Vectors, c=None, nb_it_max = 10, T_max=10):
 	""" MCMC based sampler for projection DPPs.
 	The similarity matrix is the orthogonal projection matrix onto 
 	the row span of the feature vector matrix.
-	Samples are of size equal to the rank of the projection matrix 
+	Samples are of size equal to the ransampl_size of the projection matrix 
 	also equal to the rank of the feature matrix (assumed to be full row rank).
 
 	:param Vectors:
@@ -349,7 +362,7 @@ def zono_sampling(Vectors, c=None, nb_it_max = 10, T_max=10):
 			float
 
 	:return:
-			MCMC chain of approximate samples (stacked row_wise i.e. nb_it_max rows).
+			MCMC chain of approximate sample (stacked row_wise i.e. nb_it_max rows).
 	:rtype: 
 			array_type    
 
@@ -358,7 +371,7 @@ def zono_sampling(Vectors, c=None, nb_it_max = 10, T_max=10):
 			Algorithm 5 in :cite:`GaBaVa17`
 
 			- :func:`extract_basis <extract_basis>`
-			- :func:`basis_exchange <basis_exchange>`
+			- :func:`basis_exchange_sampler <basis_exchange_sampler>`
 	"""
 
 	r,n = Vectors.shape
@@ -432,7 +445,7 @@ def zono_sampling(Vectors, c=None, nb_it_max = 10, T_max=10):
 				# Get the tile
 		B_x0 = extract_basis(np.asarray(y_star))
 
-	# Initialize sequence of samples
+	# Initialize sequence of sample
 	Bases = [B_x0]
 
 	# Compute the det of the tile (Vol(B)=abs(det(B)))
