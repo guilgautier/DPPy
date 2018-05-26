@@ -9,25 +9,25 @@ solvers.options['glpk'] = dict(msg_lev='GLP_MSG_OFF')
 ############## Approximate samplers for projection DPPs #######
 ###############################################################
 
-def dpp_sampler_approx(kernel, s_init=None, 
-											nb_it_max = 10, T_max=10,
+def dpp_sampler_approx(kernel, s_init=None, nb_it_max = 10, T_max=10,
 											sampling_mode="AED"):
 
 	if sampling_mode == "AED":
 		if s_init is None:
-			
+			pass
 		sampl = add_exchange_delete_sampler(kernel, s_init, nb_it_max, T_max)
 
 	elif sampling_mode == "AD":
 		if s_init is None:
-			
+			pass
 		sampl = add_delete_sampler(kernel, s_init, nb_it_max, T_max)
 
 	elif sampling_mode == "E":
 		if s_init is None:
-			
+			pass
 		sampl = basis_exchange_sampler(kernel, s_init, nb_it_max, T_max)
 
+	return sampl
 
 	
 

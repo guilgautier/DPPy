@@ -238,13 +238,14 @@ def proj_dpp_sampler_kernel_GS(K, size=None):
 ### Generic kernel ###
 ######################
 
-def dpp_sampler_eig(eig_vals, eig_vecs, update_rule="GS"):
+def dpp_sampler_eig(eig_vecs_sel, update_rule="GS"):
 	"""
 	.. seealso::
 		
 		Phase 1:
 
 		- :func:`dpp_eig_vecs_select <dpp_eig_vecs_select>`
+		- :func:`dpp_eig_vecs_select_gram_factor <dpp_eig_vecs_select_gram_factor>`
 		
 		Phase 2:
 
@@ -253,20 +254,17 @@ def dpp_sampler_eig(eig_vals, eig_vecs, update_rule="GS"):
 		- :func:`proj_dpp_sampler_eig_KuTa12 <proj_dpp_sampler_eig_KuTa12>`
 	"""	
 
-	#### Phase 1: Select eigenvectors
-	eig_vecs_selected = dpp_eig_vecs_select(eig_vals, eig_vecs)
-
-	if eig_vecs_selected.shape[1]:
+	if eig_vecs_sel.shape[1]:
 	#### Phase 2: Sample from projection kernel VV.T
 	# Chain rule, conditionals are updated using:
 		if update_rule == "GS": # Gram-Schmidt
-			sampl = proj_dpp_sampler_eig_GS_bis(eig_vecs_selected)
+			sampl = proj_dpp_sampler_eig_GS_bis(eig_vecs_sel)
 
 		elif update_rule == "GS_bis": # Slight modif of "GS"
-			sampl = proj_dpp_sampler_eig_GS(eig_vecs_selected)
+			sampl = proj_dpp_sampler_eig_GS(eig_vecs_sel)
 
 		elif update_rule == "KuTa12": # cf Kulesza-Taskar
-			sampl = proj_dpp_sampler_eig_KuTa12(eig_vecs_selected)
+			sampl = proj_dpp_sampler_eig_KuTa12(eig_vecs_sel)
 
 		else:
 			str_list = ["Invalid 'update_rule' parameter, choose among:",
@@ -282,30 +280,64 @@ def dpp_sampler_eig(eig_vals, eig_vecs, update_rule="GS"):
 
 ##### Phase 1
 
-def dpp_eig_vecs_select(eig_vals, eig_vecs):
-	""" Subsample eigenvectors V of the initial kernel ('K' or equivalently 'L') to build a projection DPP with kernel V V.T from which sampling is easy. The selection is made based a realization of Bernoulli variables with parameters the eigenvalues of 'K'.
+def dpp_eig_vecs_select(ber_params, eig_vecs):
+	""" Subsample eigenvectors V of the initial kernel ('K' or equivalently 'L') to build a projection DPP with kernel V V.T from which sampling is easy. The selection is made based a realization of Bernoulli variables.
 
-	:param eig_vals: 
-		Collection of eigenvalues of 'K' (inclusion) kernel.
-	:type eig_vals: 
+	:param ber_params: 
+		Parameters of Bernoulli variables
+	:type ber_params: 
 		list, array_type
 
 	:param eig_vecs: 
-		Collection of eigenvectors of 'K' (or equiv 'L') kernel.
-	:type eig_vals: 
+		Collection of eigenvectors of the kernel
+	:type eig_vecs: 
+		array_type
+
+	:param gram_factor: 
+		Feature vectors defining the kernel=gram_factor.T gram_factor
+	:type gram_factor: 
 		array_type
 
 	:return: 
-		Selected eigenvectors
+		selected eigenvectors
 	:rtype: 
 		array_type
 	"""
-	# Size of the ground set
-	nb_items = eig_vecs.shape[0]
-	# Bernoulli realisation with params eig_vals
-	ind_selected = np.random.rand(nb_items) < eig_vals
 
-	return eig_vecs[:, ind_selected]
+	# Realisation of Bernoulli random variables with params ber_params
+	ind_sel = np.random.rand(nb_items) < ber_params
+
+	return eig_vecs[:,ind_sel]
+
+
+def dpp_eig_vecs_select_gram_factor(eig_vals_L, eig_vecs, gram_factor):
+	""" Subsample eigenvectors V of the initial kernel "L" defined as L=Phi.T Phi, to build a projection DPP with kernel V V.T from which sampling is easy. The selection is made based a realization of Bernoulli variables with parameters involving the eigenvalues of 'K'.
+
+	:param eig_vals_L: 
+		Collection of eigenvalues of 'L' (marginal) kernel.
+	:type eig_vals_L: 
+		list, array_type
+
+	:param eig_vecs: 
+		Collection of eigenvectors of the kernel
+	:type eig_vecs: 
+		array_type
+
+	:param gram_factor: 
+		Feature vectors defining the kernel=gram_factor.T gram_factor
+	:type gram_factor: 
+		array_type
+
+	:return: 
+		selected eigenvectors
+	:rtype: 
+		array_type
+	"""
+
+	# Realisation of Bernoulli random variables with params eig_vals_L
+	ind_sel = np.random.rand(nb_items) < eig_vals_L/(1.0+eig_vals_L)
+
+	return gram_factor.dot(eig_vecs[:,ind_sel]/np.sqrt(eig_vals_L[ind_sel]))
 
 ##### Phase 2
 
@@ -660,20 +692,20 @@ def k_dpp_sampler_eig(eig_vals, eig_vecs, size, update_rule="GS",
 			- :func:`proj_dpp_sampler_eig_KuTa12 <proj_dpp_sampler_eig_KuTa12>`
 	"""	
 	#### Phase 1: Select eigenvectors
-	eig_vecs_selected = k_dpp_eig_vecs_select(eig_vals, eig_vecs, size,
-																						el_sym_pol_eval)
+	eig_vecs_sel = k_dpp_eig_vecs_select(eig_vals, eig_vecs, size,
+																			el_sym_pol_eval)
 
 	#### Phase 2: Sample from projection kernel VV.T
 	# Chain rule, conditionals are updated using:
 
 	if update_rule == "GS": # Gram-Schmidt
-		sampl = proj_dpp_sampler_eig_GS(eig_vecs_selected)
+		sampl = proj_dpp_sampler_eig_GS(eig_vecs_sel)
 
 	elif update_rule == "GS_bis": # Slight modif of "GS"
-		sampl = proj_dpp_sampler_eig_GS_bis(eig_vecs_selected)
+		sampl = proj_dpp_sampler_eig_GS_bis(eig_vecs_sel)
 
 	elif update_rule == "KuTa12": # cf Kulesza-Taskar
-		sampl = proj_dpp_sampler_eig_KuTa12(eig_vecs_selected)
+		sampl = proj_dpp_sampler_eig_KuTa12(eig_vecs_sel)
 
 	else:
 		str_list = ["Invalid 'update_rule' parameter, choose among:",
