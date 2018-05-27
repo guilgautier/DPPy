@@ -244,8 +244,8 @@ def dpp_sampler_eig(eig_vecs_sel, update_rule="GS"):
 		
 		Phase 1:
 
-		- :func:`dpp_eig_vecs_select <dpp_eig_vecs_select>`
-		- :func:`dpp_eig_vecs_select_gram_factor <dpp_eig_vecs_select_gram_factor>`
+		- :func:`dpp_eig_vecs_selector <dpp_eig_vecs_selector>`
+		- :func:`dpp_eig_vecs_selector_gram_factor <dpp_eig_vecs_selector_gram_factor>`
 		
 		Phase 2:
 
@@ -280,7 +280,7 @@ def dpp_sampler_eig(eig_vecs_sel, update_rule="GS"):
 
 ##### Phase 1
 
-def dpp_eig_vecs_select(ber_params, eig_vecs):
+def dpp_eig_vecs_selector(ber_params, eig_vecs):
 	""" Subsample eigenvectors V of the initial kernel ('K' or equivalently 'L') to build a projection DPP with kernel V V.T from which sampling is easy. The selection is made based a realization of Bernoulli variables.
 
 	:param ber_params: 
@@ -293,11 +293,6 @@ def dpp_eig_vecs_select(ber_params, eig_vecs):
 	:type eig_vecs: 
 		array_type
 
-	:param gram_factor: 
-		Feature vectors defining the kernel=gram_factor.T gram_factor
-	:type gram_factor: 
-		array_type
-
 	:return: 
 		selected eigenvectors
 	:rtype: 
@@ -305,26 +300,26 @@ def dpp_eig_vecs_select(ber_params, eig_vecs):
 	"""
 
 	# Realisation of Bernoulli random variables with params ber_params
-	ind_sel = np.random.rand(nb_items) < ber_params
+	ind_sel = np.random.rand(len(ber_params)) < ber_params
 
 	return eig_vecs[:,ind_sel]
 
 
-def dpp_eig_vecs_select_gram_factor(eig_vals_L, eig_vecs, gram_factor):
-	""" Subsample eigenvectors V of the initial kernel "L" defined as L=Phi.T Phi, to build a projection DPP with kernel V V.T from which sampling is easy. The selection is made based a realization of Bernoulli variables with parameters involving the eigenvalues of 'K'.
+def dpp_eig_vecs_selector_L_dual(eig_vals, eig_vecs, gram_factor):
+	""" Subsample eigenvectors V of dual kernel :math:`L'=\Phi \Phi^{\top}` to build a projection :math:`\operatorname{DPP}(K)` with :math:`K=V V^{\top}` from which sampling is easy. This corresponds to Phase I of the exact sampling scheme, the selection is made based a realization of Bernoulli variables with parameters involving the eigenvalues of :math:`L'`.
 
-	:param eig_vals_L: 
-		Collection of eigenvalues of 'L' (marginal) kernel.
-	:type eig_vals_L: 
+	:param eig_vals: 
+		Collection of eigenvalues of L' or 'L_dual' kernel.
+	:type eig_vals: 
 		list, array_type
 
 	:param eig_vecs: 
-		Collection of eigenvectors of the kernel
+		Collection of eigenvectors of 'L' or 'L_dual' kernel.
 	:type eig_vecs: 
 		array_type
 
 	:param gram_factor: 
-		Feature vectors defining the kernel=gram_factor.T gram_factor
+		Feature vectors
 	:type gram_factor: 
 		array_type
 
@@ -334,10 +329,10 @@ def dpp_eig_vecs_select_gram_factor(eig_vals_L, eig_vecs, gram_factor):
 		array_type
 	"""
 
-	# Realisation of Bernoulli random variables with params eig_vals_L
-	ind_sel = np.random.rand(nb_items) < eig_vals_L/(1.0+eig_vals_L)
+	# Realisation of Bernoulli random variables with params eig_vals
+	ind_sel = np.random.rand(len(eig_vals)) < eig_vals/(1.0+eig_vals)
 
-	return gram_factor.dot(eig_vecs[:,ind_sel]/np.sqrt(eig_vals_L[ind_sel]))
+	return gram_factor.dot(eig_vecs[:,ind_sel]/np.sqrt(eig_vals[ind_sel]))
 
 ##### Phase 2
 
@@ -683,7 +678,7 @@ def k_dpp_sampler_eig(eig_vals, eig_vecs, size, update_rule="GS",
 			
 			Phase 1:
 
-			- :func:`k_dpp_eig_vecs_select <k_dpp_eig_vecs_select>`
+			- :func:`k_dpp_eig_vecs_selector <k_dpp_eig_vecs_selector>`
 			
 			Phase 2:
 
@@ -692,7 +687,7 @@ def k_dpp_sampler_eig(eig_vals, eig_vecs, size, update_rule="GS",
 			- :func:`proj_dpp_sampler_eig_KuTa12 <proj_dpp_sampler_eig_KuTa12>`
 	"""	
 	#### Phase 1: Select eigenvectors
-	eig_vecs_sel = k_dpp_eig_vecs_select(eig_vals, eig_vecs, size,
+	eig_vecs_sel = k_dpp_eig_vecs_selector(eig_vals, eig_vecs, size,
 																			el_sym_pol_eval)
 
 	#### Phase 2: Sample from projection kernel VV.T
@@ -717,7 +712,7 @@ def k_dpp_sampler_eig(eig_vals, eig_vecs, size, update_rule="GS",
 
 	return sampl
 
-def k_dpp_eig_vecs_select(eig_vals, eig_vecs, size, el_sym_pol_eval=None):
+def k_dpp_eig_vecs_selector(eig_vals, eig_vecs, size, el_sym_pol_eval=None):
 	""" Subsample eigenvectors V of the initial kernel ('K' or equivalently 'L') to build a projection DPP with kernel V V.T from which sampling is easy. The selection is made based a realization of Bernoulli variables with parameters the eigenvalues of 'K'.
 
 	:param eig_vals: 
