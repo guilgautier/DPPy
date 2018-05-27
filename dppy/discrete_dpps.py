@@ -282,13 +282,13 @@ class Discrete_DPP:
 
 	### Approximate sampling
 	def sample_approx(self, sampling_mode="AED", nb_iter=10, T_max=None):
-
+		
 		self.list_of_samples.append(sampl)
 
 	def compute_K_kernel(self):
 		"""K = L(I+L)^-1 = I - (I+L)^-1"""
 		if self.K is not None:
-			raise ValueError("'K' kernel is already available")
+			print("'K' kernel is already available")
 
 		elif "A_zono" in self.params_keys:
 			A = self.A_zono
@@ -308,13 +308,17 @@ class Discrete_DPP:
 	def compute_L_kernel(self):
 		"""L = K(I-K)^-1 = (I-K)^-1 - I"""
 		if self.L is not None:
-			raise ValueError("'L' kernel is already available")
+			print("'L' kernel is already available")
 
 		elif "L_gram_factor" in self.params_keys:
 			self.L = self.L_gram_factor.dot(self.L_gram_factor.T)
 
 		elif self.L_eig_vals is not None:
 			self.K = (self.eig_vecs * self.L_eig_vals).dot(self.eig_vecs.T)
+
+		elif (self.ensemble_type == "K") and self.projection:
+			print("'L' kernel (= K(I-K)^-1) cannot be computed because 'K' kernel is projection i.e. has eigenvalues in {0,1}. Thus (I-K) not invertible.")
+			raise
 
 		elif self.K_eig_vals is not None:
 			try: # to compute eigenvalues of kernel L = K(I-K)^-1
@@ -323,10 +327,10 @@ class Discrete_DPP:
 				self.L = (self.eig_vecs * self.L_eig_vals).dot(self.eig_vecs.T)
 
 			except FloatingPointError as e:
-				str_print = ["WARNING: {}.".format(e),
+				str_print = ("Error: {}.".format(e),
 										"Eigenvalues of 'L' kernel (L=K(I-K)^-1) cannot be computed.",
-										"'K' kernel has some eigenvalues are very close to 1.",
-										"Hint: 'K' kernel might be a projection."]
+										"'K' kernel has some eigenvalues very close to 1.",
+										"Hint: 'K' kernel might be a projection.")
 				print("\n".join(str_print))
 
 		elif self.K is not None:
