@@ -2,6 +2,7 @@
 from .exact_sampling import *
 from .approximate_sampling import *
 import matplotlib.pyplot as plt
+from warnings import warn
 
 class Discrete_DPP:
 
@@ -80,15 +81,15 @@ class Discrete_DPP:
 	def __check_ensemble_type_arg(self):
 		### Ensemble type
 		if self.ensemble_type not in ("K", "L"):
-			str_print = ("Invalid 'ensemble_type' argument, choose among:",
+			err_print = ("Invalid 'ensemble_type' argument, choose among:",
 									"- 'K': inclusion kernel, P(S C X) = det(K_S)",
 									"- 'L': marginal kernel, P(X=S) propto det(L_S)")
-			raise ValueError("\n".join(str_print))
+			raise ValueError("\n".join(err_print))
 
 	def __check_projection_arg(self):
 		if not isinstance(self.projection, bool):
-			str_print = "Invalid 'projection' argument: must be True/False"
-			raise ValueError(str_print)
+			err_print = "Invalid 'projection' argument: must be True/False"
+			raise ValueError(err_print)
 
 	def __check_params_validity(self):
 
@@ -118,11 +119,11 @@ class Discrete_DPP:
 					self.__check_size_of_A_zono(self.A_zono)
 
 			else:
-				str_print = ("Invalid parameter(s) for K-ensemble, choose among:",
+				err_print = ("Invalid parameter(s) for K-ensemble, choose among:",
 										"- 'K_kernel': 0 <= K <= I", 
 										"- 'K_eig_dec': [eig_vals, eig_vecs]", 
 										"- 'A_zono': A is dxN matrix, with rank(A)=d corresponding to K = A.T (AA.T)^-1 A")
-				raise ValueError("\n".join(str_print))
+				raise ValueError("\n".join(err_print))
 
 		## For L-ensemble
 		elif self.ensemble_type == "L":
@@ -147,16 +148,16 @@ class Discrete_DPP:
 					self.__check_L_dual_or_not(self.L_gram_factor)
 
 			else:
-				str_print = ("Invalid parameter(s) for L-ensemble, choose among:",
+				err_print = ("Invalid parameter(s) for L-ensemble, choose among:",
 										"- 'L_kernel': L >= 0", 
 										"- 'L_eig_dec': [eig_vals, eig_vecs]", 
 										"- 'L_gram_factor': Phi is dxN feature matrix corresponding to L = Phi.T Phi")
-				raise ValueError("\n".join(str_print))
+				raise ValueError("\n".join(err_print))
 
 	def __check_symmetry_of_kernel(self, kernel):
 		if not np.allclose(kernel.T, kernel):
-			str_print = "Invalid kernel: not symmetric"
-			raise ValueError(str_print)
+			err_print = "Invalid kernel: not symmetric"
+			raise ValueError(err_print)
 
 	def __check_is_projection_kernel(self, kernel):
 			# Cheap test checking reproducing property
@@ -182,16 +183,16 @@ class Discrete_DPP:
 		tol = 1e-8
 
 		if not np.all((-tol<=eig_vals) & (eig_vals<=1.0+tol)):
-			str_print = "Invalid kernel for K-ensemble, eigenvalues not in [0,1]"
-			raise ValueError(str_print)
+			err_print = "Invalid kernel for K-ensemble, eigenvalues not in [0,1]"
+			raise ValueError(err_print)
 			
 	def __check_eig_vals_geq_0(self, eig_vals):
 
 		tol = 1e-8
 
 		if not np.all(eig_vals>=-tol):
-			str_print = "Invalid kernel for L-ensemble, eigenvalues not >= 0"
-			raise ValueError(str_print)
+			err_print = "Invalid kernel for L-ensemble, eigenvalues not >= 0"
+			raise ValueError(err_print)
 
 	def __check_size_of_A_zono(self, A_zono):
 
@@ -202,8 +203,8 @@ class Discrete_DPP:
 			print(str_print)
 
 		else:
-			str_print = "Invalid 'A_zono' (dxN) parameter, d>N => not full row rank"
-			raise ValueError(str_print)
+			err_print = "Invalid 'A_zono' (dxN) parameter, d>N => not full row rank"
+			raise ValueError(err_print)
 
 	def __check_L_dual_or_not(self):
 
@@ -279,63 +280,116 @@ class Discrete_DPP:
 
 		self.list_of_samples.append(sampl)
 
-
 	### Approximate sampling
-	def sample_approx(self, sampling_mode="AED", nb_iter=10, T_max=None):
-		
+	def sample_approx(self, sampling_mode, **params):
+
+		auth_sampl_mod = ("AED", "AD", "E", "zonotope")
+
+		if sampling_mode in auth_sampl_mod:
+			self.sampling_mode = sampling_mode
+
+			# For projection kernel K
+			if (self.ensemble_type == "K") and self.projection:
+				if self.sampling_mode == "E":
+					if self.K is None:
+						self.compute_K_kernel() 
+					MC_samples = dpp_sampler_approx(self.K, self.sampling_mode, params)
+
+				elif self.sampling_mode == "zonotope":
+					if self.A_zono is not None:
+						MC_samples = zonotope_sampler(self.A_zono, params)
+					else:
+						warn("'A_zono' does not exist, 'sampling_mode' switched to 'E'")
+						self.sampling_mode = "E"
+						self.sample_approx(self.sampling_mode, params)
+
+			elif self.sampling_mode in ("AED", "AD"):
+				if self.L is None:
+					self.compute_L_kernel()
+				MC_samples = dpp_sampler_approx(self.L, self.sampling_mode, params)
+
+		else:
+			pass
+
+		list_of_samples.append(sampl)
+
+
+
+
+
 		self.list_of_samples.append(sampl)
 
-	def compute_K_kernel(self):
+	def compute_K_kernel(self, msg=None):
 		"""K = L(I+L)^-1 = I - (I+L)^-1"""
 		if self.K is not None:
-			print("'K' kernel is already available")
+			str_print = "K kernel is already available"
 
-		elif "A_zono" in self.params_keys:
-			A = self.A_zono
-			self.K = A.T.dot(np.linalg.inv(A.dot(A.T))).dot(A)
+		else:
+			str_print = "K kernel computed via:\n" if msg is None else msg
 
-		elif self.K_eig_vals is not None:
-			self.K = (self.eig_vecs * self.K_eig_vals).dot(self.eig_vecs.T)
+			if "A_zono" in self.params_keys:
+				A = self.A_zono
+				self.K = A.T.dot(np.linalg.inv(A.dot(A.T))).dot(A)
+				str_print += "'A_zono' i.e. K = A.T (AA.T)^-1 A"
 
-		elif self.L_eig_vals is not None:
-			self.K_eig_vals = self.L_eig_vals/(1.0 + self.L_eig_vals)
-			self.K = (self.eig_vecs * self.K_eig_vals).dot(self.eig_vecs.T)
+			elif self.K_eig_vals is not None:
+				str_print += "'K_eig_vals' i.e. U D U.T"
+				self.K = (self.eig_vecs * self.K_eig_vals).dot(self.eig_vecs.T)
 
-		elif self.L is not None:
-			self.L_eig_vals, self.eig_vecs = self.__eigendecompose(self.L)
-			self.compute_K_kernel()
+			elif self.L_eig_vals is not None:
+				str_print += "'L_eig_vals' i.e eig_K = eig_L/(1+eig_L)\n"
+				self.K_eig_vals = self.L_eig_vals/(1.0 + self.L_eig_vals)
+				self.compute_K_kernel(msg=str_print)
 
-	def compute_L_kernel(self):
+			elif self.L is not None:
+				self.compute_L_kernel(msg=str_print)
+
+		print(str_print)
+
+	def compute_L_kernel(self, msg=None):
 		"""L = K(I-K)^-1 = (I-K)^-1 - I"""
 		if self.L is not None:
-			print("'L' kernel is already available")
-
-		elif "L_gram_factor" in self.params_keys:
-			self.L = self.L_gram_factor.dot(self.L_gram_factor.T)
-
-		elif self.L_eig_vals is not None:
-			self.K = (self.eig_vecs * self.L_eig_vals).dot(self.eig_vecs.T)
+			str_print = "L kernel is already available"
 
 		elif (self.ensemble_type == "K") and self.projection:
-			print("'L' kernel (= K(I-K)^-1) cannot be computed because 'K' kernel is projection i.e. has eigenvalues in {0,1}. Thus (I-K) not invertible.")
-			raise
+				err_print = ("Eigenvalues of L kernel cannot be computed",
+											"eig_L = eig_K/(1-eig_K)",
+											"K kernel has some eig_K very close to 1.",
+											"Hint: 'K' kernel might be a projection.")
+				raise ValueError("\n".join(err_print))
 
-		elif self.K_eig_vals is not None:
-			try: # to compute eigenvalues of kernel L = K(I-K)^-1
-				np.seterr(divide='raise')
-				self.L_eig_vals = self.K_eig_vals/(1.0 - self.K_eig_vals)
+		else:
+			str_print = "L kernel computed via:\n" if msg is None else msg
+
+			if "L_gram_factor" in self.params_keys:
+				str_print += "'L_gram_factor' i.e. L = Phi.T Phi"
+				Phi = self.L_gram_factor
+				self.L = Phi.T.dot(Phi)
+
+			elif self.L_eig_vals is not None:
+				str_print += "'L_eig_vals' i.e. U D U.T\n"
 				self.L = (self.eig_vecs * self.L_eig_vals).dot(self.eig_vecs.T)
 
-			except FloatingPointError as e:
-				str_print = ("Error: {}.".format(e),
-										"Eigenvalues of 'L' kernel (L=K(I-K)^-1) cannot be computed.",
-										"'K' kernel has some eigenvalues very close to 1.",
-										"Hint: 'K' kernel might be a projection.")
-				print("\n".join(str_print))
+			elif self.K_eig_vals is not None:
+				try: # to compute eigenvalues of kernel L = K(I-K)^-1
+					str_print += "'K_eig_vals' i.e. U D/(1-D) U.T\n"
+					np.seterr(divide='raise')
+					self.L_eig_vals = self.K_eig_vals/(1.0 - self.K_eig_vals)
+					self.compute_L_kernel(str_print)
+				except:
+					err_print = ("Eigenvalues of L kernel cannot be computed",
+											"eig_L = eig_K/(1-eig_K)",
+											"K kernel has some eig_K very close to 1.",
+											"Hint: 'K' kernel might be a projection.")
+					raise FloatingPointError("\n".join(err_print))
 
-		elif self.K is not None:
-			self.K_eig_vals, self.eig_vecs = self.__eigendecompose(self.K)
-			self.compute_L_kernel()
+			elif self.K is not None:
+				self.K_eig_vals, self.eig_vecs = self.__eigendecompose(self.K)
+
+			else:
+				self.compute_K_kernel(msg=str_print)
+
+		print(str_print)
 
 	def plot(self):
 		"""Display a heatmap of the kernel"""

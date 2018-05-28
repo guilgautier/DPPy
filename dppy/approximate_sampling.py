@@ -10,8 +10,11 @@ solvers.options['glpk'] = dict(msg_lev='GLP_MSG_OFF')
 ############## Approximate samplers for projection DPPs #######
 ###############################################################
 
-def dpp_sampler_approx(kernel, s_init=None, nb_it_max = 10, T_max=10,
-											sampling_mode="AED"):
+def dpp_sampler_approx(kernel, sampling_mode="AED", **params):
+
+	s_init = params.get("s_init", None)
+	nb_it_max = params.get("nb_it_max", 10)
+	T_max = params.get("T_max", None)
 
 	if sampling_mode == "AED":
 		if s_init is None:
@@ -20,17 +23,18 @@ def dpp_sampler_approx(kernel, s_init=None, nb_it_max = 10, T_max=10,
 
 	elif sampling_mode == "AD":
 		if s_init is None:
-			pass
+			s_init = initialize_AD_and_E_sampler(kernel)
 		sampl = add_delete_sampler(kernel, s_init, nb_it_max, T_max)
 
 	elif sampling_mode == "E":
 		if s_init is None:
-			pass
+			s_init = initialize_E_sampler(kernel)
 		sampl = basis_exchange_sampler(kernel, s_init, nb_it_max, T_max)
 
 	return sampl
 
 def initialize_AED_sampler(kernel):
+
 	N = kernel.shape[0]
 	ground_set = np.arange(N)
 
@@ -49,6 +53,7 @@ def initialize_AED_sampler(kernel):
 		raise ValueError("Initialization problem!")
 
 def initialize_AD_and_E_sampler(kernel, size=None):
+
 	N = kernel.shape[0]
 	ground_set = np.arange(N)
 
@@ -111,7 +116,7 @@ def add_exchange_delete_sampler(kernel, s_init=None,
 	else:
 		S0, det_S0 = s_init, det_kernel_ST(kernel, s_init)
 	sampl_size = len(S0) # Size of the current sample
-	sample = [S0] # Initialize the collection (list) of sample
+	samples = [S0] # Initialize the collection (list) of sample
 	
 	# Evaluate running time...
 	flag = True
@@ -134,7 +139,7 @@ def add_exchange_delete_sampler(kernel, s_init=None,
 			det_S1 = det_kernel_ST(kernel, S1) # det K_S1
 			if np.random.rand() < (det_S1/det_S0 * (sampl_size+1)/(N-sampl_size)):
 				S0, det_S0 = S1, det_S1
-				sample.append(S1)
+				samples.append(S1)
 				sampl_size += 1
 
 		# Exchange: S1 = S0 - s + t
@@ -145,7 +150,7 @@ def add_exchange_delete_sampler(kernel, s_init=None,
 			det_S1 = det_kernel_ST(kernel, S1) # det K_S1
 			if np.random.rand() < (det_S1/det_S0):
 				S0, det_S0 = S1, det_S1
-				sample.append(S1)
+				samples.append(S1)
 				# sampl_size stays the same
 
 		# Delete: S1 = S0 - s
@@ -155,11 +160,11 @@ def add_exchange_delete_sampler(kernel, s_init=None,
 			det_S1 = det_kernel_ST(kernel, S1) # det K_S1
 			if np.random.rand() < (det_S1/det_S0 * sampl_size/(N-(sampl_size-1))):
 				S0, det_S0 = S1, det_S1
-				sample.append(S1)
+				samples.append(S1)
 				sampl_size -= 1
 
 		else:
-			sample.append(S0)
+			samples.append(S0)
 		
 		it += 1
 		flag = (it < nb_it_max) if not T_max else ((time.time()-t_start) < T_max)
@@ -209,7 +214,7 @@ def add_delete_sampler(kernel, s_init, nb_it_max = 10, T_max=10):
 		S0, det_S0 = initialize_AD_and_E_sampler(kernel)
 	else:
 		S0, det_S0 = s_init, det_kernel_ST(kernel, s_init)
-	sample = [S0] # Initialize the collection (list) of sample
+	samples = [S0] # Initialize the collection (list) of sample
 	
 	# Evaluate running time...
 	flag = True
@@ -232,19 +237,15 @@ def add_delete_sampler(kernel, s_init, nb_it_max = 10, T_max=10):
 			det_S1 = det_kernel_ST(kernel, S1) # det K_S1
 			if np.random.rand() < det_S1/det_S0:
 				S0, det_S0 = S1, det_S1
-				sample.append(S1)
+				samples.append(S1)
 
 			else:
-				sample.append(S0)
+				samples.append(S0)
 
 		else:
-			sample.append(S0)
+			samples.append(S0)
 		
-		if nb_it_max:
-			it += 1
-			flag = it < nb_it_max
-		elif T_max:
-			flag = (time.time()-t_start) < T_max
+		flag = (it < nb_it_max) if not T_max else ((time.time()-t_start) < T_max)
 
 	return sample
 
@@ -297,7 +298,7 @@ def basis_exchange_sampler(kernel, s_init, nb_it_max = 10, T_max=10):
 	S0 = s_init # Initial sample
 	det_S0 = det_kernel_ST(kernel, S0) # det K_S0
 
-	sample = [S0] # Initialize the collection (list) of sample
+	samples = [S0] # Initialize the collection (list) of sample
 	
 	# Evaluate running time...
 	flag = True
@@ -321,20 +322,15 @@ def basis_exchange_sampler(kernel, s_init, nb_it_max = 10, T_max=10):
 			# Accept_reject the move w. proba
 			if np.random.rand() < det_S1/det_S0:
 				S0, det_S0 = S1, det_S1
-				sample.append(S1)
+				samples.append(S1)
 
 			else: # if reject, stay in the same state
-				sample.append(S0)	
+				samples.append(S0)	
 
 		else:
-			sample.append(S0)
+			samples.append(S0)
 
-		
-		if nb_it_max:
-			it += 1
-			flag = it < nb_it_max
-		elif T_max:
-			flag = (time.time()-t_start) < T_max
+		flag = (it < nb_it_max) if not T_max else ((time.time()-t_start) < T_max)
 
 	return sample
 
@@ -377,17 +373,17 @@ def extract_basis(y_sol, eps=1e-5):
 	
 	return basis.tolist()
 
-def zono_sampling(Vectors, c=None, nb_it_max = 10, T_max=10):
+def zonotope_sampler(A_zono, **params):
 	""" MCMC based sampler for projection DPPs.
 	The similarity matrix is the orthogonal projection matrix onto 
 	the row span of the feature vector matrix.
 	Samples are of size equal to the ransampl_size of the projection matrix 
 	also equal to the rank of the feature matrix (assumed to be full row rank).
 
-	:param Vectors:
+	:param A_zono:
 			Feature vector matrix, feature vectors are stacked columnwise.
 			It is assumed to be full row rank.
-	:type Vectors:
+	:type A_zono:
 			array_type
 
 	:param c: Linear objective of the linear program used to identify 
@@ -419,8 +415,13 @@ def zono_sampling(Vectors, c=None, nb_it_max = 10, T_max=10):
 			- :func:`basis_exchange_sampler <basis_exchange_sampler>`
 	"""
 
-	r,n = Vectors.shape
-
+	r, N = A_zono.shape # Sizes of r=samples=rank(A_zono), N=ground set
+	# Linear objective
+	c = params.get("lin_obj", matrix(np.random.randn(N)))
+	# Initial point x0 = A*u, u~U[0,1]^n
+	x0 = params.get("x0", matrix(A_zono.dot(np.random.rand(N))))
+	nb_it_max = params.get("nb_it_max", 10)
+	T_max = params.get("T_max", None)
 	#################################################
 	############### Linear problems #################
 	#################################################
@@ -443,47 +444,43 @@ def zono_sampling(Vectors, c=None, nb_it_max = 10, T_max=10):
 	#																[-I_n]				[0^n]
 	#########################################################
 	# Then B_x = \{ i ; y_i^* \in ]0,1[ \}
-	if c is None:
-		c = matrix(np.random.randn(n))
 
-	A = spmatrix(0.0, [], [], (r, n))
-	A[:,:] = Vectors
+	A = spmatrix(0.0, [], [], (r, N))
+	A[:,:] = A_zono
 
-	G = spmatrix(0.0, [], [], (2*n, n))
-	G[:n,:] = spmatrix(1.0, range(n), range(n))
-	G[n:,:] = spmatrix(-1.0, range(n), range(n))
+	G = spmatrix(0.0, [], [], (2*N, N))
+	G[:N,:] = spmatrix(1.0, range(N), range(N))
+	G[N:,:] = spmatrix(-1.0, range(N), range(N))
 
 	### Endpoints of segment 
 	# D_x \cap Z(A) = [x+alpha_m*d, x-alpha_M*d]
-	#############################################################################################
+	#############################################################################
 	# alpha_m/_M = 
-	# argmin  +/-alpha 									argmin  [+/-1 0^n].T * [alpha,lambda]
+	# argmin  +/-alpha 									argmin  [+/-1 0^N].T * [alpha,lambda]
 	# s.t.    x + alpha d = A lambda  <=>   s.t.  [-d A] * [alpha,lambda] = x
-	#					0 <= lambda <= 1            [ 0^n I_n ] *[alpha,lambda] <=  [1^n]
-	#																			[ 0^n -I_n]             				[0^n]
-	#############################################################################################
+	#					0 <= lambda <= 1            [ 0^N I_N ] *[alpha,lambda] <=  [1^N]
+	#																			[ 0^N -I_N]             				[0^N]
+	#############################################################################
 
-	c_mM = matrix(0.0, (n+1,1))
+	c_mM = matrix(0.0, (N+1,1))
 	c_mM[0] = 1.0
 
-	A_mM = spmatrix(0.0, [], [], (r, n+1))
+	A_mM = spmatrix(0.0, [], [], (r, N+1))
 	A_mM[:,1:] = A
 
-	G_mM = spmatrix(0.0, [], [], (2*n, n+1))
+	G_mM = spmatrix(0.0, [], [], (2*N, N+1))
 	G_mM[:,1:] = G
 
 	# Common h to both kind of LP
 	# cf. 0 <= y <= 1 and 0 <= lambda <= 1
-	h = matrix(0.0, (2*n, 1))
-	h[:n,:] = 1.0
+	h = matrix(0.0, (2*N, 1))
+	h[:N,:] = 1.0
 
 	########################
 	#### Initialization ####
 	########################
 	B_x0 = []
 	while len(B_x0) != r:
-		# Initial point x0 = A*u, u~U[0,1]^n
-		x0 = matrix(Vectors.dot(np.random.rand(n)))
 		# Initial tile B_x0
 				# Solve P_x0(A,c)
 		y_star = solvers.lp(c, G, h, A, x0, solver='glpk')['x']
@@ -494,14 +491,14 @@ def zono_sampling(Vectors, c=None, nb_it_max = 10, T_max=10):
 	Bases = [B_x0]
 
 	# Compute the det of the tile (Vol(B)=abs(det(B)))
-	det_B_x0 = la.det(Vectors[:,B_x0])
+	det_B_x0 = la.det(A_zono[:,B_x0])
 
 	it, t_start = 1, time.time()
 	flag = it < nb_it_max
 	while flag:
 
 		# Take uniform direction d defining D_x0
-		d = matrix(np.random.randn(r,1))
+		d = matrix(np.random.randn(r, 1))
 
 		# Define D_x0 \cap Z(A) = [x0 + alpha_m*d, x0 - alpha_M*d]
 			# Update the constraint [-d A] * [alpha,lambda] = x
@@ -522,7 +519,7 @@ def zono_sampling(Vectors, c=None, nb_it_max = 10, T_max=10):
 		if len(B_x1) != r: # In case extract_basis returned smtg ill conditioned
 			Bases.append(B_x0)
 		else:
-			det_B_x1 = la.det(Vectors[:,B_x1])
+			det_B_x1 = la.det(A_zono[:,B_x1])
 			if np.random.rand() < abs(det_B_x1/det_B_x0):
 					x0, B_x0, det_B_x0 = x1, B_x1, det_B_x1
 					Bases.append(B_x1)
