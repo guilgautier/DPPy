@@ -6,6 +6,23 @@ from cvxopt import matrix, spmatrix, solvers
 solvers.options['show_progress'] = False
 solvers.options['glpk'] = dict(msg_lev='GLP_MSG_OFF')
 
+def det_kernel_ST(kernel, S, T=None):
+
+	if T is None:
+		if S:
+			return la.det(kernel[np.ix_(S, S)]) # det K_SS = det K_S
+		else:
+			return 1 # = det K_emptyset = 1
+
+	elif S and T:
+		return la.det(kernel[np.ix_(S, T)]) # det K_ST
+
+	elif not S and not T:
+		return 1
+
+	else:
+		raise ValueError("Big problem")
+
 ###############################################################
 ############## Approximate samplers for projection DPPs #######
 ###############################################################
@@ -15,6 +32,7 @@ def dpp_sampler_approx(kernel, sampling_mode="AED", **params):
 	s_init = params.get("s_init", None)
 	nb_it_max = params.get("nb_it_max", 10)
 	T_max = params.get("T_max", None)
+	size = params.get("size", None) # For projection K-ensemble size = Tr(K)
 
 	if sampling_mode == "AED":
 		if s_init is None:
@@ -28,7 +46,7 @@ def dpp_sampler_approx(kernel, sampling_mode="AED", **params):
 
 	elif sampling_mode == "E":
 		if s_init is None:
-			s_init = initialize_E_sampler(kernel)
+			s_init = initialize_AD_and_E_sampler(kernel, size)
 		sampl = basis_exchange_sampler(kernel, s_init, nb_it_max, T_max)
 
 	return sampl
@@ -44,13 +62,15 @@ def initialize_AED_sampler(kernel):
 
 	for _ in range(nb_it_max):
 		if det_S0 > tol:
-			return S0, det_S0
+			break
 		else:
 			T = np.random.choice(2*N, size=N, replace=False)
-			S0 = np.intersect1d(T, ground_set)
-			det_S0 = det_kernel_ST(S0)
+			S0 = np.intersect1d(T, ground_set).tolist()
+			det_S0 = det_kernel_ST(kernel, S0)
 	else:
 		raise ValueError("Initialization problem!")
+
+	return S0
 
 def initialize_AD_and_E_sampler(kernel, size=None):
 
@@ -63,17 +83,17 @@ def initialize_AD_and_E_sampler(kernel, size=None):
 	
 	for _ in range(nb_it_max):
 		if det_S0 > tol:
-			return S0, det_S0
+			break
 		else:
-			sz = size if size else np.random.choice(ground_set, size=1)
-			S0 = np.random.choice(ground_set, size=sz, replace=False)
-			det_S0 = det_kernel_ST(S0)
+			sz = size if size else np.random.choice(ground_set[1:], size=1)[0]
+			S0 = np.random.choice(ground_set, size=sz, replace=False).tolist()
+			det_S0 = det_kernel_ST(kernel, S0)
 	else:
 		raise ValueError("Initialization problem!")
 
-def add_exchange_delete_sampler(kernel, s_init=None, 
-																nb_it_max = 10, 
-																T_max=None):
+	return S0
+
+def add_exchange_delete_sampler(kernel, s_init=None, nb_it_max=10, T_max=None):
 	""" MCMC sampler for generic DPPs, it is a mix of add/delete and basis exchange MCMC samplers.
 
 	:param kernel:
@@ -111,23 +131,20 @@ def add_exchange_delete_sampler(kernel, s_init=None,
 	ground_set = np.arange(N)
 
 	# Initialization
-	if s_init is None:
-		S0, det_S0 = initialize_AED_sampler(kernel)
-	else:
-		S0, det_S0 = s_init, det_kernel_ST(kernel, s_init)
+	S0, det_S0 = s_init, det_kernel_ST(kernel, s_init)
 	sampl_size = len(S0) # Size of the current sample
 	samples = [S0] # Initialize the collection (list) of sample
 	
 	# Evaluate running time...
 	flag = True
-	it = 1 if nb_it_max
-	t_start = time.time() if T_max else inf
+	it = 1
+	t_start = time.time() if T_max else 0
 
 	while flag:
 
 		S1 = S0.copy() # S1 = S0
 		s = np.random.choice(sampl_size, size=1) # Uniform s in S_0 by index
-		t = np.random.choice(np.delete(ground_set, S0), size=1) # Unif t in [N]-S_0
+		t = np.random.choice(np.delete(ground_set, S0), size=1)[0] # Unif t in [N]-S_0
 
 		unif_01 = np.random.rand() 
 		ratio = sampl_size/N # Proportion of items in current sample
@@ -169,9 +186,9 @@ def add_exchange_delete_sampler(kernel, s_init=None,
 		it += 1
 		flag = (it < nb_it_max) if not T_max else ((time.time()-t_start) < T_max)
 
-	return sample
+	return samples
 
-def add_delete_sampler(kernel, s_init, nb_it_max = 10, T_max=10):
+def add_delete_sampler(kernel, s_init, nb_it_max=10, T_max=10):
 	""" MCMC sampler for generic DPP(kernel), it performs local moves by removing/adding one element at a time.
 
 	:param kernel:
@@ -210,15 +227,13 @@ def add_delete_sampler(kernel, s_init, nb_it_max = 10, T_max=10):
 	N = kernel.shape[0] # Number of elements
 
 	# Initialization
-	if s_init is None:
-		S0, det_S0 = initialize_AD_and_E_sampler(kernel)
-	else:
-		S0, det_S0 = s_init, det_kernel_ST(kernel, s_init)
+	S0, det_S0 = s_init, det_kernel_ST(kernel, s_init)
 	samples = [S0] # Initialize the collection (list) of sample
 	
 	# Evaluate running time...
 	flag = True
-	it, t_start = 1, time.time()
+	it = 1
+	t_start = time.time() if T_max else 0
 
 	while flag:
 
@@ -227,12 +242,13 @@ def add_delete_sampler(kernel, s_init, nb_it_max = 10, T_max=10):
 
 			# Perform the potential add/delete move S1 = S0 +/- s
 			S1 = S0.copy() # S1 = S0
-			s = np.random.choice(N, size=1) # Uniform item in [N]
+			s = np.random.choice(N, size=1)[0] # Uniform item in [N]
 			if s in S0: 
 				S1.remove(s) # S1 = S0 - s
 			else: 
 				S1.append(s) # S1 = SO + s
 
+			print(S1)
 			# Accept_reject the move
 			det_S1 = det_kernel_ST(kernel, S1) # det K_S1
 			if np.random.rand() < det_S1/det_S0:
@@ -245,11 +261,12 @@ def add_delete_sampler(kernel, s_init, nb_it_max = 10, T_max=10):
 		else:
 			samples.append(S0)
 		
+		it += 1
 		flag = (it < nb_it_max) if not T_max else ((time.time()-t_start) < T_max)
 
-	return sample
+	return samples
 
-def basis_exchange_sampler(kernel, s_init, nb_it_max = 10, T_max=10):
+def basis_exchange_sampler(kernel, s_init, nb_it_max=10, T_max=10):
 	""" MCMC sampler for projection DPPs, based on the basis exchange property.
 
 	:param kernel:
@@ -291,18 +308,13 @@ def basis_exchange_sampler(kernel, s_init, nb_it_max = 10, T_max=10):
 
 	size = len(s_init) # Size of the sample (cardinality is fixed)
 	# Initialization
-	if s_init is None:
-		S0, det_S0 = initialize_AED_sampler(kernel, size)
-	else:
-		S0, det_S0 = s_init, det_kernel_ST(kernel, s_init)
-	S0 = s_init # Initial sample
-	det_S0 = det_kernel_ST(kernel, S0) # det K_S0
-
+	S0, det_S0 = s_init, det_kernel_ST(kernel, s_init)
 	samples = [S0] # Initialize the collection (list) of sample
 	
 	# Evaluate running time...
 	flag = True
-	it, t_start = 1, time.time()
+	it = 1
+	t_start = time.time() if T_max else 0
 
 	while flag:
 
@@ -330,10 +342,10 @@ def basis_exchange_sampler(kernel, s_init, nb_it_max = 10, T_max=10):
 		else:
 			samples.append(S0)
 
+		it += 1
 		flag = (it < nb_it_max) if not T_max else ((time.time()-t_start) < T_max)
 
-	return sample
-
+	return samples
 
 
 
@@ -519,7 +531,7 @@ def zonotope_sampler(A_zono, **params):
 		if len(B_x1) != r: # In case extract_basis returned smtg ill conditioned
 			Bases.append(B_x0)
 		else:
-			det_B_x1 = la.det(A_zono[:,B_x1])
+			det_B_x1 = la.det(A_zono[:, B_x1])
 			if np.random.rand() < abs(det_B_x1/det_B_x0):
 					x0, B_x0, det_B_x0 = x1, B_x1, det_B_x1
 					Bases.append(B_x1)
@@ -535,12 +547,3 @@ def zonotope_sampler(A_zono, **params):
 		print("Time enlapsed", time.time()-t_start)
 
 	return np.array(Bases)
-
-def det_kernel_ST(kernel, S, T=None):
-
-	if T is None:
-		ind = np.ix_(S, T) 
-	else:
-		ind = np.ix_(S, S)
-
-	return la.det(kernel[ind])

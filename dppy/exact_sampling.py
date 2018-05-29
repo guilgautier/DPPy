@@ -8,7 +8,7 @@ import scipy.linalg as la
 ################# DPPs #################
 ########################################
 
-def dpp_sampler_exact(kernel, proj_kernel=False, update_rule="GS"):
+def dpp_sampler_exact(kernel, proj_kernel=False, sampling_mode="GS"):
 	""" Sample from :math:`\operatorname{DPP}(K)`, where :math:`K` is real symmetric with eigenvalues in :math:`[0,1]`.
 
 	:param kernel: Real symmetric kernel with eigenvalues in :math:`[0,1]`
@@ -21,7 +21,7 @@ def dpp_sampler_exact(kernel, proj_kernel=False, update_rule="GS"):
 	:type proj_kernel:
 		bool, default 'False'
 
-	:param update_rule: 
+	:param sampling_mode: 
 		Indicate how the conditional probabilities i.e. the ratio of 2 determinants must be updated.
 
 		If ``proj_kernel=True``:
@@ -32,7 +32,7 @@ def dpp_sampler_exact(kernel, proj_kernel=False, update_rule="GS"):
 			- 'GS_bis': (default) Gram-Schmidt on the rows of eigenvectors, equivalent to 'GS' updates	
 			- 'GS': GSesky update
 			- 'KuTa12': Algorithm 1 in :cite:`KuTa12`
-	:type update_rule:
+	:type sampling_mode:
 		string, default 'GS_bis'
 		
 	:return:
@@ -51,11 +51,11 @@ def dpp_sampler_exact(kernel, proj_kernel=False, update_rule="GS"):
 	"""
 
 	if proj_kernel:
-		sampl = proj_dpp_sampler_kernel(K, update_rule)
+		sampl = proj_dpp_sampler_kernel(K, sampling_mode)
 
 	else:
 		eig_vecs, eig_vals = la.eigh(kernel)
-		sampl = dpp_sampler_eig(eig_vals, eig_vecs, update_rule)
+		sampl = dpp_sampler_eig(eig_vals, eig_vecs, sampling_mode)
 
 	return sampl
 
@@ -63,7 +63,7 @@ def dpp_sampler_exact(kernel, proj_kernel=False, update_rule="GS"):
 ### Projection kernel ###
 #########################
 
-def proj_dpp_sampler_kernel(kernel, update_rule="GS"):
+def proj_dpp_sampler_kernel(kernel, sampling_mode="GS"):
 	"""
 		.. seealso::
 			- :func:`proj_dpp_sampler_kernel_GS_bis <proj_dpp_sampler_kernel_GS_bis>`
@@ -75,17 +75,17 @@ def proj_dpp_sampler_kernel(kernel, update_rule="GS"):
 
 	#### Phase 2: Sample from orthogonal projection kernel K = K^2 = K.T K
 	# Chain rule, conditionals are updated using:
-	if update_rule == "GS": # Gram-Schmidt equiv GSesky
+	if sampling_mode == "GS": # Gram-Schmidt equiv GSesky
 		sampl = proj_dpp_sampler_kernel_GS(kernel)
 
-	# elif update_rule == "Schur": # Schur complement 
+	# elif sampling_mode == "Schur": # Schur complement 
 	# 	sampl = proj_dpp_sampler_kernel_Schur(kernel)
 
 	else:
-		str_list = ["Invalid 'update_rule' parameter, choose among:",
+		str_list = ["Invalid 'sampling_mode' parameter, choose among:",
 								"- 'GS' (default)",
 								# "- 'Schur'",
-								"Given 'update_rule' = {}".format(update_rule)]
+								"Given 'sampling_mode' = {}".format(sampling_mode)]
 		raise ValueError("\n".join(str_list))
 
 	return sampl
@@ -238,7 +238,7 @@ def proj_dpp_sampler_kernel_GS(K, size=None):
 ### Generic kernel ###
 ######################
 
-def dpp_sampler_eig(eig_vecs_sel, update_rule="GS"):
+def dpp_sampler_eig(eig_vecs_sel, sampling_mode="GS"):
 	"""
 	.. seealso::
 		
@@ -257,21 +257,21 @@ def dpp_sampler_eig(eig_vecs_sel, update_rule="GS"):
 	if eig_vecs_sel.shape[1]:
 	#### Phase 2: Sample from projection kernel VV.T
 	# Chain rule, conditionals are updated using:
-		if update_rule == "GS": # Gram-Schmidt
+		if sampling_mode == "GS": # Gram-Schmidt
 			sampl = proj_dpp_sampler_eig_GS_bis(eig_vecs_sel)
 
-		elif update_rule == "GS_bis": # Slight modif of "GS"
+		elif sampling_mode == "GS_bis": # Slight modif of "GS"
 			sampl = proj_dpp_sampler_eig_GS(eig_vecs_sel)
 
-		elif update_rule == "KuTa12": # cf Kulesza-Taskar
+		elif sampling_mode == "KuTa12": # cf Kulesza-Taskar
 			sampl = proj_dpp_sampler_eig_KuTa12(eig_vecs_sel)
 
 		else:
-			str_list = ["Invalid 'update_rule' parameter, choose among:",
+			str_list = ["Invalid 'sampling_mode' parameter, choose among:",
 									"- 'GS' (default)",
 									"- 'GS_bis'",
 									"- 'KuTa12'",
-									"Given 'update_rule' = {}".format(update_rule)]
+									"Given 'sampling_mode' = {}".format(sampling_mode)]
 			raise ValueError("\n".join(str_list))
 	else:
 		sampl = []
@@ -587,7 +587,7 @@ def proj_dpp_sampler_eig_KuTa12(eig_vecs, size=None):
 ################# k-DPPs #################
 ##########################################
 
-def k_dpp_sampler(kernel, size, proj_kernel=False, update_rule="GS"):
+def k_dpp_sampler(kernel, size, proj_kernel=False, sampling_mode="GS"):
 	""" Sample from :math:`\operatorname{DPP}(K)`, where :math:`K` is real symmetric with eigenvalues in :math:`[0,1]`.
 
 	:param kernel: Real symmetric kernel with eigenvalues in :math:`[0,1]`
@@ -600,7 +600,7 @@ def k_dpp_sampler(kernel, size, proj_kernel=False, update_rule="GS"):
 	:type proj_kernel:
 		bool, default 'False'
 
-	:param update_rule: 
+	:param sampling_mode: 
 		Indicate how the conditional probabilities i.e. the ratio of 2 determinants must be updated.
 
 		If ``proj_kernel=True``:
@@ -611,7 +611,7 @@ def k_dpp_sampler(kernel, size, proj_kernel=False, update_rule="GS"):
 			- "GS" (default): Gram-Schmidt on the columns of :math:`K` equiv 
 			- "GS_bis": Slight modif of "GS"
 			- "KuTa12": Algorithm 1 in :cite:`KuTa12`
-	:type update_rule:
+	:type sampling_mode:
 		string, default 'GS_bis'
 		
 	:return:
@@ -626,18 +626,18 @@ def k_dpp_sampler(kernel, size, proj_kernel=False, update_rule="GS"):
 	"""
 
 	if proj_kernel:
-		sampl = proj_k_dpp_sampler_kernel(kernel, size, update_rule)
+		sampl = proj_k_dpp_sampler_kernel(kernel, size, sampling_mode)
 
 	else:
 		eig_vecs, eig_vals = la.eigh(kernel)
-		sampl = k_dpp_sampler_eig(eig_vals, eig_vecs, size, update_rule)
+		sampl = k_dpp_sampler_eig(eig_vals, eig_vecs, size, sampling_mode)
 
 	return sampl
 
 #########################
 ### Projection kernel ###
 #########################
-def proj_k_dpp_sampler_kernel(kernel, size, update_rule="GS"):
+def proj_k_dpp_sampler_kernel(kernel, size, sampling_mode="GS"):
 	"""
 		.. seealso::
 			- :func:`proj_dpp_sampler_kernel_GS_bis <proj_dpp_sampler_kernel_GS_bis>`
@@ -649,17 +649,17 @@ def proj_k_dpp_sampler_kernel(kernel, size, update_rule="GS"):
 
 	#### Phase 2: Sample from orthogonal projection kernel K = K^2 = K.T K
 	# Chain rule, conditionals are updated using:
-	if update_rule == "GS": # Gram-Schmidt equiv GSesky
+	if sampling_mode == "GS": # Gram-Schmidt equiv GSesky
 		sampl = proj_dpp_sampler_kernel_GS(kernel, size)
 
-	# elif update_rule == "Shur": # Schur complement 
+	# elif sampling_mode == "Shur": # Schur complement 
 	# 	sampl = proj_dpp_sampler_kernel_Schur(kernel, size)
 
 	else:
-		str_list = ["Invalid 'update_rule' parameter, choose among:",
+		str_list = ["Invalid 'sampling_mode' parameter, choose among:",
 								"- 'GS' (default)",
 								# "- 'Schur'",
-								"Given 'update_rule' = {}".format(update_rule)]
+								"Given 'sampling_mode' = {}".format(sampling_mode)]
 		raise ValueError("\n".join(str_list))
 
 	return sampl
@@ -671,7 +671,7 @@ def proj_k_dpp_sampler_kernel(kernel, size, update_rule="GS"):
 ### Generic kernel ###
 ######################
 
-def k_dpp_sampler_eig(eig_vals, eig_vecs, size, update_rule="GS",
+def k_dpp_sampler_eig(eig_vals, eig_vecs, size, sampling_mode="GS",
 											el_sym_pol_eval=None):
 	"""
 		.. seealso::
@@ -693,21 +693,21 @@ def k_dpp_sampler_eig(eig_vals, eig_vecs, size, update_rule="GS",
 	#### Phase 2: Sample from projection kernel VV.T
 	# Chain rule, conditionals are updated using:
 
-	if update_rule == "GS": # Gram-Schmidt
+	if sampling_mode == "GS": # Gram-Schmidt
 		sampl = proj_dpp_sampler_eig_GS(eig_vecs_sel)
 
-	elif update_rule == "GS_bis": # Slight modif of "GS"
+	elif sampling_mode == "GS_bis": # Slight modif of "GS"
 		sampl = proj_dpp_sampler_eig_GS_bis(eig_vecs_sel)
 
-	elif update_rule == "KuTa12": # cf Kulesza-Taskar
+	elif sampling_mode == "KuTa12": # cf Kulesza-Taskar
 		sampl = proj_dpp_sampler_eig_KuTa12(eig_vecs_sel)
 
 	else:
-		str_list = ["Invalid 'update_rule' parameter, choose among:",
+		str_list = ["Invalid 'sampling_mode' parameter, choose among:",
 								"- 'GS' (default)",
 								"- 'GS_bis'",
 								"- 'KuTa12'",
-								"Given 'update_rule' = {}".format(update_rule)]
+								"Given 'sampling_mode' = {}".format(sampling_mode)]
 		raise ValueError("\n".join(str_list))
 
 	return sampl

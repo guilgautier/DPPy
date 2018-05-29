@@ -117,32 +117,32 @@ class Discrete_k_DPP:
 
 		self.list_of_samples.append(sampl)
 
-	### Approximate sampling
-	def sample_approx(self, sampling_mode="AED", nb_iter=10, T_max=None):
+	# ### Approximate sampling
+	# def sample_approx(self, sampling_mode="AED", nb_iter=10, T_max=None):
 
-		self.list_of_samples.append(sampl)
+	# 	self.list_of_samples.append(sampl)
 
-	def plot(self):
-		"""Display a heatmap of the kernel provided, either K- or L-ensemble"""
+	# def plot(self):
+	# 	"""Display a heatmap of the kernel provided, either K- or L-ensemble"""
 
-		print("Heat map of L-kernel")
-		fig, ax = plt.subplots(1,1)
+	# 	print("Heat map of L-kernel")
+	# 	fig, ax = plt.subplots(1,1)
 
-		heatmap = ax.pcolor(self.L, cmap='jet')
+	# 	heatmap = ax.pcolor(self.L, cmap='jet')
 
-		ax.set_aspect('equal')
+	# 	ax.set_aspect('equal')
 
-		ticks = np.arange(self.nb_items)
-		ticks_label = [r'${}$'.format(tic) for tic in ticks]
+	# 	ticks = np.arange(self.nb_items)
+	# 	ticks_label = [r'${}$'.format(tic) for tic in ticks]
 
-		ax.xaxis.tick_top()
-		ax.set_xticks(ticks+0.5, minor=False)
+	# 	ax.xaxis.tick_top()
+	# 	ax.set_xticks(ticks+0.5, minor=False)
 
-		ax.invert_yaxis()
-		ax.set_yticks(ticks+0.5, minor=False)
+	# 	ax.invert_yaxis()
+	# 	ax.set_yticks(ticks+0.5, minor=False)
 
-		ax.set_xticklabels(ticks_label, minor=False)
-		ax.set_yticklabels(ticks_label, minor=False)
+	# 	ax.set_xticklabels(ticks_label, minor=False)
+	# 	ax.set_yticklabels(ticks_label, minor=False)
 
-		plt.colorbar(heatmap)
-		plt.show()
+	# 	plt.colorbar(heatmap)
+	# 	plt.show()

@@ -28,7 +28,9 @@ class Discrete_DPP:
 		# If full row rank feature matrix passed via "A_zono" it means that there is the underlying projection kernel is K = A.T (AA.T)^-1 A. A priori, you want to use zonotope approximate sampler.
 		if "A_zono" in self.params_keys:
 			self.A_zono = params.get("A_zono")
-			self.projection = True
+			if not self.projection: 
+				warn("'projection' attribute set to True")
+				self.projection = True
 
 
 		### Marginal kernel L: P(X=S) propto det(L_S) = det(L_S)/det(I+L)
@@ -121,8 +123,9 @@ class Discrete_DPP:
 			else:
 				err_print = ("Invalid parameter(s) for K-ensemble, choose among:",
 										"- 'K_kernel': 0 <= K <= I", 
-										"- 'K_eig_dec': [eig_vals, eig_vecs]", 
-										"- 'A_zono': A is dxN matrix, with rank(A)=d corresponding to K = A.T (AA.T)^-1 A")
+										"- 'K_eig_dec': (eig_vals, eig_vecs)", 
+										"- 'A_zono': A is dxN matrix, with rank(A)=d corresponding to K = A.T (AA.T)^-1 A",
+										"Given: {}".format(self.params_keys))
 				raise ValueError("\n".join(err_print))
 
 		## For L-ensemble
@@ -150,8 +153,9 @@ class Discrete_DPP:
 			else:
 				err_print = ("Invalid parameter(s) for L-ensemble, choose among:",
 										"- 'L_kernel': L >= 0", 
-										"- 'L_eig_dec': [eig_vals, eig_vecs]", 
-										"- 'L_gram_factor': Phi is dxN feature matrix corresponding to L = Phi.T Phi")
+										"- 'L_eig_dec': (eig_vals, eig_vecs)", 
+										"- 'L_gram_factor': Phi is dxN feature matrix corresponding to L = Phi.T Phi",
+										"Given: {}".format(self.params_keys))
 				raise ValueError("\n".join(err_print))
 
 	def __check_symmetry_of_kernel(self, kernel):
@@ -276,7 +280,9 @@ class Discrete_DPP:
 			self.sample_exact(self.sampling_mode)
 
 		elif "A_zono" in self.params_keys:
-			pass
+			warn("DPP defined via 'A_zono', apriori you want to use 'sample_approx', but you have called 'sample_exact'")
+			self.compute_K_kernel()
+			self.sampling_mode(self.sampling_mode)
 
 		self.list_of_samples.append(sampl)
 
@@ -288,36 +294,43 @@ class Discrete_DPP:
 		if sampling_mode in auth_sampl_mod:
 			self.sampling_mode = sampling_mode
 
-			# For projection kernel K
-			if (self.ensemble_type == "K") and self.projection:
-				if self.sampling_mode == "E":
-					if self.K is None:
-						self.compute_K_kernel() 
-					MC_samples = dpp_sampler_approx(self.K, self.sampling_mode, params)
+			if self.sampling_mode == "zonotope":
 
-				elif self.sampling_mode == "zonotope":
-					if self.A_zono is not None:
-						MC_samples = zonotope_sampler(self.A_zono, params)
-					else:
-						warn("'A_zono' does not exist, 'sampling_mode' switched to 'E'")
-						self.sampling_mode = "E"
-						self.sample_approx(self.sampling_mode, params)
+				if "A_zono" in self.params_keys:
+					MC_samples = zonotope_sampler(self.A_zono, **params)
+
+				else:
+					err_print = ("Invalid 'sampling_mode':",
+											"DPP must be defined via 'A_zono' to use 'zonotope' as sampling mode")
+					raise ValueError("\n".join(err_print))
+
+			elif self.sampling_mode == "E":
+
+				if (self.ensemble_type == "K") and self.projection:
+					self.compute_K_kernel()
+					# |sample|=Tr(K) a.s. for projection DPP(K)
+					params.update({'size': int(np.round(np.trace(self.K)))}) 
+
+					MC_samples = dpp_sampler_approx(self.K, self.sampling_mode, **params)
+
+				else:
+					self.compute_L_kernel()
+					MC_samples = dpp_sampler_approx(self.L, self.sampling_mode, **params)
 
 			elif self.sampling_mode in ("AED", "AD"):
-				if self.L is None:
-					self.compute_L_kernel()
-				MC_samples = dpp_sampler_approx(self.L, self.sampling_mode, params)
+				self.compute_L_kernel()
+				MC_samples = dpp_sampler_approx(self.L, self.sampling_mode, **params)
+
+			self.list_of_samples.append(MC_samples)
 
 		else:
-			pass
-
-		list_of_samples.append(sampl)
-
-
-
-
-
-		self.list_of_samples.append(sampl)
+			err_print = ("Invalid 'sampling_mode' parameter, choose among:",
+									"- 'AED' for Add-Exchange-Delete",
+									"- 'AD' for Add-Delete",
+									"- 'E' for Exchange",
+									"- 'zonotope' for zonotope sampler (projection K-ensemble only)",
+									"Given 'sampling_mode' = {}".format(sampling_mode))
+			raise ValueError("\n".join(err_print))
 
 	def compute_K_kernel(self, msg=None):
 		"""K = L(I+L)^-1 = I - (I+L)^-1"""
@@ -385,7 +398,7 @@ class Discrete_DPP:
 
 			elif self.K is not None:
 				self.K_eig_vals, self.eig_vecs = self.__eigendecompose(self.K)
-
+				self.compute_L_kernel(msg=str_print)
 			else:
 				self.compute_K_kernel(msg=str_print)
 
