@@ -28,10 +28,6 @@ class Discrete_DPP:
 		# If full row rank feature matrix passed via "A_zono" it means that there is the underlying projection kernel is K = A.T (AA.T)^-1 A. A priori, you want to use zonotope approximate sampler.
 		if "A_zono" in self.params_keys:
 			self.A_zono = params.get("A_zono")
-			if not self.projection: 
-				warn("'projection' attribute set to True")
-				self.projection = True
-
 
 		### Marginal kernel L: P(X=S) propto det(L_S) = det(L_S)/det(I+L)
 		self.L = params.get("L_kernel", None)
@@ -118,7 +114,7 @@ class Discrete_DPP:
 
 				elif self.A_zono is not None:
 					# A_zono (dxN) must be full row rank, first sanity check is d<=N
-					self.__check_size_of_A_zono(self.A_zono)
+					self.__full_row_rank(self.A_zono)
 
 			else:
 				err_print = ("Invalid parameter(s) for K-ensemble, choose among:",
@@ -198,17 +194,21 @@ class Discrete_DPP:
 			err_print = "Invalid kernel for L-ensemble, eigenvalues not >= 0"
 			raise ValueError(err_print)
 
-	def __check_size_of_A_zono(self, A_zono):
+	def __full_row_rank(self, A_zono):
 
-		d, N = A_zono
+		d, N = A_zono.shape
+		rank = np.linalg.matrix_rank(A_zono)
 
-		if d<=N:
-			str_print = "'A_zono' (dxN) with d<=N seems valid, then you must make sure it is full row rank"
-			print(str_print)
+		if rank == d:
+			if not self.projection: 
+				warn("'projection' attribute set to True")
+				self.projection = True
 
 		else:
-			err_print = "Invalid 'A_zono' (dxN) parameter, d>N => not full row rank"
+			err_print = ("Invalid 'A_zono' (dxN) parameter, not full row rank: d(={}) != rank(={})".format(d, rank))
 			raise ValueError(err_print)
+
+
 
 	def __check_L_dual_or_not(self):
 
@@ -334,58 +334,49 @@ class Discrete_DPP:
 
 	def compute_K_kernel(self, msg=None):
 		"""K = L(I+L)^-1 = I - (I+L)^-1"""
-		if self.K is not None:
-			str_print = "K kernel is already available"
-
-		else:
+		if self.K is None:
 			str_print = "K kernel computed via:\n" if msg is None else msg
 
 			if "A_zono" in self.params_keys:
 				A = self.A_zono
 				self.K = A.T.dot(np.linalg.inv(A.dot(A.T))).dot(A)
-				str_print += "'A_zono' i.e. K = A.T (AA.T)^-1 A"
+				str_print += "- 'A_zono' i.e. K = A.T (AA.T)^-1 A"
 
 			elif self.K_eig_vals is not None:
-				str_print += "'K_eig_vals' i.e. U D U.T"
+				str_print += "- 'K_eig_vals' i.e. U D U.T"
 				self.K = (self.eig_vecs * self.K_eig_vals).dot(self.eig_vecs.T)
 
 			elif self.L_eig_vals is not None:
-				str_print += "'L_eig_vals' i.e eig_K = eig_L/(1+eig_L)\n"
+				str_print += "- 'L_eig_vals' i.e eig_K = eig_L/(1+eig_L)\n"
 				self.K_eig_vals = self.L_eig_vals/(1.0 + self.L_eig_vals)
 				self.compute_K_kernel(msg=str_print)
 
 			elif self.L is not None:
 				self.compute_L_kernel(msg=str_print)
 
-		print(str_print)
+			print(str_print)
 
 	def compute_L_kernel(self, msg=None):
 		"""L = K(I-K)^-1 = (I-K)^-1 - I"""
-		if self.L is not None:
-			str_print = "L kernel is already available"
+		if (self.ensemble_type == "K") and self.projection:
+			err_print = ("L = K(I-K)^-1 = (I-K)^-1 - I kernel cannot be computed:",
+									"K being a projection kernel it has some eigenvalues equal to 1")
+			raise ValueError("\n".join(err_print))
 
-		elif (self.ensemble_type == "K") and self.projection:
-				err_print = ("Eigenvalues of L kernel cannot be computed",
-											"eig_L = eig_K/(1-eig_K)",
-											"K kernel has some eig_K very close to 1.",
-											"Hint: 'K' kernel might be a projection.")
-				raise ValueError("\n".join(err_print))
-
-		else:
+		elif self.L is None:
 			str_print = "L kernel computed via:\n" if msg is None else msg
 
 			if "L_gram_factor" in self.params_keys:
-				str_print += "'L_gram_factor' i.e. L = Phi.T Phi"
-				Phi = self.L_gram_factor
-				self.L = Phi.T.dot(Phi)
+				str_print += "- 'L_gram_factor' i.e. L = Phi.T Phi"
+				self.L = self.L_gram_factor.T.dot(self.L_gram_factor)
 
 			elif self.L_eig_vals is not None:
-				str_print += "'L_eig_vals' i.e. U D U.T\n"
+				str_print += "- 'L_eig_vals' i.e. U D U.T\n"
 				self.L = (self.eig_vecs * self.L_eig_vals).dot(self.eig_vecs.T)
 
 			elif self.K_eig_vals is not None:
 				try: # to compute eigenvalues of kernel L = K(I-K)^-1
-					str_print += "'K_eig_vals' i.e. U D/(1-D) U.T\n"
+					str_print += "- 'K_eig_vals' i.e. U D/(1-D) U.T\n"
 					np.seterr(divide='raise')
 					self.L_eig_vals = self.K_eig_vals/(1.0 - self.K_eig_vals)
 					self.compute_L_kernel(str_print)
@@ -402,7 +393,7 @@ class Discrete_DPP:
 			else:
 				self.compute_K_kernel(msg=str_print)
 
-		print(str_print)
+			print(str_print)
 
 	def plot(self):
 		"""Display a heatmap of the kernel"""

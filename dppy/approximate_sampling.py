@@ -143,8 +143,10 @@ def add_exchange_delete_sampler(kernel, s_init=None, nb_it_max=10, T_max=None):
 	while flag:
 
 		S1 = S0.copy() # S1 = S0
-		s = np.random.choice(sampl_size, size=1) # Uniform s in S_0 by index
-		t = np.random.choice(np.delete(ground_set, S0), size=1)[0] # Unif t in [N]-S_0
+		# Uniform s in S_0 by index
+		s = np.random.choice(sampl_size, size=1)[0] 
+		# Unif t in [N]-S_0
+		t = np.random.choice(np.delete(ground_set, S0), size=1)[0] 
 
 		unif_01 = np.random.rand() 
 		ratio = sampl_size/N # Proportion of items in current sample
@@ -248,7 +250,6 @@ def add_delete_sampler(kernel, s_init, nb_it_max=10, T_max=10):
 			else: 
 				S1.append(s) # S1 = SO + s
 
-			print(S1)
 			# Accept_reject the move
 			det_S1 = det_kernel_ST(kernel, S1) # det K_S1
 			if np.random.rand() < det_S1/det_S0:
@@ -324,9 +325,9 @@ def basis_exchange_sampler(kernel, s_init, nb_it_max=10, T_max=10):
 			# Perform the potential exchange move S1 = S0 - s + t
 			S1 = S0.copy() # S1 = S0
 			# Pick one element in S_0 by index uniformly at random
-			rnd_ind = np.random.choice(size, size=1) 
+			rnd_ind = np.random.choice(size, size=1)[0]
 			# Pick one element t in [N]\S_0 uniformly at random
-			t = np.random.choice(np.delete(ground_set, S0), size=1) 
+			t = np.random.choice(np.delete(ground_set, S0), size=1)[0]
 			S1[rnd_ind] = t # S_1 = S_0 - S_0[rnd_ind] + t
 			
 			det_S1 = det_kernel_ST(kernel, S1) # det K_S1
@@ -538,12 +539,7 @@ def zonotope_sampler(A_zono, **params):
 			else:
 					Bases.append(B_x0)
 
-		if nb_it_max is not None:
-			it += 1
-			flag = it < nb_it_max
-		elif T_max:
-			flag = (time.time() - t_start) < T_max
-
-		print("Time enlapsed", time.time()-t_start)
+		it += 1
+		flag = (it < nb_it_max) if not T_max else ((time.time()-t_start) < T_max)
 
 	return np.array(Bases)
