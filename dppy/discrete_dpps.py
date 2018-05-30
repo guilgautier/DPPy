@@ -32,7 +32,8 @@ class Discrete_DPP:
 		### Marginal kernel L: P(X=S) propto det(L_S) = det(L_S)/det(I+L)
 		self.L = params.get("L_kernel", None)
 		# If eigendecomposition available: L_eig_dec = [eig_vals, eig_vecs]
-		self.L_eig_vals, self.eig_vecs = params.get("L_eig_dec", [None, None])
+		self.L_eig_vals, self.eig_vecs = params.get("L_eig_dec", 
+											[None, None if self.eig_vecs is None else self.eig_vecs])
 		# If L defined as Gram matrix: L = Phi.T Phi, with feature matrix Phi dxN
 		if "L_gram_factor" in self.params_keys:
 			self.L_gram_factor = params.get("L_gram_factor", None) 
@@ -137,14 +138,14 @@ class Discrete_DPP:
 						self.__check_is_projection_kernel(self.L)
 
 				elif self.L_eig_vals is not None:
-
-					if self.projection:
-						self.__check_eig_vals_equal_O1(self.L_eig_vals)
-					else:
 						self.__check_eig_vals_geq_0(self.L_eig_vals)
+						# self.__check_eig_vals_equal_O1(self.L_eig_vals)
 
 				elif self.L_gram_factor is not None: # 
 					self.__check_L_dual_or_not(self.L_gram_factor)
+
+					if self.projection:
+						warn("'L_gram_factor'+'projection'=True is a very weird setting, you may switch to 'projection'=False")
 
 			else:
 				err_print = ("Invalid parameter(s) for L-ensemble, choose among:",
@@ -166,7 +167,9 @@ class Discrete_DPP:
 			K_i_ = kernel[items_to_check, :]
 			K_ii = kernel[items_to_check, items_to_check]
 
-			if not np.allclose(np_inner1d(K_i_, K_i_), K_ii):
+			if np.allclose(np_inner1d(K_i_, K_i_), K_ii):
+				pass
+			else:
 				raise ValueError("Invalid kernel: doesn't seem to be a projection")
 
 	def __check_eig_vals_equal_O1(self, eig_vals):
@@ -175,8 +178,10 @@ class Discrete_DPP:
 		eig_vals_close_to_0 = (-tol<=eig_vals) & (eig_vals<=tol)
 		eig_vals_close_to_1 = (1-tol<=eig_vals) & (eig_vals<=1+tol)
 
-		if not np.all(eig_vals_close_to_0 ^ eig_vals_close_to_1):
-			ValueError("Invalid kernel: doesn't seem to be a projection")
+		if np.all(eig_vals_close_to_0 ^ eig_vals_close_to_1):
+			pass
+		else:
+			raise ValueError("Invalid kernel: doesn't seem to be a projection, check that the eigenvalues provided are equal to 0 or 1")
 
 	def __check_eig_vals_in_01(self, eig_vals):
 
@@ -201,31 +206,31 @@ class Discrete_DPP:
 
 		if rank == d:
 			if not self.projection: 
-				warn("'projection' attribute set to True")
+				warn("K-ensemble defined via 'A_zono' => 'projection' set to True")
 				self.projection = True
 
 		else:
 			err_print = ("Invalid 'A_zono' (dxN) parameter, not full row rank: d(={}) != rank(={})".format(d, rank))
 			raise ValueError(err_print)
 
+	def __check_L_dual_or_not(self, L_gram_factor):
 
-
-	def __check_L_dual_or_not(self):
-
-		d, N = self.L_gram_factor
+		d, N = L_gram_factor.shape
 		
 		if d<N:
-			self.L_dual = self.L_gram_factor.dot(self.L_gram_factor.T)
+			self.L_dual = L_gram_factor.dot(L_gram_factor.T)
 			str_print = "d={} < N={}: L dual kernel was computed".format(d, N)
 
 		else:
-			self.L = L_gram_factor.T.dot(self.L_gram_factor)
+			self.L = L_gram_factor.T.dot(L_gram_factor)
 			str_print = "d={} >= N={}: L kernel was computed".format(d, N)
+
+		print(str_print)
 
 ### Eigendecomposition
 
 	def __eigendecompose(self, kernel):
-		print("Eigendecomposition was performed")
+		# print("Eigendecomposition was performed")
 		return la.eigh(kernel)
 
 ######################
@@ -352,9 +357,17 @@ class Discrete_DPP:
 				self.compute_K_kernel(msg=str_print)
 
 			elif self.L is not None:
+				str_print += "Eigendecomposition of L\n"
+				self.L_eig_vals, self.eig_vecs = self.__eigendecompose(self.L)
+				self.compute_K_kernel(msg=str_print)
+
+			else:
 				self.compute_L_kernel(msg=str_print)
 
-			print(str_print)
+		else:
+			str_print = "K available"
+
+		print(str_print)
 
 	def compute_L_kernel(self, msg=None):
 		"""L = K(I-K)^-1 = (I-K)^-1 - I"""
@@ -367,7 +380,7 @@ class Discrete_DPP:
 			str_print = "L kernel computed via:\n" if msg is None else msg
 
 			if "L_gram_factor" in self.params_keys:
-				str_print += "- 'L_gram_factor' i.e. L = Phi.T Phi"
+				str_print += "- 'L_gram_factor' i.e. L = Phi.T Phi\n"
 				self.L = self.L_gram_factor.T.dot(self.L_gram_factor)
 
 			elif self.L_eig_vals is not None:
@@ -388,12 +401,17 @@ class Discrete_DPP:
 					raise FloatingPointError("\n".join(err_print))
 
 			elif self.K is not None:
+				str_print += "Eigendecomposition of L\n"
 				self.K_eig_vals, self.eig_vecs = self.__eigendecompose(self.K)
 				self.compute_L_kernel(msg=str_print)
+
 			else:
 				self.compute_K_kernel(msg=str_print)
 
-			print(str_print)
+		else:
+			str_print = "L available"
+
+		print(str_print)
 
 	def plot(self):
 		"""Display a heatmap of the kernel"""
