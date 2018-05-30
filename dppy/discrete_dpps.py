@@ -206,7 +206,7 @@ class Discrete_DPP:
 
 		if rank == d:
 			if not self.projection: 
-				warn("K-ensemble defined via 'A_zono' => 'projection' set to True")
+				warn("Weird setting: K-ensemble defined via 'A_zono' but 'projection'=False. 'projection' switched to True")
 				self.projection = True
 
 		else:
@@ -250,10 +250,12 @@ class Discrete_DPP:
 
 		# If eigen decoposition of K, L or L_dual is available USE IT!
 		if self.K_eig_vals is not None:
+			self.__check_eig_vals_in_01(self.K_eig_vals)
 			# Phase 1
 			V = dpp_eig_vecs_selector(self.K_eig_vals, self.eig_vecs)
 			# Phase 2
 			sampl = dpp_sampler_eig(V, self.sampling_mode)
+			self.list_of_samples.append(sampl)
 
 		elif self.L_eig_vals is not None:
 			self.K_eig_vals = self.L_eig_vals/(1.0+self.L_eig_vals)
@@ -267,14 +269,17 @@ class Discrete_DPP:
 																				self.L_gram_factor)
 				# Phase 2
 				sampl = dpp_sampler_eig(V, self.sampling_mode)
+				self.list_of_samples.append(sampl)
 
 			elif self.L_dual is not None:
 				self.L_dual_eig_vals, self.L_dual_eig_vecs\
 										= self.__eigendecompose(self.L_dual)
+				self.__check_eig_vals_geq_0(self.L_dual_eig_vals)
 				self.sample_exact(self.sampling_mode)
 
-		if (self.K is not None) and self.projection:
+		elif (self.K is not None) and self.projection:
 			sampl = proj_dpp_sampler_kernel(self.K)
+			self.list_of_samples.append(sampl)
 
 		elif self.K is not None:
 			self.K_eig_vals, self.eig_vecs = self.__eigendecompose(self.K)
@@ -287,9 +292,8 @@ class Discrete_DPP:
 		elif "A_zono" in self.params_keys:
 			warn("DPP defined via 'A_zono', apriori you want to use 'sample_approx', but you have called 'sample_exact'")
 			self.compute_K_kernel()
-			self.sampling_mode(self.sampling_mode)
-
-		self.list_of_samples.append(sampl)
+			self.sampling_mode = "GS"
+			self.sample_exact(self.sampling_mode)
 
 	### Approximate sampling
 	def sample_approx(self, sampling_mode, **params):
@@ -340,36 +344,37 @@ class Discrete_DPP:
 	def compute_K_kernel(self, msg=None):
 		"""K = L(I+L)^-1 = I - (I+L)^-1"""
 		if self.K is None:
-			str_print = "K kernel computed via:\n" if msg is None else msg
+			if not msg:
+				print("K kernel computed via:")
 
 			if "A_zono" in self.params_keys:
+				print("- 'A_zono' i.e. K = A.T (AA.T)^-1 A")
 				A = self.A_zono
 				self.K = A.T.dot(np.linalg.inv(A.dot(A.T))).dot(A)
-				str_print += "- 'A_zono' i.e. K = A.T (AA.T)^-1 A"
 
 			elif self.K_eig_vals is not None:
-				str_print += "- 'K_eig_vals' i.e. U D U.T"
+				print("- U diag(eig_K) U.T")
 				self.K = (self.eig_vecs * self.K_eig_vals).dot(self.eig_vecs.T)
 
 			elif self.L_eig_vals is not None:
-				str_print += "- 'L_eig_vals' i.e eig_K = eig_L/(1+eig_L)\n"
+				print("- eig_K = eig_L/(1+eig_L)")
 				self.K_eig_vals = self.L_eig_vals/(1.0 + self.L_eig_vals)
-				self.compute_K_kernel(msg=str_print)
+				self.compute_K_kernel(msg=True)
 
 			elif self.L is not None:
-				str_print += "Eigendecomposition of L\n"
+				print("- eigendecomposition of L")
 				self.L_eig_vals, self.eig_vecs = self.__eigendecompose(self.L)
-				self.compute_K_kernel(msg=str_print)
+				self.__check_eig_vals_geq_0(self.L_eig_vals)
+				self.compute_K_kernel(msg=True)
 
 			else:
-				self.compute_L_kernel(msg=str_print)
+				self.compute_L_kernel(msg=True)
+				self.compute_K_kernel(msg=True)
 
 		else:
-			str_print = "K available"
+			print("K available")
 
-		print(str_print)
-
-	def compute_L_kernel(self, msg=None):
+	def compute_L_kernel(self, msg=False):
 		"""L = K(I-K)^-1 = (I-K)^-1 - I"""
 		if (self.ensemble_type == "K") and self.projection:
 			err_print = ("L = K(I-K)^-1 = (I-K)^-1 - I kernel cannot be computed:",
@@ -377,22 +382,23 @@ class Discrete_DPP:
 			raise ValueError("\n".join(err_print))
 
 		elif self.L is None:
-			str_print = "L kernel computed via:\n" if msg is None else msg
+			if not msg:
+				print("L kernel computed via:")
 
 			if "L_gram_factor" in self.params_keys:
-				str_print += "- 'L_gram_factor' i.e. L = Phi.T Phi\n"
+				print("- 'L_gram_factor' i.e. L = Phi.T Phi")
 				self.L = self.L_gram_factor.T.dot(self.L_gram_factor)
 
 			elif self.L_eig_vals is not None:
-				str_print += "- 'L_eig_vals' i.e. U D U.T\n"
+				print("- U diag(eig_L) U.T")
 				self.L = (self.eig_vecs * self.L_eig_vals).dot(self.eig_vecs.T)
 
 			elif self.K_eig_vals is not None:
 				try: # to compute eigenvalues of kernel L = K(I-K)^-1
-					str_print += "- 'K_eig_vals' i.e. U D/(1-D) U.T\n"
+					print("- eig_L = eig_K/(1-eig_K)")
 					np.seterr(divide='raise')
 					self.L_eig_vals = self.K_eig_vals/(1.0 - self.K_eig_vals)
-					self.compute_L_kernel(str_print)
+					self.compute_L_kernel(msg=True)
 				except:
 					err_print = ("Eigenvalues of L kernel cannot be computed",
 											"eig_L = eig_K/(1-eig_K)",
@@ -401,17 +407,19 @@ class Discrete_DPP:
 					raise FloatingPointError("\n".join(err_print))
 
 			elif self.K is not None:
-				str_print += "Eigendecomposition of L\n"
+				print("- eigendecomposition of K")
 				self.K_eig_vals, self.eig_vecs = self.__eigendecompose(self.K)
-				self.compute_L_kernel(msg=str_print)
+				self.__check_eig_vals_in_01(self.K_eig_vals)
+				self.compute_L_kernel(msg=True)
 
 			else:
-				self.compute_K_kernel(msg=str_print)
+				self.compute_K_kernel(msg=True)
+				self.compute_L_kernel(msg=True)
 
 		else:
-			str_print = "L available"
+			print("L available")
 
-		print(str_print)
+
 
 	def plot(self):
 		"""Display a heatmap of the kernel"""
@@ -421,14 +429,14 @@ class Discrete_DPP:
 		if self.ensemble_type == "K":
 			if self.K is None:
 				self.compute_K_kernel()
-				self.plot()
+			self.nb_items = self.K.shape[0]
 			kernel_to_plot = self.K
 			str_print = "Inclusion kernel 'K'"
 
 		elif self.ensemble_type == "L":
 			if self.L is None:
 				self.compute_L_kernel()
-				self.plot()
+			self.nb_items = self.L.shape[0]
 			kernel_to_plot = self.L
 			str_print = "Marginal kernel 'L'"
 

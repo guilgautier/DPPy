@@ -332,7 +332,7 @@ def dpp_eig_vecs_selector_L_dual(eig_vals, eig_vecs, gram_factor):
 	# Realisation of Bernoulli random variables with params eig_vals
 	ind_sel = np.random.rand(len(eig_vals)) < eig_vals/(1.0+eig_vals)
 
-	return gram_factor.dot(eig_vecs[:,ind_sel]/np.sqrt(eig_vals[ind_sel]))
+	return gram_factor.T.dot(eig_vecs[:,ind_sel]/np.sqrt(eig_vals[ind_sel]))
 
 ##### Phase 2
 
