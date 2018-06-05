@@ -25,12 +25,11 @@ def dpp_sampler_exact(kernel, proj_kernel=False, sampling_mode="GS"):
 		Indicate how the conditional probabilities i.e. the ratio of 2 determinants must be updated.
 
 		If ``proj_kernel=True``:
-			- "GS" (default): Gram-Schmidt on the columns of :math:`K` equiv GSesky updates
-			- 'Schur': Schur complement updates
+			- 'GS' (default): Gram-Schmidt on the columns of :math:`K` equiv GSesky updates
 		
 		If ``proj_kernel=False``:
-			- 'GS_bis': (default) Gram-Schmidt on the rows of eigenvectors, equivalent to 'GS' updates	
-			- 'GS': GSesky update
+			- 'GS' (default): 
+			- 'GS_bis': Slight modification of 'GS'
 			- 'KuTa12': Algorithm 1 in :cite:`KuTa12`
 	:type sampling_mode:
 		string, default 'GS_bis'
