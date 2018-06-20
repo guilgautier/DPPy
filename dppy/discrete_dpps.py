@@ -1,6 +1,6 @@
 # coding: utf-8
 from .exact_sampling import *
-from .approximate_sampling import *
+from .mcmc_sampling import *
 import matplotlib.pyplot as plt
 from warnings import warn
 
@@ -248,7 +248,7 @@ class Discrete_DPP:
 
 		self.sampling_mode = sampling_mode
 
-		# If eigen decoposition of K, L or L_dual is available USE IT!
+		## If eigen decoposition of K, L or L_dual is available USE IT!
 		if self.K_eig_vals is not None:
 			self.__check_eig_vals_in_01(self.K_eig_vals)
 			# Phase 1
@@ -261,7 +261,8 @@ class Discrete_DPP:
 			self.K_eig_vals = self.L_eig_vals/(1.0+self.L_eig_vals)
 			self.sample_exact(self.sampling_mode)
 
-		elif "L_gram_factor" in self.params_keys:
+		elif "L_gram_factor" in self.params_keys: 
+		# If DPP is L-ensemble with parameter "L_gram_factor" i.e. L = Phi.T Phi but dual kernel L' = Phi Phi.T was cheaper to use (computation of L' and diagonalization for sampling)
 			if self.L_dual_eig_vals is not None:
 				# Phase 1
 				V = dpp_eig_vecs_selector_L_dual(self.L_dual_eig_vals, 
@@ -277,28 +278,35 @@ class Discrete_DPP:
 				self.__check_eig_vals_geq_0(self.L_dual_eig_vals)
 				self.sample_exact(self.sampling_mode)
 
+		## Otherwise
+		# If DPP is K-ensemble with projection kernel no need of eigendecomposition, you can apply Gram-Schmidt on the columns of K (equiv rows because of symmetry)
 		elif (self.K is not None) and self.projection:
-			sampl = proj_dpp_sampler_kernel(self.K)
+			sampl = proj_dpp_sampler_kernel(self.K, self.sampling_mode)
 			self.list_of_samples.append(sampl)
 
+		# If DPP is K-ensemble with generic kernel, eigen-decompose it
 		elif self.K is not None:
 			self.K_eig_vals, self.eig_vecs = self.__eigendecompose(self.K)
 			self.sample_exact(self.sampling_mode)
 
+		# If DPP is L-ensemble with kernel L, eigen-decompose it
 		elif self.L is not None:
 			self.L_eig_vals, self.eig_vecs = self.__eigendecompose(self.L)
 			self.sample_exact(self.sampling_mode)
 
+		# If DPP is K-ensemble with parameter 'A_zono', a priori you wish to use the zonotope approximate sampler: warning is raised 
+		# But corresponding projection kernel K = A.T (AA.T)^-1 A is computed 
 		elif "A_zono" in self.params_keys:
-			warn("DPP defined via 'A_zono', apriori you want to use 'sample_approx', but you have called 'sample_exact'")
+			warn("DPP defined via 'A_zono', apriori you want to use 'sampl_mcmc', but you have called 'sample_exact'")
 			self.compute_K_kernel()
-			self.sampling_mode = "GS"
+			self.projection, self.sampling_mode = True, "GS"
 			self.sample_exact(self.sampling_mode)
 
 	### Approximate sampling
-	def sample_approx(self, sampling_mode, **params):
+	def sample_mcmc(self, sampling_mode, **params):
 
 		auth_sampl_mod = ("AED", "AD", "E", "zonotope")
+		# AED: 
 
 		if sampling_mode in auth_sampl_mod:
 			self.sampling_mode = sampling_mode
@@ -320,15 +328,15 @@ class Discrete_DPP:
 					# |sample|=Tr(K) a.s. for projection DPP(K)
 					params.update({'size': int(np.round(np.trace(self.K)))}) 
 
-					MC_samples = dpp_sampler_approx(self.K, self.sampling_mode, **params)
+					MC_samples = dpp_sampler_mcmc(self.K, self.sampling_mode, **params)
 
 				else:
 					self.compute_L_kernel()
-					MC_samples = dpp_sampler_approx(self.L, self.sampling_mode, **params)
+					MC_samples = dpp_sampler_mcmc(self.L, self.sampling_mode, **params)
 
 			elif self.sampling_mode in ("AED", "AD"):
 				self.compute_L_kernel()
-				MC_samples = dpp_sampler_approx(self.L, self.sampling_mode, **params)
+				MC_samples = dpp_sampler_mcmc(self.L, self.sampling_mode, **params)
 
 			self.list_of_samples.append(MC_samples)
 

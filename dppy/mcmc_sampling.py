@@ -27,24 +27,24 @@ def det_kernel_ST(kernel, S, T=None):
 ############## Approximate samplers for projection DPPs #######
 ###############################################################
 
-def dpp_sampler_approx(kernel, sampling_mode="AED", **params):
+def dpp_sampler_mcmc(kernel, sampling_mode="AED", **params):
 
 	s_init = params.get("s_init", None)
 	nb_it_max = params.get("nb_it_max", 10)
 	T_max = params.get("T_max", None)
 	size = params.get("size", None) # For projection K-ensemble size = Tr(K)
 
-	if sampling_mode == "AED":
+	if sampling_mode == "AED": # Add-Exchange-Delete S'=S+t, S-t+u, S-t 
 		if s_init is None:
 			s_init = initialize_AED_sampler(kernel)
 		sampl = add_exchange_delete_sampler(kernel, s_init, nb_it_max, T_max)
 
-	elif sampling_mode == "AD":
+	elif sampling_mode == "AD": # Add-Delete S'=S+t, S-t
 		if s_init is None:
 			s_init = initialize_AD_and_E_sampler(kernel)
 		sampl = add_delete_sampler(kernel, s_init, nb_it_max, T_max)
 
-	elif sampling_mode == "E":
+	elif sampling_mode == "E": # Exchange S'=S-t+u
 		if s_init is None:
 			s_init = initialize_AD_and_E_sampler(kernel, size)
 		sampl = basis_exchange_sampler(kernel, s_init, nb_it_max, T_max)
@@ -73,6 +73,11 @@ def initialize_AED_sampler(kernel):
 	return S0
 
 def initialize_AD_and_E_sampler(kernel, size=None):
+	"""
+	.. seealso::
+			- :func:` <>`
+			- :func:` <>`
+	"""
 
 	N = kernel.shape[0]
 	ground_set = np.arange(N)

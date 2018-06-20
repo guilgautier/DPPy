@@ -65,8 +65,7 @@ def dpp_sampler_exact(kernel, proj_kernel=False, sampling_mode="GS"):
 def proj_dpp_sampler_kernel(kernel, sampling_mode="GS"):
 	"""
 		.. seealso::
-			- :func:`proj_dpp_sampler_kernel_GS_bis <proj_dpp_sampler_kernel_GS_bis>`
-			- :func:`proj_dpp_sampler_kernel_Schur <proj_dpp_sampler_kernel_Schur>`
+			- :func:`proj_dpp_sampler_kernel_GS <proj_dpp_sampler_kernel_GS>`
 	"""
 
 	#### Phase 1: Select eigenvectors
@@ -248,8 +247,8 @@ def dpp_sampler_eig(eig_vecs_sel, sampling_mode="GS"):
 		
 		Phase 2:
 
-		- :func:`proj_dpp_sampler_eig_GS_bis <proj_dpp_sampler_eig_GS_bis>`
 		- :func:`proj_dpp_sampler_eig_GS <proj_dpp_sampler_eig_GS>`
+		- :func:`proj_dpp_sampler_eig_GS_bis <proj_dpp_sampler_eig_GS_bis>`
 		- :func:`proj_dpp_sampler_eig_KuTa12 <proj_dpp_sampler_eig_KuTa12>`
 	"""	
 
@@ -421,7 +420,7 @@ def proj_dpp_sampler_eig_GS_bis(eig_vecs, size=None):
 	.. seealso::
 
 		- :func:`proj_dpp_sampler_eig_GS <proj_dpp_sampler_eig_GS>`
-		- :func:`proj_dpp_sampler_KuTa12_eig <proj_dpp_sampler_KuTa12_eig>`
+		- :func:`proj_dpp_sampler_eig_KuTa12 <proj_dpp_sampler_eig_KuTa12>`
 	"""
 
 	V = eig_vecs # Eigenvectors

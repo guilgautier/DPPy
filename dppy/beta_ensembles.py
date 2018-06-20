@@ -203,7 +203,6 @@ class BetaEnsemble:
 		plt.show()
 
 
-
 	def hist(self, normalization=True):
 
 		if not self.list_of_samples:
@@ -295,6 +294,7 @@ class BetaEnsemble:
 
 		ax.legend(loc='best', frameon=False)
 		plt.show()
+		# fig.savefig('foo.pdf')
 		
 	# def kernel(self, list_of_points):
 	# 	# return the matrix [K(x,y)]_x,y in list_of_points
