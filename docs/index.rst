@@ -33,7 +33,7 @@ Inclusion probabilities
 :math:`\mathcal{X} \sim \operatorname{DPP}(\mathbf{K})` with inclusion kernel :math:`\mathbf{K}` if it satisfies
 
 	.. math::
-		:label: eq:inclusion_proba
+		:label: inclusion_proba
 
 		\mathbb{P}[S\in \mathcal{X}] = \det \mathbf{K}_S, 
 		\quad \forall S\subset [N]
@@ -43,10 +43,12 @@ Marginal probabilities
 :math:`\mathcal{X} \sim \operatorname{DPP}(\mathbf{L})` with marginal! kernel :math:`\mathbf{L}` if it satisfies
 
 	.. math::
-		:label: eq:marginal_proba
+		:label: marginal_proba
 
 		\mathbb{P}[\mathcal{X}=S] = \frac{\det \mathbf{L}_S}{\det [I+\mathbf{L}]}, 
 		\quad \forall S\subset [N]
+
+.. _sub_existence:
 
 Existence
 ~~~~~~~~~
@@ -60,32 +62,98 @@ Sufficient condition:
 .. note::
 
 	This is only a sufficient condition, there indeed exist DPPs with non symmetric kernels such as the carries process.
-	For now, DPPy only treats real symmetric case
 
 .. todo::
 	
 	Put reference to carries process
 
+.. note::
+
+	The entries of both :math:`\mathbf{K}` and :math:`\mathbf{L}` kernels can be thought as some similarity measure between the associated items.
+
 Properties
 ~~~~~~~~~~
 
-- Number of points :math:`|\mathcal{X}| = \sum_{n=1}^N 1_{n \in \mathcal{X}}`
+- Negative association
+
+	Deriving the pair inclusion probability, also called the 2-point correlation function using :eq:inclusion_proba, we obtain
+	
+	.. math::
+		
+		\mathbb{P}[\{i, j\} \subset \mathcal{X}]
+	  &= \begin{vmatrix}
+	    \mathbb{P}[i \in \mathcal{X}]	& \mathbf{K}_{i j}\\
+	    \overline{\mathbf{K}_{i j}}		& \mathbb{P}[j \in \mathcal{X}]
+	  \end{vmatrix}\\
+	  &= \mathbb{P}[i \in \mathcal{X}] \mathbb{P}[j \in \mathcal{X}] 
+	  	- |\mathbf{K}_{i j}|^2
+
+
+- Relation between :math:`\mathbf{K}` and :math:`\mathbf{L}`
+
+	.. math::
+		:label: relation_K_Ls
+
+		\mathbf{K} = \mathbf{L}(I+\mathbf{L})^{—1} 
+			\qquad \text{and} \qquad 
+		\mathbf{L} = \mathbf{K}(I-\mathbf{K})^{—1}
+
+	.. warning::
+		
+		Recall that :math:`\operatorname{DPP}(\mathbf{K})` with *projection* inclusion kernel :math:`\mathbf{K}` yields fixed size samples (see  :eq:`number_points_projection_K`).
+		Thus, the marginal kernel :math:`\mathbf{L}` cannot be computed via  :eq:`relation_K_Ls` with :math:`\mathbf{L} = \mathbf{K}(I-\mathbf{K})^{—1}`, since :math:`\mathbf{K}` has at least one eigenvalue equal to :math:`1`.
+		However, the marginal kernel :math:`\mathbf{L}` coincides with :math:`\mathbf{K}`
+
+		.. math::
+
+			\mathbb{P}[\mathcal{X}=S] = 
+				\det \mathbf{K}_S 1_{|S|=\operatorname{rank}\mathbf{K}}
+				\quad \forall S\subset [N]
+
+	Thus, under the sufficient conditions stated in :ref:`sub_existence` and the relations :eq:`relation_K_Ls`, both kernels are diagonalizable in the same basis
+
+	.. math::
+
+		\mathbf{K} &= U \Lambda^{\mathbf{K}} U^{\top}
+			\qquad \text{and} \qquad
+		\mathbf{L} &= U \Lambda^{\mathbf{L}} U^{\top}
+
+
+- Number of points 
+	.. math::
+		:label: number_points
+
+		|\mathcal{X}|
+			= \sum_{n=1}^N 
+				\operatorname{\mathcal{B}er}
+				\left(
+					\lambda_n^{\mathbf{K}}
+				\right)
+			= \sum_{n=1}^N 
+				\operatorname{\mathcal{B}er}
+				\left(
+					\frac{\lambda_n^{\mathbf{L}}}{1+\lambda_n^{\mathbf{L}}}
+				\right)
 	
 	1. Expectation
 
 	.. math::
-		:label: eq:expect_number_points_projection_K
+		:label: expect_number_points
 
 		\mathbb{E}[|\mathcal{X}|] 
-		= \operatorname{Tr} \mathbf{K}
+			= \operatorname{Tr} \mathbf{K}
+			= \sum_{n=1}^N \lambda_n^{\mathbf{K}}
+			= \sum_{n=1}^N \frac{\lambda_n^{\mathbf{L}}}{1+\lambda_n^{\mathbf{L}}}
 
 	2. Variance
 
 	.. math::
-		:label: eq:var_number_points_projection_K
+		:label: var_number_points
 
-		\mathbb{V}ar[|\mathcal{X}|] 
-		= \operatorname{Tr} \mathbf{K} - \operatorname{Tr} \mathbf{K}^2
+		\operatorname{\mathbb{V}ar}[|\mathcal{X}|] 
+			= \operatorname{Tr} \mathbf{K} - \operatorname{Tr} \mathbf{K}^2
+			= \sum_{n=1}^N \lambda_n^{\mathbf{K}}(1-\lambda_n^{\mathbf{K}})
+			= \sum_{n=1}^N \frac{\lambda_n^{\mathbf{L}}}{(1+\lambda_n^{\mathbf{L}})^2}
 
 .. note::
 	For projection :math:`\mathbf{K}` i.e. :math:`\mathbf{K}^2=\mathbf{K}`
@@ -99,53 +167,23 @@ Properties
 		& = \operatorname{Tr} \mathbf{K} - \operatorname{Tr} \mathbf{K}^2
 			= 0
 
-	That is to say DPPs with projection :math:`\mathbf{K}` yield fixed size samples. Indeed, :eq:`eq:expect_number_points_projection_K` and :eq:`eq:var_number_points_projection_K` yield
+	That is to say DPPs with projection :math:`\mathbf{K}` yield fixed size samples. Indeed,  :eq:`expect_number_points` and  :eq:`var_number_points` yield
 
 	.. math::
-		:label: eq:number_points_projection_K
+		:label: number_points_projection_K
 
 		|\mathcal{X}| 
 			\overset{a.s.}{=} 
 				\operatorname{Tr} \mathbf{K} 
 			= \operatorname{rank} \mathbf{K}
 
-- Relation between :math:`\mathbf{K}` and :math:`\mathbf{L}`
-
-	.. math::
-		:label: eq:relation_K_L_kernels
-
-		\mathbf{K} = \mathbf{L}(I+\mathbf{L})^{—1} 
-			\qquad \text{and} \qquad 
-		\mathbf{L} = \mathbf{K}(I-\mathbf{K})^{—1}
-
-	.. warning::
-		
-		Recall that :math:`\operatorname{DPP}(\mathbf{K})` with *projection* inclusion kernel :math:`\mathbf{K}` yields fixed size samples (see :eq:`eq:number_points_projection_K`).
-		Thus, the marginal kernel :math:`\mathbf{L}` cannot be computed via :eq:`eq:relation_K_L_kernels` with :math:`\mathbf{L} = \mathbf{K}(I-\mathbf{K})^{—1}`, since :math:`\mathbf{K}` has at least one eigenvalue equal to :math:`1`.
-		However, the marginal kernel :math:`\mathbf{L}` coincides with :math:`\mathbf{K}`
-
-		.. math::
-
-			\mathbb{P}[\mathcal{X}=S] = 
-				\det \mathbf{K}_S 1_{|S|=\operatorname{rank}\mathbf{K}}
-				\quad \forall S\subset [N]
-
-- Negative association
-	
-	.. math::
-		:label: eq:negative_association
-		
-		\mathbb{P}[\{i, j\} \subset \mathcal{X}]
-	  &= \begin{vmatrix}
-	    \mathbb{P}[i \in \mathcal{X}]	& \mathbf{K}_{i j}\\
-	    \overline{\mathbf{K}_{i j}}		& \mathbb{P}[j \in \mathcal{X}]
-	  \end{vmatrix}\\
-	  &= \mathbb{P}[i \in \mathcal{X}] \mathbb{P}[j \in \mathcal{X}] 
-	  	- |\mathbf{K}_{i j}|^2
 
 
 Exact sampling
 --------------
+
+Under the sufficient conditions stated in :ref:`sub_existence`, we 
+:cite:`HKPV06` :cite:`KuTa12`
 
 Projection kernels
 ~~~~~~~~~~~~~~~~~~

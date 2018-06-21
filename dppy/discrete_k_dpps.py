@@ -60,8 +60,8 @@ class Discrete_k_DPP:
 
 	def __check_kernel_for_k_dpp_validity(self, kernel):
 		"""Check symmetry, projection, and validity:
-		- For K-ensemble 0<=K<=I
-		- For L-ensemble L>=0"""
+		- For inclusion kernel 0<=K<=I
+		- For marginal kernel L>=0"""
 
 		# Check symmetry: L.T = L
 		if not np.allclose(self.L, self.L.T):
@@ -92,7 +92,7 @@ class Discrete_k_DPP:
 				self.eig_vals = eig_vals
 				self.eig_vecs = eig_vecs
 			else:
-				raise ValueError("Invalid kernel for L-ensemble. Eigen values !>= 0")
+				raise ValueError("Invalid kernel for marginal kernel. Eigen values !>= 0")
 
 	def info(self):
 		print(self.__str__())
@@ -123,7 +123,7 @@ class Discrete_k_DPP:
 	# 	self.list_of_samples.append(sampl)
 
 	# def plot(self):
-	# 	"""Display a heatmap of the kernel provided, either K- or L-ensemble"""
+	# 	"""Display a heatmap of the kernel provided, either K- or marginal kernel"""
 
 	# 	print("Heat map of L-kernel")
 	# 	fig, ax = plt.subplots(1,1)

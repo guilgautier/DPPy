@@ -32,7 +32,7 @@ def dpp_sampler_mcmc(kernel, sampling_mode="AED", **params):
 	s_init = params.get("s_init", None)
 	nb_it_max = params.get("nb_it_max", 10)
 	T_max = params.get("T_max", None)
-	size = params.get("size", None) # For projection K-ensemble size = Tr(K)
+	size = params.get("size", None) # For projection inclusion kernel = Tr(K)
 
 	if sampling_mode == "AED": # Add-Exchange-Delete S'=S+t, S-t+u, S-t 
 		if s_init is None:
