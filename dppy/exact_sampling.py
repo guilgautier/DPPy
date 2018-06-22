@@ -25,10 +25,10 @@ def dpp_sampler_exact(kernel, proj_kernel=False, sampling_mode="GS"):
 		Indicate how the conditional probabilities i.e. the ratio of 2 determinants must be updated.
 
 		If ``proj_kernel=True``:
-			- 'GS' (default): Gram-Schmidt on the columns of :math:`K` equiv GSesky updates
+			- 'GS' (default): Gram-Schmidt on the columns of :math:`K`
 		
 		If ``proj_kernel=False``:
-			- 'GS' (default): 
+			- 'GS' (default):
 			- 'GS_bis': Slight modification of 'GS'
 			- 'KuTa12': Algorithm 1 in :cite:`KuTa12`
 	:type sampling_mode:
@@ -41,10 +41,10 @@ def dpp_sampler_exact(kernel, proj_kernel=False, sampling_mode="GS"):
 
 	.. seealso::
 
-		Projection :math:`\operatorname{DPP}` samplers
+		Projection :math:`\operatorname{DPP}` sampler
 			- :func:`proj_dpp_sampler_kernel <proj_dpp_sampler_kernel>`
 		
-		Generic :math:`\operatorname{DPP}` samplers
+		Generic :math:`\operatorname{DPP}` sampler
 			- :func:`dpp_sampler_eig <dpp_sampler_eig>`
 
 	"""
@@ -602,7 +602,7 @@ def k_dpp_sampler(kernel, size, proj_kernel=False, sampling_mode="GS"):
 		Indicate how the conditional probabilities i.e. the ratio of 2 determinants must be updated.
 
 		If ``proj_kernel=True``:
-			- "GS" (default): Gram-Schmidt on the columns of :math:`K` equiv GSesky updates
+			- "GS" (default): Gram-Schmidt on the columns of :math:`K`
 			# - "Schur": Schur complement updates
 		
 		If ``proj_kernel=False``:
