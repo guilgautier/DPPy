@@ -3,9 +3,7 @@
 Continuous DPPs
 ###############
 
-For now we only consider the so called \beta-Ensembles stems from 
+.. toctree::
+  :maxdepth: 2
 
-The case \beta=2
-
-Definition
-----------
+  beta_ensembles

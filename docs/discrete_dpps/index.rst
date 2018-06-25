@@ -3,8 +3,6 @@
 Discrete DPPs
 #############
 
-.. module:: dppy
-
 .. toctree::
   :maxdepth: 2
 

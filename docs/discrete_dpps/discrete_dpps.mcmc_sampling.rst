@@ -1,12 +1,14 @@
 MCMC sampling
 -------------
 
-:cite:`AnGhRe16`
-:cite:`LiJeSr16c`
-:cite:`LiJeSr16d`
+:cite:`AnGhRe16`, :cite:`LiJeSr16c` and :cite:`LiJeSr16d` derived variants of a Monte Carlo Markov Chain based on MH sampler having for stationnary distribution DPPs. 
+
+Correlated moves
 
 Basis exchange
 ~~~~~~~~~~~~~~
+
+Pure (basis) exchange moves
 
 .. math::
 
@@ -15,6 +17,8 @@ Basis exchange
 Add-Delete
 ~~~~~~~~~~
 
+Pure addition/deletion moves
+
 .. math::
 
 	S' \leftrightarrow S \setminus s \quad \text{Delete}\\
@@ -22,6 +26,8 @@ Add-Delete
 
 Add-Exchange-Delete
 ~~~~~~~~~~~~~~~~~~~
+
+Mix of exchange and add-delete moves
 
 .. math::
 	
@@ -32,4 +38,4 @@ Add-Exchange-Delete
 Zonotope
 ~~~~~~~~
 
-:cite:`GaBaVa17`
+Embedding of a discrete MH sampler in a continuous domain :cite:`GaBaVa17`

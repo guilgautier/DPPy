@@ -218,11 +218,13 @@ Projection DPPs
 Generic DPPs
 ~~~~~~~~~~~~
 
-	When considering non-projection DPPs, the eigendecomposition of the underlying kernel is required; adding an initial extra :math:`\mathcal{O}(N^3)` cost to the sampling scheme.
+	**Generic DPPs are mixtures of projection DPPs**
+
+	When considering non-projection DPPs, the eigendecomposition of the underlying kernel is required; adding an initial extra :math:`\mathcal{O}(N^3)` cost to sampling a *projection DPP*
 
 	.. tip::
 
-		If the marginal kernel was constructed as :math:`L=\Phi^{\dagger}\Phi` where :math:`\Phi` is a :math:`d\times N` feature matrix, it may be judicious to exploit the lower dimensional structure of the *dual* kernel :math:`\tilde{L} = \Phi \Phi^{\dagger}`.
+		If the marginal kernel was constructed as :math:`\mathbf{L}=\Phi^{\dagger}\Phi` where :math:`\Phi` is a :math:`d\times N` feature matrix, it may be judicious to exploit the lower dimensional structure of the *dual* kernel :math:`\tilde{\mathbf{L}} = \Phi \Phi^{\dagger}`.
 
 	.. note::
 
@@ -230,10 +232,10 @@ Generic DPPs
 
 		.. math::
 
-			K = U \Lambda U^{\top},
-			\quad L = V \Delta V^{\top}
+			\mathbf{K} = U \Lambda U^{\top},
+			\quad \mathbf{L} = V \Delta V^{\top}
 			\quad \text{and} \quad
-			\tilde{L} = W \Gamma W^{\top}
+			\tilde{\mathbf{L}} = W \Gamma W^{\top}
 
 		we have,
 
@@ -255,21 +257,19 @@ Generic DPPs
 
 	**Phase 1** Draw independent Bernoulli variables :math:`(B_n)` with parameters the eigenvalues:
 
-		- :math:`(\lambda_n)_{1:N}` of the inclusion kernel :math:`K`,
-		- :math:`(\delta_n)_{1:N}` of the marginal kernel :math:`L`,
-		- :math:`(\gamma_n)_{1:d}` of the (marginal) dual :math:`\tilde{L}`,
-	
-	respectively.
+		- :math:`(\lambda_n)_{1:N}` of the inclusion kernel :math:`\mathbf{K}`,
+		- :math:`(\delta_n)_{1:N}` of the marginal kernel :math:`\mathbf{L}`,
+		- :math:`(\gamma_n)_{1:d}` of the (marginal) dual :math:`\tilde{\mathbf{L}}`, respectively.
 
-	**Phase 2** Conditionally on :math:`(B_n)` set :math:`\mathcal{B} = \{ n ~;~ B_n = 1 \}` and apply :eq:`phase_2_eig_vec` with :math:`U`
+	**Phase 2** Conditionally on :math:`(B_n)` set :math:`\mathcal{B} = \{ n ~;~ B_n = 1 \}` and apply :eq:`phase_2_eig_vec` with 
 
-		- :math:`U_{:\mathcal{B}}`
-		- :math:`V_{:\mathcal{B}}`
-		- :math:`\Phi^{\top} W_{:\mathcal{B}} \Gamma_{:\mathcal{B}}^{-1/2}`, 
-	
-	respectively.
+		- :math:`r=|\mathcal{B}|`
 
-	That is to say, samples of generic DPPs are realizations of (random) *projection* DPPs i.e. **generic DPPs are mixtures of projection DPPs**.
+	and 
+
+		- :math:`U=U_{:\mathcal{B}}`,
+		- :math:`U=V_{:\mathcal{B}}`,
+		- :math:`\Phi^{\top} W_{:\mathcal{B}} \Gamma_{:\mathcal{B}}^{-1/2}`, respectively.
 
 .. todo::
 
