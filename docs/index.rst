@@ -8,6 +8,13 @@ Welcome to DPPy's documentation!
 
 DPPy is meant to become a Python library for exact and approximate sampling of Determinantal Point Processes (DPPs).
 
+
+Installation instructions
+-------------------------
+
+See `README <https://github.com/guilgautier/DPPy/blob/master/README.md>`_
+
+
 Documentation contents
 ----------------------
 

@@ -1,4 +1,8 @@
-from .random_matrices import *
+# coding: utf-8
+try: # Local import
+	from .random_matrices import *
+except SystemError:
+	from random_matrices import *
 import matplotlib.pyplot as plt
 
 class BetaEnsemble:

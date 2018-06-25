@@ -1,6 +1,11 @@
 # coding: utf-8
-from .exact_sampling import *
-from .mcmc_sampling import *
+try: # Local import
+	from .exact_sampling import *
+	from .mcmc_sampling import *
+except SystemError:
+	from exact_sampling import *
+	from mcmc_sampling import *
+	
 import matplotlib.pyplot as plt
 from warnings import warn
 

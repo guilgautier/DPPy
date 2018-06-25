@@ -68,3 +68,8 @@ Sufficient conditions:
 	.. todo::
 		
 		Put reference to carries process
+
+.. seealso::
+
+	:cite:`KuTa12`
+	
