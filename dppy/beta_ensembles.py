@@ -36,6 +36,12 @@ class BetaEnsemble:
 		self.list_of_samples = []
 
 	def sample(self, sampling_mode="full", **sampling_params):
+		"""
+		.. seealso::
+
+			- :cite:`DuEd02`
+			- :cite:`KiNe04`
+		"""
 
 		self.sampling_mode = sampling_mode
 		self.__check_sampling_mode_validity()

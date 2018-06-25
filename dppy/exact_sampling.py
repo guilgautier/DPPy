@@ -9,7 +9,7 @@ import scipy.linalg as la
 ########################################
 
 def dpp_sampler_exact(kernel, proj_kernel=False, sampling_mode="GS"):
-	""" Sample from :math:`\operatorname{DPP}(K)`, where :math:`K` is real symmetric with eigenvalues in :math:`[0,1]`.
+	""" Sample from :math:`\operatorname{DPP}(K)`, where :math:`K` is the inclusion probability kernel.
 
 	:param kernel: Real symmetric kernel with eigenvalues in :math:`[0,1]`
 	:type kernel:
@@ -28,7 +28,7 @@ def dpp_sampler_exact(kernel, proj_kernel=False, sampling_mode="GS"):
 			- 'GS' (default): Gram-Schmidt on the columns of :math:`K`
 		
 		If ``proj_kernel=False``:
-			- 'GS' (default):
+			- 'GS' (default): 
 			- 'GS_bis': Slight modification of 'GS'
 			- 'KuTa12': Algorithm 1 in :cite:`KuTa12`
 	:type sampling_mode:
@@ -52,7 +52,7 @@ def dpp_sampler_exact(kernel, proj_kernel=False, sampling_mode="GS"):
 	if proj_kernel:
 		sampl = proj_dpp_sampler_kernel(K, sampling_mode)
 
-	else:
+	else:# eigendecomposition is required 
 		eig_vecs, eig_vals = la.eigh(kernel)
 		sampl = dpp_sampler_eig(eig_vals, eig_vecs, sampling_mode)
 
@@ -73,7 +73,7 @@ def proj_dpp_sampler_kernel(kernel, sampling_mode="GS"):
 
 	#### Phase 2: Sample from orthogonal projection kernel K = K^2 = K.T K
 	# Chain rule, conditionals are updated using:
-	if sampling_mode == "GS": # Gram-Schmidt equiv GSesky
+	if sampling_mode == "GS": # Gram-Schmidt equiv Cholesky
 		sampl = proj_dpp_sampler_kernel_GS(kernel)
 
 	# elif sampling_mode == "Schur": # Schur complement 
@@ -90,12 +90,13 @@ def proj_dpp_sampler_kernel(kernel, sampling_mode="GS"):
 
 def proj_dpp_sampler_kernel_GS(K, size=None):
 	""" Sample from :math:`\operatorname{DPP}(K)` with :math:`K` orthogonal projection matrix.
-	It performs sequential Gram-Schmidt orthogonalization or equivalently GSesky decomposition updates of K.
+	It performs sequential Gram-Schmidt orthogonalization or equivalently Cholesky decomposition updates of :math:`K`.
 
 	:param K: 
 		Orthogonal projection kernel.
 	:type K: 
 		array_like
+
 	:param k: 
 		Size of the sample.
 		Default is :math:`k=\operatorname{Tr}(K)=\operatorname{rank}(K)`.
@@ -107,7 +108,10 @@ def proj_dpp_sampler_kernel_GS(K, size=None):
 	:rtype: 
 		list
 
-	# .. seealso::
+	.. seealso::
+
+		- cite:`TrBaAm18` Algorithm 3, :cite:`Gil14` Algorithm 2 
+
 	# 	- :func:`proj_dpp_sampler_kernel_Schur <proj_dpp_sampler_kernel_Schur>`
 	"""
 
@@ -138,7 +142,7 @@ def proj_dpp_sampler_kernel_GS(K, size=None):
 		rem_set[j] = False
 		Y.append(j)
 
-		###### Update the GSesky factor
+		###### Update the Cholesky factor
 		c[rem_set, it] = K[rem_set,j] - c[rem_set,:it].dot(c[j,:it])
 		c[rem_set, it] /=	np.sqrt(d_2[j])
 
@@ -279,15 +283,19 @@ def dpp_sampler_eig(eig_vecs_sel, sampling_mode="GS"):
 ##### Phase 1
 
 def dpp_eig_vecs_selector(ber_params, eig_vecs):
-	""" Subsample eigenvectors V of the initial kernel ('K' or equivalently 'L') to build a projection DPP with kernel V V.T from which sampling is easy. The selection is made based a realization of Bernoulli variables.
+	""" Subsample eigenvectors :math:`V` of the initial kernel (inclusion :math:`K`, resp. marginal :math:`L`) to build a projection DPP with kernel :math:`V V^{\top}` from which sampling is easy.
+	The selection is made based a realization of Bernoulli variables with parameters related to the eigenvalues of :math:`K`, resp. :math:`L`.
 
-	:param ber_params: 
-		Parameters of Bernoulli variables
+	:param ber_params:
+		Parameters of Bernoulli variables:
+		.. math::
+
+			\lambda^K=\lambda^L/(1+\lambda^L)
 	:type ber_params: 
 		list, array_type
 
 	:param eig_vecs: 
-		Collection of eigenvectors of the kernel
+		Collection of eigenvectors of the kernel :math:`K`, resp. :math:`L`
 	:type eig_vecs: 
 		array_type
 
@@ -295,6 +303,10 @@ def dpp_eig_vecs_selector(ber_params, eig_vecs):
 		selected eigenvectors
 	:rtype: 
 		array_type
+
+	.. seealso::
+
+		- :func:`dpp_sampler_eig <dpp_sampler_eig>`
 	"""
 
 	# Realisation of Bernoulli random variables with params ber_params
@@ -304,15 +316,15 @@ def dpp_eig_vecs_selector(ber_params, eig_vecs):
 
 
 def dpp_eig_vecs_selector_L_dual(eig_vals, eig_vecs, gram_factor):
-	""" Subsample eigenvectors V of dual kernel :math:`L'=\Phi \Phi^{\top}` to build a projection :math:`\operatorname{DPP}(K)` with :math:`K=V V^{\top}` from which sampling is easy. This corresponds to Phase I of the exact sampling scheme, the selection is made based a realization of Bernoulli variables with parameters involving the eigenvalues of :math:`L'`.
+	""" Subsample eigenvectors :math:`V` of marginal kernel :math:`L=\Phi \Phi^{\top}` based on the eigendecomposition dual kernel :math:`L'=\Phi \Phi^{\top}`.
 
 	:param eig_vals: 
-		Collection of eigenvalues of L' or 'L_dual' kernel.
+		Collection of eigenvalues of :math:`L` or :math:`L_dual` kernel.
 	:type eig_vals: 
 		list, array_type
 
 	:param eig_vecs: 
-		Collection of eigenvectors of 'L' or 'L_dual' kernel.
+		Collection of eigenvectors of :math:`L_dual` kernel.
 	:type eig_vecs: 
 		array_type
 
@@ -325,6 +337,18 @@ def dpp_eig_vecs_selector_L_dual(eig_vals, eig_vecs, gram_factor):
 		selected eigenvectors
 	:rtype: 
 		array_type
+
+	.. see also::
+			
+		Phase 1:
+
+		- :func:`dpp_eig_vecs_selector <dpp_eig_vecs_selector>`
+		
+		Phase 2:
+
+		- :func:`proj_dpp_sampler_eig_GS <proj_dpp_sampler_eig_GS>`
+		- :func:`proj_dpp_sampler_eig_GS_bis <proj_dpp_sampler_eig_GS_bis>`
+		- :func:`proj_dpp_sampler_eig_KuTa12 <proj_dpp_sampler_eig_KuTa12>`
 	"""
 
 	# Realisation of Bernoulli random variables with params eig_vals
@@ -337,7 +361,7 @@ def dpp_eig_vecs_selector_L_dual(eig_vals, eig_vecs, gram_factor):
 # Using Gram-Schmidt orthogonalization
 def proj_dpp_sampler_eig_GS(eig_vecs, size=None):
 	""" Sample from projection :math:`\operatorname{DPP}(K)` using the eigendecomposition of the projection kernel :math:`K=VV^{\top}` where :math:`V^{\top}V = I`.
-	It performs sequential update of GSesky decomposition, which is equivalent to Gram-Schmidt orthogonalization of the rows of the eigenvectors.
+	It performs sequential update of Cholesky decomposition, which is equivalent to Gram-Schmidt orthogonalization of the rows of the eigenvectors.
 
 	:param eig_vecs: 
 		Eigenvectors used to form projection kernel :math:`K=VV^{\top}`.
@@ -348,8 +372,6 @@ def proj_dpp_sampler_eig_GS(eig_vecs, size=None):
 		A sample from projection :math:`\operatorname{DPP}(K)`.
 	:rtype: 
 		list, array_type
-  
-	:Example:
 
 	.. seealso::
 
@@ -419,7 +441,7 @@ def proj_dpp_sampler_eig_GS_bis(eig_vecs, size=None):
 
 	.. seealso::
 
-		- :func:`proj_dpp_sampler_eig_GS <proj_dpp_sampler_eig_GS>`
+		- This is a slight modification of :func:`proj_dpp_sampler_eig_GS <proj_dpp_sampler_eig_GS>`
 		- :func:`proj_dpp_sampler_eig_KuTa12 <proj_dpp_sampler_eig_KuTa12>`
 	"""
 
@@ -647,7 +669,7 @@ def proj_k_dpp_sampler_kernel(kernel, size, sampling_mode="GS"):
 
 	#### Phase 2: Sample from orthogonal projection kernel K = K^2 = K.T K
 	# Chain rule, conditionals are updated using:
-	if sampling_mode == "GS": # Gram-Schmidt equiv GSesky
+	if sampling_mode == "GS": # Gram-Schmidt equiv Cholesky
 		sampl = proj_dpp_sampler_kernel_GS(kernel, size)
 
 	# elif sampling_mode == "Shur": # Schur complement 

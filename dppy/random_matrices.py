@@ -35,6 +35,11 @@ def hermite_sampler_full(N, beta=2):
 
 ## Hermite tridiag
 def hermite_sampler_tridiag(N, beta=2):
+	"""
+	.. seealso::
+
+		:cite:`DuEd02` II-C
+	"""
 
 	alpha_coef = np.sqrt(2)*np.random.randn(N)
 	beta_coef = np.random.chisquare(beta*np.arange(N-1, 0, step=-1))
@@ -49,7 +54,12 @@ def semi_circle_law(x, R=2.0):
 
 ## mu_ref == normal
 def muref_normal_sampler_tridiag(loc=0.0, scale=1.0, beta=2, size=10):
+	"""
+	.. seealso::
 
+		:cite:`DuEd02` II-C
+	"""
+	
 	# beta/2*[N-1, N-2, ..., 1]
 	b_2_Ni = 0.5*beta*np.arange(size-1, 0, step=-1)
 
@@ -89,6 +99,11 @@ def laguerre_sampler_full(M, N, beta=2):
 
 ## Laguerre, tridiagonal model
 def laguerre_sampler_tridiag(M, N, beta=2):
+	"""
+	.. seealso::
+
+		:cite:`DuEd02` III-B
+	"""
 	# M=>N
 
 	# xi_odd = xi_1, ... , xi_2N-1
@@ -117,6 +132,11 @@ def marcenko_pastur_law(x, M, N, sigma=1.0):
 
 ## mu_ref == Gamma 
 def mu_ref_gamma_sampler_tridiag(shape=1.0, scale=1.0, beta=2, size=10):
+	"""
+	.. seealso::
+
+		:cite:`DuEd02` III-B
+	"""
 
 	# beta/2*[N-1, N-2, ..., 1, 0]
 	b_2_Ni = 0.5*beta*np.arange(size-1,-1,step=-1)
@@ -180,6 +200,11 @@ def jacobi_sampler_full(M_1, M_2, N, beta=2):
 
 ## Jacobi, tridiagonal model
 def jacobi_sampler_tridiag(M_1, M_2, N, beta=2):
+	"""
+	.. seealso::
+
+		:cite:`KiNe04` Theorem 2
+	"""
 
 	# c_odd = c_1, c_2, ..., c_2N-1
 	c_odd = np.random.beta(
@@ -226,6 +251,12 @@ def wachter_law(x, M_1, M_2, N):
 
 def mu_ref_beta_sampler_tridiag(a, b, beta=2, size=10):
 
+	"""
+	.. seealso::
+
+		:cite:`KiNe04` Theorem 2
+	"""
+
 	# beta/2*[N-1, N-2, ..., 1, 0]
 	b_2_Ni = 0.5*beta*np.arange(size-1,-1,step=-1)
 
@@ -263,6 +294,11 @@ def mu_ref_beta_sampler_tridiag(a, b, beta=2, size=10):
 
 # Full matrix model
 def circular_sampler_full(N, beta=2, mode="QR"):
+	"""
+	.. seealso::
+
+		[Mezzadri, Sec 5] https://arxiv.org/pdf/math-ph/0609050.pdf	
+	"""
 	
 	if mode == "hermite":
 		size_sym_mat = int(N*(N-1)/2)
@@ -287,8 +323,7 @@ def circular_sampler_full(N, beta=2, mode="QR"):
 
 		_, U = la.eigh(A+A.conj().T)
 
-	elif mode == "QR": 
-	#[Mezzadri, Sec 5] https://arxiv.org/pdf/math-ph/0609050.pdf	
+	elif mode == "QR":
 
 		if beta == 1: #COE
 			A = np.random.randn(N, N)
@@ -331,15 +366,14 @@ def block_diag(arrs):
 	return out
 
 def mu_ref_unif_unit_circle_sampler_quindiag(beta=2, size=10):
-	""" TODO: 
-	LM and ML have same eigenvalues thus L.dot(M) + M.dot(L) is symmetric
-	could use `eigvals_banded`.
-	
-	adapted from semi_circleipy.linalg.block_diag
-	https://docs.semi_circleipy.org/doc/semi_circleipy-0.14.0/
-	reference/generated/semi_circleipy.linalg.block_diag.html
+	""" 
+	.. todo::
 
-	see also [Killip Nenciu, Theorem 1] https://arxiv.org/abs/math/0410034
+		LM and ML have same eigenvalues thus L.dot(M) + M.dot(L) is symmetric could use `eigvals_banded`.
+
+	.. see also::
+
+		:cite:`KiNe04` Theorem 1, https://arxiv.org/abs/math/0410034
 	"""
 
 	if not ((beta > 0) & isinstance(beta, int)):
