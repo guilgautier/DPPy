@@ -1,4 +1,4 @@
-[![Documentation](https://dppy.readthedocs.io/en/latest/index.html)](https://dppy.readthedocs.io)
+[![Documentation Status](https://readthedocs.org/projects/dppy/badge/?version=latest)](https://dppy.readthedocs.io/en/latest/?badge=latest)
 
 [![Build Status](https://travis-ci.com/guilgautier/DPPy.svg?token=jftmsjDJSt2JLJqsgR9n&branch=master)](https://travis-ci.com/guilgautier/DPPy)
 
@@ -49,8 +49,15 @@ And execute `setup.py`
 pip install .
 ```
 
-### Current content
 
-#### Read the Docs
+### How to cite this work?
+If you use this package for your own work, please consider citing it with this piece of BibTeX:
 
-A documentation web page is under development. Since the repo is private, Read the Docs cannot act on the documentation. To see the .html documentation page you can clone the current repository and open the `DPPy/docs/_build/html/index.html` file
+@misc{SMPyBandits,
+    title =   {{DPPy: an Open-Source project for sampling Determinantal Point Processes in Python}},
+    author =  {Guillaume Gautier},
+    year =    {2018},
+    url =     {https://github.com/guilgautier/DPPy/},
+    howpublished = {Online at: \url{github.com/guilgautier/DPPy/}},
+    note =    {Code at https://github.com/guilgautier/DPPy/, documentation at https://dppy.readthedocs.io/}
+}
