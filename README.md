@@ -1,3 +1,5 @@
+[![Documentation](https://dppy.readthedocs.io/en/latest/index.html)](https://dppy.readthedocs.io)
+
 [![Build Status](https://travis-ci.com/guilgautier/DPPy.svg?token=jftmsjDJSt2JLJqsgR9n&branch=master)](https://travis-ci.com/guilgautier/DPPy)
 
 # DPPy is meant to become a Python library for exact and approximate sampling of Determinantal Point Processes.
