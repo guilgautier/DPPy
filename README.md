@@ -1,5 +1,4 @@
 [![Documentation Status](https://readthedocs.org/projects/dppy/badge/?version=latest)](https://dppy.readthedocs.io/en/latest/?badge=latest)
-
 [![Build Status](https://travis-ci.com/guilgautier/DPPy.svg?token=jftmsjDJSt2JLJqsgR9n&branch=master)](https://travis-ci.com/guilgautier/DPPy)
 
 # DPPy is meant to become a Python library for exact and approximate sampling of Determinantal Point Processes.
@@ -53,7 +52,7 @@ pip install .
 ### How to cite this work?
 If you use this package for your own work, please consider citing it with this piece of BibTeX:
 
-@misc{SMPyBandits,
+@misc{DPPy,
     title =   {{DPPy: an Open-Source project for sampling Determinantal Point Processes in Python}},
     author =  {Guillaume Gautier},
     year =    {2018},
