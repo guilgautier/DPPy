@@ -100,10 +100,6 @@ Number of points
 				\left(
 					\frac{\lambda_n^{\mathbf{L}}}{1+\lambda_n^{\mathbf{L}}}
 				\right)
-
-	.. hint::
-
-		Keep in mind the first key equality :math:`|\mathcal{X}| = \sum_{n=1}^N \operatorname{\mathcal{B}er} \left(\lambda_n^{\mathbf{K}}\right)` to understand the :ref:`discrete_dpps_exact_sampling`.
 	
 	a. Expectation
 
@@ -127,7 +123,7 @@ Number of points
 
 	.. important::
 
-		Realizations of projection DPPs have fixed cardinality.
+		Realizations of *projection* DPPs have fixed cardinality.
 
 		.. math::
 			:label: number_points_projection_K
@@ -152,3 +148,31 @@ Number of points
 			\mathbb{E}[|\mathcal{X}|] 
 			= \operatorname{Tr} \mathbf{K} 
 			= \operatorname{rank} \mathbf{K}
+
+.. _discrete_dpps_mixture:
+
+Generic DPPs as mixtures of projection DPPs
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+*Projection* DPPs are the building blocks of the model.
+Indeed, generic DPPs are mixtures of *projection* DPPs, see Theorem 7 in :cite:`HKPV06`.
+
+.. important::
+
+	More precisely, if the spectral decomposition writes :math:`\mathbf{K}
+	= \sum_{n=1}^N \lambda_n^{\mathbf{K}} u_n u_n^{\top}` then we have
+
+	.. math::
+
+		\operatorname{DPP}(\mathbf{K})\sim\operatorname{DPP}(\mathbf{K}^B)
+	
+	where :math:`\mathbf{K}^B` is the **random** *projection* kernel defined by
+
+	.. math::
+
+		\mathbf{K}^B
+		= \sum_{n=1}^N 
+		B_n
+		u_n u_n^{\top}
+
+	with :math:`(B_n)_{n=1}^N` independent Bernoulli variables with respective parameter the :math:`\lambda_n^{\mathbf{K}})`.

@@ -3,13 +3,17 @@
 Tutorials
 #########
 
+For now the tutorial section is simply based on the 2 Notebooks
+
+1. `Discrete DPPs <https://github.com/guilgautier/DPPy/blob/master/discrete_dpps.ipynb>`_ 
+
+2. :math:`\beta`-`Ensembles <https://github.com/guilgautier/DPPy/blob/master/beta_ensembles.ipynb>`_
+
 
 Discrete DPPs
---------------
+-------------
 
 .. currentmodule:: discrete_dpps
-
-Have a look at the Notebook `Discrete DPPs <https://github.com/guilgautier/DPPy/blob/master/discrete_dpps.ipynb>`_
 
 .. autoclass:: Discrete_DPP
 
@@ -21,15 +25,10 @@ Methods
 .. function:: Discrete_DPP.plot
 
 
-
-
-
 Beta Ensemble
 --------------
 
 .. currentmodule:: beta_ensembles
-
-Have a look at the Notebook :math:`\beta`-`Ensembles <https://github.com/guilgautier/DPPy/blob/master/beta_ensembles.ipynb>`_
 
 .. autoclass:: BetaEnsemble
 

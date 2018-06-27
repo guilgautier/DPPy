@@ -3,7 +3,8 @@
 Definition
 ----------
 
-A discrete point process :math:`\mathcal{X}` on :math:`[N] \triangleq \{1,\dots,N\}` can be defined via its:
+A discrete point process :math:`\mathcal{X}` on :math:`[N] \triangleq \{1,\dots,N\}` can be understood as a random subset.
+It is defined via its:
 
 - inclusion probabilities (also called correlation functions) 
 
@@ -42,6 +43,15 @@ Marginal probabilities
 Existence
 ~~~~~~~~~
 
+Necessary condition:
+
+	.. math::
+
+		\mathbf{K} \succeq 0_N
+			\quad \text{i.e.} \quad
+			\forall x\in \mathbb{C}^N, 
+				x^{\dagger} \mathbf{K} x \geq 0
+
 Sufficient conditions:
 
 	.. math::
@@ -72,4 +82,3 @@ Sufficient conditions:
 .. seealso::
 
 	:cite:`KuTa12`
-	

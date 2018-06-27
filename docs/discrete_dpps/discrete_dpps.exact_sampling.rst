@@ -3,38 +3,26 @@
 Exact sampling
 --------------
 
-The exact sampling scheme derived in Alg. 18 :cite:`HKPV06` is based on the chain rule and the geometrical interpretations are reflected through the conditionals.
-The spectral decomposition of the inclusion kernel :math:`\mathbf{K}` (or equivalently the marginal kernel :math:`\mathbf{L}`) is required except for the case of a *projection* inclusion kernel.
+The procedure stems from the fact that :ref:`discrete_dpps_mixture`, suggesting the following two steps algorithm given the spectral decomposition of the inclusion kernel :math:`\mathbf{K}`
+
+.. math::
+
+	\mathbb{K} = \sum_{n=1}^{N} \lambda_n u_n u_n^{\dagger}
+
+1. Subsample the set of eigenvectors by drawing independent Bernoulli variables :math:`\mathcal{B}(\lambda_n)` and store the selected vectors in :math:`\tilde{U}`.
+
+2. Sample from the corresponding *projection* :math:`\operatorname{DPP}(\tilde{U}\tilde{U}^{\top})`.
+
+:cite:`HKPV06` Algorithm 18 gives the procedure for sampling *projection* DPPs. It is based on the chain rule and the geometrical interpretations are reflected through the conditionals.
+
+In the general case, the average cost of the exact sampling scheme is :math:`\mathcal{O}(N\mathbb{E}[|\mathcal{X}|]^2)` with an initial :math:`\mathcal{O}(N^3)` cost to access the spectral decomposition of the underlying inclusion kernel.
 
 .. important::
 
-	Sampling *projection* DPPs is the building block of sampling generic DPPs
-	since they are mixtures of *projection* DPPs, see Theorem 7 in :cite:`HKPV06`.
+	Sampling from a *projection* :math:`\operatorname{DPP}(\mathbf{K})` can be done in :math:`\mathcal{O}(Nr^2)` with :math:`r=\operatorname{rank}(K)`. It is worth mentioning that to sample from a *projection* DPP:
 
-	More precisely, if the spectral decomposition writes :math:`\mathbf{K}
-	= \sum_{n=1}^N \lambda_n^{\mathbf{K}} u_n u_n^{\top}` then we have
-
-	.. math::
-
-		\operatorname{DPP}(\mathbf{K})\sim\operatorname{DPP}(\mathbf{K}^B)
-	
-	where :math:`\mathbf{K}^B` is the **random** *projection* kernel defined by
-
-	.. math::
-
-		\mathbf{K}^B
-		= \sum_{n=1}^N 
-		B_n
-		u_n u_n^{\top}
-
-	with :math:`(B_n)_{n=1}^N` independent Bernoulli variables with respective parameter the :math:`\lambda_n^{\mathbf{K}})`.
-
-	This suggests a two steps algorithm for sampling generic DPPs:
-
-	**Phase 1** Sample the Bernoulli sequence :math:`(B_n)_{n=1}^N`
-
-	**Phase 2** Conditionally on the realization of :math:`B`, sample from the corresponding *projection* :math:`\operatorname{DPP}(\mathbf{K}^B)`.
-
+	- Given the projection kernel :math:`\mathbf{K}` there is no need to compute its eigenvectors
+	- Given some eigenvectors stacked in :math:`\tilde{U}` there is no need to compute :math:`\mathbf{K}=\tilde{U}\tilde{U}^{\top}`
 
 Projection DPPs
 ~~~~~~~~~~~~~~~
@@ -272,5 +260,5 @@ Generic DPPs
 		- :math:`\Phi^{\top} W_{:\mathcal{B}} \Gamma_{:\mathcal{B}}^{-1/2}`, respectively.
 
 .. todo::
-
- Code :cite:`LaGaDe18`: eigendecomposition => Cholesky factorization
+	
+	Refer to code
