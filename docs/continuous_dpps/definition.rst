@@ -1,13 +1,16 @@
 .. _continuous_dpps_definition:
 
+Definition
+----------
+
 Point Process
--------------
+~~~~~~~~~~~~~
 
 We consider the measure space :math:`(\mathbb{X}, \mathcal{B}(\mathbb{X}), \mu)` where:
 
 - :math:`\mathbb{X}` e.g. :math:`\mathbb{R}^d, \mathbb{C}^d, \mathbb{S}^{d-1}` is the ambiant space
 - :math:`\mathcal{B}(\mathbb{X})` the corresponding Borel :math:`\sigma`-algebra
-- :math:`\mu` the reference mesure
+- :math:`\mu` the reference measure
 
 A configuration of points :math:`\gamma` is a discrete 
 
@@ -41,7 +44,7 @@ The corresponding :math:`k`-correlation functions characterize the underlying po
 .. _continuous_dpps_correlation_functions:
 
 Correlation functions
----------------------
+~~~~~~~~~~~~~~~~~~~~~
 
 For :math:`k\geq 0`, the :math:`k`-correlation function :math:`\rho_k` is defined by:
 
@@ -90,7 +93,7 @@ Its determinantal feature is carried by the :math:`k`-correlation functions
 .. _continuous_dpps_existence:
 
 Existence
----------
+~~~~~~~~~
 
 One can view :math:`\mathbf{K}` as an integral operator on :math:`L^2(\mu)`
 
@@ -132,6 +135,13 @@ To access spectral properties of the kernel, it is common practice to assume :ma
 
 	- 3. makes sure there is no accumulation of points
 
+Under these assumptions
+
+.. math::
+
+	\operatorname{DPP}(\mathbf{K}) \text{ exists}
+	\Longleftrightarrow
+	O \preceq K \preceq I \text{ i.e. } \lambda_n \in [0,1], \quad \forall n
 
 
 .. warning::
@@ -140,17 +150,23 @@ To access spectral properties of the kernel, it is common practice to assume :ma
 
 .. seealso::
 
-	Remarks 1-2 :cite:`Sos00`
+	Remarks 1-2 and Theorem 3 :cite:`Sos00`
 
 	Theorem 22 :cite:`HKPV06`
 
 
 Construction
-------------
+~~~~~~~~~~~~
 
 A canonical way to construct DPPs generating configurations of at most :math:`N` points is the following. 
 
-Consider :math:`N` orthonormal functions :math:`\phi_{0},...,\phi_{N−1}` in :math:`L^2(\mu)`, i.e. :math:`\phi_{k}(x)\phi_{l}(x)\mu(dx) = \delta_{kl}`, and attach :math:`[0,1]`-valued coefficients :math:`\lambda_n` such that
+Consider :math:`N` orthonormal functions :math:`\phi_{0},...,\phi_{N−1}` in :math:`L^2(\mu)`
+
+.. math::
+
+	\int \phi_{k}(x)\phi_{l}(x)\mu(dx) = \delta_{kl}, 
+
+and attach :math:`[0,1]`-valued coefficients :math:`\lambda_n` such that
 
 .. math::
 
@@ -164,4 +180,4 @@ Consider :math:`N` orthonormal functions :math:`\phi_{0},...,\phi_{N−1}` in :m
 .. seealso::
 
 	- Lemma 21 :cite:`HKPV06`
-	- Proposition 2.11 :cite:`Joh06`
+	- Proposition 2.11 :cite:`Joh06` biorthogonal families
