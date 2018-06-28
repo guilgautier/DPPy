@@ -34,8 +34,8 @@ Let :math:`\beta>0`, the joint distribution of the :math:`\beta`-Ensemble associ
 			x_1^{N-1}	&					&x_N^{N-1}
 		\end{bmatrix}
 
-	encoding the repulsive interaction.
-	The *closer* the points are the lower the density.
+	  encoding the repulsive interaction.
+	  The *closer* the points are the lower the density.
 
 	- :math:`\beta` is the inverse temperature parameter quantifying the strength of the repulsion between the points.
 
@@ -117,7 +117,7 @@ Full matrix models
 
 beta = 1, 2, 4
 
-Diagonalization of full random 
+Diagonalization of full random
 
 
 Banded models
