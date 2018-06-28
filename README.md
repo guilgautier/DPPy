@@ -3,7 +3,7 @@
 
 # DPPy is meant to become a Python library for exact and approximate sampling of Determinantal Point Processes.
 
->Anything that can go wrong, will go wrong. -- Murphy's Law
+> Anything that can go wrong, will go wrong. -- Murphy's Law
 
 ## Introduction
 
@@ -16,9 +16,9 @@ For now, only the discrete case is tackled.
 
 ## Requirements
 
-DPPy works with Python 3.4+
+DPPy works with [Python 3.4+](https://docs.python.org/3/)
 
-### Dependencies:
+### Dependencies
  - [NumPy](http://www.numpy.org)
  - [SciPy](http://www.scipy.org/)
  - [Matplotlib](http://matplotlib.org/)
@@ -26,10 +26,10 @@ DPPy works with Python 3.4+
 The `zono_sampling` approximate sampler introduced requires CVXOPT which itself requires GCC
  - [CVXOPT](http://cvxopt.org)
  - [GCC](http://gcc.gnu.org)
-    - On MAC it comes with Xcode
-    - On UNIX
+    - On MAC it comes with [Xcode](https://developer.apple.com/xcode/)
+    - On UNIX, use your package manager (`apt`, `yum` etc)
         ```bash
-        sudo apt-get install -qq gcc g++
+        sudo apt install -qq gcc g++
         ```
 
 ## Download
@@ -48,10 +48,10 @@ And execute `setup.py`
 pip install .
 ```
 
-
 ### How to cite this work?
 If you use this package for your own work, please consider citing it with this piece of BibTeX:
 
+```bibtex
 @misc{DPPy,
     title =   {{DPPy: an Open-Source project for sampling Determinantal Point Processes in Python}},
     author =  {Guillaume Gautier},
@@ -60,3 +60,4 @@ If you use this package for your own work, please consider citing it with this p
     howpublished = {Online at: \url{github.com/guilgautier/DPPy/}},
     note =    {Code at https://github.com/guilgautier/DPPy/, documentation at https://dppy.readthedocs.io/}
 }
+```
