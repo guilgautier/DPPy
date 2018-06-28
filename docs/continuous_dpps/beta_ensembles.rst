@@ -47,6 +47,8 @@ Let :math:`\beta>0`, the joint distribution of the :math:`\beta`-Ensemble associ
 
 		:ref:`beta_ensembles_sampling`
 
+.. _beta_ensembles_definition:
+
 Orthogonal Polynomial Ensembles
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

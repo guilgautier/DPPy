@@ -3,6 +3,106 @@
 Properties
 ==========
 
+.. _discrete_dpps_mixture:
+
+Generic DPPs as mixtures of projection DPPs
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+*Projection* DPPs are the building blocks of the model.
+in the sense that generic DPPs are mixtures of *projection* DPPs
+
+.. important::
+
+	More precisely, if the spectral decomposition writes :math:`\mathbf{K}
+	= \sum_{n=1}^N \lambda_n^{\mathbf{K}} u_n u_n^{\top}` then we have
+
+	.. math::
+
+		\operatorname{DPP}(\mathbf{K})\sim\operatorname{DPP}(\mathbf{K}^B)
+	
+	where :math:`\mathbf{K}^B` is the **random** *projection* kernel defined by
+
+	.. math::
+
+		\mathbf{K}^B
+		= \sum_{n=1}^N 
+		B_n
+		u_n u_n^{\top}
+
+	with :math:`(B_n)_{n=1}^N` independent Bernoulli variables with respective parameter the :math:`\lambda_n^{\mathbf{K}})`.
+
+.. seealso::
+
+	Theorem 7 in :cite:`HKPV06`.
+
+Number of points 
+~~~~~~~~~~~~~~~~
+
+	Based on :ref:`discrete_dpps_mixture`, we have
+
+	.. math::
+		:label: number_points
+
+		|\mathcal{X}|
+			= \sum_{n=1}^N 
+				\operatorname{\mathcal{B}er}
+				\left(
+					\lambda_n^{\mathbf{K}}
+				\right)
+			= \sum_{n=1}^N 
+				\operatorname{\mathcal{B}er}
+				\left(
+					\frac{\lambda_n^{\mathbf{L}}}{1+\lambda_n^{\mathbf{L}}}
+				\right)
+	
+	a. Expectation
+
+	.. math::
+		:label: expect_number_points
+
+		\mathbb{E}[|\mathcal{X}|] 
+			= \operatorname{Tr} \mathbf{K}
+			= \sum_{n=1}^N \lambda_n^{\mathbf{K}}
+			= \sum_{n=1}^N \frac{\lambda_n^{\mathbf{L}}}{1+\lambda_n^{\mathbf{L}}}
+
+	b. Variance
+
+	.. math::
+		:label: var_number_points
+
+		\operatorname{\mathbb{V}ar}[|\mathcal{X}|] 
+			= \operatorname{Tr} \mathbf{K} - \operatorname{Tr} \mathbf{K}^2
+			= \sum_{n=1}^N \lambda_n^{\mathbf{K}}(1-\lambda_n^{\mathbf{K}})
+			= \sum_{n=1}^N \frac{\lambda_n^{\mathbf{L}}}{(1+\lambda_n^{\mathbf{L}})^2}
+
+	.. important::
+
+		Realizations of *projection* DPPs have fixed cardinality.
+
+		.. math::
+			:label: number_points_projection_K
+
+			|\mathcal{X}| 
+				\overset{a.s.}{=} 
+					\operatorname{Tr} \mathbf{K} 
+				= \operatorname{rank} \mathbf{K}
+
+		Indeed, since :math:`\mathbf{K}^2=\mathbf{K}`, :eq:`var_number_points` becomes
+
+		.. math::
+
+			\mathbb{V}ar[|\mathcal{X}|] 
+			= \operatorname{Tr} \mathbf{K} - \operatorname{Tr} \mathbf{K}^2
+			= 0
+
+		and :eq:`expect_number_points` gives
+
+		.. math::
+
+			\mathbb{E}[|\mathcal{X}|] 
+			= \operatorname{Tr} \mathbf{K} 
+			= \operatorname{rank} \mathbf{K}
+
 Geometrical insights
 ~~~~~~~~~~~~~~~~~~~~
 
@@ -82,97 +182,3 @@ Relation between inclusion and marginal kernels
 		\mathbf{K} = U \Lambda^{\mathbf{K}} U^{\top}
 			\qquad \text{and} \qquad
 		\mathbf{L} = U \Lambda^{\mathbf{L}} U^{\top}
-
-Number of points 
-~~~~~~~~~~~~~~~~
-
-	.. math::
-		:label: number_points
-
-		|\mathcal{X}|
-			= \sum_{n=1}^N 
-				\operatorname{\mathcal{B}er}
-				\left(
-					\lambda_n^{\mathbf{K}}
-				\right)
-			= \sum_{n=1}^N 
-				\operatorname{\mathcal{B}er}
-				\left(
-					\frac{\lambda_n^{\mathbf{L}}}{1+\lambda_n^{\mathbf{L}}}
-				\right)
-	
-	a. Expectation
-
-	.. math::
-		:label: expect_number_points
-
-		\mathbb{E}[|\mathcal{X}|] 
-			= \operatorname{Tr} \mathbf{K}
-			= \sum_{n=1}^N \lambda_n^{\mathbf{K}}
-			= \sum_{n=1}^N \frac{\lambda_n^{\mathbf{L}}}{1+\lambda_n^{\mathbf{L}}}
-
-	b. Variance
-
-	.. math::
-		:label: var_number_points
-
-		\operatorname{\mathbb{V}ar}[|\mathcal{X}|] 
-			= \operatorname{Tr} \mathbf{K} - \operatorname{Tr} \mathbf{K}^2
-			= \sum_{n=1}^N \lambda_n^{\mathbf{K}}(1-\lambda_n^{\mathbf{K}})
-			= \sum_{n=1}^N \frac{\lambda_n^{\mathbf{L}}}{(1+\lambda_n^{\mathbf{L}})^2}
-
-	.. important::
-
-		Realizations of *projection* DPPs have fixed cardinality.
-
-		.. math::
-			:label: number_points_projection_K
-
-			|\mathcal{X}| 
-				\overset{a.s.}{=} 
-					\operatorname{Tr} \mathbf{K} 
-				= \operatorname{rank} \mathbf{K}
-
-		Indeed, since :math:`\mathbf{K}^2=\mathbf{K}`, :eq:`var_number_points` becomes
-
-		.. math::
-
-			\mathbb{V}ar[|\mathcal{X}|] 
-			= \operatorname{Tr} \mathbf{K} - \operatorname{Tr} \mathbf{K}^2
-			= 0
-
-		and :eq:`expect_number_points` gives
-
-		.. math::
-
-			\mathbb{E}[|\mathcal{X}|] 
-			= \operatorname{Tr} \mathbf{K} 
-			= \operatorname{rank} \mathbf{K}
-
-.. _discrete_dpps_mixture:
-
-Generic DPPs as mixtures of projection DPPs
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-*Projection* DPPs are the building blocks of the model.
-Indeed, generic DPPs are mixtures of *projection* DPPs, see Theorem 7 in :cite:`HKPV06`.
-
-.. important::
-
-	More precisely, if the spectral decomposition writes :math:`\mathbf{K}
-	= \sum_{n=1}^N \lambda_n^{\mathbf{K}} u_n u_n^{\top}` then we have
-
-	.. math::
-
-		\operatorname{DPP}(\mathbf{K})\sim\operatorname{DPP}(\mathbf{K}^B)
-	
-	where :math:`\mathbf{K}^B` is the **random** *projection* kernel defined by
-
-	.. math::
-
-		\mathbf{K}^B
-		= \sum_{n=1}^N 
-		B_n
-		u_n u_n^{\top}
-
-	with :math:`(B_n)_{n=1}^N` independent Bernoulli variables with respective parameter the :math:`\lambda_n^{\mathbf{K}})`.
