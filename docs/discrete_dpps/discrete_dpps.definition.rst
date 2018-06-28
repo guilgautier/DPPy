@@ -73,7 +73,7 @@ Sufficient conditions:
 	This is only a sufficient condition, there indeed exist DPPs with non symmetric kernels such as the carries process.
 
 	In the following, DPPs defined by an *orthogonal projection* inclusion kernel :math:`\mathbf{K}` are called *projection* DPPs.
-	They are indeed valid kernels since they meet the above sufficient conditions: `they are hermitian with eigenvalues :math:`0` or :math:`1`.
+	They are indeed valid kernels since they meet the above sufficient conditions: they are hermitian with eigenvalues :math:`0` or :math:`1`.
 
 	.. todo::
 		
