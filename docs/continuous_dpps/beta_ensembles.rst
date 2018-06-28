@@ -39,18 +39,28 @@ Let :math:`\beta>0`, the joint distribution of the :math:`\beta`-Ensemble associ
 
 	- :math:`\beta` is the inverse temperature parameter quantifying the strength of the repulsion between the points.
 
-.. todo::
+.. important:: 
 
-	The cases :math:`\beta=1,2,4` take roots in random matrix theory.......
+	For Gaussian, Gamma and Beta reference measures, the :math:`\beta=1,2` and :math:`4` cases received a very special attention in the random matrix litterature, :cite:`DuEd02` ...
 
-	.. seealso::
+	The associated ensembles actually correspond to the eigenvalues of random matrices whose distribution is invariant to the action of the orthogonal (:math:`\beta=1`), unitary (:math:`\beta=2`) and symplectic (:math:`\beta=4`) group respectively.
 
-		:ref:`beta_ensembles_sampling`
+	+---------------+---------------------+----------------------+---------------------------------------+
+	| :math:`\mu`   | :math:`\mathcal{N}` | :math:`\Gamma`       | :math:`\operatorname{\mathcal{B}eta}` |
+	+===============+=====================+======================+=======================================+
+	| Ensemble name | Hermite             | Laguerre             | Jacobi                                |
+	+---------------+---------------------+----------------------+---------------------------------------+
+	| support       | :math:`\mathbb{R}`  | :math:`\mathbb{R}^+` | :math:`[0,1]`                         |
+	+---------------+---------------------+----------------------+---------------------------------------+
+
+.. note::
+
+	The study of the distribution of the eigenvalues of random orthogonal, unitary and symplectic matrices lying on the unit circle is also very thorough :cite:`KiNe04`.
 
 Orthogonal Polynomial Ensembles
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The case :math:`\beta=2` corresponds a specific type of *projection* DPPs also called Orthogonal Polynomial Ensembles (OPEs) with associated kernel
+The case :math:`\beta=2` corresponds a specific type of *projection* DPPs also called Orthogonal Polynomial Ensembles (OPEs) :cite:`Kon05` with associated kernel
 
 .. math::
 
@@ -60,11 +70,8 @@ where :math:`(p_n)` are the orthonormal polynomials w.r.t. :math:`\mu` i.e. :mat
 
 .. note::
 
-	OPEs (with :math:`N` points) correspond to *projection* DPPs onto
-
-	.. math::
-
-		\operatorname{Span}\{p_n\}_{n=0}^{N-1} = \mathbb{R}^{N-1}[X]
+	OPEs (with :math:`N` points) correspond to *projection* DPPs onto 
+	:math:`\operatorname{Span}\{p_n\}_{n=0}^{N-1} = \mathbb{R}^{N-1}[X]``
 
 .. hint::
 
@@ -103,24 +110,16 @@ where :math:`(p_n)` are the orthonormal polynomials w.r.t. :math:`\mu` i.e. :mat
 
 .. seealso::
 
-	.. todo::
-
-		cite Johansson, Konig
+	:cite:`Kon05`, :cite:`Joh06`
 
 .. _beta_ensembles_sampling:
 
 Sampling
 --------
 
-Full matrix models
-~~~~~~~~~~~~~~~~~~
+=======
+.. toctree::
+  :maxdepth: 2
 
-beta = 1, 2, 4
-
-Diagonalization of full random
-
-
-Banded models
-~~~~~~~~~~~~~
-
-:cite:`DuEd02`, :cite:`KiNe04`
+  beta_ensembles.full_matrix_models
+  beta_ensembles.banded_models

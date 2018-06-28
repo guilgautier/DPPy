@@ -43,15 +43,6 @@ Marginal probabilities
 Existence
 ~~~~~~~~~
 
-Necessary condition:
-
-	.. math::
-
-		\mathbf{K} \succeq 0_N
-			\quad \text{i.e.} \quad
-			\forall x\in \mathbb{C}^N, 
-				x^{\dagger} \mathbf{K} x \geq 0
-
 Sufficient conditions:
 
 	.. math::
@@ -74,10 +65,10 @@ Sufficient conditions:
 
 	In the following, DPPs defined by an *orthogonal projection* inclusion kernel :math:`\mathbf{K}` are called *projection* DPPs.
 	They are indeed valid kernels since they meet the above sufficient conditions: they are hermitian with eigenvalues :math:`0` or :math:`1`.
+	This is only a sufficient condition, there indeed exist DPPs with non symmetric kernels such as the :ref:`carries_process`.
 
-	.. todo::
-		
-		Put reference to carries process
+In the following, DPPs defined by an *orthogonal projection* inclusion kernel :math:`\mathbf{K}` are called *projection* DPPs.
+They are indeed valid kernels since they meet the above sufficient conditions: `they are hermitian with eigenvalues :math:`0` or :math:`1`.
 
 .. seealso::
 
