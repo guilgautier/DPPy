@@ -11,8 +11,7 @@ Determinantal Point Processes (DPPs) are distributions over sets of items that m
 Their applications in machine learning include summary extraction and recommendation systems.
 Yet, the cost of sampling from a DPP is prohibitive in large-scale applications, which has triggered an effort towards efficient approximate samplers.
 
-This library aims to provide an implementation of state of the art exact and approximate DPP and k-DPP samplers.
-For now, only the discrete case is tackled.
+This library aims to provide an implementation of state of the art exact and approximate DPP and k-DPP samplers for both discrete and continuous cases.
 
 ## Requirements
 
@@ -23,7 +22,7 @@ DPPy works with Python 3.4+
  - [SciPy](http://www.scipy.org/)
  - [Matplotlib](http://matplotlib.org/)
 
-The `zono_sampling` approximate sampler introduced requires CVXOPT which itself requires GCC
+The `zono_sampling` mcmc sampler for discrete DPPs requires CVXOPT which itself requires GCC
  - [CVXOPT](http://cvxopt.org)
  - [GCC](http://gcc.gnu.org)
     - On MAC it comes with Xcode
@@ -48,10 +47,13 @@ And execute `setup.py`
 pip install .
 ```
 
+### How to cite this work?
+If you use this package for your own work, please consider citing it with this piece of BibTeX:
 
 ### How to cite this work?
 If you use this package for your own work, please consider citing it with this piece of BibTeX:
 
+```bibtex
 @misc{DPPy,
     title =   {{DPPy: an Open-Source project for sampling Determinantal Point Processes in Python}},
     author =  {Guillaume Gautier},
@@ -60,3 +62,4 @@ If you use this package for your own work, please consider citing it with this p
     howpublished = {Online at: \url{github.com/guilgautier/DPPy/}},
     note =    {Code at https://github.com/guilgautier/DPPy/, documentation at https://dppy.readthedocs.io/}
 }
+```

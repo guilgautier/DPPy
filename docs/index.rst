@@ -8,7 +8,7 @@ Welcome to DPPy's documentation!
 
 DPPy is in its early stage of development and is meant to become a Python library for exact and approximate sampling of Determinantal Point Processes (DPPs).
 
-This documentation, for both the underlying discrete and continuous DPP models, aims at gathering:
+This documentation, for both discrete and continuous DPP models, aims at gathering:
 
 	1. the main mathematical background and intuitions
 
