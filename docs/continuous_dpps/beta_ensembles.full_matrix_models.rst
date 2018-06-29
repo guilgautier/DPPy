@@ -1,4 +1,4 @@
-.. _full_matrix_models::
+.. _full_matrix_models:
 
 Full matrix models
 ~~~~~~~~~~~~~~~~~~
@@ -7,7 +7,7 @@ As mentioned earlier, for specific reference measures the :math:`\beta = 1, 2, 4
 
 This is a highway for sampling exactly such ensembles in :math:`\mathcal{O}(N^3)`!
 
-.. _hermite_ensemble::
+.. _hermite_ensemble:
 
 Hermite Ensemble
 ++++++++++++++++
@@ -67,7 +67,7 @@ Normalization :math:`\sqrt{\beta N}` to concentrate as the semi-circle law.
 .. image:: ../images/Hermite.pdf
 	:width: 40pt
 
-.. _laguerre_ensemble::
+.. _laguerre_ensemble:
 
 Laguerre Ensemble
 +++++++++++++++++
@@ -143,7 +143,7 @@ where
 	:width: 40pt
 
 
-.. _jacobi_ensemble::
+.. _jacobi_ensemble:
 
 Jacobi Ensemble
 +++++++++++++++
@@ -226,7 +226,7 @@ itself tending to the arcsine law in the limit
 .. image:: ../images/Jacobi.pdf
 	:width: 40pt
 
-.. _circular_ensemble::
+.. _circular_ensemble:
 
 Circular Ensemble
 +++++++++++++++++
@@ -314,7 +314,7 @@ Circular Ensemble
 
 	add figure
 
-.. _ginibre_ensemble::
+.. _ginibre_ensemble:
 
 Ginibre Ensemble
 ++++++++++++++++

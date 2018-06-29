@@ -117,7 +117,6 @@ where :math:`(p_n)` are the orthonormal polynomials w.r.t. :math:`\mu` i.e. :mat
 Sampling
 --------
 
-=======
 .. toctree::
   :maxdepth: 2
 

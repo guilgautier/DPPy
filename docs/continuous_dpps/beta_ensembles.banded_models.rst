@@ -1,4 +1,4 @@
-.. _banded_matrix_models::
+.. _banded_matrix_models:
 
 Banded models
 ~~~~~~~~~~~~~
@@ -9,7 +9,7 @@ A way to circumvent the problem is to adopt the equivalent banded models i.e. di
 The first tridiagonal models for the :ref:`hermite_ensemble: and :ref:`laguerre_ensemble: were revealed by :cite:`DuEd02`, who left the :ref:`jacobi_ensemble: one as an open question, addressed by :cite:`KiNe04`.
 These tridiagonal formulation permit sampling in :math:`\mathcal{O}(N^2)` but also unlocked generic :math:`\beta>0`!
 
-:cite:`KiNe04` also derived a quindiagonal model for the :ref:`circular_ensemble:
+:cite:`KiNe04` also derived a quindiagonal model for the :ref:`circular_ensemble`
 
 .. seealso::
 
