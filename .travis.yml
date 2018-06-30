@@ -24,16 +24,16 @@ matrix:
 before_install:
 # For OSX, you may want to call a script installing virtual env and so on.
   - . ./scripts/install.sh
- 
+
 install:
   - python -m pip install -U pip
   - python -m easy_install -U setuptools
-  # - pip install -U pytest
+  - pip install -U pytest
   # - pip install sphinx
   - pip install .
-  
+
 # Command to run tests. These are run for each configuration
-script: 
+script:
   - python --version
-  # - pytest testing/
+  - pytest
   # - cd docs && make html && make doctest SPHINXOPTS=-W #Make doctest treat warnings as errors, to detect problems in autodoc
