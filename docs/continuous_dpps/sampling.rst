@@ -1,7 +1,7 @@
 .. _continuous_dpps_sampling:
 
 Sampling
---------
+********
 
 .. todo::
 

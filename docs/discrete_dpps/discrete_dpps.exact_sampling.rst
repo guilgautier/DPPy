@@ -1,7 +1,7 @@
 .. _discrete_dpps_exact_sampling:
 
 Exact sampling
---------------
+**************
 
 The procedure stems from the fact that :ref:`discrete_dpps_mixture`, suggesting the following two steps algorithm given the spectral decomposition of the inclusion kernel :math:`\mathbf{K}`
 
@@ -25,7 +25,7 @@ In the general case, the average cost of the exact sampling scheme is :math:`\ma
 	- Given some eigenvectors stacked in :math:`\tilde{U}` there is no need to compute :math:`\mathbf{K}=\tilde{U}\tilde{U}^{\top}`
 
 Projection DPPs
-~~~~~~~~~~~~~~~
+===============
 
 	.. important::
 
@@ -204,7 +204,7 @@ Projection DPPs
 
 
 Generic DPPs
-~~~~~~~~~~~~
+============
 
 	**Generic DPPs are mixtures of projection DPPs**
 

@@ -1,7 +1,7 @@
 .. _discrete_dpps_approximate_sampling:
 
 Approximate sampling
---------------------
+********************
 
 .. todo::
 

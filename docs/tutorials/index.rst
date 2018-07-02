@@ -11,7 +11,7 @@ For now the tutorial section is simply based on the 2 Notebooks
 
 
 Discrete DPPs
--------------
+*************
 
 .. currentmodule:: discrete_dpps
 
@@ -26,7 +26,7 @@ Methods
 
 
 Beta Ensemble
---------------
+*************
 
 .. currentmodule:: beta_ensembles
 

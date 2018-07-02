@@ -1,7 +1,7 @@
 .. _full_matrix_models:
 
 Full matrix models
-~~~~~~~~~~~~~~~~~~
+------------------
 
 As mentioned earlier, for specific reference measures the :math:`\beta = 1, 2, 4` cases are very singular in the sense that the corresponding ensembles coincide with the eigenvalues of random matrices.
 
@@ -10,7 +10,7 @@ This is a highway for sampling exactly such ensembles in :math:`\mathcal{O}(N^3)
 .. _hermite_ensemble:
 
 Hermite Ensemble
-++++++++++++++++
+^^^^^^^^^^^^^^^^
 
 .. hint::
 
@@ -64,13 +64,16 @@ Normalization :math:`\sqrt{\beta N}` to concentrate as the semi-circle law.
 	
 	\frac{\sqrt{4-x^2}}{2\pi} 1_{[-2,2]} dx
 
+.. plot:: plots/ex_plot_hermite.py
+  :include-source:
+
 .. image:: ../images/Hermite.pdf
 	:width: 40pt
 
 .. _laguerre_ensemble:
 
 Laguerre Ensemble
-+++++++++++++++++
+^^^^^^^^^^^^^^^^^
 
 .. hint::
 
@@ -146,7 +149,7 @@ where
 .. _jacobi_ensemble:
 
 Jacobi Ensemble
-+++++++++++++++
+^^^^^^^^^^^^^^^
 
 .. math::
 
@@ -229,7 +232,7 @@ itself tending to the arcsine law in the limit
 .. _circular_ensemble:
 
 Circular Ensemble
-+++++++++++++++++
+^^^^^^^^^^^^^^^^^
 
 .. math::
 
@@ -317,7 +320,7 @@ Circular Ensemble
 .. _ginibre_ensemble:
 
 Ginibre Ensemble
-++++++++++++++++
+^^^^^^^^^^^^^^^^
 
 .. math::
 
