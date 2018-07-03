@@ -202,7 +202,6 @@ Projection DPPs
 			- Refer to code also
 			- Equivalence with Cholesky updates? 
 
-
 Generic DPPs
 ============
 

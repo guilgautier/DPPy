@@ -7,7 +7,7 @@ As mentioned earlier, for specific reference measures the :math:`\beta = 1, 2, 4
 
 This is a highway for sampling exactly such ensembles in :math:`\mathcal{O}(N^3)`!
 
-.. _hermite_ensemble:
+.. _hermite_ensemble_full:
 
 Hermite Ensemble
 ^^^^^^^^^^^^^^^^
@@ -68,7 +68,7 @@ Normalization :math:`\sqrt{\beta N}` to concentrate as the semi-circle law.
   :include-source:
 
 
-.. _laguerre_ensemble:
+.. _laguerre_ensemble_full:
 
 Laguerre Ensemble
 ^^^^^^^^^^^^^^^^^
@@ -144,7 +144,7 @@ where
   :include-source:
 
 
-.. _jacobi_ensemble:
+.. _jacobi_ensemble_full:
 
 Jacobi Ensemble
 ^^^^^^^^^^^^^^^
@@ -227,7 +227,7 @@ itself tending to the arcsine law in the limit
 .. plot:: plots/ex_plot_jacobi_full_mat.py
   :include-source:
 
-.. _circular_ensemble:
+.. _circular_ensemble_full:
 
 Circular Ensemble
 ^^^^^^^^^^^^^^^^^
@@ -317,7 +317,7 @@ Circular Ensemble
 	    eigvals(U)
 
 
-.. _ginibre_ensemble:
+.. _ginibre_ensemble_full:
 
 Ginibre Ensemble
 ^^^^^^^^^^^^^^^^
