@@ -81,7 +81,7 @@ Its determinantal feature is carried by the :math:`k`-correlation functions
 
 	\forall k\geq 1, \quad
 	\rho_k(x_1,\dots,x_k) 
-		= \det [\mathbb{K}(x_i, x_j)]_{i,j=1}^k
+		= \det [\mathbf{K}(x_i, x_j)]_{i,j=1}^k
 
 .. seealso::
 
@@ -160,7 +160,7 @@ Construction
 
 A canonical way to construct DPPs generating configurations of at most :math:`N` points is the following. 
 
-Consider :math:`N` orthonormal functions :math:`\phi_{0},...,\phi_{N−1}` in :math:`L^2(\mu)`
+Consider :math:`N` orthonormal functions :math:`\phi_{0},...,\phi_{N−1} \in L^2(\mu)`
 
 .. math::
 

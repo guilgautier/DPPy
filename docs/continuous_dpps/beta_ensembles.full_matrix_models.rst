@@ -64,11 +64,9 @@ Normalization :math:`\sqrt{\beta N}` to concentrate as the semi-circle law.
 	
 	\frac{\sqrt{4-x^2}}{2\pi} 1_{[-2,2]} dx
 
-.. plot:: plots/ex_plot_hermite.py
+.. plot:: plots/ex_plot_hermite_full_mat.py
   :include-source:
 
-.. image:: ../images/Hermite.pdf
-	:width: 40pt
 
 .. _laguerre_ensemble:
 
@@ -140,10 +138,10 @@ where
 
 	c = \frac{M}{N}
 	\quad \text{and} \quad 
-	\lambda_\pm = (1\pm\sqrt{c})^2`
+	\lambda_\pm = (1\pm\sqrt{c})^2
 
-.. image:: ../images/Laguerre.pdf
-	:width: 40pt
+.. plot:: plots/ex_plot_laguerre_full_mat.py
+  :include-source:
 
 
 .. _jacobi_ensemble:
@@ -226,8 +224,8 @@ where
 
 itself tending to the arcsine law in the limit
 
-.. image:: ../images/Jacobi.pdf
-	:width: 40pt
+.. plot:: plots/ex_plot_jacobi_full_mat.py
+  :include-source:
 
 .. _circular_ensemble:
 
@@ -239,11 +237,15 @@ Circular Ensemble
 	\left|\Delta(e^{i \theta_1 },\dots, e^{i \theta_N})\right|^{\beta}
     \prod_{j = 1}^N \frac{1}{2\pi} \mathbf{1}_{[0,2\pi]} (\theta_j) d\theta_j
 
+.. hint::
+
+	Eigenvalues of orthogonal (resp. unitary and  self-dual unitary) matrices drawn uniformly i.e. Haar measure on the respective groups.
+	The eigenvalues lie on the unit circle i.e. :math:`\lambda_n = e^{i \theta_n}`.
+	The distribution of the angles :math:`\theta_n` converges to the uniform measure on :math:`[0, 2\pi[` as :math:`N` grows.
+
 - :math:`\beta=1`
 
-	.. hint::
-
-		Uniform measure i.e. Haar measure on orthogonal matrices $\mathbb{O}_N$:  $U^{\top}U = I_N$
+	Uniform measure i.e. Haar measure on orthogonal matrices :math:`\mathbb{O}_N`:  :math:`U^{\top}U = I_N`
 
 	1. Via QR algorithm, see :cite:`Mez06` Section 5
 
@@ -265,11 +267,9 @@ Circular Ensemble
 	      = U^{\top}\Lambda U\\
 	    eigvals(U)
 
-- :math:\beta=2`
+- :math:`\beta=2`
 
-	.. hint::
-
-		Uniform measure i.e. Haar measure on unitary matrices $\mathbb{U}_N$:   $U^{\dagger}U = I_N$
+	Uniform measure i.e. Haar measure on unitary matrices :math:`\mathbb{U}_N`: :math:`U^{\dagger}U = I_N`
 
 	1. Via QR algorithm, see :cite:`Mez06` Section 5
 
@@ -282,6 +282,8 @@ Circular Ensemble
 		U = np.multiply(Q, d/np.abs(d), Q)
 		return eigvals(U)
 
+	.. plot:: plots/ex_plot_circular_full_mat_QR.py
+		:include-source:
 
 	2. The Hermite way
 
@@ -292,12 +294,13 @@ Circular Ensemble
 	      = U^{\dagger}\Lambda U\\
 	    eigvals(U)
 
+	.. plot:: plots/ex_plot_circular_full_mat_hermite.py
+		:include-source:
+
 
 - :math:`\beta=4`
   
-  .. hint::
-
-  	Uniform measure i.e. Haar measure  onsymplectic matrices $\mathbb{U}\operatorname{Sp}_{2N}$:   $U^{\dagger}U = I_N$
+  Uniform measure i.e. Haar measure on self-dual unitary matrices :math:`\mathbb{U}\operatorname{Sp}_{2N}`:   :math:`U^{\dagger}U = I_{2N}`
 
 	.. math::
 
@@ -313,9 +316,6 @@ Circular Ensemble
 	            = U^{\dagger} \Lambda U\\
 	    eigvals(U)
 
-.. todo::
-
-	add figure
 
 .. _ginibre_ensemble:
 
@@ -334,8 +334,7 @@ Ginibre Ensemble
 	\frac{1}{\sqrt{2}} 
 	\left( \mathcal{N}_{N,N}(0,1) + i~ \mathcal{N}_{N, N}(0,1) \right)
 
-Nomalization $\sqrt{N}$ to concentrate in the unit circle
+Nomalization :math:`\sqrt{N}` to concentrate in the unit circle
 
-.. todo::
-
-	add figure
+.. plot:: plots/ex_plot_ginibre_full_mat.py
+  :include-source:

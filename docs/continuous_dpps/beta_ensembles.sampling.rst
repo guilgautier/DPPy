@@ -1,10 +1,10 @@
-.. beta_ensembles_sampling::
+.. _beta_ensembles_sampling:
 
 Sampling
 ========
 
 .. toctree::
-  :maxdepth: 2
+  :maxdepth: 3
 
   beta_ensembles.full_matrix_models
   beta_ensembles.banded_models
