@@ -1,7 +1,7 @@
 .. _references:
 
 References
-==========
+##########
 
 .. bibliography:: biblio.bib
 	:encoding: latex+latin

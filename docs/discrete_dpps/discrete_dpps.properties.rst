@@ -1,12 +1,12 @@
 .. _discrete_dpps_properties:
 
 Properties
-==========
+**********
 
 .. _discrete_dpps_mixture:
 
 Generic DPPs as mixtures of projection DPPs
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+===========================================
 
 *Projection* DPPs are the building blocks of the model.
 in the sense that generic DPPs are mixtures of *projection* DPPs
@@ -35,8 +35,8 @@ in the sense that generic DPPs are mixtures of *projection* DPPs
 
 	Theorem 7 in :cite:`HKPV06`.
 
-Number of points 
-~~~~~~~~~~~~~~~~
+Number of points
+================
 
 	Based on :ref:`discrete_dpps_mixture`, we have
 
@@ -104,7 +104,7 @@ Number of points
 			= \operatorname{rank} \mathbf{K}
 
 Geometrical insights
-~~~~~~~~~~~~~~~~~~~~
+====================
 
 	Kernels satisfying the sufficient conditions :eq:`suff_cond_K` and :eq:`suff_cond_L` can be expressed as
 
@@ -137,7 +137,7 @@ Geometrical insights
 	That is to say, DPPs favor subsets :math:`S` whose corresponding feature vectors span a large volume i.e. *DPPs sample softened orthogonal bases*.
 
 Diversity
-~~~~~~~~~
+=========
 
 	The *determinantal* structure of DPPs encodes the notion of diversity.
 	Deriving the pair inclusion probability, also called the 2-point correlation function using :eq:`inclusion_proba`, we obtain
@@ -155,7 +155,7 @@ Diversity
 	That is, the greater the similarity :math:`|\mathbf{K}_{i j}|` between items :math:`i` and :math:`j`, the less likely they co-occur in the samples.
 
 Relation between inclusion and marginal kernels
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+===============================================
 
 	.. math::
 		:label: relation_K_L

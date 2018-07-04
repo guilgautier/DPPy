@@ -1,10 +1,10 @@
 .. _continuous_dpps_properties:
 
 Properties
-----------
+**********
 
 Thinning
-~~~~~~~~
+========
 
 Let :math:`\lambda > 1`.
 The configuration of points :math:`\gamma^{\lambda}` obtained after subsampling the points of a configuration :math:`\gamma^{\lambda}\sim \operatorname{DPP}(\mathbf{K})` with i.i.d. :math:`\operatorname{\mathcal{B}er}\left(\frac{1}{\lambda}\right)` is still a DPP with kernel :math:`\frac{1}{\lambda} \mathbf{K}`.
@@ -35,7 +35,7 @@ The configuration of points :math:`\gamma^{\lambda}` obtained after subsampling 
 				\mu^{\otimes k}(dx) \\
 
 Linear statistics
-~~~~~~~~~~~~~~~~~
+=================
 
 1. Expectation 
 
