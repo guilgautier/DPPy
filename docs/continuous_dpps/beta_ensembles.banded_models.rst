@@ -11,7 +11,6 @@ These tridiagonal formulation permit sampling in :math:`\mathcal{O}(N^2)` but al
 
 :cite:`KiNe04` also derived a quindiagonal model for the :ref:`circular_ensemble_full`.
 
-
 .. _hermite_ensemble_banded:
 
 Hermite Ensemble
@@ -78,8 +77,8 @@ That is to say,
 	\beta_{i+1}
 	    \sim \chi_{\beta(N - i)}^2
 	
-
-
+.. plot:: plots/ex_plot_hermite_banded.py
+  :include-source:
 
 .. _laguerre_ensemble_banded:
 
@@ -164,7 +163,8 @@ That is to say,
 	\xi_{2i}
 	    \sim \chi_{\beta(N - i)}^2
 
-
+.. plot:: plots/ex_plot_laguerre_banded.py
+  :include-source:
 
 .. _jacobi_ensemble_banded:
 
@@ -269,6 +269,8 @@ That is to say,
 	        \frac{\beta}{2} (M_1+M_2-N-i+1) 
 	    \right)
 
+.. plot:: plots/ex_plot_jacobi_banded.py
+  :include-source:
 
 .. _circular_ensemble_banded:
 
@@ -318,6 +320,11 @@ and where
 	\quad \text{and} \quad
 	\Xi_{N-1} = [\overline{\alpha}_{N-1}]
 
-.. todo::
+.. hint::
 
-	Add plot showing cristalization
+	The effect of increasing the :math:`\beta` parameter can be nicely vizualized on this :ref:`circular_ensemble_banded`
+	Viewing :math:`\beta` as the inverse temperature, the configuration of the eigenvalues cristallizes with :math:`\beta`.
+	The following pictures display realizations for :math:`\beta=1, 10, 20` respectively.
+
+.. plot:: plots/ex_plot_circular_banded.py
+  :include-source:

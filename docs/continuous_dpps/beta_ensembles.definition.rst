@@ -19,18 +19,18 @@ Let :math:`\beta>0`, the joint distribution of the :math:`\beta`-Ensemble associ
 	
 	- :math:`|\Delta(x_1,\dots,x_N)| = \prod_{i<j} (x_i - x_j)` is the  determinant of the Vandermonde matrix, 
 
-	.. math::
+		.. math::
 
-		\Delta(x_1,\dots,x_N)
-		= \begin{bmatrix}
-			1 				& \dots 	& 1				\\
-			x_1 			& \dots 	& x_N			\\
-			\vdots		& 				& \vdots	\\
-			x_1^{N-1}	&					&x_N^{N-1}
-		\end{bmatrix}
+			\Delta(x_1,\dots,x_N)
+			= \begin{bmatrix}
+				1 				& \dots 	& 1				\\
+				x_1 			& \dots 	& x_N			\\
+				\vdots		& 				& \vdots	\\
+				x_1^{N-1}	&					&x_N^{N-1}
+			\end{bmatrix}
 
-	  encoding the repulsive interaction.
-	  The *closer* the points are the lower the density.
+		encoding the repulsive interaction.
+		The *closer* the points are the lower the density.
 
 	- :math:`\beta` is the inverse temperature parameter quantifying the strength of the repulsion between the points.
 
