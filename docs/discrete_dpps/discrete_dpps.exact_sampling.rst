@@ -1,13 +1,13 @@
 .. _discrete_dpps_exact_sampling:
 
 Exact sampling
---------------
+**************
 
 The procedure stems from the fact that :ref:`discrete_dpps_mixture`, suggesting the following two steps algorithm given the spectral decomposition of the inclusion kernel :math:`\mathbf{K}`
 
 .. math::
 
-	\mathbb{K} = \sum_{n=1}^{N} \lambda_n u_n u_n^{\dagger}
+	\mathbf{K} = \sum_{n=1}^{N} \lambda_n u_n u_n^{\dagger}
 
 1. Subsample the set of eigenvectors by drawing independent Bernoulli variables :math:`\mathcal{B}(\lambda_n)` and store the selected vectors in :math:`\tilde{U}`.
 
@@ -19,13 +19,13 @@ In the general case, the average cost of the exact sampling scheme is :math:`\ma
 
 .. important::
 
-	Sampling from a *projection* :math:`\operatorname{DPP}(\mathbf{K})` can be done in :math:`\mathcal{O}(Nr^2)` with :math:`r=\operatorname{rank}(K)`. It is worth mentioning that to sample from a *projection* DPP:
+	Sampling from a *projection* :math:`\operatorname{DPP}(\mathbf{K})` can be done in :math:`\mathcal{O}(Nr^2)` with :math:`r=\operatorname{rank}(\mathbf{K})`. It is worth mentioning that to sample from a *projection* DPP:
 
 	- Given the projection kernel :math:`\mathbf{K}` there is no need to compute its eigenvectors
 	- Given some eigenvectors stacked in :math:`\tilde{U}` there is no need to compute :math:`\mathbf{K}=\tilde{U}\tilde{U}^{\top}`
 
 Projection DPPs
-~~~~~~~~~~~~~~~
+===============
 
 	.. important::
 
@@ -202,9 +202,8 @@ Projection DPPs
 			- Refer to code also
 			- Equivalence with Cholesky updates? 
 
-
 Generic DPPs
-~~~~~~~~~~~~
+============
 
 	**Generic DPPs are mixtures of projection DPPs**
 

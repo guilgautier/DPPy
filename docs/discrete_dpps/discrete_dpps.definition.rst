@@ -1,7 +1,7 @@
 .. _discrete_dpps_definition:
 
 Definition
-----------
+**********
 
 A discrete point process :math:`\mathcal{X}` on :math:`[N] \triangleq \{1,\dots,N\}` can be understood as a random subset.
 It is defined via its:
@@ -21,7 +21,8 @@ It is defined via its:
 The *determinantal* feature of DPPs stems from the fact that such inclusion, resp. marginal probabilities are given by the principal minors of the corresponding inclusion kernel :math:`\mathbf{K}` (resp. marginal kernel :math:`\mathbf{L}`).
 
 Inclusion probabilities
-~~~~~~~~~~~~~~~~~~~~~~~
+=======================
+
 :math:`\mathcal{X} \sim \operatorname{DPP}(\mathbf{K})` with inclusion kernel :math:`\mathbf{K}` if it satisfies
 
 	.. math::
@@ -31,7 +32,8 @@ Inclusion probabilities
 		\quad \forall S\subset [N]
 
 Marginal probabilities
-~~~~~~~~~~~~~~~~~~~~~~
+======================
+
 :math:`\mathcal{X} \sim \operatorname{DPP}(\mathbf{L})` with marginal kernel :math:`\mathbf{L}` if it satisfies
 
 	.. math::
@@ -41,7 +43,7 @@ Marginal probabilities
 		\quad \forall S\subset [N]
 
 Existence
-~~~~~~~~~
+=========
 
 Sufficient conditions:
 

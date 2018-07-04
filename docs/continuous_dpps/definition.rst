@@ -1,10 +1,10 @@
 .. _continuous_dpps_definition:
 
 Definition
-----------
+**********
 
 Point Process
-~~~~~~~~~~~~~
+=============
 
 We consider the measure space :math:`(\mathbb{X}, \mathcal{B}(\mathbb{X}), \mu)` where:
 
@@ -44,7 +44,7 @@ The corresponding :math:`k`-correlation functions characterize the underlying po
 .. _continuous_dpps_correlation_functions:
 
 Correlation functions
-~~~~~~~~~~~~~~~~~~~~~
+=====================
 
 For :math:`k\geq 0`, the :math:`k`-correlation function :math:`\rho_k` is defined by:
 
@@ -81,7 +81,7 @@ Its determinantal feature is carried by the :math:`k`-correlation functions
 
 	\forall k\geq 1, \quad
 	\rho_k(x_1,\dots,x_k) 
-		= \det [\mathbb{K}(x_i, x_j)]_{i,j=1}^k
+		= \det [\mathbf{K}(x_i, x_j)]_{i,j=1}^k
 
 .. seealso::
 
@@ -93,7 +93,7 @@ Its determinantal feature is carried by the :math:`k`-correlation functions
 .. _continuous_dpps_existence:
 
 Existence
-~~~~~~~~~
+=========
 
 One can view :math:`\mathbf{K}` as an integral operator on :math:`L^2(\mu)`
 
@@ -156,11 +156,11 @@ Under these assumptions
 
 
 Construction
-~~~~~~~~~~~~
+============
 
 A canonical way to construct DPPs generating configurations of at most :math:`N` points is the following. 
 
-Consider :math:`N` orthonormal functions :math:`\phi_{0},...,\phi_{N−1}` in :math:`L^2(\mu)`
+Consider :math:`N` orthonormal functions :math:`\phi_{0},...,\phi_{N−1} \in L^2(\mu)`
 
 .. math::
 

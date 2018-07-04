@@ -46,7 +46,8 @@ release = ''
 extensions = ['sphinx.ext.doctest','sphinx.ext.autodoc','sphinx.ext.viewcode',
               'sphinx.ext.todo', # To Do snippet
               'sphinx.ext.mathjax', # LaTeX math rendering
-              'sphinxcontrib.bibtex'] # Bibliography management
+              'sphinxcontrib.bibtex',# Bibliography management
+              'matplotlib.sphinxext.plot_directive'] # display plot
 
 todo_include_todos = True
 
@@ -67,7 +68,7 @@ master_doc = 'index'
 #
 # This is also used if you do content translation via gettext catalogs.
 # Usually you set "language" from the command line for these cases.
-language = None
+language = "Python"
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
@@ -114,6 +115,7 @@ htmlhelp_basename = 'DPPydoc'
 
 
 # -- Options for LaTeX output ------------------------------------------------
+latex_engine = 'pdflatex'
 
 latex_elements = {
     # The paper size ('letterpaper' or 'a4paper').
@@ -137,9 +139,46 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, 'DPPy.tex', 'DPPy Documentation',
-     'Guillaume Gautier', 'manual'),
+    (master_doc, 'main.tex', 'Sphinx format for Latex and HTML',
+     'Meher Krishna Patel', 'report')
 ]
+
+
+# -- Options for Epub output ----------------------------------------------
+
+# Bibliographic Dublin Core info.
+epub_title = project
+epub_author = author
+epub_publisher = author
+epub_copyright = copyright
+
+# The unique identifier of the text. This can be a ISBN number
+# or the project homepage.
+#
+# epub_identifier = ''
+
+# A unique identification for the text.
+#
+# epub_uid = ''
+
+# A list of files that should not be packed into the epub file.
+epub_exclude_files = ['search.html']
+
+
+
+# Example configuration for intersphinx: refer to the Python standard library.
+intersphinx_mapping = {'https://docs.python.org/': None}
+
+
+def setup(app):
+    app.add_stylesheet('custom.css')  # remove line numbers
+    app.add_javascript('copybutton.js') # show/hide prompt >>>
+
+# use :numref: for references (instead of :ref:)
+numfig = True
+smart_quotes = False
+html_use_smartypants = False
+html_theme = 'sphinx_rtd_theme'
 
 
 # -- Options for manual page output ------------------------------------------
