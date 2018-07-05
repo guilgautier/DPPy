@@ -4,7 +4,7 @@ References
 ##########
 
 .. bibliography:: biblio.bib
-	:encoding: latex+latin
+	:encoding: latin
 	:style: alpha
 	:cited:	
 
