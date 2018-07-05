@@ -20,7 +20,7 @@ Discrete DPPs
 Methods
 
 .. function:: Discrete_DPP.info
-.. function:: Discrete_DPP.sample_exact
+.. automethod:: Discrete_DPP.sample_exact
 .. function:: Discrete_DPP.sample_mcmc
 .. function:: Discrete_DPP.plot
 

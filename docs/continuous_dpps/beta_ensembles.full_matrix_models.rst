@@ -285,6 +285,8 @@ Circular Ensemble
 	.. plot:: plots/ex_plot_circular_full_mat_QR.py
 		:include-source:
 
+	Histogram of the eigenvalues
+
 	2. The Hermite way
 
 	.. math::
@@ -296,6 +298,8 @@ Circular Ensemble
 
 	.. plot:: plots/ex_plot_circular_full_mat_hermite.py
 		:include-source:
+
+	Histogram of the eigenvalues
 
 
 - :math:`\beta=4`

@@ -32,7 +32,7 @@ def dpp_sampler_exact(kernel, proj_kernel=False, sampling_mode="GS"):
 			- 'GS_bis': Slight modification of 'GS'
 			- 'KuTa12': Algorithm 1 in :cite:`KuTa12`
 	:type sampling_mode:
-		string, default 'GS_bis'
+		string, default 'GS'
 		
 	:return:
 		A sample from :math:`\operatorname{DPP}(K)`.
