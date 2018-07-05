@@ -3,7 +3,7 @@
 MCMC sampling
 *************
 
-:cite:`AnGhRe16`, :cite:`LiJeSr16c` and :cite:`LiJeSr16d` derived variants of a Monte Carlo Markov Chain based on MH sampler having for stationnary distribution :math:`\operatorname{DPP}(\mathbf{L})` :eq:`marginal_proba`.
+:cite:`AnGhRe16`, :cite:`LiJeSr16a`, :cite:`LiJeSr16c` and :cite:`LiJeSr16d` derived variants of a Monte Carlo Markov Chain based on MH sampler having for stationnary distribution :math:`\operatorname{DPP}(\mathbf{L})` :eq:`marginal_proba`.
 
 .. math::
 	

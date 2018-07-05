@@ -3,6 +3,8 @@
 Approximate sampling
 ********************
 
+:cite:`LiJeSr16b`
+
 .. todo::
 
 	random projection, low rank approximation of the kernel ?
