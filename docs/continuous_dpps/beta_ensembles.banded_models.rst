@@ -37,11 +37,11 @@ The equivalent tridiagonal model reads
 .. math::
 
 	\begin{bmatrix}
-	    \alpha_1 		& \sqrt{\beta_2}& 0         	&    0      & 0       	\\
-	    \sqrt{\beta_2}  & \alpha_2 		& \sqrt{\beta_3}&    0      & 0       	\\
-	        0    		& \ddots   		& \ddots      	& \ddots	& 0       	\\
-	        0 			& 0 			& \sqrt{\beta_{N-1}} & \alpha_{N- 1}   & \sqrt{\beta_{N}} \\
-	        0   		& 0        & 0           	& \sqrt{\beta_N} 	& \alpha_{N}
+			\alpha_1    & \sqrt{\beta_2}& 0           &    0      & 0         \\
+			\sqrt{\beta_2}  & \alpha_2    & \sqrt{\beta_3}&    0      & 0         \\
+					0       & \ddots      & \ddots        & \ddots  & 0         \\
+					0       & 0       & \sqrt{\beta_{N-1}} & \alpha_{N- 1}   & \sqrt{\beta_{N}} \\
+					0       & 0        & 0            & \sqrt{\beta_N}  & \alpha_{N}
 	\end{bmatrix}
 
 with
@@ -49,12 +49,12 @@ with
 .. math::
 
 	\alpha_{i}
-	    \sim \mathcal{N}(\mu, \sigma^2)
-	    \quad
+			\sim \mathcal{N}(\mu, \sigma^2)
+			\quad
 	\text{and}
-	    \quad
+			\quad
 	\beta_{i+1}
-	    \sim \Gamma\left(\frac{\beta}{2}(N - i), \sigma^2\right)
+			\sim \Gamma\left(\frac{\beta}{2}(N - i), \sigma^2\right)
 	
 
 To recover the full matrix model for :ref:`hermite_ensemble_full`, recall that :math:`\Gamma(\frac{k}{2}, 2)\equiv \chi_k^2` and take
@@ -70,15 +70,18 @@ That is to say,
 .. math::
 
 	\alpha_{i}
-	    \sim \mathcal{N}(0, \sqrt{2})
-	    \quad
+			\sim \mathcal{N}(0, \sqrt{2})
+			\quad
 	\text{and}
-	    \quad
+			\quad
 	\beta_{i+1}
-	    \sim \chi_{\beta(N - i)}^2
+			\sim \chi_{\beta(N - i)}^2
 	
+
 .. plot:: plots/ex_plot_hermite_banded.py
-  :include-source:
+	:include-source:
+
+	Histogram of the eigenvalues
 
 .. _laguerre_ensemble_banded:
 
@@ -96,9 +99,9 @@ For a :math:`\Gamma(k,\theta)` reference measure :math:`\mu`
 	(x_1,\dots,x_N) 
 	\sim 
 		\left|\Delta(x_1,\dots,x_N)\right|^{\beta}
-	    %
+			%
 		\prod_{i= 1}^N 
-	        x_i^{k-1}
+					x_i^{k-1}
 			e^{- \frac{x_i}{\theta}} 
 			% \indic_{\bbR}(x_i)
 		\ d x_i
@@ -109,24 +112,24 @@ The equivalent tridiagonal model reads
 .. math::
 
 	\begin{bmatrix}
-	    \alpha_1 		& \sqrt{\beta_2}& 0         	&    0      & 0       	\\
-	    \sqrt{\beta_2}  & \alpha_2 		& \sqrt{\beta_3}&    0      & 0       	\\
-	        0    		& \ddots   		& \ddots      	& \ddots	& 0       	\\
-	        0 			& 0 			& \sqrt{\beta_{N-1}} & \alpha_{N- 1}   & \sqrt{\beta_{N}} \\
-	        0   		& 0        & 0           	& \sqrt{\beta_N} 	& \alpha_{N}
+			\alpha_1    & \sqrt{\beta_2}& 0           &    0      & 0         \\
+			\sqrt{\beta_2}  & \alpha_2    & \sqrt{\beta_3}&    0      & 0         \\
+					0       & \ddots      & \ddots        & \ddots  & 0         \\
+					0       & 0       & \sqrt{\beta_{N-1}} & \alpha_{N- 1}   & \sqrt{\beta_{N}} \\
+					0       & 0        & 0            & \sqrt{\beta_N}  & \alpha_{N}
 	\end{bmatrix}
 	=
 	\begin{bmatrix}
-	    \sqrt{\xi_1} 	& 	 			&          		&        	\\
-	    \sqrt{\xi_2}  	& \sqrt{\xi_3}	&      			&        	\\
-	         			& \ddots		& \ddots 		&   		\\
-	          	 		&       		& \sqrt{\xi_{2N-2}} & \sqrt{\xi_{2N-1}}
+			\sqrt{\xi_1}  &         &             &         \\
+			\sqrt{\xi_2}    & \sqrt{\xi_3}  &           &         \\
+								& \ddots    & \ddots    &       \\
+									&           & \sqrt{\xi_{2N-2}} & \sqrt{\xi_{2N-1}}
 	\end{bmatrix}
 	\begin{bmatrix}
-	    \sqrt{\xi_1} 	& \sqrt{\xi_2}	&          	&        					 \\
-	      				& \sqrt{\xi_3}	& \ddots  	&        					 \\
-	         			& 				& \ddots 	& \sqrt{\xi_{2N-2}} \\
-	          	 		&       		&			& \sqrt{\xi_{2N-1}}
+			\sqrt{\xi_1}  & \sqrt{\xi_2}  &           &                  \\
+								& \sqrt{\xi_3}  & \ddots    &                  \\
+								&         & \ddots  & \sqrt{\xi_{2N-2}} \\
+									&           &     & \sqrt{\xi_{2N-1}}
 	\end{bmatrix}
 
 
@@ -135,12 +138,12 @@ with
 .. math::
 
 	\xi_{2i-1}
-	    \sim \Gamma\left(\frac{\beta}{2}(N - i) + k, \theta \right)
-	    \quad
+			\sim \Gamma\left(\frac{\beta}{2}(N - i) + k, \theta \right)
+			\quad
 	\text{and}
-	    \quad
+			\quad
 	\xi_{2i}
-	    \sim \Gamma\left(\frac{\beta}{2}(N - i), \theta \right)
+			\sim \Gamma\left(\frac{\beta}{2}(N - i), \theta \right)
 
 
 To recover the full matrix model for :ref:`laguerre_ensemble_full`, recall that :math:`\Gamma(\frac{k}{2}, 2)\equiv \chi_k^2` and take 
@@ -156,15 +159,17 @@ That is to say,
 .. math::
 
 	\xi_{2i-1}
-	    \sim \chi_{\beta(M - i + 1)}^2
-	    \quad
+			\sim \chi_{\beta(M - i + 1)}^2
+			\quad
 	\text{and}
-	    \quad
+			\quad
 	\xi_{2i}
-	    \sim \chi_{\beta(N - i)}^2
+			\sim \chi_{\beta(N - i)}^2
 
 .. plot:: plots/ex_plot_laguerre_banded.py
-  :include-source:
+	:include-source:
+
+	Histogram of the eigenvalues
 
 .. _jacobi_ensemble_banded:
 
@@ -182,10 +187,10 @@ For a :math:`\Gamma(k,\theta)` reference measure :math:`\mu`
 	(x_1,\dots,x_N) 
 	\sim 
 		\left|\Delta(x_1,\dots,x_N)\right|^{\beta}
-	    %
+			%
 		\prod_{i= 1}^N 
-	        x_i^{a-1}
-	        (1-x_i)^{b-1}
+					x_i^{a-1}
+					(1-x_i)^{b-1}
 			% \indic_{\bbR}(x_i)
 		\ d x_i
 
@@ -195,24 +200,24 @@ The equivalent tridiagonal model reads
 .. math::
 
 	\begin{bmatrix}
-	    \alpha_1 		& \sqrt{\beta_2}& 0         	&    0      & 0       	\\
-	    \sqrt{\beta_2}  & \alpha_2 		& \sqrt{\beta_3}&    0      & 0       	\\
-	        0    		& \ddots   		& \ddots      	& \ddots	& 0       	\\
-	        0 			& 0 			& \sqrt{\beta_{N-1}} & \alpha_{N- 1}   & \sqrt{\beta_{N}} \\
-	        0   		& 0        & 0           	& \sqrt{\beta_N} 	& \alpha_{N}
+			\alpha_1    & \sqrt{\beta_2}& 0           &    0      & 0         \\
+			\sqrt{\beta_2}  & \alpha_2    & \sqrt{\beta_3}&    0      & 0         \\
+					0       & \ddots      & \ddots        & \ddots  & 0         \\
+					0       & 0       & \sqrt{\beta_{N-1}} & \alpha_{N- 1}   & \sqrt{\beta_{N}} \\
+					0       & 0        & 0            & \sqrt{\beta_N}  & \alpha_{N}
 	\end{bmatrix}
 
 
 .. math::
 
 	\begin{aligned}
-	    \alpha_1 &= \xi_1 	                \quad & \\
-	    \alpha_k &= \xi_{2k-2}+\xi_{2k-1}    \quad &\beta_{k+1} &= \xi_{2k-1}\xi_{2k}
+			\alpha_1 &= \xi_1                   \quad & \\
+			\alpha_k &= \xi_{2k-2}+\xi_{2k-1}    \quad &\beta_{k+1} &= \xi_{2k-1}\xi_{2k}
 	\end{aligned}
 
 	\begin{aligned}
-	    \xi_1 &= c_1 	           \quad &\gamma_1 &= 1-c_1 \\
-	    \xi_k &= (1-c_{k-1})c_k    \quad &\gamma_k &= c_{k-1}(1-c_k)
+			\xi_1 &= c_1             \quad &\gamma_1 &= 1-c_1 \\
+			\xi_k &= (1-c_{k-1})c_k    \quad &\gamma_k &= c_{k-1}(1-c_k)
 	\end{aligned}
 
 
@@ -221,22 +226,22 @@ with,
 .. math::
 
 	c_{2i-1}
-	    \sim 
-	    \operatorname{Beta}
-	    \left( 
-	        \frac{\beta}{2}(N-i) + a, 
-	        \frac{\beta}{2}(N-i) + b 
-	    \right)
-	    \quad
+			\sim 
+			\operatorname{Beta}
+			\left( 
+					\frac{\beta}{2}(N-i) + a, 
+					\frac{\beta}{2}(N-i) + b 
+			\right)
+			\quad
 	\text{and}
-	    \quad
+			\quad
 	c_{2i}
-	    \sim
-	    \operatorname{Beta}
-	    \left( 
-	        \frac{\beta}{2} (N-i), 
-	        \frac{\beta}{2} (N-i-1) + a + b 
-	    \right)
+			\sim
+			\operatorname{Beta}
+			\left( 
+					\frac{\beta}{2} (N-i), 
+					\frac{\beta}{2} (N-i-1) + a + b 
+			\right)
 
 
 To recover the full matrix model for :ref:`laguerre_ensemble_full`, recall that :math:`\Gamma(\frac{k}{2}, 2)\equiv \chi_k^2` and take 
@@ -252,25 +257,27 @@ That is to say,
 .. math::
 
 	c_{2i-1}
-	    \sim 
-	    \operatorname{Beta}
-	    \left( 
-	        \frac{\beta}{2}(M_1-i+1), 
-	        \frac{\beta}{2}(M_2-i+1) 
-	    \right)
-	    \quad
+			\sim 
+			\operatorname{Beta}
+			\left( 
+					\frac{\beta}{2}(M_1-i+1), 
+					\frac{\beta}{2}(M_2-i+1) 
+			\right)
+			\quad
 	\text{and}
-	    \quad
+			\quad
 	c_{2i}
-	    \sim
-	    \operatorname{Beta}
-	    \left( 
-	        \frac{\beta}{2} (N-i), 
-	        \frac{\beta}{2} (M_1+M_2-N-i+1) 
-	    \right)
+			\sim
+			\operatorname{Beta}
+			\left( 
+					\frac{\beta}{2} (N-i), 
+					\frac{\beta}{2} (M_1+M_2-N-i+1) 
+			\right)
 
 .. plot:: plots/ex_plot_jacobi_banded.py
-  :include-source:
+	:include-source:
+
+	Histogram of the eigenvalues
 
 .. _circular_ensemble_banded:
 
@@ -284,7 +291,7 @@ Circular Ensemble
 .. math::
 
 	\left|\Delta(e^{i \theta_1},\dots, e^{i \theta_N})\right|^{\beta}
-    \prod_{j = 1}^N \frac{1}{2\pi} \mathbf{1}_{[0,2\pi]} (\theta_j) d\theta_j
+		\prod_{j = 1}^N \frac{1}{2\pi} \mathbf{1}_{[0,2\pi]} (\theta_j) d\theta_j
 
 .. important::
 
@@ -327,4 +334,6 @@ and where
 	The following pictures display realizations for :math:`\beta=1, 10, 20` respectively.
 
 .. plot:: plots/ex_plot_circular_banded.py
-  :include-source:
+	:include-source:
+
+	Histogram of the eigenvalues

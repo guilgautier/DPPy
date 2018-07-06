@@ -52,11 +52,11 @@ class Discrete_DPP:
 		self.sampling_mode = None
 		### Exact:
 		## if K (inclusion) kernel is projection
-		# - 'GS' for Gram-Schmidt
+		# - ``'GS'`` for Gram-Schmidt
 		## else
-		# - 'GS'
-		# - 'GS_bis' slight modif of Gram-Schmidt
-		# - 'KuTa12' for Kulesza (Algo 1).
+		# - ``'GS'``
+		# - ``'GS_bis'`` slight modif of Gram-Schmidt
+		# - ``'KuTa12'`` for Kulesza (Algo 1).
 		### Approximate:
 		## Local chains
 		# - 'AED' Add-Exchange-Delete
@@ -250,6 +250,25 @@ class Discrete_DPP:
 
 	### Exact sampling
 	def sample_exact(self, sampling_mode="GS"):
+		""" Sample exactly from the corresponding :class:`Discrete_DPP <Discrete_DPP>` object
+
+		:param sampling_mode:
+
+			If ``projection=True``:
+				- ``'GS'`` (default): Gram-Schmidt on the columns of :math:`\mathbf{K}`
+			
+			If ``projection=False``:
+				- ``'GS'`` (default): 
+				- ``'GS_bis'``: Slight modification of ``'GS'``
+				- ``'KuTa12'``: Algorithm 1 in :cite:`KuTa12`
+		:type sampling_mode:
+			string, default ``'GS'``
+
+		.. seealso::
+
+			- :ref:`discrete_dpps_exact_sampling`
+			- :func:`sample_mcmc <sample_mcmc>`
+		"""
 
 		self.sampling_mode = sampling_mode
 
