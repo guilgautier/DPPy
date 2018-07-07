@@ -258,6 +258,7 @@ Generic DPPs
 		- :math:`U=V_{:\mathcal{B}}`,
 		- :math:`\Phi^{\top} W_{:\mathcal{B}} \Gamma_{:\mathcal{B}}^{-1/2}`, respectively.
 
-.. todo::
-	
-	Refer to code
+.. seealso::
+	.. currentmodule:: discrete_dpps
+
+	:func:`Discrete_DPP.sample_exact <Discrete_DPP.sample_exact>`

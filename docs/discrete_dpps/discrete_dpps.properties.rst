@@ -35,6 +35,8 @@ in the sense that generic DPPs are mixtures of *projection* DPPs
 
 	Theorem 7 in :cite:`HKPV06`.
 
+.. _discrete_dpps_nb_points:
+
 Number of points
 ================
 
@@ -103,6 +105,8 @@ Number of points
 			= \operatorname{Tr} \mathbf{K} 
 			= \operatorname{rank} \mathbf{K}
 
+.. _discrete_dpps_geometry:
+
 Geometrical insights
 ====================
 
@@ -136,6 +140,8 @@ Geometrical insights
 		
 	That is to say, DPPs favor subsets :math:`S` whose corresponding feature vectors span a large volume i.e. *DPPs sample softened orthogonal bases*.
 
+.. _discrete_dpps_diversity:
+
 Diversity
 =========
 
@@ -153,6 +159,8 @@ Diversity
 	  	- |\mathbf{K}_{i j}|^2
 
 	That is, the greater the similarity :math:`|\mathbf{K}_{i j}|` between items :math:`i` and :math:`j`, the less likely they co-occur in the samples.
+
+.. _discrete_dpps_relation_kernels:
 
 Relation between inclusion and marginal kernels
 ===============================================

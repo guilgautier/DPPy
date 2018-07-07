@@ -1,15 +1,46 @@
-# coding: utf-8
-try: # Local import
-	from .exact_sampling import *
-	from .mcmc_sampling import *
-except SystemError:
-	from exact_sampling import *
-	from mcmc_sampling import *
-	
-import matplotlib.pyplot as plt
-from warnings import warn
-
 class Discrete_DPP:
+	""" Discrete DPP object parametrized by
+
+		:param kernel_type:
+			
+			- ``'inclusion'`` :math:`K` kernel
+			- ``'marginal'`` :math:`L` kernel
+
+		:type kernel_type:
+			string
+
+		:param projection:
+			Indicate whether the provided kernel is of projection type
+
+		:type projection:
+			bool, default ``False``
+
+		:param params:
+			Dictionary containing the parametrization of the underlying
+
+			- inclusion kernel
+
+				- ``{'K': K}``, with :math:`0 \preceq K \preceq I`
+				- ``{'K_eig_dec': (eig_vals, eig_vecs)}``, with :math:`0 \leq eigvals \leq 1`
+				- ``{'A_zono': A}``, with :math:`A (d \\times N)` and :math:`\operatorname{rank}(A)=d`
+
+			- marginal kernel
+
+				- ``{"L": L}``, with :math:`L\succeq 0`
+				- ``{"L_eig_dec": (eig_vals, eig_vecs)}``, with :math:`eigvals \geq 0`
+				- ``{"L_gram_factor": Phi}``, with :math:`L = \Phi^{ \\top} \Phi`
+
+		:type params:
+			dict
+
+		.. seealso::
+
+			:ref:`discrete_dpps_definition`
+
+		.. caution::
+
+			For now we only consider real valued matrices :math:`K, L, A, \Phi`.
+	"""
 
 ###################
 ### Constructor ###
@@ -243,19 +274,23 @@ class Discrete_DPP:
 ######################
 
 	def info(self):
+		""" Print infos about the :class:`Discrete_DPP` object
+		"""
 		print(self.__str__())
 
 	def flush_samples(self):
+		""" Empty the ``Discrete_DPP.list_of_samples`` attribute.
+		"""
 		self.list_of_samples = []
 
 	### Exact sampling
 	def sample_exact(self, sampling_mode="GS"):
-		""" Sample exactly from the corresponding :class:`Discrete_DPP <Discrete_DPP>` object
+		""" Sample exactly from the corresponding :class:`Discrete_DPP <Discrete_DPP>` object. The sampling scheme is based on the chain rule with Gram-Schmidt like updates of the conditionals.
 
 		:param sampling_mode:
 
 			If ``projection=True``:
-				- ``'GS'`` (default): Gram-Schmidt on the columns of :math:`\mathbf{K}`
+				- ``'GS'`` (default): Gram-Schmidt on the rows of :math:`\mathbf{K}` or the corresponding eigenvectors.
 			
 			If ``projection=False``:
 				- ``'GS'`` (default): 
@@ -264,10 +299,25 @@ class Discrete_DPP:
 		:type sampling_mode:
 			string, default ``'GS'``
 
+		:return:
+			A sample from the corresponding :class:`Discrete_DPP <Discrete_DPP>` object.
+		:rtype: 
+			list
+
+		.. note::
+
+			each time you call this function, the sample is added to ``Discrete_DPP.list_of_samples`` attribute.
+			The latter can be emptied using :func:`flush_samples <flush_samples>`
+
+		.. caution::
+
+			The underlying kernel :math:`\mathbf{K}`, resp. :math:`\mathbf{L}` must be real values for now.
+
 		.. seealso::
 
 			- :ref:`discrete_dpps_exact_sampling`
 			- :func:`sample_mcmc <sample_mcmc>`
+			- :func:`flush_samples <flush_samples>`
 		"""
 
 		self.sampling_mode = sampling_mode
@@ -328,9 +378,45 @@ class Discrete_DPP:
 
 	### Approximate sampling
 	def sample_mcmc(self, sampling_mode, **params):
+		""" Run a MCMC with stationary distribution the corresponding :class:`Discrete_DPP <Discrete_DPP>` object.
+
+		:param sampling_mode:
+
+			- ``'AED'`` Add-Exchange-Delete
+			- ``'AD'`` Add-Delete
+			- ``'E'`` Exchange
+			- ``'zonotope'`` Zonotope sampling
+
+		:type sampling_mode:
+			string
+
+		:param params:
+			Dictionary containing the parameters for MCMC samplers with keys
+
+			- ``'s_init'`` (default None) Starting state of the Markov chain
+			- ``'nb_iter_max'`` (default 10) Number of iterations of the chain
+			- ``'T_max'`` (default None) Time horizon
+			- ``'size'`` (default None) Size of the initial sample for ``sampling_mode='AD'/'E'``
+
+					- :math:`=Tr(K)` for projection :math:`K` (inclusion) kernel and ``sampling_mode='E'``
+
+		:type params:
+			dict
+
+
+
+		:return:
+			A sample from the corresponding :class:`Discrete_DPP <Discrete_DPP>` object.
+		:rtype: 
+			list
+
+		.. seealso::
+
+			- :ref:`discrete_dpps_mcmc_sampling`
+			- :func:`sample_exact <sample_exact>`
+		"""
 
 		auth_sampl_mod = ("AED", "AD", "E", "zonotope")
-		# AED: 
 
 		if sampling_mode in auth_sampl_mod:
 			self.sampling_mode = sampling_mode
@@ -374,7 +460,13 @@ class Discrete_DPP:
 			raise ValueError("\n".join(err_print))
 
 	def compute_K(self, msg=None):
-		"""K = L(I+L)^-1 = I - (I+L)^-1"""
+		""" Compute the inclusion kernel :math:`K` from the original parametrization of the :class:`Discrete_DPP` object.
+
+			.. seealso::
+
+				:ref:`discrete_dpps_relation_kernels`
+				
+		"""
 		if self.K is None:
 			if not msg:
 				print("K (inclusion) kernel computed via:")
@@ -407,7 +499,12 @@ class Discrete_DPP:
 			print("K (inclusion) kernel available")
 
 	def compute_L(self, msg=False):
-		"""L = K(I-K)^-1 = (I-K)^-1 - I"""
+		""" Compute the marginal kernel :math:`L` from the original parametrization of the :class:`Discrete_DPP` object.
+
+			.. seealso::
+
+				:ref:`discrete_dpps_relation_kernels`
+		"""
 		if (self.kernel_type == "inclusion") and self.projection:
 			err_print = ("L = K(I-K)^-1 = (I-K)^-1 - I kernel cannot be computed:",
 									"K being a projection kernel it has some eigenvalues equal to 1")
@@ -454,7 +551,7 @@ class Discrete_DPP:
 
 
 	def plot(self):
-		"""Display a heatmap of the kernel"""
+		"""Display a heatmap of the kernel used to define the :class:`Discrete_DPP` object i.e. either the inclusion kernel :math:`K` or the marginal kernel :math:`L`"""
 
 		fig, ax = plt.subplots(1,1)
 

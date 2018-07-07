@@ -1,4 +1,4 @@
-.. _disctrete_dpps_mcmc_sampling:
+.. _discrete_dpps_mcmc_sampling:
 
 MCMC sampling
 *************
@@ -18,7 +18,7 @@ MCMC sampling
 Basis exchange
 ==============
 
-Pure (basis) exchange moves
+Pure exchange moves
 
 .. math::
 

@@ -6,6 +6,8 @@ except SystemError:
 import matplotlib.pyplot as plt
 
 class BetaEnsemble:
+	""" Name 
+	"""
 
 	def __init__(self, name, beta=2):
 
@@ -34,13 +36,51 @@ class BetaEnsemble:
 																			len(self.list_of_samples))
 
 	def info(self):
+		""" Print infos about the :class:`BetaEnsemble` object
+		"""
 		print(self.__str__())
 
 	def flush_samples(self):
+		""" Empty the ``BetaEnsemble.list_of_samples`` attribute.
+		"""
 		self.list_of_samples = []
 
 	def sample(self, sampling_mode="full", **sampling_params):
-		"""
+		""" Sample exactly from the corresponding :class:`Discrete_DPP <Discrete_DPP>` object. The sampling scheme is based on the chain rule with Gram-Schmidt like updates of the conditionals.
+
+		:param sampling_mode:
+
+			- sampling_mode="full":
+				- ``'GS'`` (default): Gram-Schmidt on the rows of :math:`\mathbf{K}` or the corresponding eigenvectors.
+			
+			If ``projection=False``:
+				- ``'GS'`` (default): 
+				- ``'GS_bis'``: Slight modification of ``'GS'``
+				- ``'KuTa12'``: Algorithm 1 in :cite:`KuTa12`
+
+		:type sampling_mode:
+			string, default ``'GS'``
+
+		:return:
+			A sample from the corresponding :class:`Discrete_DPP <Discrete_DPP>` object.
+		:rtype: 
+			list
+
+		.. note::
+
+			each time you call this function, the sample is added to ``Discrete_DPP.list_of_samples`` attribute.
+			The latter can be emptied using :func:`flush_samples <flush_samples>`
+
+		.. caution::
+
+			The underlying kernel :math:`\mathbf{K}`, resp. :math:`\mathbf{L}` must be real values for now.
+
+		.. seealso::
+
+			- :ref:`discrete_dpps_exact_sampling`
+			- :func:`sample_mcmc <sample_mcmc>`
+			- :func:`flush_samples <flush_samples>`
+
 		.. seealso::
 
 			- :cite:`DuEd02`
@@ -111,6 +151,12 @@ class BetaEnsemble:
 
 
 	def plot(self, normalization=True):
+		"""
+			.. seealso::
+
+				- :cite:`DuEd02`
+				- :cite:`KiNe04`
+		"""
 
 		if not self.list_of_samples:
 			raise ValueError("list_of_samples is empty, you must sample first")
