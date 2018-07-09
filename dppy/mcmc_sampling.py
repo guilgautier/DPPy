@@ -2,6 +2,7 @@ import time
 import numpy as np
 import scipy.linalg as la
 
+# For zonotope sampler
 from cvxopt import matrix, spmatrix, solvers
 solvers.options['show_progress'] = False
 solvers.options['glpk'] = dict(msg_lev='GLP_MSG_OFF')
@@ -28,6 +29,17 @@ def det_kernel_ST(kernel, S, T=None):
 ###############################################################
 
 def dpp_sampler_mcmc(kernel, sampling_mode="AED", **params):
+	""" Interface function with initializations and samplers for MCMC schemes.  
+
+	.. seealso::
+
+		- :ref:`discrete_dpps_mcmc_sampling_add_exchange_delete`
+		- :func:`add_exchange_delete_sampler <add_exchange_delete_sampler>`
+		- :func:`initialize_AED_sampler <initialize_AED_sampler>`
+		- :func:`add_delete_sampler <add_delete_sampler>`
+		- :func:`basis_exchange_sampler <basis_exchange_sampler>`
+		- :func:`initialize_AD_and_E_sampler <initialize_AD_and_E_sampler>`
+	"""
 
 	s_init = params.get("s_init", None)
 	nb_it_max = params.get("nb_it_max", 10)
@@ -52,6 +64,13 @@ def dpp_sampler_mcmc(kernel, sampling_mode="AED", **params):
 	return sampl
 
 def initialize_AED_sampler(kernel):
+	"""
+	.. seealso::
+		- :func:`add_delete_sampler <add_delete_sampler>`
+		- :func:`basis_exchange_sampler <basis_exchange_sampler>`
+		- :func:`initialize_AED_sampler <initialize_AED_sampler>`
+		- :func:`add_exchange_delete_sampler <add_exchange_delete_sampler>`
+	"""
 
 	N = kernel.shape[0]
 	ground_set = np.arange(N)
@@ -75,8 +94,11 @@ def initialize_AED_sampler(kernel):
 def initialize_AD_and_E_sampler(kernel, size=None):
 	"""
 	.. seealso::
-			- :func:` <>`
-			- :func:` <>`
+	
+		- :func:`add_delete_sampler <add_delete_sampler>`
+		- :func:`basis_exchange_sampler <basis_exchange_sampler>`
+		- :func:`initialize_AED_sampler <initialize_AED_sampler>`
+		- :func:`add_exchange_delete_sampler <add_exchange_delete_sampler>`
 	"""
 
 	N = kernel.shape[0]
@@ -129,7 +151,7 @@ def add_exchange_delete_sampler(kernel, s_init=None, nb_it_max=10, T_max=None):
 
 	.. seealso::
 			
-			Algorithm 3 in :cite:`LiJeSr16c`
+		Algorithm 3 in :cite:`LiJeSr16c`
 	"""
 
 	N = kernel.shape[0]

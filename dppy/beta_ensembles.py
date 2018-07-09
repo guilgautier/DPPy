@@ -6,7 +6,11 @@ except SystemError:
 import matplotlib.pyplot as plt
 
 class BetaEnsemble:
-	""" Name 
+	""" 
+
+		.. seealso::
+
+			- :math:`\beta`-Ensembles :ref:`beta_ensembles_definition`
 	"""
 
 	def __init__(self, name, beta=2):
@@ -152,10 +156,7 @@ class BetaEnsemble:
 
 	def plot(self, normalization=True):
 		"""
-			.. seealso::
 
-				- :cite:`DuEd02`
-				- :cite:`KiNe04`
 		"""
 
 		if not self.list_of_samples:
@@ -260,6 +261,25 @@ class BetaEnsemble:
 
 
 	def hist(self, normalization=True):
+		""" Display the histogram of the corresponding :class:`BetaEnsemble` object
+		
+		:param normalization:
+			If ``True``, the points will be normalized so that concentrate as 
+
+		:type normalization:
+			bool, default ``True``
+
+		.. caution::
+
+			An initial call to :func:`sample <sample>` is necessary
+
+		.. seealso::
+
+			:func:`sample <sample>`
+			:func:`plot <plot>`
+			:ref:`full_matrix_models`
+			:ref:`banded_matrix_models`	
+		"""
 
 		if not self.list_of_samples:
 			raise ValueError("list_of_samples is empty, you must sample first")

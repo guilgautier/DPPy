@@ -3,14 +3,14 @@ class Discrete_DPP:
 
 		:param kernel_type:
 			
-			- ``'inclusion'`` :math:`K` kernel
-			- ``'marginal'`` :math:`L` kernel
+			- ``'inclusion'`` :math:`\mathbf{K}` kernel
+			- ``'marginal'`` :math:`\mathbf{L}` kernel
 
 		:type kernel_type:
 			string
 
 		:param projection:
-			Indicate whether the provided kernel is of projection type
+			Indicate whether the provided kernel is of projection type. This may be useful when the :class:`Discrete_DPP` object is defined through its inclusion kernel :math:`\mathbf{K}`.
 
 		:type projection:
 			bool, default ``False``
@@ -33,13 +33,14 @@ class Discrete_DPP:
 		:type params:
 			dict
 
-		.. seealso::
-
-			:ref:`discrete_dpps_definition`
-
 		.. caution::
 
 			For now we only consider real valued matrices :math:`K, L, A, \Phi`.
+
+		.. seealso::
+
+			- :ref:`discrete_dpps_exact_sampling_projection_dpps`
+			- :ref:`discrete_dpps_definition`
 	"""
 
 ###################
@@ -274,12 +275,17 @@ class Discrete_DPP:
 ######################
 
 	def info(self):
-		""" Print infos about the :class:`Discrete_DPP` object
+		""" Display infos about the :class:`Discrete_DPP` object
 		"""
 		print(self.__str__())
 
 	def flush_samples(self):
 		""" Empty the ``Discrete_DPP.list_of_samples`` attribute.
+
+			.. see also::
+
+				- :func:`sample_exact <sample_exact>`
+				- :func:`sample_mcmc <sample_mcmc>`
 		"""
 		self.list_of_samples = []
 
@@ -289,10 +295,10 @@ class Discrete_DPP:
 
 		:param sampling_mode:
 
-			If ``projection=True``:
+			- ``projection=True``:
 				- ``'GS'`` (default): Gram-Schmidt on the rows of :math:`\mathbf{K}` or the corresponding eigenvectors.
 			
-			If ``projection=False``:
+			- ``projection=False``:
 				- ``'GS'`` (default): 
 				- ``'GS_bis'``: Slight modification of ``'GS'``
 				- ``'KuTa12'``: Algorithm 1 in :cite:`KuTa12`
@@ -306,18 +312,19 @@ class Discrete_DPP:
 
 		.. note::
 
-			each time you call this function, the sample is added to ``Discrete_DPP.list_of_samples`` attribute.
-			The latter can be emptied using :func:`flush_samples <flush_samples>`
+			Each time you call this function, the sample is added to the ``Discrete_DPP.list_of_samples`` attribute.
+
+			The latter can be emptied using :func:`.flush_samples() <flush_samples>`
 
 		.. caution::
 
-			The underlying kernel :math:`\mathbf{K}`, resp. :math:`\mathbf{L}` must be real values for now.
+			The underlying kernel :math:`\mathbf{K}`, resp. :math:`\mathbf{L}` must be real valued for now.
 
 		.. seealso::
 
 			- :ref:`discrete_dpps_exact_sampling`
-			- :func:`sample_mcmc <sample_mcmc>`
 			- :func:`flush_samples <flush_samples>`
+			- :func:`sample_mcmc <sample_mcmc>`
 		"""
 
 		self.sampling_mode = sampling_mode
@@ -398,12 +405,10 @@ class Discrete_DPP:
 			- ``'T_max'`` (default None) Time horizon
 			- ``'size'`` (default None) Size of the initial sample for ``sampling_mode='AD'/'E'``
 
-					- :math:`=Tr(K)` for projection :math:`K` (inclusion) kernel and ``sampling_mode='E'``
+					- :math:`=Tr(K)` for projection :math:`\mathbf{K}` (inclusion) kernel and ``sampling_mode='E'``
 
 		:type params:
 			dict
-
-
 
 		:return:
 			A sample from the corresponding :class:`Discrete_DPP <Discrete_DPP>` object.
@@ -414,6 +419,7 @@ class Discrete_DPP:
 
 			- :ref:`discrete_dpps_mcmc_sampling`
 			- :func:`sample_exact <sample_exact>`
+			- :func:`flush_samples <flush_samples>`
 		"""
 
 		auth_sampl_mod = ("AED", "AD", "E", "zonotope")
@@ -460,12 +466,11 @@ class Discrete_DPP:
 			raise ValueError("\n".join(err_print))
 
 	def compute_K(self, msg=None):
-		""" Compute the inclusion kernel :math:`K` from the original parametrization of the :class:`Discrete_DPP` object.
+		""" Compute the inclusion kernel :math:`\mathbf{K}` from the original parametrization of the :class:`Discrete_DPP` object.
 
 			.. seealso::
 
 				:ref:`discrete_dpps_relation_kernels`
-				
 		"""
 		if self.K is None:
 			if not msg:
@@ -499,7 +504,7 @@ class Discrete_DPP:
 			print("K (inclusion) kernel available")
 
 	def compute_L(self, msg=False):
-		""" Compute the marginal kernel :math:`L` from the original parametrization of the :class:`Discrete_DPP` object.
+		""" Compute the marginal kernel :math:`\mathbf{L}` from the original parametrization of the :class:`Discrete_DPP` object.
 
 			.. seealso::
 
@@ -551,7 +556,7 @@ class Discrete_DPP:
 
 
 	def plot(self):
-		"""Display a heatmap of the kernel used to define the :class:`Discrete_DPP` object i.e. either the inclusion kernel :math:`K` or the marginal kernel :math:`L`"""
+		"""Display a heatmap of the kernel used to define the :class:`Discrete_DPP` object i.e. either the inclusion kernel :math:`\mathbf{K}` or the marginal kernel :math:`\mathbf{L}`"""
 
 		fig, ax = plt.subplots(1,1)
 

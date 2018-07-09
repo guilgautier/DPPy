@@ -8,8 +8,7 @@ Properties
 Generic DPPs as mixtures of projection DPPs
 ===========================================
 
-*Projection* DPPs are the building blocks of the model.
-in the sense that generic DPPs are mixtures of *projection* DPPs
+*Projection* DPPs are the building blocks of the model in the sense that generic DPPs are mixtures of *projection* DPPs.
 
 .. important::
 
@@ -33,7 +32,8 @@ in the sense that generic DPPs are mixtures of *projection* DPPs
 
 .. seealso::
 
-	Theorem 7 in :cite:`HKPV06`.
+	- Theorem 7 in :cite:`HKPV06`
+	- :ref:`discrete_dpps_exact_sampling`
 
 .. _discrete_dpps_nb_points:
 
@@ -105,6 +105,14 @@ Number of points
 			= \operatorname{Tr} \mathbf{K} 
 			= \operatorname{rank} \mathbf{K}
 
+		In particular we have
+
+		.. math::
+			:label: marginal_projection_K
+
+			\mathbb{P}[\mathcal{X}=S] 
+				= \det \mathbf{K}_S 1_{|S|=\operatorname{rank} \mathbf{K}}
+
 .. _discrete_dpps_geometry:
 
 Geometrical insights
@@ -158,7 +166,7 @@ Diversity
 	  &= \mathbb{P}[i \in \mathcal{X}] \mathbb{P}[j \in \mathcal{X}] 
 	  	- |\mathbf{K}_{i j}|^2
 
-	That is, the greater the similarity :math:`|\mathbf{K}_{i j}|` between items :math:`i` and :math:`j`, the less likely they co-occur in the samples.
+	That is, the greater the similarity :math:`|\mathbf{K}_{i j}|` between items :math:`i` and :math:`j`, the less likely they co-occur.
 
 .. _discrete_dpps_relation_kernels:
 
