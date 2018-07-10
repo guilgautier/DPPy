@@ -1,3 +1,14 @@
+# coding: utf-8
+try: # Local import
+	from .exact_sampling import *
+	from .mcmc_sampling import *
+except SystemError:
+	from exact_sampling import *
+	from mcmc_sampling import *
+	
+import matplotlib.pyplot as plt
+from warnings import warn
+
 class Discrete_DPP:
 	""" Discrete DPP object parametrized by
 
