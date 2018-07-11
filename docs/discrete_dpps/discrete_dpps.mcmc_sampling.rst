@@ -80,6 +80,7 @@ where :math:`\Phi` is the underlying :math:`r\times N` feature matrix satisfying
 In this setting the :ref:`discrete_dpps_nb_points` is almost surely equal to :math:`r` and we have
 
 .. math::
+	:label: zonotope_marginal
 
 	\mathbb{P}[\mathcal{X}=S] 
 		= \det \mathbf{K}_S 1_{|S|=r}
@@ -93,22 +94,35 @@ Then, the original discrete ground set is embedded in a continuous domain called
 	
 	\mathcal{Z}(\Phi) = \Phi [0,1]^N
 
-
 This zonotope is a polytope with a very singular feature; it admits a tiling made of non-degenerate parallelograms spanned by the feature vectors :math:`\{\phi_s\}_{s\in S}` i.e. :math:`\operatorname{Vol}^2 \{\phi_s\}_{s\in S} \neq 0`.
 Any sample of :math:`\operatorname{DPP}(\mathbf{K})` is now represented by a tile, so that the corresponding MCMC jumps from one tile to another.
 
 The underlying continuous structure of the zonotope is exploited through the hit-and-run kernel.
-The associated MCMC is used to move across the zonotope and visit the different tiles.
-Finally, to recover the discrete DPP samples one needs to identify the tile in which the chain states lie, this is done by solving a linear program (LP).
+The associated Markov chain is used to move across the zonotope and visit the different tiles.
+Finally, to recover the discrete DPP samples one needs to identify the tile in which the successive points lie, this is done by solving a linear program (LP).
 
-.. note::
-
-	At each step the hit-and-run kernel requires to solve 2 very similar LPs in order to access the end points of the successive segments.
 
 .. hint::
 
-	On the one hand, the :ref:`discrete_dpps_mcmc_sampling_zonotope` perspective on sampling *projection* DPPs yields less correlated samples at the cost of solving 3 LPs at each iteration (which can be :math:`\mathcal{O}(N)`).
-	On the other hand, the :ref:`discrete_dpps_mcmc_sampling_add_exchange_delete` view allows to perform cheap but more correlated moves.
+	At the current point hit-and-run takes a uniform direction generating a line crossing the zonotope passing through the current state.
+	This defines a segment onto which the next point is proposed uniformly at random and then accepted with a specified ratio.
+
+	In this setting:
+
+	- From the current state any point in the zonotope is accessible
+	- The portions of the random segment intersecting the different tiles is *positively correlated* to the volume of the tile
+	- To target distributions proportional to :math:`\operatorname{Vol}^{\alpha}` the acceptance ratio takes the form
+
+		.. math::
+
+			\left[\frac{\operatorname{Vol} \{\phi_s\}_{s\in S'}}
+								{\operatorname{Vol} \{\phi_s\}_{s\in S}} \right]^{\alpha - 1}
+
+
+.. caution::
+
+	On the one hand, the :ref:`discrete_dpps_mcmc_sampling_zonotope` perspective on sampling *projection* DPPs yields a better exploration of the state space at the cost of solving 3 LPs at each step (1 for the identification of the tile and 2 very similar to find the endpoints of the segment).
+	On the other hand, the :ref:`discrete_dpps_mcmc_sampling_add_exchange_delete` view allows to perform cheap but very local moves.
 
 .. seealso::
 

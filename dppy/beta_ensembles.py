@@ -6,11 +6,26 @@ except SystemError:
 import matplotlib.pyplot as plt
 
 class BetaEnsemble:
-	""" 
+	""" Discrete DPP object parametrized by
 
-		.. seealso::
+	:param name:
+		- ``'hermite'``
+		- ``'laguerre'``
+		- ``'jacobi'``
+		- ``'circular'``
+		- ``'ginibre'``
+	:type name:
+		string
 
-			- :math:`\beta`-Ensembles :ref:`beta_ensembles_definition`
+	:param beta:
+		:math:`\\beta > 0` inverse temperature parameter.
+		Default ``beta=2`` corresponds to the DPP case, see :ref:`beta_ensembles_definition_OPE`
+	:type beta:
+		int, float, default 2
+
+	.. seealso::
+
+		- :math:`\\beta`-Ensembles :ref:`beta_ensembles_definition`
 	"""
 
 	def __init__(self, name, beta=2):
@@ -49,46 +64,67 @@ class BetaEnsemble:
 		"""
 		self.list_of_samples = []
 
-	def sample(self, sampling_mode="full", **sampling_params):
-		""" Sample exactly from the corresponding :class:`Discrete_DPP <Discrete_DPP>` object. The sampling scheme is based on the chain rule with Gram-Schmidt like updates of the conditionals.
+	def sample(self, sampling_mode='full', **sampling_params):
+		""" Sample exactly from the corresponding :class:`BetaEnsemble <BetaEnsemble>` object by computing the eigenvalues of random matrices.
 
-		:param sampling_mode:
+		:param sampling_params:
 
-			- sampling_mode="full":
-				- ``'GS'`` (default): Gram-Schmidt on the rows of :math:`\mathbf{K}` or the corresponding eigenvectors.
+			- ``sampling_mode='full'``:
+			- ``sampling_mode='banded'``:
+
+		:type sampling_params:
+			string, default ``'full'``
+
+		:param sampling_params:
+			Dictionary containing the parametrization of the underlying :class:`BetaEnsemble <BetaEnsemble>` object viewed as the eigenvalues of a full or banded random matrix.
 			
-			If ``projection=False``:
-				- ``'GS'`` (default): 
-				- ``'GS_bis'``: Slight modification of ``'GS'``
-				- ``'KuTa12'``: Algorithm 1 in :cite:`KuTa12`
+			For ``sampling_mode='full'``, the ``'N'`` key refers to the number of points i.e. the size of the matrix to be diagonalized.
 
-		:type sampling_mode:
-			string, default ``'GS'``
+				- for ``BetaEnsemble.name='hermite'`` 
+					
+					``sampling_params={'N':N}``
 
-		:return:
-			A sample from the corresponding :class:`Discrete_DPP <Discrete_DPP>` object.
-		:rtype: 
-			list
+				- for ``BetaEnsemble.name='laguerre'`` 
+				
+					``sampling_params={'M':M, 'N':N}`` where :math:`M \geq N`
 
-		.. note::
+				- for ``BetaEnsemble.name='jacobi'`` 
 
-			each time you call this function, the sample is added to ``Discrete_DPP.list_of_samples`` attribute.
-			The latter can be emptied using :func:`flush_samples <flush_samples>`
+					``sampling_params={'M_1': M_1, 'M_2':M_2, 'N':N}`` where :math:`M_{1,2}\geq N`
 
-		.. caution::
+				- for ``BetaEnsemble.name='circular'`` 
+					
+					``sampling_params={'N':N, 'mode':'QR'/'hermite'}``
 
-			The underlying kernel :math:`\mathbf{K}`, resp. :math:`\mathbf{L}` must be real values for now.
+				- for ``BetaEnsemble.name='ginibre'`` 
+					
+					``sampling_params={'N':N}``
+
+			For ``sampling_mode='banded'``, the ``'size'`` key refers to the number of points i.e. the size of the matrix to be diagonalized.
+
+				- for ``BetaEnsemble.name='hermite'`` 
+
+					- ``sampling_params={'loc':, 'scale':, 'size':}``, where ``'loc', 'scale'`` are respectively the mean and standard deviation of the corresponding Gaussian reference measure. To recover the full matrix model take, ``loc`` :math:`=0`, ``scale`` :math:`=\sqrt{2}` and ``size``:math:`=N`.
+
+				- for ``BetaEnsemble.name='laguerre'``
+
+					- ``sampling_params={'shape':, 'scale':, 'size':}``, where ``'shape', 'scale'`` are respectively the shape and standard deviation of the corresponding Gamma reference measure. To recover the full matrix model take ``shape`` :math:`=\\frac{1}{2} \\beta (M-N+1)`, ``scale``:math:`=2` and ``size`` :math:`=N`.
+
+				- for ``BetaEnsemble.name='jacobi'``
+
+					- ``sampling_params={'a':, 'b':, 'size':}``, where ``'a', 'b'`` are the respective parameters of the corresponding Beta reference measure. To recover the full matrix model take :math:`a=\\frac{1}{2} \\beta (M_1-N+1)`, :math:`b=\\frac{1}{2} \\beta (M_2-N+1)` and ``size``:math:`=N`.
+
+				- for ``BetaEnsemble.name='circular'``
+					
+					- ``sampling_params={size:}``.
+
+		:type sampling_params:
+			dict
 
 		.. seealso::
 
-			- :ref:`discrete_dpps_exact_sampling`
-			- :func:`sample_mcmc <sample_mcmc>`
 			- :func:`flush_samples <flush_samples>`
-
-		.. seealso::
-
-			- :cite:`DuEd02`
-			- :cite:`KiNe04`
+			- :ref:`full_matrix_models` and :ref:`banded_matrix_models` 
 		"""
 
 		self.sampling_mode = sampling_mode
@@ -155,8 +191,24 @@ class BetaEnsemble:
 
 
 	def plot(self, normalization=True):
-		"""
+		""" Display the histogram of the corresponding :class:`BetaEnsemble` object
+		
+		:param normalization:
+			If ``True``, the points will be normalized so that concentrate as 
 
+		:type normalization:
+			bool, default ``True``
+
+		.. caution::
+
+			An initial call to :func:`sample <sample>` is necessary
+
+		.. seealso::
+
+			- :func:`sample <sample>`
+			- :func:`hist <hist>`
+			- :ref:`full_matrix_models`
+			- :ref:`banded_matrix_models`	
 		"""
 
 		if not self.list_of_samples:
@@ -275,10 +327,10 @@ class BetaEnsemble:
 
 		.. seealso::
 
-			:func:`sample <sample>`
-			:func:`plot <plot>`
-			:ref:`full_matrix_models`
-			:ref:`banded_matrix_models`	
+			- :func:`sample <sample>`
+			- :func:`plot <plot>`
+			- :ref:`full_matrix_models`
+			- :ref:`banded_matrix_models`	
 		"""
 
 		if not self.list_of_samples:

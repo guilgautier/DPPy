@@ -31,22 +31,22 @@ class Discrete_DPP:
 
 			- inclusion kernel
 
-				- ``{'K': K}``, with :math:`0 \preceq K \preceq I`
+				- ``{'K': K}``, with :math:`0 \preceq \mathbf{K} \preceq I`
 				- ``{'K_eig_dec': (eig_vals, eig_vecs)}``, with :math:`0 \leq eigvals \leq 1`
 				- ``{'A_zono': A}``, with :math:`A (d \\times N)` and :math:`\operatorname{rank}(A)=d`
 
 			- marginal kernel
 
-				- ``{"L": L}``, with :math:`L\succeq 0`
+				- ``{"L": L}``, with :math:`\mathbf{L}\succeq 0`
 				- ``{"L_eig_dec": (eig_vals, eig_vecs)}``, with :math:`eigvals \geq 0`
-				- ``{"L_gram_factor": Phi}``, with :math:`L = \Phi^{ \\top} \Phi`
+				- ``{"L_gram_factor": Phi}``, with :math:`\mathbf{L} = \Phi^{ \\top} \Phi`
 
 		:type params:
 			dict
 
 		.. caution::
 
-			For now we only consider real valued matrices :math:`K, L, A, \Phi`.
+			For now we only consider real valued matrices :math:`\mathbf{K}, \mathbf{L}, A, \Phi`.
 
 		.. seealso::
 
@@ -416,7 +416,7 @@ class Discrete_DPP:
 			- ``'T_max'`` (default None) Time horizon
 			- ``'size'`` (default None) Size of the initial sample for ``sampling_mode='AD'/'E'``
 
-					- :math:`=Tr(K)` for projection :math:`\mathbf{K}` (inclusion) kernel and ``sampling_mode='E'``
+					- :math:`\operatorname{rank}(\mathbf{K})=\operatorname{Tr}(\mathbf{K})` for projection :math:`\mathbf{K}` (inclusion) kernel and ``sampling_mode='E'``
 
 		:type params:
 			dict

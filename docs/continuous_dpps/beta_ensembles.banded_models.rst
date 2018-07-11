@@ -1,7 +1,7 @@
 .. _banded_matrix_models:
 
-Banded models
--------------
+Banded matrix models
+--------------------
 
 Computing the eigenvalues of a full :math:`N\times N` random matrix is :math:`\mathcal{O}(N^3)` can become prohibitive for large :math:`N`.
 A way to circumvent the problem is to adopt the equivalent banded models i.e. diagonalize banded matrices.

@@ -16,8 +16,8 @@ Discrete DPPs
 	:members:
 
 
-Beta Ensemble
-*************
+:math:`\beta`-Ensembles
+***********************
 
 .. important::
 

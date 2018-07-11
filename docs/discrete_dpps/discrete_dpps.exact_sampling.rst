@@ -3,6 +3,11 @@
 Exact sampling
 **************
 
+.. seealso::
+	.. currentmodule:: discrete_dpps
+
+	:func:`Discrete_DPP.sample_exact <Discrete_DPP.sample_exact>`
+
 The procedure stems from the fact that :ref:`discrete_dpps_mixture`, suggesting the following two steps algorithm given the spectral decomposition of the inclusion kernel :math:`\mathbf{K}`
 
 .. math::
@@ -261,8 +266,3 @@ Generic DPPs
 		- :math:`U=U_{:\mathcal{B}}`,
 		- :math:`U=V_{:\mathcal{B}}`,
 		- :math:`\Phi^{\top} W_{:\mathcal{B}} \Gamma_{:\mathcal{B}}^{-1/2}`, respectively.
-
-.. seealso::
-	.. currentmodule:: discrete_dpps
-
-	:func:`Discrete_DPP.sample_exact <Discrete_DPP.sample_exact>`

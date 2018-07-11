@@ -4,11 +4,11 @@
 	 contain the root `toctree` directive.
 
 Welcome to DPPy's documentation!
-================================
+################################
 
 DPPy is in its early stage of development and is meant to become a Python library for exact and approximate sampling of Determinantal Point Processes (DPPs).
 
-This documentation, for both discrete and continuous DPP models, aims at gathering:
+This documentation, for both discrete and continuous DPP models, aims at collecting:
 
 	1. the main mathematical background and intuitions
 
@@ -16,13 +16,13 @@ This documentation, for both discrete and continuous DPP models, aims at gatheri
 
 
 Installation instructions
--------------------------
+=========================
 
 See `README <https://github.com/guilgautier/DPPy/blob/master/README.md>`_
 
 
 Documentation contents
-----------------------
+======================
 
 .. toctree::
   :maxdepth: 3
@@ -35,7 +35,7 @@ Documentation contents
 
 
 Indices and tables
-------------------
+==================
 
 * :ref:`genindex`
 * :ref:`modindex`

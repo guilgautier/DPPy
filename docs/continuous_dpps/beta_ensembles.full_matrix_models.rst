@@ -126,9 +126,6 @@ Laguerre Ensemble
         \end{bmatrix}
     \quad A = A A^{\dagger}
 
-.. seealso::
-
-	- Banded matrix model for :ref:`hermite_ensemble_banded`
 
 Normalization :math:`\beta M` to concentrate as Marcenko-Pastur law
 

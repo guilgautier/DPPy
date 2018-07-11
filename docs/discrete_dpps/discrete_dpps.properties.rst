@@ -122,9 +122,9 @@ Geometrical insights
 
 	.. math::
 
-		K_{ij} = \langle \phi_i, \phi_j \rangle
+		\mathbf{K}_{ij} = \langle \phi_i, \phi_j \rangle
 		\quad \text{and} \quad
-		L_{ij} = \langle \psi_i, \psi_j \rangle,
+		\mathbf{K}_{ij} = \langle \psi_i, \psi_j \rangle,
 
 	where each item is represented by a feature vector :math:`\phi_i` (resp. :math:`\psi_i`).
 
