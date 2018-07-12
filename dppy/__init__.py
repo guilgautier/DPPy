@@ -1,1 +1,1 @@
-# from . import dpp_sampling
+# from . import discrete_dpps

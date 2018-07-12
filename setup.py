@@ -78,6 +78,7 @@ setup(
                       'scipy',
                       'matplotlib',
                       'cvxopt',
+                      'networkx', # for the Discrete DPPs Notebook
                       'sphinxcontrib-bibtex', 
                       'sphinx_rtd_theme'] 
 
