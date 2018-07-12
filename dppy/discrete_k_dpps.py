@@ -1,6 +1,10 @@
 # coding: utf-8
-from .exact_sampling import *
-from .approximate_sampling import *
+try: # Local import
+	from .exact_sampling import *
+	from .approximate_sampling import *
+except (SystemError, ImportError):
+	from .exact_sampling import *
+	from .approximate_sampling import *
 import matplotlib.pyplot as plt
 
 class Discrete_k_DPP:
@@ -19,17 +23,17 @@ class Discrete_k_DPP:
 		# If valid kernel, diagonalization only for non projection kernel.
 		self.eig_vals = None
 		self.eig_vecs = None
-		self.__check_kernel_for_k_dpp_validity(kernel) 
+		self.__check_kernel_for_k_dpp_validity(kernel)
 
 		if self.projection_kernel:
 			self.el_sym_pol_eval = None
 		else:
 			self.el_sym_pol_eval = elem_symm_poly(self.eig_vals, self.size)
-		
+
 		self.sampling_mode = None # Default 'GS'
 		### Exact sampling
-		# 'GS' for Gram-Schmidt, 
-		# 'Schur' for Schur complement 
+		# 'GS' for Gram-Schmidt,
+		# 'Schur' for Schur complement
 		# 'KuTa12' for Kulesza (Algo 1).
 		### Approx sampling
 		# 'AED' 'AD' 'E' A=Add E=Exchange D=Delete
@@ -99,19 +103,19 @@ class Discrete_k_DPP:
 
 	def flush_samples(self):
 		self.list_of_samples = []
-		
+
 	### Exact sampling
 	def sample_exact(self, sampling_mode="GS"):
 
 		self.sampling_mode = sampling_mode
-		if self.projection_kernel: 
+		if self.projection_kernel:
 			# No need for eigendecomposition, update conditional via Gram-Schmidt on columns (equiv on rows) of K
 			sampl = proj_k_dpp_sampler_kernel(self.L,
-																				self.size, 
+																				self.size,
 																				self.sampling_mode)
-		else: #if self.el_sym_pol_eval is not None: 
+		else: #if self.el_sym_pol_eval is not None:
 		# i.e. if eigen decomposition available use it!
-			sampl = k_dpp_sampler_eig(self.eig_vals, self.eig_vecs,	self.size, 
+			sampl = k_dpp_sampler_eig(self.eig_vals, self.eig_vecs,	self.size,
 																self.sampling_mode,
 																self.el_sym_pol_eval)
 

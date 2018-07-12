@@ -1,7 +1,7 @@
 # coding: utf-8
 try: # Local import
 	from .random_matrices import *
-except SystemError:
+except (SystemError, ImportError):
 	from random_matrices import *
 import matplotlib.pyplot as plt
 
@@ -77,32 +77,32 @@ class BetaEnsemble:
 
 		:param sampling_params:
 			Dictionary containing the parametrization of the underlying :class:`BetaEnsemble <BetaEnsemble>` object viewed as the eigenvalues of a full or banded random matrix.
-			
+
 			For ``sampling_mode='full'``, the ``'N'`` key refers to the number of points i.e. the size of the matrix to be diagonalized.
 
-				- for ``BetaEnsemble.name='hermite'`` 
-					
+				- for ``BetaEnsemble.name='hermite'``
+
 					``sampling_params={'N':N}``
 
-				- for ``BetaEnsemble.name='laguerre'`` 
-				
+				- for ``BetaEnsemble.name='laguerre'``
+
 					``sampling_params={'M':M, 'N':N}`` where :math:`M \geq N`
 
-				- for ``BetaEnsemble.name='jacobi'`` 
+				- for ``BetaEnsemble.name='jacobi'``
 
 					``sampling_params={'M_1': M_1, 'M_2':M_2, 'N':N}`` where :math:`M_{1,2}\geq N`
 
-				- for ``BetaEnsemble.name='circular'`` 
-					
+				- for ``BetaEnsemble.name='circular'``
+
 					``sampling_params={'N':N, 'mode':'QR'/'hermite'}``
 
-				- for ``BetaEnsemble.name='ginibre'`` 
-					
+				- for ``BetaEnsemble.name='ginibre'``
+
 					``sampling_params={'N':N}``
 
 			For ``sampling_mode='banded'``, the ``'size'`` key refers to the number of points i.e. the size of the matrix to be diagonalized.
 
-				- for ``BetaEnsemble.name='hermite'`` 
+				- for ``BetaEnsemble.name='hermite'``
 
 					- ``sampling_params={'loc':, 'scale':, 'size':}``, where ``'loc', 'scale'`` are respectively the mean and standard deviation of the corresponding Gaussian reference measure. To recover the full matrix model take, ``loc`` :math:`=0`, ``scale`` :math:`=\sqrt{2}` and ``size``:math:`=N`.
 
@@ -115,7 +115,7 @@ class BetaEnsemble:
 					- ``sampling_params={'a':, 'b':, 'size':}``, where ``'a', 'b'`` are the respective parameters of the corresponding Beta reference measure. To recover the full matrix model take :math:`a=\\frac{1}{2} \\beta (M_1-N+1)`, :math:`b=\\frac{1}{2} \\beta (M_2-N+1)` and ``size``:math:`=N`.
 
 				- for ``BetaEnsemble.name='circular'``
-					
+
 					- ``sampling_params={size:}``.
 
 		:type sampling_params:
@@ -124,7 +124,7 @@ class BetaEnsemble:
 		.. seealso::
 
 			- :func:`flush_samples <flush_samples>`
-			- :ref:`full_matrix_models` and :ref:`banded_matrix_models` 
+			- :ref:`full_matrix_models` and :ref:`banded_matrix_models`
 		"""
 
 		self.sampling_mode = sampling_mode
@@ -135,27 +135,27 @@ class BetaEnsemble:
 
 		if self.sampling_mode == "banded":
 
-			if self.name == "hermite":					
+			if self.name == "hermite":
 					sampl = muref_normal_sampler_tridiag(loc=self.sampling_params["loc"],
-																					scale=self.sampling_params["scale"], 
-																					beta=self.beta, 
+																					scale=self.sampling_params["scale"],
+																					beta=self.beta,
 																					size=self.sampling_params["size"])
 
-			elif self.name == "laguerre":					
+			elif self.name == "laguerre":
 					sampl = mu_ref_gamma_sampler_tridiag(
 																					shape=self.sampling_params["shape"],
 																					scale=self.sampling_params["scale"],
-																					beta=self.beta, 
+																					beta=self.beta,
 																					size=self.sampling_params["size"])
 
 			elif self.name == "jacobi":
-					sampl = mu_ref_beta_sampler_tridiag(a=self.sampling_params["a"], 
-																						b=self.sampling_params["b"], 
-																						beta=self.beta, 
+					sampl = mu_ref_beta_sampler_tridiag(a=self.sampling_params["a"],
+																						b=self.sampling_params["b"],
+																						beta=self.beta,
 																						size=self.sampling_params["size"])
 
-			elif self.name == "circular":					
-					sampl = mu_ref_unif_unit_circle_sampler_quindiag(beta=self.beta, 
+			elif self.name == "circular":
+					sampl = mu_ref_unif_unit_circle_sampler_quindiag(beta=self.beta,
 																		  			size=self.sampling_params["size"])
 
 			elif self.name == "ginibre":
@@ -192,9 +192,9 @@ class BetaEnsemble:
 
 	def plot(self, normalization=True):
 		""" Display the histogram of the corresponding :class:`BetaEnsemble` object
-		
+
 		:param normalization:
-			If ``True``, the points will be normalized so that concentrate as 
+			If ``True``, the points will be normalized so that concentrate as
 
 		:type normalization:
 			bool, default ``True``
@@ -208,7 +208,7 @@ class BetaEnsemble:
 			- :func:`sample <sample>`
 			- :func:`hist <hist>`
 			- :ref:`full_matrix_models`
-			- :ref:`banded_matrix_models`	
+			- :ref:`banded_matrix_models`
 		"""
 
 		if not self.list_of_samples:
@@ -228,15 +228,15 @@ class BetaEnsemble:
 
 						points = (points - self.sampling_params['loc'])/\
 											(np.sqrt(0.5)*self.sampling_params['scale'])
-						
+
 					elif self.sampling_mode == "full":
 						N = self.sampling_params['N']
 
 					points /= np.sqrt(self.beta * N)
 
 					x = np.linspace(-2,2,100)
-					ax.plot(x, semi_circle_law(x), 
-									'r-', lw=2, alpha=0.6, 
+					ax.plot(x, semi_circle_law(x),
+									'r-', lw=2, alpha=0.6,
 									label=r'$f_{sc}$')
 
 			elif self.name == "laguerre":
@@ -248,7 +248,7 @@ class BetaEnsemble:
 						M = 2/self.beta * self.sampling_params['shape'] + N -1
 
 						points /= 0.5*self.sampling_params['scale']
-						
+
 					elif self.sampling_mode == "full":
 						N = self.sampling_params['N']
 						M	= self.sampling_params['M']
@@ -260,15 +260,15 @@ class BetaEnsemble:
 									'r-', lw=2, alpha=0.6,
 									label=r'$f_{MP}$')
 
-			elif self.name == "jacobi":		
+			elif self.name == "jacobi":
 
 				if normalization:
 
 					if self.sampling_mode == "banded":
 						N	= self.sampling_params['size']
-						M_1 = 2/self.beta * self.sampling_params['a'] + N -1 
+						M_1 = 2/self.beta * self.sampling_params['a'] + N -1
 						M_2 = 2/self.beta * self.sampling_params['b'] + N -1
-						
+
 					elif self.sampling_mode == "full":
 						N	= self.sampling_params['N']
 						M_1 = self.sampling_params['M_1']
@@ -277,7 +277,7 @@ class BetaEnsemble:
 					eps = 1e-5
 					x = np.linspace(eps, 1.0-eps, 500)
 					ax.plot(x, wachter_law(x, M_1, M_2, N),
-									'r-', lw=2, alpha=0.6, 
+									'r-', lw=2, alpha=0.6,
 									label='Wachter Law')
 
 			ax.scatter(points, np.zeros(len(points)), c='blue', label="sample")
@@ -286,8 +286,8 @@ class BetaEnsemble:
 
 			if self.name == "circular":
 
-				unit_circle = plt.Circle((0,0), 1, color='r', fill=False) 
-				ax.add_artist(unit_circle) 
+				unit_circle = plt.Circle((0,0), 1, color='r', fill=False)
+				ax.add_artist(unit_circle)
 
 				ax.set_xlim([-1.3, 1.3])
 				ax.set_ylim([-1.3, 1.3])
@@ -299,8 +299,8 @@ class BetaEnsemble:
 
 					points /= np.sqrt(self.sampling_params['N'])
 
-					unit_circle = plt.Circle((0,0), 1, color='r', fill=False) 
-					ax.add_artist(unit_circle) 
+					unit_circle = plt.Circle((0,0), 1, color='r', fill=False)
+					ax.add_artist(unit_circle)
 
 					ax.set_xlim([-1.3, 1.3])
 					ax.set_ylim([-1.3, 1.3])
@@ -314,9 +314,9 @@ class BetaEnsemble:
 
 	def hist(self, normalization=True):
 		""" Display the histogram of the corresponding :class:`BetaEnsemble` object
-		
+
 		:param normalization:
-			If ``True``, the points will be normalized so that concentrate as 
+			If ``True``, the points will be normalized so that concentrate as
 
 		:type normalization:
 			bool, default ``True``
@@ -330,7 +330,7 @@ class BetaEnsemble:
 			- :func:`sample <sample>`
 			- :func:`plot <plot>`
 			- :ref:`full_matrix_models`
-			- :ref:`banded_matrix_models`	
+			- :ref:`banded_matrix_models`
 		"""
 
 		if not self.list_of_samples:
@@ -349,15 +349,15 @@ class BetaEnsemble:
 
 					points = (points - self.sampling_params['loc'])/\
 										(np.sqrt(0.5)*self.sampling_params['scale'])
-					
+
 				elif self.sampling_mode == "full":
 					N = self.sampling_params['N']
 
 				points /= np.sqrt(self.beta * N)
 
 				x = np.linspace(-2,2,100)
-				ax.plot(x, semi_circle_law(x), 
-								'r-', lw=2, alpha=0.6, 
+				ax.plot(x, semi_circle_law(x),
+								'r-', lw=2, alpha=0.6,
 								label=r'$f_{sc}$')
 
 		elif self.name == "laguerre":
@@ -369,7 +369,7 @@ class BetaEnsemble:
 					M = 2/self.beta * self.sampling_params['shape'] + N -1
 
 					points /= 0.5*self.sampling_params['scale']
-					
+
 				elif self.sampling_mode == "full":
 					N = self.sampling_params['N']
 					M	= self.sampling_params['M']
@@ -381,15 +381,15 @@ class BetaEnsemble:
 								'r-', lw=2, alpha=0.6,
 								label=r'$f_{MP}$')
 
-		elif self.name == "jacobi":		
+		elif self.name == "jacobi":
 
 			if normalization:
 
 				if self.sampling_mode == "banded":
 					N	= self.sampling_params['size']
-					M_1 = 2/self.beta * self.sampling_params['a'] + N -1 
+					M_1 = 2/self.beta * self.sampling_params['a'] + N -1
 					M_2 = 2/self.beta * self.sampling_params['b'] + N -1
-					
+
 				elif self.sampling_mode == "full":
 					N	= self.sampling_params['N']
 					M_1 = self.sampling_params['M_1']
@@ -398,7 +398,7 @@ class BetaEnsemble:
 				eps = 1e-5
 				x = np.linspace(eps,1.0-eps,500)
 				ax.plot(x, wachter_law(x, M_1, M_2, N),
-								'r-', lw=2, alpha=0.6, 
+								'r-', lw=2, alpha=0.6,
 								label='Wachter Law')
 
 		elif self.name == "circular":
@@ -407,23 +407,23 @@ class BetaEnsemble:
 
 				points = np.angle(points)
 
-				ax.axhline(y=1/(2*np.pi), 
-									color='r', 
+				ax.axhline(y=1/(2*np.pi),
+									color='r',
 									label=r"$\frac{1}{2\pi}$")
 
 		elif self.name == "ginibre":
 
 			raise ValueError("No 'hist' method for Ginibre.")
 
-		ax.hist(points, 
-						bins=30, density=1, 
-						facecolor='blue', alpha=0.5, 
+		ax.hist(points,
+						bins=30, density=1,
+						facecolor='blue', alpha=0.5,
 						label='hist')
 
 		ax.legend(loc='best', frameon=False)
 		plt.show()
 		# fig.savefig('foo.pdf')
-		
+
 	# def kernel(self, list_of_points):
 	# 	# return the matrix [K(x,y)]_x,y in list_of_points
 	# 	# maybe plot the heatmap
@@ -504,7 +504,7 @@ class BetaEnsemble:
 
 				if self.name == "hermite":
 					pass
-					
+
 				elif self.name == "laguerre":
 
 					if ('M' not in self.sampling_params):

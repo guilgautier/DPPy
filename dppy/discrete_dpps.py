@@ -2,10 +2,10 @@
 try: # Local import
 	from .exact_sampling import *
 	from .mcmc_sampling import *
-except SystemError:
+except (SystemError, ImportError):
 	from exact_sampling import *
 	from mcmc_sampling import *
-	
+
 import matplotlib.pyplot as plt
 from warnings import warn
 
@@ -13,7 +13,7 @@ class Discrete_DPP:
 	""" Discrete DPP object parametrized by
 
 		:param kernel_type:
-			
+
 			- ``'inclusion'`` :math:`\mathbf{K}` kernel
 			- ``'marginal'`` :math:`\mathbf{L}` kernel
 
@@ -60,7 +60,7 @@ class Discrete_DPP:
 
 	def __init__(self, kernel_type, projection=False, **params):
 
-		self.kernel_type = kernel_type 
+		self.kernel_type = kernel_type
 		self.__check_kernel_type_arg()
 
 		self.projection = projection
@@ -80,12 +80,12 @@ class Discrete_DPP:
 		### Marginal kernel L: P(X=S) propto det(L_S) = det(L_S)/det(I+L)
 		self.L = params.get("L", None)
 		# If eigendecomposition available: L_eig_dec = [eig_vals, eig_vecs]
-		self.L_eig_vals, self.eig_vecs = params.get("L_eig_dec", 
+		self.L_eig_vals, self.eig_vecs = params.get("L_eig_dec",
 											[None, None if self.eig_vecs is None else self.eig_vecs])
 		# If L defined as Gram matrix: L = Phi.T Phi, with feature matrix Phi dxN
 		if "L_gram_factor" in self.params_keys:
-			self.L_gram_factor = params.get("L_gram_factor", None) 
-			# In case d<N, use "dual" view 
+			self.L_gram_factor = params.get("L_gram_factor", None)
+			# In case d<N, use "dual" view
 			self.L_dual = None # L' = Phi Phi.T
 			self.L_dual_eig_vals, self.L_dual_eig_vecs = None, None
 
@@ -167,8 +167,8 @@ class Discrete_DPP:
 
 			else:
 				err_print = ("Invalid parameter(s) for inclusion kernel, choose among:",
-										"- 'K': 0 <= K <= I", 
-										"- 'K_eig_dec': (eig_vals, eig_vecs)", 
+										"- 'K': 0 <= K <= I",
+										"- 'K_eig_dec': (eig_vals, eig_vecs)",
 										"- 'A_zono': A is dxN matrix, with rank(A)=d corresponding to K = A.T (AA.T)^-1 A",
 										"Given: {}".format(self.params_keys))
 				raise ValueError("\n".join(err_print))
@@ -189,7 +189,7 @@ class Discrete_DPP:
 						self.__check_eig_vals_geq_0(self.L_eig_vals)
 						# self.__check_eig_vals_equal_O1(self.L_eig_vals)
 
-				elif self.L_gram_factor is not None: # 
+				elif self.L_gram_factor is not None: #
 					self.__check_L_dual_or_not(self.L_gram_factor)
 
 					if self.projection:
@@ -197,8 +197,8 @@ class Discrete_DPP:
 
 			else:
 				err_print = ("Invalid parameter(s) for marginal kernel, choose among:",
-										"- 'L': L >= 0", 
-										"- 'L_eig_dec': (eig_vals, eig_vecs)", 
+										"- 'L': L >= 0",
+										"- 'L_eig_dec': (eig_vals, eig_vecs)",
 										"- 'L_gram_factor': Phi is dxN feature matrix corresponding to L = Phi.T Phi",
 										"Given: {}".format(self.params_keys))
 				raise ValueError("\n".join(err_print))
@@ -238,7 +238,7 @@ class Discrete_DPP:
 		if not np.all((-tol<=eig_vals) & (eig_vals<=1.0+tol)):
 			err_print = "Invalid kernel for inclusion kernel, eigenvalues not in [0,1]"
 			raise ValueError(err_print)
-			
+
 	def __check_eig_vals_geq_0(self, eig_vals):
 
 		tol = 1e-8
@@ -253,7 +253,7 @@ class Discrete_DPP:
 		rank = np.linalg.matrix_rank(A_zono)
 
 		if rank == d:
-			if not self.projection: 
+			if not self.projection:
 				warn("Weird setting: inclusion kernel defined via 'A_zono' but 'projection'=False. 'projection' switched to True")
 				self.projection = True
 
@@ -264,7 +264,7 @@ class Discrete_DPP:
 	def __check_L_dual_or_not(self, L_gram_factor):
 
 		d, N = L_gram_factor.shape
-		
+
 		if d<N:
 			self.L_dual = L_gram_factor.dot(L_gram_factor.T)
 			str_print = "d={} < N={}: L dual kernel was computed".format(d, N)
@@ -308,9 +308,9 @@ class Discrete_DPP:
 
 			- ``projection=True``:
 				- ``'GS'`` (default): Gram-Schmidt on the rows of :math:`\mathbf{K}` or the corresponding eigenvectors.
-			
+
 			- ``projection=False``:
-				- ``'GS'`` (default): 
+				- ``'GS'`` (default):
 				- ``'GS_bis'``: Slight modification of ``'GS'``
 				- ``'KuTa12'``: Algorithm 1 in :cite:`KuTa12`
 		:type sampling_mode:
@@ -318,7 +318,7 @@ class Discrete_DPP:
 
 		:return:
 			A sample from the corresponding :class:`Discrete_DPP <Discrete_DPP>` object.
-		:rtype: 
+		:rtype:
 			list
 
 		.. note::
@@ -353,11 +353,11 @@ class Discrete_DPP:
 			self.K_eig_vals = self.L_eig_vals/(1.0+self.L_eig_vals)
 			self.sample_exact(self.sampling_mode)
 
-		elif "L_gram_factor" in self.params_keys: 
+		elif "L_gram_factor" in self.params_keys:
 		# If DPP is marginal kernel with parameter "L_gram_factor" i.e. L = Phi.T Phi but dual kernel L' = Phi Phi.T was cheaper to use (computation of L' and diagonalization for sampling)
 			if self.L_dual_eig_vals is not None:
 				# Phase 1
-				V = dpp_eig_vecs_selector_L_dual(self.L_dual_eig_vals, 
+				V = dpp_eig_vecs_selector_L_dual(self.L_dual_eig_vals,
 																				self.L_dual_eig_vecs,
 																				self.L_gram_factor)
 				# Phase 2
@@ -386,8 +386,8 @@ class Discrete_DPP:
 			self.L_eig_vals, self.eig_vecs = self.__eigendecompose(self.L)
 			self.sample_exact(self.sampling_mode)
 
-		# If DPP is inclusion kernel with parameter 'A_zono', a priori you wish to use the zonotope approximate sampler: warning is raised 
-		# But corresponding projection kernel K = A.T (AA.T)^-1 A is computed 
+		# If DPP is inclusion kernel with parameter 'A_zono', a priori you wish to use the zonotope approximate sampler: warning is raised
+		# But corresponding projection kernel K = A.T (AA.T)^-1 A is computed
 		elif "A_zono" in self.params_keys:
 			warn("DPP defined via 'A_zono', apriori you want to use 'sampl_mcmc', but you have called 'sample_exact'")
 			self.compute_K()
@@ -423,7 +423,7 @@ class Discrete_DPP:
 
 		:return:
 			A sample from the corresponding :class:`Discrete_DPP <Discrete_DPP>` object.
-		:rtype: 
+		:rtype:
 			list
 
 		.. seealso::
@@ -453,7 +453,7 @@ class Discrete_DPP:
 				if (self.kernel_type == "inclusion") and self.projection:
 					self.compute_K()
 					# |sample|=Tr(K) a.s. for projection DPP(K)
-					params.update({'size': int(np.round(np.trace(self.K)))}) 
+					params.update({'size': int(np.round(np.trace(self.K)))})
 
 					MC_samples = dpp_sampler_mcmc(self.K, self.sampling_mode, **params)
 
