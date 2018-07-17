@@ -4,9 +4,9 @@ Definition
 **********
 
 A discrete point process :math:`\mathcal{X}` on :math:`[N] \triangleq \{1,\dots,N\}` can be understood as a random subset.
-It is defined via its:
+It is defined either via its:
 
-- inclusion probabilities (also called correlation functions) 
+- inclusion probabilities (also called correlation functions)
 
 	.. math::
 
@@ -23,38 +23,40 @@ The *determinantal* feature of DPPs stems from the fact that such inclusion, res
 Inclusion probabilities
 =======================
 
-:math:`\mathcal{X} \sim \operatorname{DPP}(\mathbf{K})` with inclusion kernel :math:`\mathbf{K}` if it satisfies
+We say that :math:`\mathcal{X} \sim \operatorname{DPP}(\mathbf{K})` with inclusion kernel a complex matrix :math:`\mathbf{K}` if
 
 	.. math::
 		:label: inclusion_proba
 
-		\mathbb{P}[S\in \mathcal{X}] = \det \mathbf{K}_S, 
+		\mathbb{P}[S\in \mathcal{X}] = \det \mathbf{K}_S,
 		\quad \forall S\subset [N]
 
 Marginal probabilities
 ======================
 
-:math:`\mathcal{X} \sim \operatorname{DPP}(\mathbf{L})` with marginal kernel :math:`\mathbf{L}` if it satisfies
+We say that :math:`\mathcal{X} \sim \operatorname{DPP}(\mathbf{L})` with marginal kernel a complex matrix :math:`\mathbf{L}` if
 
 	.. math::
 		:label: marginal_proba
 
-		\mathbb{P}[\mathcal{X}=S] = \frac{\det \mathbf{L}_S}{\det [I+\mathbf{L}]}, 
+		\mathbb{P}[\mathcal{X}=S] = \frac{\det \mathbf{L}_S}{\det [I+\mathbf{L}]},
 		\quad \forall S\subset [N]
 
 Existence
 =========
 
-Sufficient conditions:
+Some common sufficient conditions for existence are:
 
 	.. math::
 		:label: suff_cond_K
 
 		\mathbf{K} = \mathbf{K}^{\dagger}
-		\quad \text{and} \quad 
+		\quad \text{and} \quad
 		0_N \preceq \mathbf{K} \preceq I_N
 
-	.. math:: 
+where the dagger means "conjugate transpose". For the definition via marginal probabilities, sufficient conditions are
+
+	.. math::
 		:label: suff_cond_L
 
 		\mathbf{L} = \mathbf{L}^{\dagger}
@@ -63,14 +65,10 @@ Sufficient conditions:
 
 .. note::
 
-	This is only a sufficient condition, there indeed exist DPPs with non symmetric kernels such as the :ref:`carries_process`.
+	These are only a sufficient conditions, there indeed exist DPPs with non symmetric kernels such as the :ref:`carries_process`.
 
 	In the following, DPPs defined by an *orthogonal projection* inclusion kernel :math:`\mathbf{K}` are called *projection* DPPs.
-	They are indeed valid kernels since they meet the above sufficient conditions: they are hermitian with eigenvalues :math:`0` or :math:`1`.
-	
-
-In the following, DPPs defined by an *orthogonal projection* inclusion kernel :math:`\mathbf{K}` are called *projection* DPPs.
-They are indeed valid kernels since they meet the above sufficient conditions: they are hermitian with eigenvalues :math:`0` or :math:`1`.
+	They are indeed valid kernels since they meet the above sufficient conditions: they are Hermitian with eigenvalues :math:`0` or :math:`1`.
 
 .. seealso::
 
