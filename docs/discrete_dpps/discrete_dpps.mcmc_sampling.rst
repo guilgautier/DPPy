@@ -13,20 +13,9 @@ MCMC sampling
 Add/exchange/delete
 ===================
 
-:cite:`AnGhRe16`, :cite:`LiJeSr16a`, :cite:`LiJeSr16c` and :cite:`LiJeSr16d` derived variants of a Monte Carlo Markov Chain based on Metropolis Hastings (MH) sampler having for stationnary distribution :math:`\operatorname{DPP}(\mathbf{L})` :eq:`marginal_proba`.
+:cite:`AnGhRe16`, :cite:`LiJeSr16a`, :cite:`LiJeSr16c` and :cite:`LiJeSr16d` derived variants of a Metropolis sampler having for stationary distribution :math:`\operatorname{DPP}(\mathbf{L})` :eq:`marginal_proba`.
 
-The transition probability takes the following generic form
-
-.. math::
-	:label: AED_transition_probas
-	
-	\mathbb{P}[S' | S] 
-		\propto \min \left( 1, \frac{\det \mathbf{L}_S'}{\det \mathbf{L}_S} \right)
-		1_{|S' \Delta S|\leq 1}
-
-.. hint::
-	
-	Because :math:`|S' \Delta S|\leq 1`, transitions are very local inducing correlated moves.
+With proposals having the following mechanism
 
 .. _discrete_dpps_mcmc_sampling_E:
 
@@ -63,6 +52,10 @@ Mix of exchange and add-delete moves
 .. seealso::
 
 	- :cite:`AnGhRe16`, :cite:`LiJeSr16a`, :cite:`LiJeSr16c` and :cite:`LiJeSr16d`
+
+.. hint::
+	
+	Because transitions are allowed between subsets having at most 2 different :math:`|S' \Delta S|\leq 1`, transitions are very local inducing correlated moves.
 
 .. _discrete_dpps_mcmc_sampling_zonotope:
 
@@ -101,6 +94,9 @@ The underlying continuous structure of the zonotope is exploited through the hit
 The associated Markov chain is used to move across the zonotope and visit the different tiles.
 Finally, to recover the discrete DPP samples one needs to identify the tile in which the successive points lie, this is done by solving a linear program (LP).
 
+.. todo::
+
+	Merge hint and caution
 
 .. hint::
 

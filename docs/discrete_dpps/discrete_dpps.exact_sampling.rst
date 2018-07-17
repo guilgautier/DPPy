@@ -26,6 +26,8 @@ In the general case, the average cost of the exact sampling scheme is :math:`\ma
 
 	Sampling from a *projection* :math:`\operatorname{DPP}(\mathbf{K})` can be done in :math:`\mathcal{O}(Nr^2)` with :math:`r=\operatorname{rank}(\mathbf{K})`. It is worth mentioning that to sample from a *projection* DPP:
 
+	As we shall see next in :ref:`discrete_dpps_exact_sampling_projection_dpps`:
+
 	- Given the projection kernel :math:`\mathbf{K}` there is no need to compute its eigenvectors
 	- Given some orthonormal vectors stacked in :math:`\tilde{U}` there is no need to compute :math:`\mathbf{K}=\tilde{U}\tilde{U}^{\top}`
 
@@ -63,7 +65,7 @@ Projection DPPs
 
 	**Chain rule**
 
-	Let :math:`S=\{s_1, \dots, s_r\}` with :math:`r=\operatorname{rank}(K)`, equation :eq:`number_points_projection_K` yields 
+	Let :math:`S=\{s_1, \dots, s_r\}` with :math:`r=\operatorname{rank}(\mathbf{K})`, equation :eq:`number_points_projection_K` yields 
 
 	.. math::
 
@@ -221,6 +223,7 @@ Generic DPPs
 	.. tip::
 
 		If the marginal kernel was constructed as :math:`\mathbf{L}=\Phi^{\dagger}\Phi` where :math:`\Phi` is a :math:`d\times N` feature matrix, it may be judicious to exploit the lower dimensional structure of the *dual* kernel :math:`\tilde{\mathbf{L}} = \Phi \Phi^{\dagger}`.
+		Indeed, when :math:`d`
 
 	.. note::
 

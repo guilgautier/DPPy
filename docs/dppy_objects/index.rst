@@ -1,7 +1,7 @@
-.. _tutorials:
+.. _dppy_objects:
 
-Tutorials
-#########
+DPPy objects
+############
 
 Discrete DPPs
 *************

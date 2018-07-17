@@ -12,13 +12,15 @@ We consider the measure space :math:`(\mathbb{X}, \mathcal{B}(\mathbb{X}), \mu)`
 - :math:`\mathcal{B}(\mathbb{X})` the corresponding Borel :math:`\sigma`-algebra
 - :math:`\mu` the reference measure
 
-A configuration of points :math:`\gamma` is a discrete 
+A configuration of points :math:`\gamma` is a discrete and locally finite subset of :math:`\mathbb{X}`.
+
+Discrete means
 
   .. math::
 
     \forall x \in \gamma, \exists r >0, \quad B(x,r) \cap \gamma = \{x\}
 
-and locally finite subset of :math:`\mathbb{X}`
+and locally finite corresponds to
 
 	.. math::
 		
@@ -73,15 +75,14 @@ For :math:`k\geq 0`, the :math:`k`-correlation function :math:`\rho_k` is define
 		\rho_k(x_1,\dots,x_k) 
 		= \lim_{\epsilon \to 0} \frac{1}{\epsilon^k} \mathbb{P}\left[ \gamma \text{ has a point in } [x_i,x_i +\epsilon], \forall 1\leq i \leq k \right]
 
-A Determinant Point Process (DPP) is a point process parametrized by a kernel :math:`\mathbf{K}` associated to the reference measure :math:`\mu`.
-
-Its determinantal feature is carried by the :math:`k`-correlation functions
+A Determinant Point Process (DPP) on is a point process on :math:`(\mathbb{X}, \mathcal{B}(\mathbb{X}), \mu)` parametrized by a kernel :math:`K` associated to the reference measure :math:`\mu`.
+The :math:`k`-correlation functions read
 
 .. math::
 
 	\forall k\geq 1, \quad
 	\rho_k(x_1,\dots,x_k) 
-		= \det [\mathbf{K}(x_i, x_j)]_{i,j=1}^k
+		= \det [K(x_i, x_j)]_{i,j=1}^k
 
 .. seealso::
 
@@ -95,14 +96,14 @@ Its determinantal feature is carried by the :math:`k`-correlation functions
 Existence
 =========
 
-One can view :math:`\mathbf{K}` as an integral operator on :math:`L^2(\mu)`
+One can view :math:`K` as an integral operator on :math:`L^2(\mu)`
 
 .. math::
 
 	\forall x \in \mathbb{X},
 	Kf(x) = \int_{\mathbb{X}} K(x,y) f(y) \mu(dy)
 
-To access spectral properties of the kernel, it is common practice to assume :math:`\mathbf{K}`
+To access spectral properties of the kernel, it is common practice to assume :math:`K`
 
 1. `Hilbert Schmidt <https://en.wikipedia.org/wiki/Hilbert%E2%80%93Schmidt_integral_operator>`_
 
@@ -123,9 +124,17 @@ To access spectral properties of the kernel, it is common practice to assume :ma
 		\forall B\subset \mathbb{X} \text{ compact}, \quad
 		\int_B K(x,x) \mu(dx) < \infty
 
+Under assumptions 1-3, the
+
+.. math::
+
+	\operatorname{DPP}(K) \text{ exists}
+	\Longleftrightarrow
+	O \preceq K \preceq I \text{ i.e. } \lambda_n \in [0,1], \quad \forall n
+
 .. hint::
 
-	- 1. implies :math:`\mathbf{K}` to be a compact operator.
+	- 1. implies :math:`K` to be a compact operator.
 
 	- 2. with 1. allows to apply the spectral theorem, providing 
 
@@ -135,24 +144,14 @@ To access spectral properties of the kernel, it is common practice to assume :ma
 
 	- 3. makes sure there is no accumulation of points
 
-Under these assumptions
-
-.. math::
-
-	\operatorname{DPP}(\mathbf{K}) \text{ exists}
-	\Longleftrightarrow
-	O \preceq K \preceq I \text{ i.e. } \lambda_n \in [0,1], \quad \forall n
-
-
 .. warning::
 
-	This is only a sufficient condition, there indeed exist DPPs with non symmetric kernels such as the :ref:`carries_process`. 
+	These are only a sufficient conditions, there indeed exist DPPs with non symmetric kernels such as the :ref:`carries_process`. 
 
 .. seealso::
 
-	Remarks 1-2 and Theorem 3 :cite:`Sos00`
-
-	Theorem 22 :cite:`HKPV06`
+	- Remarks 1-2 and Theorem 3 :cite:`Sos00`
+	- Theorem 22 :cite:`HKPV06`
 
 
 Construction
@@ -174,7 +173,7 @@ and attach :math:`[0,1]`-valued coefficients :math:`\lambda_n` such that
 
 .. note::
 
-	In this setting, in order to generate configurations :math:`\{x1, \dots ,xN\}` of :math:`N` points a.s. set :math:`\lambda_n=1`.
+	In this setting, in order to generate configurations :math:`\{x_1, \dots ,x_N\}` of :math:`N` points a.s. set :math:`\lambda_n=1`.
 	The corresponding kernel :math:`K_N` is the projection onto :math:`\operatorname{Span} \{\phi_{0},...,\phi_{N−1}\}`
 
 .. seealso::

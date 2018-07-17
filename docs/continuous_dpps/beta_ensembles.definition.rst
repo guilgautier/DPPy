@@ -63,7 +63,7 @@ The case :math:`\beta=2` corresponds a specific type of *projection* DPPs also c
 
 	K_N(x, y) = \sum_{n=0}^{N-1} p_n(x) p_n(y)
 
-where :math:`(p_n)` are the orthonormal polynomials w.r.t. :math:`\mu` i.e. :math:`\langle p_k, p_l \rangle_{L^2(\mu)}=\delta_{kl}`.
+where :math:`(p_n)` are the orthonormal polynomials w.r.t. :math:`\mu` i.e. :math:`\operatorname{deg}(p_n)=n` and :math:`\langle p_k, p_l \rangle_{L^2(\mu)}=\delta_{kl}`.
 
 .. note::
 

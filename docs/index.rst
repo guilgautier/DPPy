@@ -12,7 +12,7 @@ This documentation, for both discrete and continuous DPP models, aims at collect
 
 	1. the main mathematical background and intuitions
 
-	2. state of the art sampling algorithms through Python objects in the :ref:`tutorials`
+	2. state of the art sampling algorithms through Python objects in the :ref:`dppy_objects`
 
 
 Installation instructions
@@ -30,7 +30,7 @@ Documentation contents
   discrete_dpps/index
   continuous_dpps/index
   exotic_dpps/index
-  tutorials/index
+  dppy_objects/index
   references/index
 
 

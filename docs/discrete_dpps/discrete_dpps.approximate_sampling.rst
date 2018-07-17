@@ -7,4 +7,4 @@ Approximate sampling
 
 .. todo::
 
-	random projection, low rank approximation of the kernel ?
+	In a near future this section will include approximation of the kernel through random projections

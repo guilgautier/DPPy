@@ -3,6 +3,8 @@
 Properties
 **********
 
+Throughout this section, we assume :math:`\mathbf{K}` and :math:`\mathbf{L}` satisfy the sufficient conditions :eq:`suff_cond_K` and eq:`suff_cond_L` respectively.
+
 .. _discrete_dpps_mixture:
 
 Generic DPPs as mixtures of projection DPPs
@@ -12,8 +14,8 @@ Generic DPPs as mixtures of projection DPPs
 
 .. important::
 
-	More precisely, if the spectral decomposition writes :math:`\mathbf{K}
-	= \sum_{n=1}^N \lambda_n^{\mathbf{K}} u_n u_n^{\top}` then we have
+	More precisely, noting the spectral decomposition :math:`\mathbf{K}
+	= \sum_{n=1}^N \lambda_n^{\mathbf{K}} u_n u_n^{\dagger}` then we have
 
 	.. math::
 
@@ -26,7 +28,7 @@ Generic DPPs as mixtures of projection DPPs
 		\mathbf{K}^B
 		= \sum_{n=1}^N 
 		B_n
-		u_n u_n^{\top}
+		u_n u_n^{\dagger}
 
 	with :math:`(B_n)_{n=1}^N` independent Bernoulli variables with respective parameter the :math:`\lambda_n^{\mathbf{K}})`.
 
@@ -195,6 +197,6 @@ Relation between inclusion and marginal kernels
 
 	.. math::
 
-		\mathbf{K} = U \Lambda^{\mathbf{K}} U^{\top}
+		\mathbf{K} = U \Lambda^{\mathbf{K}} U^{\dagger}
 			\qquad \text{and} \qquad
-		\mathbf{L} = U \Lambda^{\mathbf{L}} U^{\top}
+		\mathbf{L} = U \Lambda^{\mathbf{L}} U^{\dagger}
