@@ -68,6 +68,10 @@ Normalization :math:`\sqrt{\beta N}` to concentrate as the semi-circle law.
   :include-source:
 
 
+.. seealso::
+
+	- Banded matrix model for :ref:`hermite_ensemble_banded`
+
 .. _laguerre_ensemble_full:
 
 Laguerre Ensemble
@@ -143,6 +147,9 @@ where
 .. plot:: plots/ex_plot_laguerre_full_mat.py
   :include-source:
 
+.. seealso::
+
+	- Banded matrix model for :ref:`laguerre_ensemble_banded`
 
 .. _jacobi_ensemble_full:
 
@@ -226,6 +233,10 @@ itself tending to the arcsine law in the limit
 
 .. plot:: plots/ex_plot_jacobi_full_mat.py
   :include-source:
+
+.. seealso::
+
+	- Banded matrix model for :ref:`jacobi_ensemble_banded`
 
 .. _circular_ensemble_full:
 
@@ -320,6 +331,9 @@ Circular Ensemble
 	            = U^{\dagger} \Lambda U\\
 	    eigvals(U)
 
+.. seealso::
+
+	- Banded matrix model for :ref:`laguerre_ensemble_banded`
 
 .. _ginibre_ensemble_full:
 

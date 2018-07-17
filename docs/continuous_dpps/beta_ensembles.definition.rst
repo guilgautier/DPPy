@@ -36,7 +36,7 @@ Let :math:`\beta>0`, the joint distribution of the :math:`\beta`-Ensemble associ
 
 .. important:: 
 
-	For Gaussian, Gamma and Beta reference measures, the :math:`\beta=1,2` and :math:`4` cases received a very special attention in the random matrix litterature, :cite:`DuEd02` ...
+	For Gaussian, Gamma and Beta reference measures, the :math:`\beta=1,2` and :math:`4` cases received a very special attention in the random matrix litterature, e.g. :cite:`DuEd02`.
 
 	The associated ensembles actually correspond to the eigenvalues of random matrices whose distribution is invariant to the action of the orthogonal (:math:`\beta=1`), unitary (:math:`\beta=2`) and symplectic (:math:`\beta=4`) group respectively.
 
@@ -51,6 +51,8 @@ Let :math:`\beta>0`, the joint distribution of the :math:`\beta`-Ensemble associ
 .. note::
 
 	The study of the distribution of the eigenvalues of random orthogonal, unitary and symplectic matrices lying on the unit circle is also very thorough :cite:`KiNe04`.
+
+.. _beta_ensembles_definition_OPE:
 
 Orthogonal Polynomial Ensembles
 -------------------------------

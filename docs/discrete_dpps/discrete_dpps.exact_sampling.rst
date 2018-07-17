@@ -3,6 +3,11 @@
 Exact sampling
 **************
 
+.. seealso::
+	.. currentmodule:: discrete_dpps
+
+	:func:`Discrete_DPP.sample_exact <Discrete_DPP.sample_exact>`
+
 The procedure stems from the fact that :ref:`discrete_dpps_mixture`, suggesting the following two steps algorithm given the spectral decomposition of the inclusion kernel :math:`\mathbf{K}`
 
 .. math::
@@ -22,7 +27,9 @@ In the general case, the average cost of the exact sampling scheme is :math:`\ma
 	Sampling from a *projection* :math:`\operatorname{DPP}(\mathbf{K})` can be done in :math:`\mathcal{O}(Nr^2)` with :math:`r=\operatorname{rank}(\mathbf{K})`. It is worth mentioning that to sample from a *projection* DPP:
 
 	- Given the projection kernel :math:`\mathbf{K}` there is no need to compute its eigenvectors
-	- Given some eigenvectors stacked in :math:`\tilde{U}` there is no need to compute :math:`\mathbf{K}=\tilde{U}\tilde{U}^{\top}`
+	- Given some orthonormal vectors stacked in :math:`\tilde{U}` there is no need to compute :math:`\mathbf{K}=\tilde{U}\tilde{U}^{\top}`
+
+.. _discrete_dpps_exact_sampling_projection_dpps:
 
 Projection DPPs
 ===============
@@ -202,6 +209,8 @@ Projection DPPs
 			- Refer to code also
 			- Equivalence with Cholesky updates? 
 
+.. _discrete_dpps_exact_sampling_generic_dpps:
+
 Generic DPPs
 ============
 
@@ -257,7 +266,3 @@ Generic DPPs
 		- :math:`U=U_{:\mathcal{B}}`,
 		- :math:`U=V_{:\mathcal{B}}`,
 		- :math:`\Phi^{\top} W_{:\mathcal{B}} \Gamma_{:\mathcal{B}}^{-1/2}`, respectively.
-
-.. todo::
-	
-	Refer to code

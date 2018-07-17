@@ -17,7 +17,7 @@ def hermite_sampler_full(N, beta=2):
 
 	elif beta==2:
 		A = np.random.randn(N, N) + 1j*np.random.randn(N, N)
-		
+
 	elif beta==4:
 		X = np.random.randn(N, N) + 1j*np.random.randn(N, N)
 		Y = np.random.randn(N, N) + 1j*np.random.randn(N, N)
@@ -59,7 +59,7 @@ def muref_normal_sampler_tridiag(loc=0.0, scale=1.0, beta=2, size=10):
 
 		:cite:`DuEd02` II-C
 	"""
-	
+
 	# beta/2*[N-1, N-2, ..., 1]
 	b_2_Ni = 0.5*beta*np.arange(size-1, 0, step=-1)
 
@@ -77,7 +77,7 @@ def muref_normal_sampler_tridiag(loc=0.0, scale=1.0, beta=2, size=10):
 
 # Laguerre, full matrix model
 def laguerre_sampler_full(M, N, beta=2):
-	
+
 	if beta==1:
 		A = np.random.randn(N, M)
 
@@ -118,7 +118,7 @@ def laguerre_sampler_tridiag(M, N, beta=2):
 	alpha_coef = xi_even + xi_odd
 	# beta_i+1 = xi_2i-1 * xi_2i
 	beta_coef = xi_odd[:-1] * xi_even[1:]
-	
+
 	return la.eigvalsh_tridiagonal(alpha_coef, np.sqrt(beta_coef))
 
 # Marcenko Pastur law
@@ -130,7 +130,7 @@ def marcenko_pastur_law(x, M, N, sigma=1.0):
 
 	return 1.0/(2*np.pi*sigma**2) * 1.0/(c*x) *np.sqrt(np.maximum((Lp-x)*(x-Lm),0))
 
-## mu_ref == Gamma 
+## mu_ref == Gamma
 def mu_ref_gamma_sampler_tridiag(shape=1.0, scale=1.0, beta=2, size=10):
 	"""
 	.. seealso::
@@ -153,7 +153,7 @@ def mu_ref_gamma_sampler_tridiag(shape=1.0, scale=1.0, beta=2, size=10):
 	alpha_coef = xi_even + xi_odd
 	# beta_i+1 = xi_2i-1 * xi_2i
 	beta_coef = xi_odd[:-1] * xi_even[1:]
-	
+
 	return la.eigvalsh_tridiagonal(alpha_coef, np.sqrt(beta_coef))
 
 
@@ -167,7 +167,7 @@ def mu_ref_gamma_sampler_tridiag(shape=1.0, scale=1.0, beta=2, size=10):
 
 # Jacobi, full matrix model
 def jacobi_sampler_full(M_1, M_2, N, beta=2):
-	
+
 	if beta==1:
 		X = np.random.randn(N, M_1)
 		Y = np.random.randn(N, M_2)
@@ -219,12 +219,12 @@ def jacobi_sampler_tridiag(M_1, M_2, N, beta=2):
 
 	# xi_odd = xi_2i-1 = (1-c_2i-2) c_2i-1
 	xi_odd = (1-c_even)*c_odd
-	
+
 	# xi_even = xi_0=0, xi_2, xi_2N-2
 	# xi_2i = (1-c_2i-1)*c_2i
 	xi_even = np.zeros(N)
 	xi_even[1:] = (1-c_odd[:-1])*c_even[1:]
-	
+
 	# alpha_i = xi_2i-2 + xi_2i-1
 	# alpha_1 = xi_0 + xi_1 = xi_1
 	alpha_coef = xi_even + xi_odd
@@ -247,7 +247,7 @@ def wachter_law(x, M_1, M_2, N):
 	# Lm = ((np.sqrt(M_1*(M_1+M_2-N)) - np.sqrt(M_2*N))/(M_1+M_2))**2
 	# Lp = ((np.sqrt(M_1*(M_1+M_2-N)) + np.sqrt(M_2*N))/(M_1+M_2))**2
 
-	# return 1/(2*np.pi) * (M_1+M_2)/N * 1/(x*(1-x)) * np.sqrt(np.maximum((Lp-x)*(x-Lm),0))  
+	# return 1/(2*np.pi) * (M_1+M_2)/N * 1/(x*(1-x)) * np.sqrt(np.maximum((Lp-x)*(x-Lm),0))
 
 def mu_ref_beta_sampler_tridiag(a, b, beta=2, size=10):
 
@@ -271,12 +271,12 @@ def mu_ref_beta_sampler_tridiag(a, b, beta=2, size=10):
 
 	# xi_odd = xi_2i-1 = (1-c_2i-2) c_2i-1
 	xi_odd = (1-c_even)*c_odd
-	
+
 	# xi_even = xi_0=0, xi_2, xi_2N-2
 	# xi_2i = (1-c_2i-1)*c_2i
 	xi_even = np.zeros(size)
 	xi_even[1:] = (1-c_odd[:-1])*c_even[1:]
-	
+
 	# alpha_i = xi_2i-2 + xi_2i-1
 	# alpha_1 = xi_0 + xi_1 = xi_1
 	alpha_coef = xi_even + xi_odd
@@ -297,9 +297,9 @@ def circular_sampler_full(N, beta=2, mode="QR"):
 	"""
 	.. seealso::
 
-		[Mezzadri, Sec 5] https://arxiv.org/pdf/math-ph/0609050.pdf	
+		[Mezzadri, Sec 5] https://arxiv.org/pdf/math-ph/0609050.pdf
 	"""
-	
+
 	if mode == "hermite":
 		size_sym_mat = int(N*(N-1)/2)
 
@@ -308,7 +308,7 @@ def circular_sampler_full(N, beta=2, mode="QR"):
 
 		elif beta==2:#CUE
 			A = np.random.randn(N, N) + 1j*np.random.randn(N, N)
-			
+
 		elif beta==4:
 			X = np.random.randn(N, N) + 1j*np.random.randn(N, N)
 			Y = np.random.randn(N, N) + 1j*np.random.randn(N, N)
@@ -337,15 +337,15 @@ def circular_sampler_full(N, beta=2, mode="QR"):
 			raise ValueError("Invalid beta parameter, in 'QR' mode."
 							"Only beta = 1, 2 are available.\n"
 							"Given {}".format(beta))
-			
+
 		#U, _ = np.linalg.qr(A)
 		Q, R = np.linalg.qr(A)
 		d = np.diagonal(R)
 		U = np.multiply(Q, d/np.abs(d), Q)
-		
+
 	else:
 		raise ValueError("mode = 'hermite' or 'QR'")
-	
+
 	return la.eigvals(U)
 
 # Circular, quindiagonal model
@@ -366,7 +366,7 @@ def block_diag(arrs):
 	return out
 
 def mu_ref_unif_unit_circle_sampler_quindiag(beta=2, size=10):
-	""" 
+	"""
 	.. todo::
 
 		LM and ML have same eigenvalues thus L.dot(M) + M.dot(L) is symmetric could use `eigvals_banded`.
@@ -382,8 +382,8 @@ def mu_ref_unif_unit_circle_sampler_quindiag(beta=2, size=10):
 	# Xi_-1 = [1]
 	xi_1 = np.array([1], ndmin=2, dtype=np.complex_)
 	# xi_0,1,...,N-2
-	xi_list = np.zeros((size-1, 2, 2), dtype=np.complex_) 
-	# xi_N-1 = [alpha_N-1.conj()] i.e. 
+	xi_list = np.zeros((size-1, 2, 2), dtype=np.complex_)
+	# xi_N-1 = [alpha_N-1.conj()] i.e.
 	# conjugate of a point uniformly distributed on the unit circle
 	vec_N_1 = np.random.randn(2)
 	vec_N_1 /= np.linalg.norm(vec_N_1)
@@ -402,7 +402,7 @@ def mu_ref_unif_unit_circle_sampler_quindiag(beta=2, size=10):
 
 		xi_list[ind,:,:] = [[alpha.conj(),	rho		],
 												[rho,					 -alpha]]
-		
+
 	# L = diag(xi_0,xi_2,\dots)
 	L = block_diag(xi_list[::2,:,:])
 	# M = diag(xi_-1,xi_1,\xi_3\dots)

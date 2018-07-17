@@ -2,6 +2,7 @@ import time
 import numpy as np
 import scipy.linalg as la
 
+# For zonotope sampler
 from cvxopt import matrix, spmatrix, solvers
 solvers.options['show_progress'] = False
 solvers.options['glpk'] = dict(msg_lev='GLP_MSG_OFF')
@@ -28,13 +29,24 @@ def det_kernel_ST(kernel, S, T=None):
 ###############################################################
 
 def dpp_sampler_mcmc(kernel, sampling_mode="AED", **params):
+	""" Interface function with initializations and samplers for MCMC schemes.
+
+	.. seealso::
+
+		- :ref:`discrete_dpps_mcmc_sampling_add_exchange_delete`
+		- :func:`add_exchange_delete_sampler <add_exchange_delete_sampler>`
+		- :func:`initialize_AED_sampler <initialize_AED_sampler>`
+		- :func:`add_delete_sampler <add_delete_sampler>`
+		- :func:`basis_exchange_sampler <basis_exchange_sampler>`
+		- :func:`initialize_AD_and_E_sampler <initialize_AD_and_E_sampler>`
+	"""
 
 	s_init = params.get("s_init", None)
 	nb_it_max = params.get("nb_it_max", 10)
 	T_max = params.get("T_max", None)
 	size = params.get("size", None) # For projection inclusion kernel = Tr(K)
 
-	if sampling_mode == "AED": # Add-Exchange-Delete S'=S+t, S-t+u, S-t 
+	if sampling_mode == "AED": # Add-Exchange-Delete S'=S+t, S-t+u, S-t
 		if s_init is None:
 			s_init = initialize_AED_sampler(kernel)
 		sampl = add_exchange_delete_sampler(kernel, s_init, nb_it_max, T_max)
@@ -52,6 +64,13 @@ def dpp_sampler_mcmc(kernel, sampling_mode="AED", **params):
 	return sampl
 
 def initialize_AED_sampler(kernel):
+	"""
+	.. seealso::
+		- :func:`add_delete_sampler <add_delete_sampler>`
+		- :func:`basis_exchange_sampler <basis_exchange_sampler>`
+		- :func:`initialize_AED_sampler <initialize_AED_sampler>`
+		- :func:`add_exchange_delete_sampler <add_exchange_delete_sampler>`
+	"""
 
 	N = kernel.shape[0]
 	ground_set = np.arange(N)
@@ -75,8 +94,11 @@ def initialize_AED_sampler(kernel):
 def initialize_AD_and_E_sampler(kernel, size=None):
 	"""
 	.. seealso::
-			- :func:` <>`
-			- :func:` <>`
+
+		- :func:`add_delete_sampler <add_delete_sampler>`
+		- :func:`basis_exchange_sampler <basis_exchange_sampler>`
+		- :func:`initialize_AED_sampler <initialize_AED_sampler>`
+		- :func:`add_exchange_delete_sampler <add_exchange_delete_sampler>`
 	"""
 
 	N = kernel.shape[0]
@@ -85,7 +107,7 @@ def initialize_AD_and_E_sampler(kernel, size=None):
 	S0, det_S0 = [], 0.0
 	nb_it_max = 100
 	tol = 1e-9
-	
+
 	for _ in range(nb_it_max):
 		if det_S0 > tol:
 			break
@@ -108,18 +130,18 @@ def add_exchange_delete_sampler(kernel, s_init=None, nb_it_max=10, T_max=None):
 
 	:param s_init:
 			Initial sample.
-	:type s_init: 
+	:type s_init:
 			list
 
 	:param nb_it_max:
 		Maximum number of iterations performed by the the algorithm.
 		Default is 10.
-	:type nb_it_max: 
+	:type nb_it_max:
 		int
 
-	:param T_max: 
+	:param T_max:
 		Maximum running time of the algorithm (in seconds).
-	:type T_max: 
+	:type T_max:
 			float
 
 	:return:
@@ -128,8 +150,8 @@ def add_exchange_delete_sampler(kernel, s_init=None, nb_it_max=10, T_max=None):
 		array_type
 
 	.. seealso::
-			
-			Algorithm 3 in :cite:`LiJeSr16c`
+
+		Algorithm 3 in :cite:`LiJeSr16c`
 	"""
 
 	N = kernel.shape[0]
@@ -139,7 +161,7 @@ def add_exchange_delete_sampler(kernel, s_init=None, nb_it_max=10, T_max=None):
 	S0, det_S0 = s_init, det_kernel_ST(kernel, s_init)
 	sampl_size = len(S0) # Size of the current sample
 	samples = [S0] # Initialize the collection (list) of sample
-	
+
 	# Evaluate running time...
 	flag = True
 	it = 1
@@ -149,11 +171,11 @@ def add_exchange_delete_sampler(kernel, s_init=None, nb_it_max=10, T_max=None):
 
 		S1 = S0.copy() # S1 = S0
 		# Uniform s in S_0 by index
-		s = np.random.choice(sampl_size, size=1)[0] 
+		s = np.random.choice(sampl_size, size=1)[0]
 		# Unif t in [N]-S_0
-		t = np.random.choice(np.delete(ground_set, S0), size=1)[0] 
+		t = np.random.choice(np.delete(ground_set, S0), size=1)[0]
 
-		unif_01 = np.random.rand() 
+		unif_01 = np.random.rand()
 		ratio = sampl_size/N # Proportion of items in current sample
 
 		# Add: S1 = S0 + t
@@ -189,7 +211,7 @@ def add_exchange_delete_sampler(kernel, s_init=None, nb_it_max=10, T_max=None):
 
 		else:
 			samples.append(S0)
-		
+
 		it += 1
 		flag = (it < nb_it_max) if not T_max else ((time.time()-t_start) < T_max)
 
@@ -205,19 +227,19 @@ def add_delete_sampler(kernel, s_init, nb_it_max=10, T_max=10):
 
 	:param s_init:
 			Initial sample.
-	:type s_init: 
+	:type s_init:
 			list
 
 	:param nb_it_max:
 			Maximum number of iterations performed by the the algorithm.
 			Default is 10.
-	:type nb_it_max: 
+	:type nb_it_max:
 			int
 
-	:param T_max: 
+	:param T_max:
 			Maximum running time of the algorithm (in seconds).
 			Default is 10s.
-	:type T_max: 
+	:type T_max:
 			float
 
 	:return:
@@ -226,7 +248,7 @@ def add_delete_sampler(kernel, s_init, nb_it_max=10, T_max=10):
 		array_type
 
 	.. seealso::
-			
+
 			Algorithm 1 in :cite:`LiJeSr16c`
 	"""
 
@@ -236,7 +258,7 @@ def add_delete_sampler(kernel, s_init, nb_it_max=10, T_max=10):
 	# Initialization
 	S0, det_S0 = s_init, det_kernel_ST(kernel, s_init)
 	samples = [S0] # Initialize the collection (list) of sample
-	
+
 	# Evaluate running time...
 	flag = True
 	it = 1
@@ -245,14 +267,14 @@ def add_delete_sampler(kernel, s_init, nb_it_max=10, T_max=10):
 	while flag:
 
 		# With proba 1/2 try to add/delete an element
-		if np.random.rand() < 0.5: 
+		if np.random.rand() < 0.5:
 
 			# Perform the potential add/delete move S1 = S0 +/- s
 			S1 = S0.copy() # S1 = S0
 			s = np.random.choice(N, size=1)[0] # Uniform item in [N]
-			if s in S0: 
+			if s in S0:
 				S1.remove(s) # S1 = S0 - s
-			else: 
+			else:
 				S1.append(s) # S1 = SO + s
 
 			# Accept_reject the move
@@ -266,7 +288,7 @@ def add_delete_sampler(kernel, s_init, nb_it_max=10, T_max=10):
 
 		else:
 			samples.append(S0)
-		
+
 		it += 1
 		flag = (it < nb_it_max) if not T_max else ((time.time()-t_start) < T_max)
 
@@ -283,28 +305,28 @@ def basis_exchange_sampler(kernel, s_init, nb_it_max=10, T_max=10):
 
 	:param s_init:
 			Initial sample.
-	:type s_init: 
+	:type s_init:
 			list
 
 	:param nb_it_max:
 			Maximum number of iterations performed by the the algorithm.
 			Default is 10.
-	:type nb_it_max: 
+	:type nb_it_max:
 			int
 
-	:param T_max: 
+	:param T_max:
 			Maximum running time of the algorithm (in seconds).
 			Default is 10s.
-	:type T_max: 
+	:type T_max:
 			float
 
 	:return:
 			MCMC chain of approximate sample (stacked row_wise i.e. nb_it_max rows).
-	:rtype: 
+	:rtype:
 			array_type
 
 	.. seealso::
-			
+
 			Algorithm 2 in :cite:`LiJeSr16c`
 	"""
 
@@ -316,7 +338,7 @@ def basis_exchange_sampler(kernel, s_init, nb_it_max=10, T_max=10):
 	# Initialization
 	S0, det_S0 = s_init, det_kernel_ST(kernel, s_init)
 	samples = [S0] # Initialize the collection (list) of sample
-	
+
 	# Evaluate running time...
 	flag = True
 	it = 1
@@ -325,7 +347,7 @@ def basis_exchange_sampler(kernel, s_init, nb_it_max=10, T_max=10):
 	while flag:
 
 		# With proba 1/2 try to swap 2 elements
-		if np.random.rand() < 0.5: 
+		if np.random.rand() < 0.5:
 
 			# Perform the potential exchange move S1 = S0 - s + t
 			S1 = S0.copy() # S1 = S0
@@ -334,7 +356,7 @@ def basis_exchange_sampler(kernel, s_init, nb_it_max=10, T_max=10):
 			# Pick one element t in [N]\S_0 uniformly at random
 			t = np.random.choice(np.delete(ground_set, S0), size=1)[0]
 			S1[rnd_ind] = t # S_1 = S_0 - S_0[rnd_ind] + t
-			
+
 			det_S1 = det_kernel_ST(kernel, S1) # det K_S1
 
 			# Accept_reject the move w. proba
@@ -343,7 +365,7 @@ def basis_exchange_sampler(kernel, s_init, nb_it_max=10, T_max=10):
 				samples.append(S1)
 
 			else: # if reject, stay in the same state
-				samples.append(S0)	
+				samples.append(S0)
 
 		else:
 			samples.append(S0)
@@ -360,26 +382,26 @@ def basis_exchange_sampler(kernel, s_init, nb_it_max=10, T_max=10):
 ######################
 
 def extract_basis(y_sol, eps=1e-5):
-	""" Subroutine of zono_sampling to extract the tile of the zonotope 
-	in which a point lies. It extracts the indices of entries of the solution 
+	""" Subroutine of zono_sampling to extract the tile of the zonotope
+	in which a point lies. It extracts the indices of entries of the solution
 	of LP :eq:`Px` that are in (0,1).
 
-	:param y_sol: 
+	:param y_sol:
 			Optimal solution of LP :eq:`Px`
-	:type y_sol: 
+	:type y_sol:
 			list
-					
-	:param eps: 
+
+	:param eps:
 			Tolerance :math:`y_i^* \in (\epsilon, 1-\epsilon), \quad \epsilon \geq 0`
-	:eps type: 
+	:eps type:
 			float
 
-	:return: 
-			Indices of the feature vectors spanning the tile in which the point is lies. 
+	:return:
+			Indices of the feature vectors spanning the tile in which the point is lies.
 			:math:`B_{x} = \left\{ i \, ; \, y_i^* \in (0,1) \\right\}`
-	:rtype: 
-			list         
-					
+	:rtype:
+			list
+
 	.. seealso::
 
 			Algorithm 3 in :cite:`GaBaVa17`
@@ -388,14 +410,14 @@ def extract_basis(y_sol, eps=1e-5):
 	"""
 
 	basis = np.where((eps<y_sol)&(y_sol<1-eps))[0]
-	
+
 	return basis.tolist()
 
 def zonotope_sampler(A_zono, **params):
 	""" MCMC based sampler for projection DPPs.
-	The similarity matrix is the orthogonal projection matrix onto 
+	The similarity matrix is the orthogonal projection matrix onto
 	the row span of the feature vector matrix.
-	Samples are of size equal to the ransampl_size of the projection matrix 
+	Samples are of size equal to the ransampl_size of the projection matrix
 	also equal to the rank of the feature matrix (assumed to be full row rank).
 
 	:param A_zono:
@@ -404,26 +426,26 @@ def zonotope_sampler(A_zono, **params):
 	:type A_zono:
 			array_type
 
-	:param c: Linear objective of the linear program used to identify 
+	:param c: Linear objective of the linear program used to identify
 			the tile in which a point lies.
 	:type c: list
 
 	:param nb_it_max:
 			Maximum number of iterations performed by the the algorithm.
 			Default is 10.
-	:type nb_it_max: 
+	:type nb_it_max:
 			int
 
-	:param T_max: 
+	:param T_max:
 			Maximum running time of the algorithm (in seconds).
 			Default is 10s.
-	:type T_max: 
+	:type T_max:
 			float
 
 	:return:
 			MCMC chain of approximate sample (stacked row_wise i.e. nb_it_max rows).
-	:rtype: 
-			array_type    
+	:rtype:
+			array_type
 
 	.. seealso::
 
@@ -452,7 +474,7 @@ def zonotope_sampler(A_zono, **params):
 	# =====> solvers.lp(c, G, h, A, b, solver='glpk')
 	#################################################
 
-	### To access the tile Z(B_x) 
+	### To access the tile Z(B_x)
 	# Solve P_x(A,c)
 	#########################################################
 	# y^* =
@@ -470,10 +492,10 @@ def zonotope_sampler(A_zono, **params):
 	G[:N,:] = spmatrix(1.0, range(N), range(N))
 	G[N:,:] = spmatrix(-1.0, range(N), range(N))
 
-	### Endpoints of segment 
+	### Endpoints of segment
 	# D_x \cap Z(A) = [x+alpha_m*d, x-alpha_M*d]
 	#############################################################################
-	# alpha_m/_M = 
+	# alpha_m/_M =
 	# argmin  +/-alpha 									argmin  [+/-1 0^N].T * [alpha,lambda]
 	# s.t.    x + alpha d = A lambda  <=>   s.t.  [-d A] * [alpha,lambda] = x
 	#					0 <= lambda <= 1            [ 0^N I_N ] *[alpha,lambda] <=  [1^N]

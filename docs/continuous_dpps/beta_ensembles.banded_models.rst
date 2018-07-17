@@ -1,15 +1,15 @@
 .. _banded_matrix_models:
 
-Banded models
--------------
+Banded matrix models
+--------------------
 
 Computing the eigenvalues of a full :math:`N\times N` random matrix is :math:`\mathcal{O}(N^3)` can become prohibitive for large :math:`N`.
 A way to circumvent the problem is to adopt the equivalent banded models i.e. diagonalize banded matrices.
 
-The first tridiagonal models for the :ref:`hermite_ensemble_full` and :ref:`laguerre_ensemble_full` were revealed by :cite:`DuEd02`, who left the :ref:`jacobi_ensemble_full` one as an open question, addressed by :cite:`KiNe04`.
+The first tridiagonal models for the :ref:`hermite_ensemble_banded` and :ref:`laguerre_ensemble_banded` were revealed by :cite:`DuEd02`, who left the :ref:`jacobi_ensemble_banded` one as an open question, addressed by :cite:`KiNe04`.
 These tridiagonal formulation permit sampling in :math:`\mathcal{O}(N^2)` but also unlocked generic :math:`\beta>0`!
 
-:cite:`KiNe04` also derived a quindiagonal model for the :ref:`circular_ensemble_full`.
+:cite:`KiNe04` also derived a quindiagonal model for the :ref:`circular_ensemble_banded`.
 
 .. _hermite_ensemble_banded:
 
@@ -18,7 +18,8 @@ Hermite Ensemble
 
 .. seealso::
 
-	:cite:`DuEd02` II-C
+	- :cite:`DuEd02` II-C
+	- Full matrix model for :ref:`hermite_ensemble_full`
 
 For a generic :math:`\mathcal{N}(\mu, \sigma)` reference measure :math:`\mu`
 
@@ -90,7 +91,8 @@ Laguerre Ensemble
 
 .. seealso::
 
-	:cite:`DuEd02` III-B
+	- :cite:`DuEd02` III-B
+	- Full matrix model for :ref:`laguerre_ensemble_full`
 
 For a :math:`\Gamma(k,\theta)` reference measure :math:`\mu`
 
@@ -178,7 +180,8 @@ Jacobi Ensemble
 
 .. seealso::
 
-	:cite:`KiNe04` Theorem 2
+	- :cite:`KiNe04` Theorem 2
+	- Full matrix model for :ref:`jacobi_ensemble_full`
 
 For a :math:`\Gamma(k,\theta)` reference measure :math:`\mu`
 
@@ -286,7 +289,8 @@ Circular Ensemble
 
 .. seealso::
 
-	:cite:`KiNe04` Theorem 1
+	- :cite:`KiNe04` Theorem 1
+	- Full matrix model for :ref:`circular_ensemble_full`
 
 .. math::
 
