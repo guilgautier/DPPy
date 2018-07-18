@@ -3,7 +3,7 @@
 
 # DPPy is meant to become a Python library for exact and approximate sampling of Determinantal Point Processes.
 
-> Anything that can go wrong, will go wrong. -- Murphy's Law
+> Anything that can go wrong, will go wrong. − [Murphy's Law](http://phdcomics.com/comics/archive.php?comicid=1867)
 
 ## Introduction
 
