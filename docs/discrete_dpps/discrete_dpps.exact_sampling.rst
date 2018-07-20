@@ -205,11 +205,8 @@ Projection DPPs
 		- :cite:`KuTa12` Algorithm 1, for a first interpretation of :cite:`HKPV06` algorithm running in :math:`\mathcal{O}(N r^3)`
 		- :cite:`Gil14` Algorithm 2, for the :math:`\mathcal{O}(N r^2)` implementation
 		- :cite:`TrBaAm18` Algorithm 3, for a technical report on DPP sampling
+		- :cite:`LaGaDe18` for a different perspective on exact sampling using Cholesky decomposition instead of the spectral decomposition
 
-		.. todo::
-
-			- Refer to code also
-			- Equivalence with Cholesky updates? 
 
 .. _discrete_dpps_exact_sampling_generic_dpps:
 

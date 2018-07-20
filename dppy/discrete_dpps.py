@@ -49,9 +49,9 @@ class Discrete_DPP:
 			For now we only consider real valued matrices :math:`\mathbf{K}, \mathbf{L}, A, \Phi`.
 
 		.. seealso::
-
-			- :ref:`discrete_dpps_exact_sampling_projection_dpps`
+			
 			- :ref:`discrete_dpps_definition`
+			- :ref:`discrete_dpps_exact_sampling_projection_dpps`
 	"""
 
 ###################

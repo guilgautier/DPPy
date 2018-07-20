@@ -107,13 +107,14 @@ Number of points
 			= \operatorname{Tr} \mathbf{K} 
 			= \operatorname{rank} \mathbf{K}
 
-		In particular we have
+		Thus,
 
 		.. math::
 			:label: marginal_projection_K
 
 			\mathbb{P}[\mathcal{X}=S] 
 				= \det \mathbf{K}_S 1_{|S|=\operatorname{rank} \mathbf{K}}
+
 
 .. _discrete_dpps_geometry:
 

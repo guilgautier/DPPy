@@ -15,7 +15,11 @@ Add/exchange/delete
 
 :cite:`AnGhRe16`, :cite:`LiJeSr16a`, :cite:`LiJeSr16c` and :cite:`LiJeSr16d` derived variants of a Metropolis sampler having for stationary distribution :math:`\operatorname{DPP}(\mathbf{L})` :eq:`marginal_proba`.
 
-With proposals having the following mechanism
+The proposal mechanism works as follows.
+At state :math:`S\subset [N]`, pick 
+:math:`s \sim \mathcal{U}_{S}` and 
+:math:`t \sim \mathcal{U}_{[N]\setminus S}`
+and then
 
 .. _discrete_dpps_mcmc_sampling_E:
 
@@ -55,7 +59,7 @@ Mix of exchange and add-delete moves
 
 .. hint::
 	
-	Because transitions are allowed between subsets having at most 2 different :math:`|S' \Delta S|\leq 1`, transitions are very local inducing correlated moves.
+	Because moves are allowed between subsets having at most 2 different elements, transitions are very local inducing correlation.
 
 .. _discrete_dpps_mcmc_sampling_zonotope:
 
@@ -94,30 +98,10 @@ The underlying continuous structure of the zonotope is exploited through the hit
 The associated Markov chain is used to move across the zonotope and visit the different tiles.
 Finally, to recover the discrete DPP samples one needs to identify the tile in which the successive points lie, this is done by solving a linear program (LP).
 
-.. todo::
+.. note::
 
-	Merge hint and caution
-
-.. hint::
-
-	At the current point hit-and-run takes a uniform direction generating a line crossing the zonotope passing through the current state.
-	This defines a segment onto which the next point is proposed uniformly at random and then accepted with a specified ratio.
-
-	In this setting:
-
-	- From the current state any point in the zonotope is accessible
-	- The portions of the random segment intersecting the different tiles is *positively correlated* to the volume of the tile
-	- To target distributions proportional to :math:`\operatorname{Vol}^{\alpha}` the acceptance ratio takes the form
-
-		.. math::
-
-			\left[\frac{\operatorname{Vol} \{\phi_s\}_{s\in S'}}
-								{\operatorname{Vol} \{\phi_s\}_{s\in S}} \right]^{\alpha - 1}
-
-
-.. caution::
-
-	On the one hand, the :ref:`discrete_dpps_mcmc_sampling_zonotope` perspective on sampling *projection* DPPs yields a better exploration of the state space at the cost of solving 3 LPs at each step (1 for the identification of the tile and 2 very similar to find the endpoints of the segment).
+	On the one hand, the :ref:`discrete_dpps_mcmc_sampling_zonotope` perspective on sampling *projection* DPPs yields a better exploration of the state space.
+	Using hit-and-run from a given given all other states become accessible but at the cost of solving 3 LPs at each step (1 for the identification of the tile and 2 very similar to find the endpoints of the segment).
 	On the other hand, the :ref:`discrete_dpps_mcmc_sampling_add_exchange_delete` view allows to perform cheap but very local moves.
 
 .. seealso::
