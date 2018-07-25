@@ -187,6 +187,8 @@ def add_exchange_delete_sampler(kernel, s_init=None, nb_it_max=10, T_max=None):
 				S0, det_S0 = S1, det_S1
 				samples.append(S1)
 				sampl_size += 1
+			else:
+				samples.append(S0)
 
 		# Exchange: S1 = S0 - s + t
 		elif (0.5*(1-ratio)**2 <= unif_01) & (unif_01 < 0.5*(1-ratio)):
@@ -198,6 +200,8 @@ def add_exchange_delete_sampler(kernel, s_init=None, nb_it_max=10, T_max=None):
 				S0, det_S0 = S1, det_S1
 				samples.append(S1)
 				# sampl_size stays the same
+			else:
+				samples.append(S0)
 
 		# Delete: S1 = S0 - s
 		elif (0.5*(1-ratio) <= unif_01) & (unif_01 < 0.5*(ratio**2+(1-ratio))):
@@ -208,6 +212,8 @@ def add_exchange_delete_sampler(kernel, s_init=None, nb_it_max=10, T_max=None):
 				S0, det_S0 = S1, det_S1
 				samples.append(S1)
 				sampl_size -= 1
+			else:
+				samples.append(S0)
 
 		else:
 			samples.append(S0)

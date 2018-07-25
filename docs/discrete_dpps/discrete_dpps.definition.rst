@@ -66,10 +66,48 @@ where the dagger means "conjugate transpose". For the definition via marginal pr
 .. note::
 
 	These are only a sufficient conditions, there indeed exist DPPs with non symmetric kernels such as the :ref:`carries_process`.
+	In the following, unless otherwise specified, we work under these sufficient conditions.
 
-	In the following, DPPs defined by an *orthogonal projection* inclusion kernel :math:`\mathbf{K}` are called *projection* DPPs.
+	.. plot:: plots/ex_plot_K_kernel.py
+	  :include-source:
+	  
+	.. code-block:: python
+
+		r, N = 4, 10
+		Phi = np.random.randn(r, N)
+		L = Phi.T@Phi
+		DPP = Discrete_DPP("marginal", **{"L":L})
+
+		print(DPP)
+
+		# DPP defined through marginal kernel
+		# Parametrized by dict_keys(['L'])
+		# - sampling mode = None
+		# - number of samples = 0
+
+.. important::
+
+	DPPs defined by an *orthogonal projection* inclusion kernel :math:`\mathbf{K}` are called *projection* DPPs.
 	They are indeed valid kernels since they meet the above sufficient conditions: they are Hermitian with eigenvalues :math:`0` or :math:`1`.
+
+	.. code-block:: python
+
+		r, N = 4, 10
+		A = np.random.randn(r, N)
+		K = A.T@la.inv(A@A.T)@A
+		proj_DPP = Discrete_DPP("inclusion", projection=True, **{"K":K})
+		
+		print(proj_DPP)
+
+		# DPP defined through projection inclusion kernel
+		# Parametrized by dict_keys(['K'])
+		# - sampling mode = None
+		# - number of samples = 0
+
 
 .. seealso::
 
-	:cite:`KuTa12`
+	.. currentmodule:: discrete_dpps
+
+	- :class:`Discrete_DPP <Discrete_DPP>`
+	- :cite:`KuTa12`

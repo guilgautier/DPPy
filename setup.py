@@ -77,10 +77,10 @@ setup(
     install_requires=['numpy', 
                       'scipy',
                       'matplotlib',
-                      'cvxopt',
-                      'networkx', # for the Discrete DPPs Notebook
-                      'sphinxcontrib-bibtex', 
-                      'sphinx_rtd_theme'] 
+                      'cvxopt', # For zonotope MCMC sampler
+                      'networkx', # For the Discrete DPPs Notebook
+                      'sphinxcontrib-bibtex', # For bibliography
+                      'sphinx_rtd_theme'] # Documentation theme
 
     # List additional groups of dependencies here (e.g. development dependencies). You can install these using the following syntax, for example:
     # $ pip install -e .[dev,test]

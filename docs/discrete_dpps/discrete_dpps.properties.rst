@@ -79,6 +79,27 @@ Number of points
 			= \sum_{n=1}^N \lambda_n^{\mathbf{K}}(1-\lambda_n^{\mathbf{K}})
 			= \sum_{n=1}^N \frac{\lambda_n^{\mathbf{L}}}{(1+\lambda_n^{\mathbf{L}})^2}
 
+
+	.. testcode::
+
+		from discrete_dpps import *
+		np.random.seed(4321)
+
+		r, N = 4, 10
+
+		A = np.random.randn(r, N)
+		eig_vecs, _ = la.qr(A.T, mode="economic")
+		eig_vals = np.random.rand(r) # 0< <1
+
+		DPP = Discrete_DPP("inclusion", **{"K_eig_dec":(eig_vals, eig_vecs)})
+
+		for _ in range(10): DPP.sample_exact()
+		print(DPP.list_of_samples)
+
+	.. testoutput::
+
+		[[2, 5, 6], [8], [5, 7], [1, 3], [4, 8], [9], [7, 5], [8, 9], [7, 1, 8], [5, 4, 7]]
+
 	.. important::
 
 		Realizations of *projection* DPPs have fixed cardinality.
@@ -115,6 +136,25 @@ Number of points
 			\mathbb{P}[\mathcal{X}=S] 
 				= \det \mathbf{K}_S 1_{|S|=\operatorname{rank} \mathbf{K}}
 
+		.. testcode::
+
+			from discrete_dpps import *
+			np.random.seed(4321)
+
+			r, N = 4, 10
+
+			A = np.random.randn(r, N)
+			eig_vecs, _ = la.qr(A.T, mode="economic")
+			eig_vals = np.ones(r)
+
+			DPP = Discrete_DPP("inclusion", **{"K_eig_dec":(eig_vals, eig_vecs)})
+
+			for _ in range(10): DPP.sample_exact()
+			print(DPP.list_of_samples)
+		
+		.. testoutput::
+
+			[[1, 2, 5, 7], [0, 9, 7, 8], [5, 7, 9, 0], [5, 1, 7, 8], [0, 3, 8, 7], [3, 2, 7, 8], [5, 8, 0, 9], [7, 6, 3, 1], [1, 7, 9, 5], [4, 7, 5, 2]]
 
 .. _discrete_dpps_geometry:
 
@@ -185,7 +225,7 @@ Relation between inclusion and marginal kernels
 
 	.. warning::
 		
-		For DPPs with *projection* inclusion kernel :math:`K`, the marginal kernel :math:`\mathbf{L}` cannot be computed via  :eq:`relation_K_L` with :math:`\mathbf{L} = \mathbf{K}(I-\mathbf{K})^{—1}`, since :math:`\mathbf{K}` has at least one eigenvalue equal to :math:`1` (:math:`K^2=K`).
+		For DPPs with *projection* inclusion kernel :math:`K`, the marginal kernel :math:`\mathbf{L}` cannot be computed via  :eq:`relation_K_L` with :math:`\mathbf{L} = \mathbf{K}(I-\mathbf{K})^{—1}`, since :math:`\mathbf{K}` has at least one eigenvalue equal to :math:`1` (:math:`\mathbf{K}^2=\mathbf{K}`).
 		However, the marginal kernel :math:`\mathbf{L}` coincides with :math:`\mathbf{K}`.
 
 		.. math::
@@ -201,3 +241,24 @@ Relation between inclusion and marginal kernels
 		\mathbf{K} = U \Lambda^{\mathbf{K}} U^{\dagger}
 			\qquad \text{and} \qquad
 		\mathbf{L} = U \Lambda^{\mathbf{L}} U^{\dagger}
+
+	.. code-block:: python
+
+		r, N = 4, 10
+		A = np.random.randn(r, N)
+		U, _ = la.qr(A.T, mode="economic")
+		eig_vals = np.random.rand(r) # 0< <1
+
+		DPP = Discrete_DPP("inclusion", **{'K_eig_dec': (eig_vals, U)})
+		DPP.compute_L()
+
+		#	L (marginal) kernel computed via:
+		#	- eig_L = eig_K/(1-eig_K)
+		#	- U diag(eig_L) U.T
+
+	.. seealso::
+
+		.. currentmodule:: discrete_dpps
+
+		- :func:`Discrete_DPP.compute_K <Discrete_DPP.compute_K>`
+		- :func:`Discrete_DPP.compute_L <Discrete_DPP.compute_L>`
