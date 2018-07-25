@@ -3,11 +3,6 @@
 Exact sampling
 **************
 
-.. seealso::
-	.. currentmodule:: discrete_dpps
-
-	:func:`Discrete_DPP.sample_exact <Discrete_DPP.sample_exact>`
-
 The procedure stems from the fact that :ref:`discrete_dpps_mixture`, suggesting the following two steps algorithm given the spectral decomposition of the inclusion kernel :math:`\mathbf{K}`
 
 .. math::
@@ -136,6 +131,32 @@ Projection DPPs
 
 		Finally, sampling from a projection :math:`\operatorname{DPP}(\mathbf{K})` can be performed in :math:`\mathcal{O}(N r^2)`.
 
+	.. code-block:: python
+
+		r, N = 4, 10
+
+		A = np.random.randn(r, N)
+		eig_vecs, _ = la.qr(A.T, mode="economic")
+		eig_vals = np.ones(r)
+		# K = (eig_vecs*eig_vals)@eig_vecs.T
+
+		DPP = Discrete_DPP("inclusion", projection=True, **{"K_eig_dec":(eig_vals, eig_vecs)})
+		# DPP = Discrete_DPP("inclusion", projection=True, **{"K":K})
+
+		DPP.sample_exact()
+
+	.. seealso::
+
+		.. currentmodule:: discrete_dpps
+
+		- :func:`Discrete_DPP.sample_exact <Discrete_DPP.sample_exact>`
+		- :cite:`HKPV06` Algorithm 18 and Proposition 19, for the original idea
+		- :cite:`KuTa12` Algorithm 1, for a first interpretation of :cite:`HKPV06` algorithm running in :math:`\mathcal{O}(N r^3)`
+		- :cite:`Gil14` Algorithm 2, for the :math:`\mathcal{O}(N r^2)` implementation
+		- :cite:`TrBaAm18` Algorithm 3, for a technical report on DPP sampling
+		- :cite:`LaGaDe18` for a different perspective on exact sampling using Cholesky decomposition instead of the spectral decomposition
+
+
 	.. attention::
 
 		The fact that :math:`\mathbf{K}` is a *projection* kernel is **crucial**.
@@ -198,19 +219,6 @@ Projection DPPs
 			&\qquad= r - |Y|
 			&\qquad= r - |Y|
 
-
-	.. seealso::
-
-		- :cite:`HKPV06` Algorithm 18 and Proposition 19, for the original idea
-		- :cite:`KuTa12` Algorithm 1, for a first interpretation of :cite:`HKPV06` algorithm running in :math:`\mathcal{O}(N r^3)`
-		- :cite:`Gil14` Algorithm 2, for the :math:`\mathcal{O}(N r^2)` implementation
-		- :cite:`TrBaAm18` Algorithm 3, for a technical report on DPP sampling
-
-		.. todo::
-
-			- Refer to code also
-			- Equivalence with Cholesky updates? 
-
 .. _discrete_dpps_exact_sampling_generic_dpps:
 
 Generic DPPs
@@ -223,7 +231,7 @@ Generic DPPs
 	.. tip::
 
 		If the marginal kernel was constructed as :math:`\mathbf{L}=\Phi^{\dagger}\Phi` where :math:`\Phi` is a :math:`d\times N` feature matrix, it may be judicious to exploit the lower dimensional structure of the *dual* kernel :math:`\tilde{\mathbf{L}} = \Phi \Phi^{\dagger}`.
-		Indeed, when :math:`d`
+		Indeed, when :math:`d<N` computing the eigendecomposition of :math:`\tilde{\mathbf{L}}` costs :math:`\mathcal{O}(d^3)` compared to :math:`\mathcal{O}(N^3)` for :math:`\mathbf{L}`.
 
 	.. note::
 
@@ -269,3 +277,38 @@ Generic DPPs
 		- :math:`U=U_{:\mathcal{B}}`,
 		- :math:`U=V_{:\mathcal{B}}`,
 		- :math:`\Phi^{\top} W_{:\mathcal{B}} \Gamma_{:\mathcal{B}}^{-1/2}`, respectively.
+		  
+.. code-block:: python
+
+	r, N = 4, 10
+
+.. code-block:: python
+
+	### Inclusion kernel
+	A = np.random.randn(r, N)
+	eig_vecs, _ = la.qr(A.T, mode="economic")
+	eig_vals = np.random.rand(r) # 0 < < 1
+
+	DPP = Discrete_DPP("inclusion", **{"K_eig_dec":(eig_vals, eig_vecs)})
+
+	DPP.sample_exact()
+	DPP.list_of_samples
+	# [[6, 0, 8]]
+
+.. code-block:: python
+
+	### Marginal kernel
+	Phi = np.random.randn(r, N) # L = Phi.T Phi
+
+	DPP = Discrete_DPP("marginal", **{"L_gram_factor":Phi})
+
+	DPP.sample_exact()
+	DPP.list_of_samples
+	# d=4 < N=10: L dual kernel was computed
+	# [[7, 2]]
+
+.. seealso::
+
+	.. currentmodule:: discrete_dpps
+
+	:func:`Discrete_DPP.sample_exact <Discrete_DPP.sample_exact>`

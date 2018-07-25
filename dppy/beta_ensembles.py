@@ -308,6 +308,11 @@ class BetaEnsemble:
 
 			ax.scatter(points.real, points.imag, c='blue', label="sample")
 
+		str_title = "Last realization of {} ensemble with {} points {}".format(
+									self.name,
+									self.sampling_params['N'] if ("N" in self.sampling_params) else self.sampling_params['size'],
+									r"($\beta={}$)".format(self.beta) if self.name!="ginibre" else "")
+		plt.title(str_title)
 		ax.legend(loc='best', frameon=False)
 		plt.show()
 
@@ -419,6 +424,12 @@ class BetaEnsemble:
 						bins=30, density=1,
 						facecolor='blue', alpha=0.5,
 						label='hist')
+
+		str_title = "Histogram of {} ensemble with {} points {}".format(
+									self.name,
+										self.sampling_params['N'] if ("N" in self.sampling_params) else self.sampling_params['size'],
+										r"($\beta={}$)".format(self.beta) if self.name!="ginibre" else "")
+		plt.title(str_title)
 
 		ax.legend(loc='best', frameon=False)
 		plt.show()

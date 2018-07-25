@@ -49,9 +49,9 @@ class Discrete_DPP:
 			For now we only consider real valued matrices :math:`\mathbf{K}, \mathbf{L}, A, \Phi`.
 
 		.. seealso::
-
-			- :ref:`discrete_dpps_exact_sampling_projection_dpps`
+			
 			- :ref:`discrete_dpps_definition`
+			- :ref:`discrete_dpps_exact_sampling_projection_dpps`
 	"""
 
 ###################
@@ -143,7 +143,7 @@ class Discrete_DPP:
 		### Check initialization parameters of the DPP
 
 		## For inclusion kernel
-		if self.kernel_type == "":
+		if self.kernel_type == "inclusion":
 
 			auth_params = ("K", "K_eig_dec", "A_zono")
 			if any([key in auth_params for key in self.params_keys]):
@@ -490,7 +490,7 @@ class Discrete_DPP:
 			if "A_zono" in self.params_keys:
 				print("- 'A_zono' i.e. K = A.T (AA.T)^-1 A")
 				A = self.A_zono
-				self.K = A.T.dot(np.linalg.inv(A.dot(A.T))).dot(A)
+				self.K = A.T.dot(la.inv(A.dot(A.T))).dot(A)
 
 			elif self.K_eig_vals is not None:
 				print("- U diag(eig_K) U.T")
@@ -567,7 +567,7 @@ class Discrete_DPP:
 
 
 	def plot(self):
-		"""Display a heatmap of the kernel used to define the :class:`Discrete_DPP` object i.e. either the inclusion kernel :math:`\mathbf{K}` or the marginal kernel :math:`\mathbf{L}`"""
+		"""Display a heatmap of the kernel used to define the :class:`Discrete_DPP` object (inclusion kernel :math:`\mathbf{K}` or marginal kernel :math:`\mathbf{L}`)"""
 
 		fig, ax = plt.subplots(1,1)
 
@@ -576,16 +576,15 @@ class Discrete_DPP:
 				self.compute_K()
 			self.nb_items = self.K.shape[0]
 			kernel_to_plot = self.K
-			str_print = "K (inclusion) kernel"
+			str_title = r"$K$ (inclusion) kernel"
 
 		elif self.kernel_type == "marginal":
 			if self.L is None:
 				self.compute_L()
 			self.nb_items = self.L.shape[0]
 			kernel_to_plot = self.L
-			str_print = "L (marginal) kernel"
+			str_title = r"$L$ (marginal) kernel"
 
-		print(str_print)
 		heatmap = ax.pcolor(kernel_to_plot, cmap="jet")
 
 		ax.set_aspect("equal")
@@ -601,6 +600,8 @@ class Discrete_DPP:
 
 		ax.set_xticklabels(ticks_label, minor=False)
 		ax.set_yticklabels(ticks_label, minor=False)
+
+		plt.title(str_title, y=1.1)
 
 		plt.colorbar(heatmap)
 		plt.show()

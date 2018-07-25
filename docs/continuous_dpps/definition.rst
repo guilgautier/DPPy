@@ -6,38 +6,22 @@ Definition
 Point Process
 =============
 
-We consider the measure space :math:`(\mathbb{X}, \mathcal{B}(\mathbb{X}), \mu)` where:
+Let :math:`\mathbb{X} = \mathbb{R}^d, \mathbb{C}^d \text{ or } \mathbb{S}^{d-1}` be the ambiant space, we endow it with the corresponding Borel :math:`\sigma`-algebra :math:`\mathcal{B}(\mathbb{X})` together with a reference measure :math:`\mu`.
 
-- :math:`\mathbb{X}` e.g. :math:`\mathbb{R}^d, \mathbb{C}^d, \mathbb{S}^{d-1}` is the ambiant space
-- :math:`\mathcal{B}(\mathbb{X})` the corresponding Borel :math:`\sigma`-algebra
-- :math:`\mu` the reference measure
-
-A configuration of points :math:`\gamma` is a discrete and locally finite subset of :math:`\mathbb{X}`.
-
-Discrete means
-
-  .. math::
-
-    \forall x \in \gamma, \exists r >0, \quad B(x,r) \cap \gamma = \{x\}
-
-and locally finite corresponds to
+For our purpose, we consider point processes as locally finite random subsets :math:`\gamma \subset \mathbb{X}` i.e.
 
 	.. math::
 		
-		\forall K \subset \mathbb{X} \text{ compact}, 
-			\quad \#(\gamma \cap K) < \infty
-
-A point process is a probability measure on the space of configurations of points :math:`\gamma` endowed with the *canonical* :math:`\sigma`-algebra making the application :math:`\gamma \mapsto \# (\gamma \cap K)` measurable for all compact :math:`K`.
+		\forall C \subset \mathbb{X} \text{ compact}, 
+			\quad \#(\gamma \cap C) < \infty
 
 .. hint::
 
-	A point process is a random configuration of points
+	A point process is a random subset of points :math:`\{X_1, \dots, X_N\} \subset \mathbb{X}`	with :math:`N` being random.
 
-	.. math::
+.. seealso::
 
-		\{X_1, \dots, X_N\} \subset \mathbb{X}
-
-	with N being random.
+	More formal definitions can be found in :cite:`MoWa04` Section 2 and :cite:`Joh06` Section 2 and references therein.
 
 To understand the interaction between the points of a point process, one focuses on the interaction of each cloud of :math:`k` points (for all :math:`k`). 
 The corresponding :math:`k`-correlation functions characterize the underlying point process.
@@ -68,7 +52,7 @@ For :math:`k\geq 0`, the :math:`k`-correlation function :math:`\rho_k` is define
 .. hint::
 
 	The :math:`k`-correlation function does not always exists, but but when they do, they have a meaningful interpretation. 
-	For :math:`\mu` absolutely continuous w.r.t. Lebesgue
+	On :math:`\mathbb{X}=\mathbb{R}` with :math:`\mu` absolutely continuous w.r.t. Lebesgue
 
 	.. math::
 
@@ -130,7 +114,9 @@ Under assumptions 1-3, the
 
 	\operatorname{DPP}(K) \text{ exists}
 	\Longleftrightarrow
-	O \preceq K \preceq I \text{ i.e. } \lambda_n \in [0,1], \quad \forall n
+		0 \preceq K \preceq I 
+			\quad \text{i.e.} \quad 
+		\lambda_n \in [0,1], \quad \forall n
 
 .. hint::
 

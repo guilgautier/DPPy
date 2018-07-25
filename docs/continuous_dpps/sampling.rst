@@ -29,8 +29,6 @@ Perfect sampling
 Approximate sampling
 ====================
 
-Fourier approximation of the kernel.
-
 .. seealso::
 
-	:cite:`LaMoRu15` Section 4
+	Approximation of :math:`K(x,y)=K(x-y)` by Fourier series :cite:`LaMoRu15` Section 4
