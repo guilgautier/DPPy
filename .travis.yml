@@ -8,31 +8,32 @@ language: python
 sudo: require
 
 matrix:
- include:
-  # - os: linux
-  #   python: 2.7
-  # - os: osx
-  #   language: generic
-  #   env: PYTHON=2.7
-  - os: linux
-   python: 3.4
-  - os: osx
-   language: generic
-   env: PYTHON=3.4.6
+    include:
+        # - os: linux
+        #   python: 2.7
+        # - os: osx
+        #   language: generic
+        #   env: PYTHON=2.7
+        - os: linux
+          python: 3.4
+        - os: osx
+          language: generic
+          env: PYTHON=3.4.6
 
+# Command to install dependencies for each configuration.
 before_install:
 # For OSX, you may want to call a script installing virtual env and so on.
- - . ./scripts/install.sh
+  - . ./scripts/install.sh
 
 install:
- - python -m pip install -U pip
- - python -m easy_install -U setuptools
- - pip install -U pytest
- # - pip install sphinx
- - pip install .
+  - python -m pip install -U pip
+  - python -m easy_install -U setuptools
+  - pip install -U pytest
+  # - pip install sphinx
+  - pip install .
 
 # Command to run tests. These are run for each configuration
 script:
- - python --version
- - pytest
- # - cd docs && make html && make doctest SPHINXOPTS=-W #Make doctest treat warnings as errors, to detect problems in autodoc
+  - python --version
+  - pytest
+  # - cd docs && make html && make doctest SPHINXOPTS=-W #Make doctest treat warnings as errors, to detect problems in autodoc
