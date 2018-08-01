@@ -82,8 +82,6 @@ That is to say,
 .. plot:: plots/ex_plot_hermite_banded.py
 	:include-source:
 
-	Histogram of the eigenvalues
-
 .. _laguerre_ensemble_banded:
 
 Laguerre Ensemble
@@ -170,8 +168,6 @@ That is to say,
 
 .. plot:: plots/ex_plot_laguerre_banded.py
 	:include-source:
-
-	Histogram of the eigenvalues
 
 .. _jacobi_ensemble_banded:
 
@@ -280,8 +276,6 @@ That is to say,
 .. plot:: plots/ex_plot_jacobi_banded.py
 	:include-source:
 
-	Histogram of the eigenvalues
-
 .. _circular_ensemble_banded:
 
 Circular Ensemble
@@ -339,5 +333,3 @@ and where
 
 .. plot:: plots/ex_plot_circular_banded.py
 	:include-source:
-
-	Histogram of the eigenvalues

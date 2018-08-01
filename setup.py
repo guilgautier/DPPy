@@ -48,7 +48,7 @@ setup(
         'Development Status :: 3 - Alpha',
 
         # Indicate who your project is intended for
-        'Intended Audience :: Developers',
+        'Intended Audience :: Science/Research',
         'Topic :: Software Development :: Build Tools',
 
         # Pick your license as you wish (should match "license" above)
@@ -58,6 +58,10 @@ setup(
         # that you indicate whether you support Python 2, Python 3 or both.
         # 'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3.4',
+
+        # Specify supported OS. 
+        'Operating System :: Unix',
+        'Operating System :: MacOS'
     ],
 
     # What does your project relate to?
@@ -79,7 +83,7 @@ setup(
                       'matplotlib',
                       'cvxopt', # For zonotope MCMC sampler
                       'networkx', # For the Discrete DPPs Notebook
-                      'sphinxcontrib-bibtex', # For bibliography
+                      'sphinxcontrib-bibtex', # Documentation bibliography
                       'sphinx_rtd_theme'] # Documentation theme
 
     # List additional groups of dependencies here (e.g. development dependencies). You can install these using the following syntax, for example:

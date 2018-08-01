@@ -1,17 +1,13 @@
 [![Documentation Status](https://readthedocs.org/projects/dppy/badge/?version=latest)](https://dppy.readthedocs.io/en/latest/?badge=latest)
 [![Build Status](https://travis-ci.com/guilgautier/DPPy.svg?branch=master)](https://travis-ci.com/guilgautier/DPPy)
 
-# DPPy is meant to become a Python library for exact and approximate sampling of Determinantal Point Processes.
+# DPPy is a Python library for sampling Determinantal Point Processes.
 
 > Anything that can go wrong, will go wrong. − [Murphy's Law](http://phdcomics.com/comics/archive.php?comicid=1867)
 
 ## Introduction
 
-Determinantal Point Processes (DPPs) are distributions over sets of items that model diversity using kernels. 
-Their applications in machine learning include summary extraction and recommendation systems.
-Yet, the cost of sampling from a DPP is prohibitive in large-scale applications, which has triggered an effort towards efficient approximate samplers.
-
-This library aims to provide an implementation of state of the art exact and approximate DPP and k-DPP samplers for both discrete and continuous cases.
+Determinantal point processes (DPPs) are specific probability distributions over clouds of points that have been popular as models or computational tools across physics, probability, statistics, and more recently of booming interest in machine learning. Sampling from DPPs is a nontrivial matter, and many approaches have been proposed. DPPy is a Python library that puts together all exact and approximate sampling algorithms for DPPs.
 
 ## Requirements
 

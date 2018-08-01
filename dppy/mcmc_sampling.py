@@ -5,7 +5,7 @@ import scipy.linalg as la
 # For zonotope sampler
 from cvxopt import matrix, spmatrix, solvers
 solvers.options['show_progress'] = False
-solvers.options['glpk'] = dict(msg_lev='GLP_MSG_OFF')
+# solvers.options['glpk'] = {'msg_lev':'GLP_MSG_OFF'}
 
 def det_kernel_ST(kernel, S, T=None):
 

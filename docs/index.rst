@@ -28,11 +28,4 @@ Documentation contents
   exotic_dpps/index
   dppy_objects/index
   references/index
-
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+  
