@@ -1,9 +1,9 @@
-.. _discrete_dpps_definition:
+.. _finite_dpps_definition:
 
 Definition
 **********
 
-A discrete point process :math:`\mathcal{X}` on :math:`[N] \triangleq \{1,\dots,N\}` can be understood as a random subset.
+A finite point process :math:`\mathcal{X}` on :math:`[N] \triangleq \{1,\dots,N\}` can be understood as a random subset.
 It is defined either via its:
 
 - inclusion probabilities (also called correlation functions)
@@ -30,6 +30,8 @@ We say that :math:`\mathcal{X} \sim \operatorname{DPP}(\mathbf{K})` with inclusi
 
 		\mathbb{P}[S\in \mathcal{X}] = \det \mathbf{K}_S,
 		\quad \forall S\subset [N]
+
+where :math:`\mathbf{K}_S` denotes the square submatrix of :math:`\mathbf{K}` obtained by keeping only rows and columns indexed by :math:`S`.
 
 Marginal probabilities
 ======================
@@ -68,22 +70,23 @@ where the dagger means "conjugate transpose". For the definition via marginal pr
 	These are only a sufficient conditions, there indeed exist DPPs with non symmetric kernels such as the :ref:`carries_process`.
 	In the following, unless otherwise specified, we work under these sufficient conditions.
 
-	.. plot:: plots/ex_plot_K_kernel.py
-	  :include-source:
-	  
-	.. code-block:: python
 
-		r, N = 4, 10
-		Phi = np.random.randn(r, N)
-		L = Phi.T@Phi
-		DPP = Discrete_DPP("marginal", **{"L":L})
+.. plot:: plots/ex_plot_K_kernel.py
+  :include-source:
+  
+.. code-block:: python
 
-		print(DPP)
+	r, N = 4, 10
+	Phi = np.random.randn(r, N)
+	L = Phi.T@Phi
+	DPP = Finite_DPP("marginal", **{"L":L})
 
-		# DPP defined through marginal kernel
-		# Parametrized by dict_keys(['L'])
-		# - sampling mode = None
-		# - number of samples = 0
+	print(DPP)
+
+	# DPP defined through marginal kernel
+	# Parametrized by dict_keys(['L'])
+	# - sampling mode = None
+	# - number of samples = 0
 
 .. important::
 
@@ -95,7 +98,7 @@ where the dagger means "conjugate transpose". For the definition via marginal pr
 		r, N = 4, 10
 		A = np.random.randn(r, N)
 		K = A.T@la.inv(A@A.T)@A
-		proj_DPP = Discrete_DPP("inclusion", projection=True, **{"K":K})
+		proj_DPP = Finite_DPP("inclusion", projection=True, **{"K":K})
 		
 		print(proj_DPP)
 
@@ -107,7 +110,7 @@ where the dagger means "conjugate transpose". For the definition via marginal pr
 
 .. seealso::
 
-	.. currentmodule:: discrete_dpps
+	.. currentmodule:: finite_dpps
 
-	- :class:`Discrete_DPP <Discrete_DPP>`
+	- :class:`Finite_DPP <Finite_DPP>`
 	- :cite:`KuTa12`

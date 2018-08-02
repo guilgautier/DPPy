@@ -1,9 +1,9 @@
-.. _discrete_dpps_exact_sampling:
+.. _finite_dpps_exact_sampling:
 
 Exact sampling
 **************
 
-The procedure stems from the fact that :ref:`discrete_dpps_mixture`, suggesting the following two steps algorithm given the spectral decomposition of the inclusion kernel :math:`\mathbf{K}`
+The procedure stems from the fact that :ref:`finite_dpps_mixture`, suggesting the following two steps algorithm given the spectral decomposition of the inclusion kernel :math:`\mathbf{K}`
 
 .. math::
 
@@ -21,12 +21,12 @@ In the general case, the average cost of the exact sampling scheme is :math:`\ma
 
 	Sampling from a *projection* :math:`\operatorname{DPP}(\mathbf{K})` can be done in :math:`\mathcal{O}(Nr^2)` with :math:`r=\operatorname{rank}(\mathbf{K})`. It is worth mentioning that to sample from a *projection* DPP:
 
-	As we shall see next in :ref:`discrete_dpps_exact_sampling_projection_dpps`:
+	As we shall see next in :ref:`finite_dpps_exact_sampling_projection_dpps`:
 
 	- Given the projection kernel :math:`\mathbf{K}` there is no need to compute its eigenvectors
 	- Given some orthonormal vectors stacked in :math:`\tilde{U}` there is no need to compute :math:`\mathbf{K}=\tilde{U}\tilde{U}^{\top}`
 
-.. _discrete_dpps_exact_sampling_projection_dpps:
+.. _finite_dpps_exact_sampling_projection_dpps:
 
 Projection DPPs
 ===============
@@ -140,16 +140,16 @@ Projection DPPs
 		eig_vals = np.ones(r)
 		# K = (eig_vecs*eig_vals)@eig_vecs.T
 
-		DPP = Discrete_DPP("inclusion", projection=True, **{"K_eig_dec":(eig_vals, eig_vecs)})
-		# DPP = Discrete_DPP("inclusion", projection=True, **{"K":K})
+		DPP = Finite_DPP("inclusion", projection=True, **{"K_eig_dec":(eig_vals, eig_vecs)})
+		# DPP = Finite_DPP("inclusion", projection=True, **{"K":K})
 
 		DPP.sample_exact()
 
 	.. seealso::
 
-		.. currentmodule:: discrete_dpps
+		.. currentmodule:: finite_dpps
 
-		- :func:`Discrete_DPP.sample_exact <Discrete_DPP.sample_exact>`
+		- :func:`Finite_DPP.sample_exact <Finite_DPP.sample_exact>`
 		- :cite:`HKPV06` Algorithm 18 and Proposition 19, for the original idea
 		- :cite:`KuTa12` Algorithm 1, for a first interpretation of :cite:`HKPV06` algorithm running in :math:`\mathcal{O}(N r^3)`
 		- :cite:`Gil14` Algorithm 2, for the :math:`\mathcal{O}(N r^2)` implementation
@@ -219,7 +219,7 @@ Projection DPPs
 			&\qquad= r - |Y|
 			&\qquad= r - |Y|
 
-.. _discrete_dpps_exact_sampling_generic_dpps:
+.. _finite_dpps_exact_sampling_generic_dpps:
 
 Generic DPPs
 ============
@@ -289,7 +289,7 @@ Generic DPPs
 	eig_vecs, _ = la.qr(A.T, mode="economic")
 	eig_vals = np.random.rand(r) # 0 < < 1
 
-	DPP = Discrete_DPP("inclusion", **{"K_eig_dec":(eig_vals, eig_vecs)})
+	DPP = Finite_DPP("inclusion", **{"K_eig_dec":(eig_vals, eig_vecs)})
 
 	DPP.sample_exact()
 	DPP.list_of_samples
@@ -300,7 +300,7 @@ Generic DPPs
 	### Marginal kernel
 	Phi = np.random.randn(r, N) # L = Phi.T Phi
 
-	DPP = Discrete_DPP("marginal", **{"L_gram_factor":Phi})
+	DPP = Finite_DPP("marginal", **{"L_gram_factor":Phi})
 
 	DPP.sample_exact()
 	DPP.list_of_samples
@@ -309,6 +309,6 @@ Generic DPPs
 
 .. seealso::
 
-	.. currentmodule:: discrete_dpps
+	.. currentmodule:: finite_dpps
 
-	:func:`Discrete_DPP.sample_exact <Discrete_DPP.sample_exact>`
+	:func:`Finite_DPP.sample_exact <Finite_DPP.sample_exact>`

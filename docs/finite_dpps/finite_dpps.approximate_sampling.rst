@@ -1,4 +1,4 @@
-.. _discrete_dpps_approximate_sampling:
+.. _finite_dpps_approximate_sampling:
 
 Approximate sampling
 ********************

@@ -11,7 +11,7 @@ Chain rule
 
 .. important::
 
-	In the same vein as the discrete case, the spectral decomposition of the kernel is required for applying the chain rule to sample generic continuous DPPs.
+	In the same vein as the finite case, the spectral decomposition of the kernel is required for applying the chain rule to sample generic continuous DPPs.
 
 The chain rule still applies except that now conditionals have a density and it becomes tricky to sample from them.
 One could use rejection sampling but a good proposal is difficult to tailor, the acceptance rate that is difficult to control.

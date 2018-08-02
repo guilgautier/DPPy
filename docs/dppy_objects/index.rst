@@ -3,16 +3,16 @@
 DPPy objects
 ############
 
-Discrete DPPs
+Finite DPPs
 *************
 
 .. important::
 
-	Check out the Notebook `Discrete DPPs <https://github.com/guilgautier/DPPy/blob/master/notebooks/discrete_dpps.ipynb>`_ 
+	Check out the Notebook `Finite DPPs <https://github.com/guilgautier/DPPy/blob/master/notebooks/finite_dpps.ipynb>`_ 
 
-.. currentmodule:: discrete_dpps
+.. currentmodule:: finite_dpps
 
-.. autoclass:: Discrete_DPP
+.. autoclass:: Finite_DPP
 	:members:
 
 

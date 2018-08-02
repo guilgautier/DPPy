@@ -7,7 +7,7 @@ except (SystemError, ImportError):
 	from .approximate_sampling import *
 import matplotlib.pyplot as plt
 
-class Discrete_k_DPP:
+class Finite_k_DPP:
 
 	def __init__(self, kernel, size, projection_kernel=False):
 
@@ -40,7 +40,7 @@ class Discrete_k_DPP:
 		self.list_of_samples = []
 
 	def __str__(self):
-		str_info = ["Discrete k-DPP(L) defined on {} items by:",
+		str_info = ["Finite k-DPP(L) defined on {} items by:",
 								"- Projection kernel: {}",
 								"- sampling mode = {}",
 								"- number of samples = {}"]

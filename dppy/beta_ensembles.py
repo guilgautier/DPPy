@@ -6,7 +6,7 @@ except (SystemError, ImportError):
 import matplotlib.pyplot as plt
 
 class BetaEnsemble:
-	""" Discrete DPP object parametrized by
+	""" Finite DPP object parametrized by
 
 	:param name:
 		- ``'hermite'``

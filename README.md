@@ -7,7 +7,9 @@
 
 ## Introduction
 
-Determinantal point processes (DPPs) are specific probability distributions over clouds of points that have been popular as models or computational tools across physics, probability, statistics, and more recently of booming interest in machine learning. Sampling from DPPs is a nontrivial matter, and many approaches have been proposed. DPPy is a Python library that puts together all exact and approximate sampling algorithms for DPPs.
+Determinantal point processes (DPPs) are specific probability distributions over clouds of points that have been popular as models or computational tools across physics, probability, statistics, and more recently of booming interest in machine learning. 
+Sampling from DPPs is a nontrivial matter, and many approaches have been proposed. 
+DPPy is a Python library that puts together all exact and approximate sampling algorithms for DPPs.
 
 ## Requirements
 
@@ -18,7 +20,7 @@ DPPy works with [Python 3.4+](https://docs.python.org/3/)
  - [SciPy](http://www.scipy.org/)
  - [Matplotlib](http://matplotlib.org/)
 
-The `zono_sampling` mcmc sampler for discrete DPPs requires CVXOPT which itself requires GCC
+The `zono_sampling` mcmc sampler for finite DPPs requires CVXOPT which itself requires GCC
  - [CVXOPT](http://cvxopt.org)
  - [GCC](http://gcc.gnu.org)
     - On MAC it comes with [Xcode](https://developer.apple.com/xcode/)

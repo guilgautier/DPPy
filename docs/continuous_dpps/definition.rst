@@ -34,7 +34,7 @@ Correlation functions
 
 For :math:`k\geq 0`, the :math:`k`-correlation function :math:`\rho_k` is defined by:
 
-:math:`\forall f : \mathbb{X}^k \to \mathbb{C}` measurable with compact support
+:math:`\forall f : \mathbb{X}^k \to \mathbb{C}` bounded measurable functions
 
 .. math::
 

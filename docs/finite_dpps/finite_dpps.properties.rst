@@ -1,11 +1,11 @@
-.. _discrete_dpps_properties:
+.. _finite_dpps_properties:
 
 Properties
 **********
 
 Throughout this section, we assume :math:`\mathbf{K}` and :math:`\mathbf{L}` satisfy the sufficient conditions :eq:`suff_cond_K` and eq:`suff_cond_L` respectively.
 
-.. _discrete_dpps_mixture:
+.. _finite_dpps_mixture:
 
 Generic DPPs as mixtures of projection DPPs
 ===========================================
@@ -35,14 +35,14 @@ Generic DPPs as mixtures of projection DPPs
 .. seealso::
 
 	- Theorem 7 in :cite:`HKPV06`
-	- :ref:`discrete_dpps_exact_sampling`
+	- :ref:`finite_dpps_exact_sampling`
 
-.. _discrete_dpps_nb_points:
+.. _finite_dpps_nb_points:
 
 Number of points
 ================
 
-	Based on :ref:`discrete_dpps_mixture`, we have
+	Based on :ref:`finite_dpps_mixture`, we have
 
 	.. math::
 		:label: number_points
@@ -82,7 +82,7 @@ Number of points
 
 	.. testcode::
 
-		from discrete_dpps import *
+		from finite_dpps import *
 		np.random.seed(4321)
 
 		r, N = 4, 10
@@ -91,7 +91,7 @@ Number of points
 		eig_vecs, _ = la.qr(A.T, mode="economic")
 		eig_vals = np.random.rand(r) # 0< <1
 
-		DPP = Discrete_DPP("inclusion", **{"K_eig_dec":(eig_vals, eig_vecs)})
+		DPP = Finite_DPP("inclusion", **{"K_eig_dec":(eig_vals, eig_vecs)})
 
 		for _ in range(10): DPP.sample_exact()
 		print(DPP.list_of_samples)
@@ -138,7 +138,7 @@ Number of points
 
 		.. testcode::
 
-			from discrete_dpps import *
+			from finite_dpps import *
 			np.random.seed(4321)
 
 			r, N = 4, 10
@@ -147,7 +147,7 @@ Number of points
 			eig_vecs, _ = la.qr(A.T, mode="economic")
 			eig_vals = np.ones(r)
 
-			DPP = Discrete_DPP("inclusion", **{"K_eig_dec":(eig_vals, eig_vecs)})
+			DPP = Finite_DPP("inclusion", **{"K_eig_dec":(eig_vals, eig_vecs)})
 
 			for _ in range(10): DPP.sample_exact()
 			print(DPP.list_of_samples)
@@ -156,7 +156,7 @@ Number of points
 
 			[[1, 2, 5, 7], [0, 9, 7, 8], [5, 7, 9, 0], [5, 1, 7, 8], [0, 3, 8, 7], [3, 2, 7, 8], [5, 8, 0, 9], [7, 6, 3, 1], [1, 7, 9, 5], [4, 7, 5, 2]]
 
-.. _discrete_dpps_geometry:
+.. _finite_dpps_geometry:
 
 Geometrical insights
 ====================
@@ -191,7 +191,7 @@ Geometrical insights
 		
 	That is to say, DPPs favor subsets :math:`S` whose corresponding feature vectors span a large volume i.e. *DPPs sample softened orthogonal bases*.
 
-.. _discrete_dpps_diversity:
+.. _finite_dpps_diversity:
 
 Diversity
 =========
@@ -211,7 +211,7 @@ Diversity
 
 	That is, the greater the similarity :math:`|\mathbf{K}_{i j}|` between items :math:`i` and :math:`j`, the less likely they co-occur.
 
-.. _discrete_dpps_relation_kernels:
+.. _finite_dpps_relation_kernels:
 
 Relation between inclusion and marginal kernels
 ===============================================
@@ -249,7 +249,7 @@ Relation between inclusion and marginal kernels
 		U, _ = la.qr(A.T, mode="economic")
 		eig_vals = np.random.rand(r) # 0< <1
 
-		DPP = Discrete_DPP("inclusion", **{'K_eig_dec': (eig_vals, U)})
+		DPP = Finite_DPP("inclusion", **{'K_eig_dec': (eig_vals, U)})
 		DPP.compute_L()
 
 		#	L (marginal) kernel computed via:
@@ -258,7 +258,7 @@ Relation between inclusion and marginal kernels
 
 	.. seealso::
 
-		.. currentmodule:: discrete_dpps
+		.. currentmodule:: finite_dpps
 
-		- :func:`Discrete_DPP.compute_K <Discrete_DPP.compute_K>`
-		- :func:`Discrete_DPP.compute_L <Discrete_DPP.compute_L>`
+		- :func:`Finite_DPP.compute_K <Finite_DPP.compute_K>`
+		- :func:`Finite_DPP.compute_L <Finite_DPP.compute_L>`

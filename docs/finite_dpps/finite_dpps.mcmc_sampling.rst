@@ -1,9 +1,9 @@
-.. _discrete_dpps_mcmc_sampling:
+.. _finite_dpps_mcmc_sampling:
 
 MCMC sampling
 *************
 
-.. _discrete_dpps_mcmc_sampling_add_exchange_delete:
+.. _finite_dpps_mcmc_sampling_add_exchange_delete:
 
 Add/exchange/delete
 ===================
@@ -21,7 +21,7 @@ At state :math:`S\subset [N]`, propose :math:`S'` different from :math:`S` by at
 
 Then perform
 
-.. _discrete_dpps_mcmc_sampling_E:
+.. _finite_dpps_mcmc_sampling_E:
 
 Exchange
 --------
@@ -32,7 +32,7 @@ Pure exchange moves
 
   S' \leftrightarrow S \setminus s \cup t
 
-.. _discrete_dpps_mcmc_sampling_AD:
+.. _finite_dpps_mcmc_sampling_AD:
 
 Add-Delete
 ----------
@@ -42,7 +42,7 @@ Pure addition/deletion moves
   - Delete :math:`S' \leftrightarrow S \setminus s`
   - Add :math:`S' \leftrightarrow S \cup t`
 
-.. _discrete_dpps_mcmc_sampling_AED:
+.. _finite_dpps_mcmc_sampling_AED:
 
 Add-Exchange-Delete
 -------------------
@@ -59,13 +59,13 @@ Mix of exchange and add-delete moves
 
 .. testcode::
 
-  from discrete_dpps import *
+  from finite_dpps import *
   np.random.seed(413121)
 
   r, N = 4, 10
   A = np.random.randn(r, N)
   L = A.T@A
-  DPP = Discrete_DPP("marginal", **{"L":L})
+  DPP = Finite_DPP("marginal", **{"L":L})
 
   DPP.sample_mcmc("AED")
   print(DPP.list_of_samples)
@@ -77,13 +77,13 @@ Mix of exchange and add-delete moves
 
 .. seealso::
 
-  .. currentmodule:: discrete_dpps
+  .. currentmodule:: finite_dpps
 
-  - :func:`Discrete_DPP.sample_mcmc <Discrete_DPP.sample_mcmc>`
+  - :func:`Finite_DPP.sample_mcmc <Finite_DPP.sample_mcmc>`
   - :cite:`AnGhRe16`, :cite:`LiJeSr16a`, :cite:`LiJeSr16c` and :cite:`LiJeSr16d`
 
 
-.. _discrete_dpps_mcmc_sampling_zonotope:
+.. _finite_dpps_mcmc_sampling_zonotope:
 
 Zonotope
 ========
@@ -96,7 +96,7 @@ Zonotope
 
 where :math:`\Phi` is the underlying :math:`r\times N` feature matrix satisfying :math:`\operatorname{rank}(\Phi)=\operatorname{rank}(\mathbf{K})=r`.
 
-In this setting the :ref:`discrete_dpps_nb_points` is almost surely equal to :math:`r` and we have
+In this setting the :ref:`finite_dpps_nb_points` is almost surely equal to :math:`r` and we have
 
 .. math::
   :label: zonotope_marginal
@@ -107,9 +107,9 @@ In this setting the :ref:`discrete_dpps_nb_points` is almost surely equal to :ma
     = \frac{\operatorname{Vol}^2 \{\phi_s\}_{s\in S}}
           {\det\Phi \Phi^{\top}} 1_{|S|=r}
 
-The original discrete ground set is embedded in a continuous domain called a zonotope.
+The original finite ground set is embedded in a continuous domain called a zonotope.
 Hit-and-run procedure is used to move across this polytope and visit the different tiles.
-To recover the discrete DPP samples one needs to identify the tile in which the successive points lie, this is done by solving linear programs (LPs).
+To recover the finite DPP samples one needs to identify the tile in which the successive points lie, this is done by solving linear programs (LPs).
 
 .. hint::
 
@@ -117,13 +117,13 @@ To recover the discrete DPP samples one needs to identify the tile in which the 
 
 .. testcode::
 
-  from discrete_dpps import *
+  from finite_dpps import *
   np.random.seed(1234)
 
   r, N = 4, 10
   A = np.random.randn(r, N)
 
-  DPP = Discrete_DPP("inclusion", projection=True, **{"A_zono":A})
+  DPP = Finite_DPP("inclusion", projection=True, **{"A_zono":A})
 
   DPP.sample_mcmc("zonotope")
   print(DPP.list_of_samples)
@@ -143,14 +143,14 @@ To recover the discrete DPP samples one needs to identify the tile in which the 
 
 .. note::
 
-  On the one hand, the :ref:`discrete_dpps_mcmc_sampling_zonotope` perspective on sampling *projection* DPPs yields a better exploration of the state space.
+  On the one hand, the :ref:`finite_dpps_mcmc_sampling_zonotope` perspective on sampling *projection* DPPs yields a better exploration of the state space.
   Using hit-and-run from a given given all other states become accessible but at the cost of solving LPs at each step.
-  On the other hand, the :ref:`discrete_dpps_mcmc_sampling_add_exchange_delete` view allows to perform cheap but local moves.
+  On the other hand, the :ref:`finite_dpps_mcmc_sampling_add_exchange_delete` view allows to perform cheap but local moves.
 
 .. seealso::
 
-  .. currentmodule:: discrete_dpps
+  .. currentmodule:: finite_dpps
 
-  - :func:`Discrete_DPP.sample_mcmc <Discrete_DPP.sample_mcmc>`
+  - :func:`Finite_DPP.sample_mcmc <Finite_DPP.sample_mcmc>`
   - :cite:`GaBaVa17`
   

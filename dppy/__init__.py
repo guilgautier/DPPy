@@ -1,1 +1,1 @@
-# from . import discrete_dpps
+# from . import finite_dpps

@@ -1,4 +1,4 @@
-from discrete_dpps import *
+from finite_dpps import *
 
 r, N = 4, 10
 A = np.random.randn(r, N)
@@ -7,7 +7,7 @@ eig_vecs, _ = la.qr(A.T, mode="economic")
 eig_vals = np.random.rand(r) # 0< <1
 K = (eig_vecs*eig_vals)@eig_vecs.T
 
-DPP = Discrete_DPP("inclusion", **{"K":K})
+DPP = Finite_DPP("inclusion", **{"K":K})
 
 print(DPP)
 # DPP defined through inclusion kernel

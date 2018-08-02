@@ -33,7 +33,7 @@ def dpp_sampler_mcmc(kernel, sampling_mode="AED", **params):
 
 	.. seealso::
 
-		- :ref:`discrete_dpps_mcmc_sampling_add_exchange_delete`
+		- :ref:`finite_dpps_mcmc_sampling_add_exchange_delete`
 		- :func:`add_exchange_delete_sampler <add_exchange_delete_sampler>`
 		- :func:`initialize_AED_sampler <initialize_AED_sampler>`
 		- :func:`add_delete_sampler <add_delete_sampler>`

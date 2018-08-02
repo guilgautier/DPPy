@@ -9,8 +9,8 @@ except (SystemError, ImportError):
 import matplotlib.pyplot as plt
 from warnings import warn
 
-class Discrete_DPP:
-	""" Discrete DPP object parametrized by
+class Finite_DPP:
+	""" Finite DPP object parametrized by
 
 		:param kernel_type:
 
@@ -21,7 +21,7 @@ class Discrete_DPP:
 			string
 
 		:param projection:
-			Indicate whether the provided kernel is of projection type. This may be useful when the :class:`Discrete_DPP` object is defined through its inclusion kernel :math:`\mathbf{K}`.
+			Indicate whether the provided kernel is of projection type. This may be useful when the :class:`Finite_DPP` object is defined through its inclusion kernel :math:`\mathbf{K}`.
 
 		:type projection:
 			bool, default ``False``
@@ -50,8 +50,8 @@ class Discrete_DPP:
 
 		.. seealso::
 			
-			- :ref:`discrete_dpps_definition`
-			- :ref:`discrete_dpps_exact_sampling_projection_dpps`
+			- :ref:`finite_dpps_definition`
+			- :ref:`finite_dpps_exact_sampling_projection_dpps`
 	"""
 
 ###################
@@ -286,12 +286,12 @@ class Discrete_DPP:
 ######################
 
 	def info(self):
-		""" Display infos about the :class:`Discrete_DPP` object
+		""" Display infos about the :class:`Finite_DPP` object
 		"""
 		print(self.__str__())
 
 	def flush_samples(self):
-		""" Empty the ``Discrete_DPP.list_of_samples`` attribute.
+		""" Empty the ``Finite_DPP.list_of_samples`` attribute.
 
 			.. see also::
 
@@ -302,7 +302,7 @@ class Discrete_DPP:
 
 	### Exact sampling
 	def sample_exact(self, sampling_mode="GS"):
-		""" Sample exactly from the corresponding :class:`Discrete_DPP <Discrete_DPP>` object. The sampling scheme is based on the chain rule with Gram-Schmidt like updates of the conditionals.
+		""" Sample exactly from the corresponding :class:`Finite_DPP <Finite_DPP>` object. The sampling scheme is based on the chain rule with Gram-Schmidt like updates of the conditionals.
 
 		:param sampling_mode:
 
@@ -317,13 +317,13 @@ class Discrete_DPP:
 			string, default ``'GS'``
 
 		:return:
-			A sample from the corresponding :class:`Discrete_DPP <Discrete_DPP>` object.
+			A sample from the corresponding :class:`Finite_DPP <Finite_DPP>` object.
 		:rtype:
 			list
 
 		.. note::
 
-			Each time you call this function, the sample is added to the ``Discrete_DPP.list_of_samples`` attribute.
+			Each time you call this function, the sample is added to the ``Finite_DPP.list_of_samples`` attribute.
 
 			The latter can be emptied using :func:`.flush_samples() <flush_samples>`
 
@@ -333,7 +333,7 @@ class Discrete_DPP:
 
 		.. seealso::
 
-			- :ref:`discrete_dpps_exact_sampling`
+			- :ref:`finite_dpps_exact_sampling`
 			- :func:`flush_samples <flush_samples>`
 			- :func:`sample_mcmc <sample_mcmc>`
 		"""
@@ -396,7 +396,7 @@ class Discrete_DPP:
 
 	### Approximate sampling
 	def sample_mcmc(self, sampling_mode, **params):
-		""" Run a MCMC with stationary distribution the corresponding :class:`Discrete_DPP <Discrete_DPP>` object.
+		""" Run a MCMC with stationary distribution the corresponding :class:`Finite_DPP <Finite_DPP>` object.
 
 		:param sampling_mode:
 
@@ -422,13 +422,13 @@ class Discrete_DPP:
 			dict
 
 		:return:
-			A sample from the corresponding :class:`Discrete_DPP <Discrete_DPP>` object.
+			A sample from the corresponding :class:`Finite_DPP <Finite_DPP>` object.
 		:rtype:
 			list
 
 		.. seealso::
 
-			- :ref:`discrete_dpps_mcmc_sampling`
+			- :ref:`finite_dpps_mcmc_sampling`
 			- :func:`sample_exact <sample_exact>`
 			- :func:`flush_samples <flush_samples>`
 		"""
@@ -477,11 +477,11 @@ class Discrete_DPP:
 			raise ValueError("\n".join(err_print))
 
 	def compute_K(self, msg=None):
-		""" Compute the inclusion kernel :math:`\mathbf{K}` from the original parametrization of the :class:`Discrete_DPP` object.
+		""" Compute the inclusion kernel :math:`\mathbf{K}` from the original parametrization of the :class:`Finite_DPP` object.
 
 			.. seealso::
 
-				:ref:`discrete_dpps_relation_kernels`
+				:ref:`finite_dpps_relation_kernels`
 		"""
 		if self.K is None:
 			if not msg:
@@ -515,11 +515,11 @@ class Discrete_DPP:
 			print("K (inclusion) kernel available")
 
 	def compute_L(self, msg=False):
-		""" Compute the marginal kernel :math:`\mathbf{L}` from the original parametrization of the :class:`Discrete_DPP` object.
+		""" Compute the marginal kernel :math:`\mathbf{L}` from the original parametrization of the :class:`Finite_DPP` object.
 
 			.. seealso::
 
-				:ref:`discrete_dpps_relation_kernels`
+				:ref:`finite_dpps_relation_kernels`
 		"""
 		if (self.kernel_type == "inclusion") and self.projection:
 			err_print = ("L = K(I-K)^-1 = (I-K)^-1 - I kernel cannot be computed:",
@@ -567,7 +567,7 @@ class Discrete_DPP:
 
 
 	def plot(self):
-		"""Display a heatmap of the kernel used to define the :class:`Discrete_DPP` object (inclusion kernel :math:`\mathbf{K}` or marginal kernel :math:`\mathbf{L}`)"""
+		"""Display a heatmap of the kernel used to define the :class:`Finite_DPP` object (inclusion kernel :math:`\mathbf{K}` or marginal kernel :math:`\mathbf{L}`)"""
 
 		fig, ax = plt.subplots(1,1)
 
