@@ -91,7 +91,7 @@ Number of points
 		eig_vecs, _ = la.qr(A.T, mode="economic")
 		eig_vals = np.random.rand(r) # 0< <1
 
-		DPP = Finite_DPP("inclusion", **{"K_eig_dec":(eig_vals, eig_vecs)})
+		DPP = FiniteDPP("inclusion", **{"K_eig_dec":(eig_vals, eig_vecs)})
 
 		for _ in range(10): DPP.sample_exact()
 		print(DPP.list_of_samples)
@@ -147,7 +147,7 @@ Number of points
 			eig_vecs, _ = la.qr(A.T, mode="economic")
 			eig_vals = np.ones(r)
 
-			DPP = Finite_DPP("inclusion", **{"K_eig_dec":(eig_vals, eig_vecs)})
+			DPP = FiniteDPP("inclusion", **{"K_eig_dec":(eig_vals, eig_vecs)})
 
 			for _ in range(10): DPP.sample_exact()
 			print(DPP.list_of_samples)
@@ -249,7 +249,7 @@ Relation between inclusion and marginal kernels
 		U, _ = la.qr(A.T, mode="economic")
 		eig_vals = np.random.rand(r) # 0< <1
 
-		DPP = Finite_DPP("inclusion", **{'K_eig_dec': (eig_vals, U)})
+		DPP = FiniteDPP("inclusion", **{'K_eig_dec': (eig_vals, U)})
 		DPP.compute_L()
 
 		#	L (marginal) kernel computed via:
@@ -260,5 +260,5 @@ Relation between inclusion and marginal kernels
 
 		.. currentmodule:: finite_dpps
 
-		- :func:`Finite_DPP.compute_K <Finite_DPP.compute_K>`
-		- :func:`Finite_DPP.compute_L <Finite_DPP.compute_L>`
+		- :func:`FiniteDPP.compute_K <FiniteDPP.compute_K>`
+		- :func:`FiniteDPP.compute_L <FiniteDPP.compute_L>`

@@ -174,7 +174,7 @@ def setup(app):
     app.add_stylesheet('custom.css')  # remove line numbers
     app.add_javascript('copybutton.js') # show/hide prompt >>>
 
-# use :numref: for references (instead of :ref:)
+# use :numref: for bibliography (instead of :ref:)
 numfig = True
 smart_quotes = False
 html_use_smartypants = False

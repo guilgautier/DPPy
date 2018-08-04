@@ -36,7 +36,7 @@ class BetaEnsemble:
 		self.beta = beta
 		self.__check_beta_validity()
 
-		self.sampling_mode = None
+		self.sampling_mode = "banded"
 		self.sampling_params = {}
 		self.list_of_samples = []
 		# self.nb_of_samples = len(self.list_of_samples)
@@ -64,16 +64,16 @@ class BetaEnsemble:
 		"""
 		self.list_of_samples = []
 
-	def sample(self, sampling_mode='full', **sampling_params):
+	def sample(self, sampling_mode='banded', **sampling_params):
 		""" Sample exactly from the corresponding :class:`BetaEnsemble <BetaEnsemble>` object by computing the eigenvalues of random matrices.
 
 		:param sampling_params:
 
-			- ``sampling_mode='full'``:
 			- ``sampling_mode='banded'``:
+			- ``sampling_mode='full'``:
 
 		:type sampling_params:
-			string, default ``'full'``
+			string, default ``'banded'``
 
 		:param sampling_params:
 			Dictionary containing the parametrization of the underlying :class:`BetaEnsemble <BetaEnsemble>` object viewed as the eigenvalues of a full or banded random matrix.

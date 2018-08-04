@@ -1,14 +1,14 @@
-.. _references:
+.. _bibliography:
 
-References
-##########
+Bibliography
+############
 
 .. bibliography:: biblio.bib
 	:encoding: latin
 	:style: alpha
 	:all:	
 
-.. Fix to make sure references appear when bibliography called in separate file
+.. Fix to make sure bibliography appear when bibliography called in separate file
 .. latex+latin => latin
 .. :cited: => :all: see http://sphinxcontrib-bibtex.readthedocs.io/en/latest/usage.html#unresolved-citations-across-documents
 

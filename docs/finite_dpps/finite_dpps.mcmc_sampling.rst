@@ -65,7 +65,7 @@ Mix of exchange and add-delete moves
   r, N = 4, 10
   A = np.random.randn(r, N)
   L = A.T@A
-  DPP = Finite_DPP("marginal", **{"L":L})
+  DPP = FiniteDPP("marginal", **{"L":L})
 
   DPP.sample_mcmc("AED")
   print(DPP.list_of_samples)
@@ -79,7 +79,7 @@ Mix of exchange and add-delete moves
 
   .. currentmodule:: finite_dpps
 
-  - :func:`Finite_DPP.sample_mcmc <Finite_DPP.sample_mcmc>`
+  - :func:`FiniteDPP.sample_mcmc <FiniteDPP.sample_mcmc>`
   - :cite:`AnGhRe16`, :cite:`LiJeSr16a`, :cite:`LiJeSr16c` and :cite:`LiJeSr16d`
 
 
@@ -123,7 +123,7 @@ To recover the finite DPP samples one needs to identify the tile in which the su
   r, N = 4, 10
   A = np.random.randn(r, N)
 
-  DPP = Finite_DPP("inclusion", projection=True, **{"A_zono":A})
+  DPP = FiniteDPP("inclusion", projection=True, **{"A_zono":A})
 
   DPP.sample_mcmc("zonotope")
   print(DPP.list_of_samples)
@@ -151,6 +151,6 @@ To recover the finite DPP samples one needs to identify the tile in which the su
 
   .. currentmodule:: finite_dpps
 
-  - :func:`Finite_DPP.sample_mcmc <Finite_DPP.sample_mcmc>`
+  - :func:`FiniteDPP.sample_mcmc <FiniteDPP.sample_mcmc>`
   - :cite:`GaBaVa17`
   

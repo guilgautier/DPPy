@@ -21,7 +21,7 @@ For our purpose, we consider point processes as locally finite random subsets :m
 
 .. seealso::
 
-	More formal definitions can be found in :cite:`MoWa04` Section 2 and :cite:`Joh06` Section 2 and references therein.
+	More formal definitions can be found in :cite:`MoWa04` Section 2 and :cite:`Joh06` Section 2 and bibliography therein.
 
 To understand the interaction between the points of a point process, one focuses on the interaction of each cloud of :math:`k` points (for all :math:`k`). 
 The corresponding :math:`k`-correlation functions characterize the underlying point process.
@@ -34,7 +34,7 @@ Correlation functions
 
 For :math:`k\geq 0`, the :math:`k`-correlation function :math:`\rho_k` is defined by:
 
-:math:`\forall f : \mathbb{X}^k \to \mathbb{C}` bounded measurable functions
+:math:`\forall f : \mathbb{X}^k \to \mathbb{C}` bounded measurable
 
 .. math::
 
@@ -59,7 +59,7 @@ For :math:`k\geq 0`, the :math:`k`-correlation function :math:`\rho_k` is define
 		\rho_k(x_1,\dots,x_k) 
 		= \lim_{\epsilon \to 0} \frac{1}{\epsilon^k} \mathbb{P}\left[ \gamma \text{ has a point in } [x_i,x_i +\epsilon], \forall 1\leq i \leq k \right]
 
-A Determinant Point Process (DPP) on is a point process on :math:`(\mathbb{X}, \mathcal{B}(\mathbb{X}), \mu)` parametrized by a kernel :math:`K` associated to the reference measure :math:`\mu`.
+A Determinant Point Process (DPP) is a point process on :math:`(\mathbb{X}, \mathcal{B}(\mathbb{X}), \mu)` parametrized by a kernel :math:`K` associated to the reference measure :math:`\mu`.
 The :math:`k`-correlation functions read
 
 .. math::

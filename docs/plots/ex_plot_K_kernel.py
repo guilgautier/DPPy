@@ -7,7 +7,7 @@ eig_vecs, _ = la.qr(A.T, mode="economic")
 eig_vals = np.random.rand(r) # 0< <1
 K = (eig_vecs*eig_vals)@eig_vecs.T
 
-DPP = Finite_DPP("inclusion", **{"K":K})
+DPP = FiniteDPP("inclusion", **{"K":K})
 
 print(DPP)
 # DPP defined through inclusion kernel

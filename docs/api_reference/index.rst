@@ -1,7 +1,7 @@
-.. _dppy_objects:
+.. _api_reference:
 
-DPPy objects
-############
+API Reference
+#############
 
 Finite DPPs
 *************
@@ -12,7 +12,7 @@ Finite DPPs
 
 .. currentmodule:: finite_dpps
 
-.. autoclass:: Finite_DPP
+.. autoclass:: FiniteDPP
 	:members:
 
 

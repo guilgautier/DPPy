@@ -3,6 +3,10 @@
 Properties
 **********
 
+.. important::
+
+	The :ref:`finite_dpps_properties` presented in the finite case regarding see :ref:`finite_dpps_mixture` and :ref:`finite_dpps_nb_points` are still valid!
+
 Thinning
 ========
 

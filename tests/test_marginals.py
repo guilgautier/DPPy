@@ -26,7 +26,7 @@ class FollowsTheRightMarginalForSingletons(unittest.TestCase):
         for i in range(N-r):
             L[i,i] = 0
         K = Q.dot(L.dot(Q.T)) # projection matrix by construction
-        dpp = Finite_DPP(kernel_type="inclusion", proj=True, K=K)
+        dpp = FiniteDPP(kernel_type="inclusion", proj=True, K=K)
 
         # sample from the dpp
         numSamples = 100
@@ -55,7 +55,7 @@ class FollowsTheRightMarginalForSingletons(unittest.TestCase):
         for i in range(N-r):
             L[i,i] = 0
         K = Q.dot(L.dot(Q.T)) # projection matrix by construction
-        dpp = Finite_DPP(kernel_type="inclusion", proj=True, K=K)
+        dpp = FiniteDPP(kernel_type="inclusion", proj=True, K=K)
 
         # sample from the dpp
         numSamples = 100
@@ -84,7 +84,7 @@ class FollowsTheRightMarginalForSingletons(unittest.TestCase):
         for i in range(N-r):
             L[i,i] = 0
         K = Q.dot(L.dot(Q.T)) # projection matrix by construction
-        dpp = Finite_DPP(kernel_type="inclusion", proj=True, K=K)
+        dpp = FiniteDPP(kernel_type="inclusion", proj=True, K=K)
 
         # sample from the dpp
         numSamples = 100
@@ -115,7 +115,7 @@ class FollowsTheRightMarginalForDoubletons(unittest.TestCase):
         for i in range(N-r):
             L[i,i] = 0
         K = Q.dot(L.dot(Q.T)) # projection matrix by construction
-        dpp = Finite_DPP(kernel_type="inclusion", proj=True, K=K)
+        dpp = FiniteDPP(kernel_type="inclusion", proj=True, K=K)
 
         # sample from the dpp
         numSamples = 100
@@ -151,7 +151,7 @@ class FollowsTheRightMarginalForDoubletons(unittest.TestCase):
         for i in range(N-r):
             L[i,i] = 0
         K = Q.dot(L.dot(Q.T)) # projection matrix by construction
-        dpp = Finite_DPP(kernel_type="inclusion", proj=True, K=K)
+        dpp = FiniteDPP(kernel_type="inclusion", proj=True, K=K)
 
         # sample from the dpp
         numSamples = 100
@@ -187,7 +187,7 @@ class FollowsTheRightMarginalForDoubletons(unittest.TestCase):
         for i in range(N-r):
             L[i,i] = 0
         K = Q.dot(L.dot(Q.T)) # projection matrix by construction
-        dpp = Finite_DPP(kernel_type="inclusion", proj=True, K=K)
+        dpp = FiniteDPP(kernel_type="inclusion", proj=True, K=K)
 
         # sample from the dpp
         numSamples = 100

@@ -140,16 +140,18 @@ Projection DPPs
 		eig_vals = np.ones(r)
 		# K = (eig_vecs*eig_vals)@eig_vecs.T
 
-		DPP = Finite_DPP("inclusion", projection=True, **{"K_eig_dec":(eig_vals, eig_vecs)})
-		# DPP = Finite_DPP("inclusion", projection=True, **{"K":K})
+		DPP = FiniteDPP("inclusion", projection=True, **{"K_eig_dec":(eig_vals, eig_vecs)})
+		# DPP = FiniteDPP("inclusion", projection=True, **{"K":K})
 
 		DPP.sample_exact()
+		DPP.list_of_samples
+		# [[1, 4, 3, 8]]
 
 	.. seealso::
 
 		.. currentmodule:: finite_dpps
 
-		- :func:`Finite_DPP.sample_exact <Finite_DPP.sample_exact>`
+		- :func:`FiniteDPP.sample_exact <FiniteDPP.sample_exact>`
 		- :cite:`HKPV06` Algorithm 18 and Proposition 19, for the original idea
 		- :cite:`KuTa12` Algorithm 1, for a first interpretation of :cite:`HKPV06` algorithm running in :math:`\mathcal{O}(N r^3)`
 		- :cite:`Gil14` Algorithm 2, for the :math:`\mathcal{O}(N r^2)` implementation
@@ -289,7 +291,7 @@ Generic DPPs
 	eig_vecs, _ = la.qr(A.T, mode="economic")
 	eig_vals = np.random.rand(r) # 0 < < 1
 
-	DPP = Finite_DPP("inclusion", **{"K_eig_dec":(eig_vals, eig_vecs)})
+	DPP = FiniteDPP("inclusion", **{"K_eig_dec":(eig_vals, eig_vecs)})
 
 	DPP.sample_exact()
 	DPP.list_of_samples
@@ -300,7 +302,7 @@ Generic DPPs
 	### Marginal kernel
 	Phi = np.random.randn(r, N) # L = Phi.T Phi
 
-	DPP = Finite_DPP("marginal", **{"L_gram_factor":Phi})
+	DPP = FiniteDPP("marginal", **{"L_gram_factor":Phi})
 
 	DPP.sample_exact()
 	DPP.list_of_samples
@@ -311,4 +313,4 @@ Generic DPPs
 
 	.. currentmodule:: finite_dpps
 
-	:func:`Finite_DPP.sample_exact <Finite_DPP.sample_exact>`
+	:func:`FiniteDPP.sample_exact <FiniteDPP.sample_exact>`
