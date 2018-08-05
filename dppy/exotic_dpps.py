@@ -4,7 +4,7 @@ import numpy as np
 import scipy.linalg as la
 import networkx as nx
 import matplotlib.pyplot as plt
-from itertools import chain
+from itertools import chain, combinations
 
 try: # Local import
 	from .exact_sampling import proj_dpp_sampler_eig_GS
@@ -30,8 +30,15 @@ class UST:
 
 		self.kernel = None
 		self.kernel_eig_vecs = None
+
+		# self.list_ST_edge_labels = None
 		#degrees = [g.degree(v) for v in nodesices]
 		#transition_proba = [[1./deg]*deg for deg in degrees]
+
+	def flush_samples(self):
+		""" Empty the ``UST.list_of_samples`` attribute.
+		"""
+		self.list_of_samples = []
 
 	def sample(self, mode="Wilson"):
 
@@ -47,7 +54,7 @@ class UST:
 				self.__compute_kernel_eig_vecs()
 
 			dpp_sample = proj_dpp_sampler_eig_GS(self.kernel_eig_vecs)
-			
+
 			g_finite_dpp = nx.Graph()
 			edges_finite_dpp = [self.edges[ind] for ind in dpp_sample]
 			g_finite_dpp.add_edges_from(edges_finite_dpp)
@@ -59,18 +66,25 @@ class UST:
 
 		self.list_of_samples.append(sampl)
 		
-	def flush_samples(self):
-		""" Empty the ``BetaEnsemble.list_of_samples`` attribute.
-		"""
-		self.list_of_samples = []
-		
 	def compute_kernel(self):
 
 		if self.kernel is None:
 			self.__compute_kernel_eig_vecs()
 			self.kernel = self.kernel_eig_vecs@self.kernel_eig_vecs.T
 		else:
-			print("Kernel available")
+			pass
+
+	# def compute_list_of_ST(self):
+
+	# 	if self.list_ST_edge_labels is None:
+	# 		potential_st = combinations(np.arange(self.nb_edges), self.nb_nodes-1)
+	# 		potential_st = np.array(list(potential_st))
+
+	# 		self.compute_kernel()
+	# 		is_st = lambda x: la.det(self.kernel[np.ix_(x, x)])>1e-5
+	# 		self.list_ST_edge_labels = potential_st[list(map(is_st, potential_st))]
+	# 	else:
+	# 		pass
 			
 	def __compute_kernel_eig_vecs(self):
 
@@ -80,7 +94,7 @@ class UST:
 		else:
 			pass
 
-	def plot_kernel(self):
+	def plot_kernel(self, title="UST kernel i.e. transfer current matrix"):
 
 		if self.kernel is None: self.compute_kernel()
 
@@ -102,17 +116,19 @@ class UST:
 		ax.set_xticklabels(ticks_label, minor=False)
 		ax.set_yticklabels(ticks_label, minor=False)
 
-		# plt.title(str_title, y=1.1)
+		plt.title(title, y=1.1)
 
 		plt.colorbar(heatmap)
 		plt.show()
 
-	def plot_sample(self):
+	def plot_sample(self, title=""):
 
 		graph_to_plot = self.list_of_samples[-1]
 
 		fig = plt.figure(figsize=(4,4))
 		nx.draw_circular(graph_to_plot, node_color='orange', with_labels = True)
+		plt.title(title)
+		plt.show()
 
 	def __wilson(self, root=None):
 
@@ -228,8 +244,6 @@ def unif_permutation(N):
 			tmp[j], tmp[i] = tmp[i], tmp[j]
 
 	return tmp
-
-#sigma = [2,2,4,3,8,7,3,2]
 
 ### RSK
 def RSK(sigma):

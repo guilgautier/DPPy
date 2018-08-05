@@ -491,7 +491,7 @@ class FiniteDPP:
 				str_print = ("- 'A_zono' i.e. K = A.T (AA.T)^-1 A",
 										"- U = QR(A.T)",
 										"- K = U U.T")
-				print(str_print.join("\n"))
+				print("\n".join(str_print))
 				self.eig_vecs, _ = la.qr(self.A_zono.T, mode="economic")
 				self.K = self.eig_vecs@self.eig_vecs.T
 
