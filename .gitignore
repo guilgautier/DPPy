@@ -5,6 +5,7 @@
 *.ipynb
 !beta_ensembles.ipynb
 !finite_dpps.ipynb
+!exotic_dpps.ipynb
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

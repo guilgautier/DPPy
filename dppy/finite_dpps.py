@@ -488,9 +488,12 @@ class FiniteDPP:
 				print("K (inclusion) kernel computed via:")
 
 			if "A_zono" in self.params_keys:
-				print("- 'A_zono' i.e. K = A.T (AA.T)^-1 A")
-				A = self.A_zono
-				self.K = A.T.dot(la.inv(A.dot(A.T))).dot(A)
+				str_print = ("- 'A_zono' i.e. K = A.T (AA.T)^-1 A",
+										"- U = QR(A.T)",
+										"- K = U U.T")
+				print(str_print.join("\n"))
+				self.eig_vecs, _ = la.qr(self.A_zono.T, mode="economic")
+				self.K = self.eig_vecs@self.eig_vecs.T
 
 			elif self.K_eig_vals is not None:
 				print("- U diag(eig_K) U.T")

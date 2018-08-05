@@ -260,10 +260,10 @@ def dpp_sampler_eig(eig_vecs_sel, sampling_mode="GS"):
 	#### Phase 2: Sample from projection kernel VV.T
 	# Chain rule, conditionals are updated using:
 		if sampling_mode == "GS": # Gram-Schmidt
-			sampl = proj_dpp_sampler_eig_GS_bis(eig_vecs_sel)
+			sampl = proj_dpp_sampler_eig_GS(eig_vecs_sel)
 
 		elif sampling_mode == "GS_bis": # Slight modif of "GS"
-			sampl = proj_dpp_sampler_eig_GS(eig_vecs_sel)
+			sampl = proj_dpp_sampler_eig_GS_bis(eig_vecs_sel)
 
 		elif sampling_mode == "KuTa12": # cf Kulesza-Taskar
 			sampl = proj_dpp_sampler_eig_KuTa12(eig_vecs_sel)
