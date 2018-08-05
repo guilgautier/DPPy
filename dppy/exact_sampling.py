@@ -8,7 +8,7 @@ import scipy.linalg as la
 ################# DPPs #################
 ########################################
 
-def dpp_sampler_exact(kernel, proj_kernel=False, sampling_mode="GS"):
+def dpp_sampler_exact(kernel, proj_kernel=False, mode="GS"):
 	""" Sample from :math:`\operatorname{DPP}(K)`, where :math:`K` is the inclusion probability kernel.
 
 	:param kernel: Real symmetric kernel with eigenvalues in :math:`[0,1]`
@@ -21,7 +21,7 @@ def dpp_sampler_exact(kernel, proj_kernel=False, sampling_mode="GS"):
 	:type proj_kernel:
 		bool, default 'False'
 
-	:param sampling_mode:
+	:param mode:
 		Indicate how the conditional probabilities i.e. the ratio of 2 determinants must be updated.
 
 		If ``proj_kernel=True``:
@@ -31,7 +31,7 @@ def dpp_sampler_exact(kernel, proj_kernel=False, sampling_mode="GS"):
 			- 'GS' (default):
 			- 'GS_bis': Slight modification of 'GS'
 			- 'KuTa12': Algorithm 1 in :cite:`KuTa12`
-	:type sampling_mode:
+	:type mode:
 		string, default 'GS'
 
 	:return:
@@ -50,11 +50,11 @@ def dpp_sampler_exact(kernel, proj_kernel=False, sampling_mode="GS"):
 	"""
 
 	if proj_kernel:
-		sampl = proj_dpp_sampler_kernel(K, sampling_mode)
+		sampl = proj_dpp_sampler_kernel(K, mode)
 
 	else:# eigendecomposition is required
 		eig_vecs, eig_vals = la.eigh(kernel)
-		sampl = dpp_sampler_eig(eig_vals, eig_vecs, sampling_mode)
+		sampl = dpp_sampler_eig(eig_vals, eig_vecs, mode)
 
 	return sampl
 
@@ -62,7 +62,7 @@ def dpp_sampler_exact(kernel, proj_kernel=False, sampling_mode="GS"):
 ### Projection kernel ###
 #########################
 
-def proj_dpp_sampler_kernel(kernel, sampling_mode="GS"):
+def proj_dpp_sampler_kernel(kernel, mode="GS"):
 	"""
 		.. seealso::
 			- :func:`proj_dpp_sampler_kernel_GS <proj_dpp_sampler_kernel_GS>`
@@ -73,17 +73,17 @@ def proj_dpp_sampler_kernel(kernel, sampling_mode="GS"):
 
 	#### Phase 2: Sample from orthogonal projection kernel K = K^2 = K.T K
 	# Chain rule, conditionals are updated using:
-	if sampling_mode == "GS": # Gram-Schmidt equiv Cholesky
+	if mode == "GS": # Gram-Schmidt equiv Cholesky
 		sampl = proj_dpp_sampler_kernel_GS(kernel)
 
-	# elif sampling_mode == "Schur": # Schur complement
+	# elif mode == "Schur": # Schur complement
 	# 	sampl = proj_dpp_sampler_kernel_Schur(kernel)
 
 	else:
-		str_list = ["Invalid 'sampling_mode' parameter, choose among:",
+		str_list = ["Invalid 'mode' parameter, choose among:",
 								"- 'GS' (default)",
 								# "- 'Schur'",
-								"Given 'sampling_mode' = {}".format(sampling_mode)]
+								"Given 'mode' = {}".format(mode)]
 		raise ValueError("\n".join(str_list))
 
 	return sampl
@@ -240,7 +240,7 @@ def proj_dpp_sampler_kernel_GS(K, size=None):
 ### Generic kernel ###
 ######################
 
-def dpp_sampler_eig(eig_vecs_sel, sampling_mode="GS"):
+def dpp_sampler_eig(eig_vecs_sel, mode="GS"):
 	"""
 	.. seealso::
 
@@ -259,21 +259,21 @@ def dpp_sampler_eig(eig_vecs_sel, sampling_mode="GS"):
 	if eig_vecs_sel.shape[1]:
 	#### Phase 2: Sample from projection kernel VV.T
 	# Chain rule, conditionals are updated using:
-		if sampling_mode == "GS": # Gram-Schmidt
+		if mode == "GS": # Gram-Schmidt
 			sampl = proj_dpp_sampler_eig_GS(eig_vecs_sel)
 
-		elif sampling_mode == "GS_bis": # Slight modif of "GS"
+		elif mode == "GS_bis": # Slight modif of "GS"
 			sampl = proj_dpp_sampler_eig_GS_bis(eig_vecs_sel)
 
-		elif sampling_mode == "KuTa12": # cf Kulesza-Taskar
+		elif mode == "KuTa12": # cf Kulesza-Taskar
 			sampl = proj_dpp_sampler_eig_KuTa12(eig_vecs_sel)
 
 		else:
-			str_list = ["Invalid 'sampling_mode' parameter, choose among:",
+			str_list = ["Invalid 'mode' parameter, choose among:",
 									"- 'GS' (default)",
 									"- 'GS_bis'",
 									"- 'KuTa12'",
-									"Given 'sampling_mode' = {}".format(sampling_mode)]
+									"Given 'mode' = {}".format(mode)]
 			raise ValueError("\n".join(str_list))
 	else:
 		sampl = []
@@ -607,7 +607,7 @@ def proj_dpp_sampler_eig_KuTa12(eig_vecs, size=None):
 ################# k-DPPs #################
 ##########################################
 
-def k_dpp_sampler(kernel, size, proj_kernel=False, sampling_mode="GS"):
+def k_dpp_sampler(kernel, size, proj_kernel=False, mode="GS"):
 	""" Sample from :math:`\operatorname{DPP}(K)`, where :math:`K` is real symmetric with eigenvalues in :math:`[0,1]`.
 
 	:param kernel: Real symmetric kernel with eigenvalues in :math:`[0,1]`
@@ -620,7 +620,7 @@ def k_dpp_sampler(kernel, size, proj_kernel=False, sampling_mode="GS"):
 	:type proj_kernel:
 		bool, default 'False'
 
-	:param sampling_mode:
+	:param mode:
 		Indicate how the conditional probabilities i.e. the ratio of 2 determinants must be updated.
 
 		If ``proj_kernel=True``:
@@ -631,7 +631,7 @@ def k_dpp_sampler(kernel, size, proj_kernel=False, sampling_mode="GS"):
 			- "GS" (default): Gram-Schmidt on the columns of :math:`K` equiv
 			- "GS_bis": Slight modif of "GS"
 			- "KuTa12": Algorithm 1 in :cite:`KuTa12`
-	:type sampling_mode:
+	:type mode:
 		string, default 'GS_bis'
 
 	:return:
@@ -646,18 +646,18 @@ def k_dpp_sampler(kernel, size, proj_kernel=False, sampling_mode="GS"):
 	"""
 
 	if proj_kernel:
-		sampl = proj_k_dpp_sampler_kernel(kernel, size, sampling_mode)
+		sampl = proj_k_dpp_sampler_kernel(kernel, size, mode)
 
 	else:
 		eig_vecs, eig_vals = la.eigh(kernel)
-		sampl = k_dpp_sampler_eig(eig_vals, eig_vecs, size, sampling_mode)
+		sampl = k_dpp_sampler_eig(eig_vals, eig_vecs, size, mode)
 
 	return sampl
 
 #########################
 ### Projection kernel ###
 #########################
-def proj_k_dpp_sampler_kernel(kernel, size, sampling_mode="GS"):
+def proj_k_dpp_sampler_kernel(kernel, size, mode="GS"):
 	"""
 		.. seealso::
 			- :func:`proj_dpp_sampler_kernel_GS_bis <proj_dpp_sampler_kernel_GS_bis>`
@@ -669,17 +669,17 @@ def proj_k_dpp_sampler_kernel(kernel, size, sampling_mode="GS"):
 
 	#### Phase 2: Sample from orthogonal projection kernel K = K^2 = K.T K
 	# Chain rule, conditionals are updated using:
-	if sampling_mode == "GS": # Gram-Schmidt equiv Cholesky
+	if mode == "GS": # Gram-Schmidt equiv Cholesky
 		sampl = proj_dpp_sampler_kernel_GS(kernel, size)
 
-	# elif sampling_mode == "Shur": # Schur complement
+	# elif mode == "Shur": # Schur complement
 	# 	sampl = proj_dpp_sampler_kernel_Schur(kernel, size)
 
 	else:
-		str_list = ["Invalid 'sampling_mode' parameter, choose among:",
+		str_list = ["Invalid 'mode' parameter, choose among:",
 								"- 'GS' (default)",
 								# "- 'Schur'",
-								"Given 'sampling_mode' = {}".format(sampling_mode)]
+								"Given 'mode' = {}".format(mode)]
 		raise ValueError("\n".join(str_list))
 
 	return sampl
@@ -691,7 +691,7 @@ def proj_k_dpp_sampler_kernel(kernel, size, sampling_mode="GS"):
 ### Generic kernel ###
 ######################
 
-def k_dpp_sampler_eig(eig_vals, eig_vecs, size, sampling_mode="GS",
+def k_dpp_sampler_eig(eig_vals, eig_vecs, size, mode="GS",
 											el_sym_pol_eval=None):
 	"""
 		.. seealso::
@@ -713,21 +713,21 @@ def k_dpp_sampler_eig(eig_vals, eig_vecs, size, sampling_mode="GS",
 	#### Phase 2: Sample from projection kernel VV.T
 	# Chain rule, conditionals are updated using:
 
-	if sampling_mode == "GS": # Gram-Schmidt
+	if mode == "GS": # Gram-Schmidt
 		sampl = proj_dpp_sampler_eig_GS(eig_vecs_sel)
 
-	elif sampling_mode == "GS_bis": # Slight modif of "GS"
+	elif mode == "GS_bis": # Slight modif of "GS"
 		sampl = proj_dpp_sampler_eig_GS_bis(eig_vecs_sel)
 
-	elif sampling_mode == "KuTa12": # cf Kulesza-Taskar
+	elif mode == "KuTa12": # cf Kulesza-Taskar
 		sampl = proj_dpp_sampler_eig_KuTa12(eig_vecs_sel)
 
 	else:
-		str_list = ["Invalid 'sampling_mode' parameter, choose among:",
+		str_list = ["Invalid 'mode' parameter, choose among:",
 								"- 'GS' (default)",
 								"- 'GS_bis'",
 								"- 'KuTa12'",
-								"Given 'sampling_mode' = {}".format(sampling_mode)]
+								"Given 'mode' = {}".format(mode)]
 		raise ValueError("\n".join(str_list))
 
 	return sampl

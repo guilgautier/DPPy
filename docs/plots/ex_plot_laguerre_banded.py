@@ -10,8 +10,8 @@ laguerre_params = {"shape":10000, "scale":2.0, "size":2000}
 # scale = 2.0
 # size = N
 
-sampling_mode = "banded"  # Banded (tridiagonal) matrix model
+mode = "banded"  # Banded (tridiagonal) matrix model
 
-laguerre.sample(sampling_mode, **laguerre_params) # Sample
+laguerre.sample(mode, **laguerre_params) # Sample
 
 laguerre.hist(normalization=True) # Histogram of the eigenvalues/(beta*M)

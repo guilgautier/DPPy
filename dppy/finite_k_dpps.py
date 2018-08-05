@@ -30,7 +30,7 @@ class Finite_k_DPP:
 		else:
 			self.el_sym_pol_eval = elem_symm_poly(self.eig_vals, self.size)
 
-		self.sampling_mode = None # Default 'GS'
+		self.mode = None # Default 'GS'
 		### Exact sampling
 		# 'GS' for Gram-Schmidt,
 		# 'Schur' for Schur complement
@@ -47,7 +47,7 @@ class Finite_k_DPP:
 
 		return "\n".join(str_info).format(self.nb_items,
 																		"Yes" if self.projection_kernel else "No",
-																		self.sampling_mode,
+																		self.mode,
 																		len(self.list_of_samples))
 
 	def __check_size_param_validity(self):
@@ -105,24 +105,24 @@ class Finite_k_DPP:
 		self.list_of_samples = []
 
 	### Exact sampling
-	def sample_exact(self, sampling_mode="GS"):
+	def sample_exact(self, mode="GS"):
 
-		self.sampling_mode = sampling_mode
+		self.mode = mode
 		if self.projection_kernel:
 			# No need for eigendecomposition, update conditional via Gram-Schmidt on columns (equiv on rows) of K
 			sampl = proj_k_dpp_sampler_kernel(self.L,
 																				self.size,
-																				self.sampling_mode)
+																				self.mode)
 		else: #if self.el_sym_pol_eval is not None:
 		# i.e. if eigen decomposition available use it!
 			sampl = k_dpp_sampler_eig(self.eig_vals, self.eig_vecs,	self.size,
-																self.sampling_mode,
+																self.mode,
 																self.el_sym_pol_eval)
 
 		self.list_of_samples.append(sampl)
 
 	# ### Approximate sampling
-	# def sample_approx(self, sampling_mode="AED", nb_iter=10, T_max=None):
+	# def sample_approx(self, mode="AED", nb_iter=10, T_max=None):
 
 	# 	self.list_of_samples.append(sampl)
 

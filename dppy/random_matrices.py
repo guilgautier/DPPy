@@ -293,14 +293,14 @@ def mu_ref_beta_sampler_tridiag(a, b, beta=2, size=10):
 #########################
 
 # Full matrix model
-def circular_sampler_full(N, beta=2, mode="QR"):
+def circular_sampler_full(N, beta=2, haar_mode="QR"):
 	"""
 	.. seealso::
 
 		[Mezzadri, Sec 5] https://arxiv.org/pdf/math-ph/0609050.pdf
 	"""
 
-	if mode == "hermite":
+	if haar_mode == "hermite":
 		size_sym_mat = int(N*(N-1)/2)
 
 		if beta==1:#COE
@@ -323,7 +323,7 @@ def circular_sampler_full(N, beta=2, mode="QR"):
 
 		_, U = la.eigh(A+A.conj().T)
 
-	elif mode == "QR":
+	elif haar_mode == "QR":
 
 		if beta == 1: #COE
 			A = np.random.randn(N, N)
@@ -344,7 +344,7 @@ def circular_sampler_full(N, beta=2, mode="QR"):
 		U = np.multiply(Q, d/np.abs(d), Q)
 
 	else:
-		raise ValueError("mode = 'hermite' or 'QR'")
+		raise ValueError("haar_mode != 'hermite' or 'QR'")
 
 	return la.eigvals(U)
 

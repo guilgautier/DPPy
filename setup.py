@@ -82,7 +82,7 @@ setup(
                       'scipy',
                       'matplotlib',
                       'cvxopt', # For zonotope MCMC sampler
-                      'networkx', # For the Finite DPPs Notebook
+                      'networkx',
                       'sphinxcontrib-bibtex', # Documentation bibliography
                       'sphinx_rtd_theme'] # Documentation theme
 

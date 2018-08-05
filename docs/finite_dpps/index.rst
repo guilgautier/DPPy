@@ -1,7 +1,7 @@
 .. _finite_dpps:
 
 Finite DPPs
-#############
+###########
 
 .. toctree::
   :maxdepth: 2

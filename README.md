@@ -13,12 +13,13 @@ DPPy is a Python library that puts together all exact and approximate sampling a
 
 ## Requirements
 
-DPPy works with [Python 3.4+](https://docs.python.org/3/)
+DPPy works with [Python 3.4+](http://docs.python.org/3/)
 
 ### Dependencies
  - [NumPy](http://www.numpy.org)
  - [SciPy](http://www.scipy.org/)
  - [Matplotlib](http://matplotlib.org/)
+ - [Networkx](http://networkx.github.io/)
 
 The `zono_sampling` mcmc sampler for finite DPPs requires CVXOPT which itself requires GCC
  - [CVXOPT](http://cvxopt.org)

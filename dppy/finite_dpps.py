@@ -92,7 +92,7 @@ class FiniteDPP:
 		self.__check_params_validity()
 
 		#### Sampling
-		self.sampling_mode = None
+		self.mode = None
 		### Exact:
 		## if K (inclusion) kernel is projection
 		# - ``'GS'`` for Gram-Schmidt
@@ -114,7 +114,7 @@ class FiniteDPP:
 											"projection " if self.projection else "",
 											self.kernel_type),
 								"Parametrized by {}".format(self.params_keys),
-								"- sampling mode = {}".format(self.sampling_mode),
+								"- sampling mode = {}".format(self.mode),
 								"- number of samples = {}".format(len(self.list_of_samples)))
 
 		return "\n".join(str_info)
@@ -301,10 +301,10 @@ class FiniteDPP:
 		self.list_of_samples = []
 
 	### Exact sampling
-	def sample_exact(self, sampling_mode="GS"):
+	def sample_exact(self, mode="GS"):
 		""" Sample exactly from the corresponding :class:`FiniteDPP <FiniteDPP>` object. The sampling scheme is based on the chain rule with Gram-Schmidt like updates of the conditionals.
 
-		:param sampling_mode:
+		:param mode:
 
 			- ``projection=True``:
 				- ``'GS'`` (default): Gram-Schmidt on the rows of :math:`\mathbf{K}` or the corresponding eigenvectors.
@@ -313,7 +313,7 @@ class FiniteDPP:
 				- ``'GS'`` (default):
 				- ``'GS_bis'``: Slight modification of ``'GS'``
 				- ``'KuTa12'``: Algorithm 1 in :cite:`KuTa12`
-		:type sampling_mode:
+		:type mode:
 			string, default ``'GS'``
 
 		:return:
@@ -338,7 +338,7 @@ class FiniteDPP:
 			- :func:`sample_mcmc <sample_mcmc>`
 		"""
 
-		self.sampling_mode = sampling_mode
+		self.mode = mode
 
 		## If eigen decoposition of K, L or L_dual is available USE IT!
 		if self.K_eig_vals is not None:
@@ -346,12 +346,12 @@ class FiniteDPP:
 			# Phase 1
 			V = dpp_eig_vecs_selector(self.K_eig_vals, self.eig_vecs)
 			# Phase 2
-			sampl = dpp_sampler_eig(V, self.sampling_mode)
+			sampl = dpp_sampler_eig(V, self.mode)
 			self.list_of_samples.append(sampl)
 
 		elif self.L_eig_vals is not None:
 			self.K_eig_vals = self.L_eig_vals/(1.0+self.L_eig_vals)
-			self.sample_exact(self.sampling_mode)
+			self.sample_exact(self.mode)
 
 		elif "L_gram_factor" in self.params_keys:
 		# If DPP is marginal kernel with parameter "L_gram_factor" i.e. L = Phi.T Phi but dual kernel L' = Phi Phi.T was cheaper to use (computation of L' and diagonalization for sampling)
@@ -361,51 +361,51 @@ class FiniteDPP:
 																				self.L_dual_eig_vecs,
 																				self.L_gram_factor)
 				# Phase 2
-				sampl = dpp_sampler_eig(V, self.sampling_mode)
+				sampl = dpp_sampler_eig(V, self.mode)
 				self.list_of_samples.append(sampl)
 
 			elif self.L_dual is not None:
 				self.L_dual_eig_vals, self.L_dual_eig_vecs\
 										= self.__eigendecompose(self.L_dual)
 				self.__check_eig_vals_geq_0(self.L_dual_eig_vals)
-				self.sample_exact(self.sampling_mode)
+				self.sample_exact(self.mode)
 
 		## Otherwise
 		# If DPP is inclusion kernel with projection kernel no need of eigendecomposition, you can apply Gram-Schmidt on the columns of K (equiv rows because of symmetry)
 		elif (self.K is not None) and self.projection:
-			sampl = proj_dpp_sampler_kernel(self.K, self.sampling_mode)
+			sampl = proj_dpp_sampler_kernel(self.K, self.mode)
 			self.list_of_samples.append(sampl)
 
 		# If DPP is inclusion kernel with generic kernel, eigen-decompose it
 		elif self.K is not None:
 			self.K_eig_vals, self.eig_vecs = self.__eigendecompose(self.K)
-			self.sample_exact(self.sampling_mode)
+			self.sample_exact(self.mode)
 
 		# If DPP is marginal kernel with kernel L, eigen-decompose it
 		elif self.L is not None:
 			self.L_eig_vals, self.eig_vecs = self.__eigendecompose(self.L)
-			self.sample_exact(self.sampling_mode)
+			self.sample_exact(self.mode)
 
 		# If DPP is inclusion kernel with parameter 'A_zono', a priori you wish to use the zonotope approximate sampler: warning is raised
 		# But corresponding projection kernel K = A.T (AA.T)^-1 A is computed
 		elif "A_zono" in self.params_keys:
 			warn("DPP defined via 'A_zono', apriori you want to use 'sampl_mcmc', but you have called 'sample_exact'")
 			self.compute_K()
-			self.projection, self.sampling_mode = True, "GS"
-			self.sample_exact(self.sampling_mode)
+			self.projection, self.mode = True, "GS"
+			self.sample_exact(self.mode)
 
 	### Approximate sampling
-	def sample_mcmc(self, sampling_mode, **params):
+	def sample_mcmc(self, mode, **params):
 		""" Run a MCMC with stationary distribution the corresponding :class:`FiniteDPP <FiniteDPP>` object.
 
-		:param sampling_mode:
+		:param mode:
 
 			- ``'AED'`` Add-Exchange-Delete
 			- ``'AD'`` Add-Delete
 			- ``'E'`` Exchange
 			- ``'zonotope'`` Zonotope sampling
 
-		:type sampling_mode:
+		:type mode:
 			string
 
 		:param params:
@@ -414,9 +414,9 @@ class FiniteDPP:
 			- ``'s_init'`` (default None) Starting state of the Markov chain
 			- ``'nb_iter_max'`` (default 10) Number of iterations of the chain
 			- ``'T_max'`` (default None) Time horizon
-			- ``'size'`` (default None) Size of the initial sample for ``sampling_mode='AD'/'E'``
+			- ``'size'`` (default None) Size of the initial sample for ``mode='AD'/'E'``
 
-					- :math:`\operatorname{rank}(\mathbf{K})=\operatorname{Tr}(\mathbf{K})` for projection :math:`\mathbf{K}` (inclusion) kernel and ``sampling_mode='E'``
+					- :math:`\operatorname{rank}(\mathbf{K})=\operatorname{Tr}(\mathbf{K})` for projection :math:`\mathbf{K}` (inclusion) kernel and ``mode='E'``
 
 		:type params:
 			dict
@@ -435,45 +435,45 @@ class FiniteDPP:
 
 		auth_sampl_mod = ("AED", "AD", "E", "zonotope")
 
-		if sampling_mode in auth_sampl_mod:
-			self.sampling_mode = sampling_mode
+		if mode in auth_sampl_mod:
+			self.mode = mode
 
-			if self.sampling_mode == "zonotope":
+			if self.mode == "zonotope":
 
 				if "A_zono" in self.params_keys:
 					MC_samples = zonotope_sampler(self.A_zono, **params)
 
 				else:
-					err_print = ("Invalid 'sampling_mode':",
+					err_print = ("Invalid 'mode':",
 											"DPP must be defined via 'A_zono' to use 'zonotope' as sampling mode")
 					raise ValueError("\n".join(err_print))
 
-			elif self.sampling_mode == "E":
+			elif self.mode == "E":
 
 				if (self.kernel_type == "inclusion") and self.projection:
 					self.compute_K()
 					# |sample|=Tr(K) a.s. for projection DPP(K)
 					params.update({'size': int(np.round(np.trace(self.K)))})
 
-					MC_samples = dpp_sampler_mcmc(self.K, self.sampling_mode, **params)
+					MC_samples = dpp_sampler_mcmc(self.K, self.mode, **params)
 
 				else:
 					self.compute_L()
-					MC_samples = dpp_sampler_mcmc(self.L, self.sampling_mode, **params)
+					MC_samples = dpp_sampler_mcmc(self.L, self.mode, **params)
 
-			elif self.sampling_mode in ("AED", "AD"):
+			elif self.mode in ("AED", "AD"):
 				self.compute_L()
-				MC_samples = dpp_sampler_mcmc(self.L, self.sampling_mode, **params)
+				MC_samples = dpp_sampler_mcmc(self.L, self.mode, **params)
 
 			self.list_of_samples.append(MC_samples)
 
 		else:
-			err_print = ("Invalid 'sampling_mode' parameter, choose among:",
+			err_print = ("Invalid 'mode' parameter, choose among:",
 									"- 'AED' for Add-Exchange-Delete",
 									"- 'AD' for Add-Delete",
 									"- 'E' for Exchange",
 									"- 'zonotope' for zonotope sampler (projection inclusion kernel only)",
-									"Given 'sampling_mode' = {}".format(sampling_mode))
+									"Given 'mode' = {}".format(mode))
 			raise ValueError("\n".join(err_print))
 
 	def compute_K(self, msg=None):
@@ -569,8 +569,15 @@ class FiniteDPP:
 
 
 
-	def plot(self):
-		"""Display a heatmap of the kernel used to define the :class:`FiniteDPP` object (inclusion kernel :math:`\mathbf{K}` or marginal kernel :math:`\mathbf{L}`)"""
+	def plot(self, title=""):
+		"""Display a heatmap of the kernel used to define the :class:`FiniteDPP` object (inclusion kernel :math:`\mathbf{K}` or marginal kernel :math:`\mathbf{L}`)
+
+		:param title:
+			Plot title
+
+		:type title:
+			string
+		"""
 
 		fig, ax = plt.subplots(1,1)
 
@@ -604,7 +611,7 @@ class FiniteDPP:
 		ax.set_xticklabels(ticks_label, minor=False)
 		ax.set_yticklabels(ticks_label, minor=False)
 
-		plt.title(str_title, y=1.1)
+		plt.title(title if title else str_title, y=1.1)
 
 		plt.colorbar(heatmap)
 		plt.show()

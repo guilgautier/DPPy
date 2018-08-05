@@ -1,7 +1,7 @@
 .. _finite_dpps_api:
 
-API Reference
-#############
+API
+###
 
 .. important::
 

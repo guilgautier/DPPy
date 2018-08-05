@@ -10,8 +10,8 @@ hermite_params = {"loc":0.0, "scale":np.sqrt(2), "size":1000}
 # scale = np.sqrt(2)
 # size = N
 
-sampling_mode = "banded" # Banded (tridiagonal) matrix model
+mode = "banded" # Banded (tridiagonal) matrix model
 
-hermite.sample(sampling_mode, **hermite_params) # Sample
+hermite.sample(mode, **hermite_params) # Sample
 
 hermite.hist(normalization=True) # Histogram of the eigenvalues/sqrt(beta*size)

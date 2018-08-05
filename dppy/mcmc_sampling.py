@@ -28,7 +28,7 @@ def det_kernel_ST(kernel, S, T=None):
 ############## Approximate samplers for projection DPPs #######
 ###############################################################
 
-def dpp_sampler_mcmc(kernel, sampling_mode="AED", **params):
+def dpp_sampler_mcmc(kernel, mode="AED", **params):
 	""" Interface function with initializations and samplers for MCMC schemes.
 
 	.. seealso::
@@ -46,17 +46,17 @@ def dpp_sampler_mcmc(kernel, sampling_mode="AED", **params):
 	T_max = params.get("T_max", None)
 	size = params.get("size", None) # For projection inclusion kernel = Tr(K)
 
-	if sampling_mode == "AED": # Add-Exchange-Delete S'=S+t, S-t+u, S-t
+	if mode == "AED": # Add-Exchange-Delete S'=S+t, S-t+u, S-t
 		if s_init is None:
 			s_init = initialize_AED_sampler(kernel)
 		sampl = add_exchange_delete_sampler(kernel, s_init, nb_it_max, T_max)
 
-	elif sampling_mode == "AD": # Add-Delete S'=S+t, S-t
+	elif mode == "AD": # Add-Delete S'=S+t, S-t
 		if s_init is None:
 			s_init = initialize_AD_and_E_sampler(kernel)
 		sampl = add_delete_sampler(kernel, s_init, nb_it_max, T_max)
 
-	elif sampling_mode == "E": # Exchange S'=S-t+u
+	elif mode == "E": # Exchange S'=S-t+u
 		if s_init is None:
 			s_init = initialize_AD_and_E_sampler(kernel, size)
 		sampl = basis_exchange_sampler(kernel, s_init, nb_it_max, T_max)

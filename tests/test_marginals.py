@@ -31,7 +31,7 @@ class FollowsTheRightMarginalForSingletons(unittest.TestCase):
         # sample from the dpp
         numSamples = 100
         for _ in range(numSamples):
-            dpp.sample_exact(sampling_mode="GS")
+            dpp.sample_exact(mode="GS")
 
         # perform chi-square test
         h, bins = np.histogram([item for sublist in dpp.list_of_samples for item in sublist], bins = np.arange(N+1))
@@ -60,7 +60,7 @@ class FollowsTheRightMarginalForSingletons(unittest.TestCase):
         # sample from the dpp
         numSamples = 100
         for _ in range(numSamples):
-            dpp.sample_exact(sampling_mode="GS_bis")
+            dpp.sample_exact(mode="GS_bis")
 
         # perform chi-square test
         h, bins = np.histogram([item for sublist in dpp.list_of_samples for item in sublist], bins = np.arange(N+1))
@@ -89,7 +89,7 @@ class FollowsTheRightMarginalForSingletons(unittest.TestCase):
         # sample from the dpp
         numSamples = 100
         for _ in range(numSamples):
-            dpp.sample_exact(sampling_mode="KuTa12")
+            dpp.sample_exact(mode="KuTa12")
 
         # perform chi-square test
         h, bins = np.histogram([item for sublist in dpp.list_of_samples for item in sublist], bins = np.arange(N+1))
@@ -120,7 +120,7 @@ class FollowsTheRightMarginalForDoubletons(unittest.TestCase):
         # sample from the dpp
         numSamples = 100
         for _ in range(numSamples):
-            dpp.sample_exact(sampling_mode="GS")
+            dpp.sample_exact(mode="GS")
 
         # Sample doubletons with high likelihood and count them
         doubletons = [npr.choice(N, size=2, p=np.diag(K)/r, replace=False)
@@ -156,7 +156,7 @@ class FollowsTheRightMarginalForDoubletons(unittest.TestCase):
         # sample from the dpp
         numSamples = 100
         for _ in range(numSamples):
-            dpp.sample_exact(sampling_mode="GS_bis")
+            dpp.sample_exact(mode="GS_bis")
 
         # Sample doubletons with high likelihood and count them
         doubletons = [npr.choice(N, size=2, p=np.diag(K)/r, replace=False)
@@ -192,7 +192,7 @@ class FollowsTheRightMarginalForDoubletons(unittest.TestCase):
         # sample from the dpp
         numSamples = 100
         for _ in range(numSamples):
-            dpp.sample_exact(sampling_mode="KuTa12")
+            dpp.sample_exact(mode="KuTa12")
 
         # Sample doubletons with high likelihood and count them
         doubletons = [npr.choice(N, size=2, p=np.diag(K)/r, replace=False)
@@ -210,7 +210,7 @@ class FollowsTheRightMarginalForDoubletons(unittest.TestCase):
 
 def main():
     #suite = unittest.TestSuite()
-    #suite.addTest(FollowsTheRightMarginalForSingletonsNew("GS_bis"))# for sampling_mode in
+    #suite.addTest(FollowsTheRightMarginalForSingletonsNew("GS_bis"))# for mode in
     #unittest.TextTestRunner().run(suite)
     unittest.main()
 

@@ -4,7 +4,7 @@ import numpy as np
 import scipy.linalg as la
 import networkx as nx
 import matplotlib.pyplot as plt
-from itertools import chain, combinations
+from itertools import chain
 
 try: # Local import
 	from .exact_sampling import proj_dpp_sampler_eig_GS
@@ -16,16 +16,33 @@ except (SystemError, ImportError):
 ##############################
 
 class UST:
+	""" Uniform Spanning Tree object parametrized by
+
+		:param graph: 
+			Connected undirected graph
+
+		:type graph:
+			networkx graph
+
+		.. seealso::
+			
+			- :ref:`finite_dpps_definition`
+			- :ref:`exotic_dpps`
+	"""
 
 	def __init__(self, graph):
 		
 		self.graph = graph
+
+		self.nodes = list(self.graph.nodes())
 		self.nb_nodes = len(self.graph)
+
+		self.edges = list(self.graph.edges())
 		self.nb_edges = self.graph.number_of_edges()
 
 		self.neighbors = [list(graph.neighbors(v)) for v in range(self.nb_nodes)]
-		self.edges = list(self.graph.edges())
 		
+		self.mode = "Wilson" # sampling mode
 		self.list_of_samples = []
 
 		self.kernel = None
@@ -41,14 +58,28 @@ class UST:
 		self.list_of_samples = []
 
 	def sample(self, mode="Wilson"):
+		""" Sample exactly from Unif :class:`BetaEnsemble <BetaEnsemble>` object by computing the eigenvalues of random matrices.
+		Generates a networkx graph object.
 
-		if mode=="Wilson":
+		:param mode:
+
+			- ``'Wilson'``
+			- ``'Aldous-Broder'``
+			- ``'DPP_exact'``
+
+		:type mode:
+			string, default ``'Wilson'``
+		"""
+
+		self.mode = mode
+
+		if self.mode=="Wilson":
 			sampl = self.__wilson()
 
-		elif mode=="Aldous":
+		elif self.mode=="Aldous-Broder":
 			sampl = self.__aldous()
 
-		elif mode=="exact_finite_dpp":
+		elif self.mode=="DPP_exact":
 
 			if self.kernel_eig_vecs is None:
 				self.__compute_kernel_eig_vecs()
@@ -62,41 +93,74 @@ class UST:
 			sampl = g_finite_dpp
 
 		else:
-			raise ValueError("In valid 'sampling_mode' argument. Choose among 'Wilson', 'Aldous' or 'exact_finite_dpp'.\nGiven {}".format(sampling_mode))
+			raise ValueError("In valid 'mode' argument. Choose among 'Wilson', 'Aldous-Broder' or 'DPP_exact'.\nGiven {}".format(mode))
 
 		self.list_of_samples.append(sampl)
 		
 	def compute_kernel(self):
+		"""
+			Compute the orthogonal projection kernel :math:`\mathbf{K}` onto the row span of the vertex-edge incidence matrix, refering to the transfer current matrix.
+			In fact, one can discard any row of the vertex-edge incidence matrix (:math:`A`) to compute :math:`\mathbf{K}=A^{\top}[AA^{\top}]^{-1}A`.
+			In practice, we orthogonalize the rows of :math:`A` to get the eigenvectors :math:`U` of :math:`\mathbf{K}` and thus compute :math:`\mathbf{K}=UU^{\top}`.
+
+			.. seealso::
+
+				- :func:`plot_kernel <plot_kernel>`
+		"""
 
 		if self.kernel is None:
-			self.__compute_kernel_eig_vecs()
-			self.kernel = self.kernel_eig_vecs@self.kernel_eig_vecs.T
+			vert_edg_inc = nx.incidence_matrix(self.graph, oriented=True)
+			A = vert_edg_inc[:-1,:].toarray() # Discard any row e.g. the last one
+			self.kernel_eig_vecs, _ = la.qr(A.T, mode="economic") # Orthog rows of A
+			self.kernel = self.kernel_eig_vecs@self.kernel_eig_vecs.T # K = UU.T
 		else:
 			pass
 
-	# def compute_list_of_ST(self):
+	def plot_graph(self, title=""):
+		"""Display the original graph defining the :class:`UST` object
 
-	# 	if self.list_ST_edge_labels is None:
-	# 		potential_st = combinations(np.arange(self.nb_edges), self.nb_nodes-1)
-	# 		potential_st = np.array(list(potential_st))
+		:param title:
+			Plot title
 
-	# 		self.compute_kernel()
-	# 		is_st = lambda x: la.det(self.kernel[np.ix_(x, x)])>1e-5
-	# 		self.list_ST_edge_labels = potential_st[list(map(is_st, potential_st))]
-	# 	else:
-	# 		pass
-			
-	def __compute_kernel_eig_vecs(self):
+		:type title:
+			string
 
-		if self.kernel_eig_vecs is None:
-			A = nx.incidence_matrix(self.graph, oriented=True)[:-1,:].toarray()
-			self.kernel_eig_vecs, _ = la.qr(A.T, mode="economic")
-		else:
-			pass
+		.. seealso::
 
-	def plot_kernel(self, title="UST kernel i.e. transfer current matrix"):
+			- :func:`compute_kernel <compute_kernel>`
+		"""
 
-		if self.kernel is None: self.compute_kernel()
+		edge_lab = [r'$e_{}$'.format(i) for i in range(self.nb_edges)]
+		edge_labels = dict(zip(self.edges, edge_lab))
+		node_labels = dict(zip(self.nodes, self.nodes))
+
+		fig = plt.figure(figsize=(4,4))
+
+		nx.draw_circular(self.graph, node_color='orange', width=3)
+		pos=nx.circular_layout(self.graph)
+		nx.draw_networkx_labels(self.graph, pos, node_labels)
+		nx.draw_networkx_edge_labels(self.graph, pos, edge_labels, font_size=20)
+
+		str_title = "Original graph"
+		plt.title(title if title else str_title)
+		plt.show()
+
+
+	def plot_kernel(self, title=""):
+		"""Display a heatmap of the underlying orthogonal projection kernel :math:`\mathbf{K}` associated to the DPP underlying the :class:`UST` object
+
+		:param title:
+			Plot title
+
+		:type title:
+			string
+
+		.. seealso::
+
+			- :func:`compute_kernel <compute_kernel>`
+		"""
+
+		self.compute_kernel()
 
 		fig, ax = plt.subplots(1,1)
 
@@ -116,18 +180,32 @@ class UST:
 		ax.set_xticklabels(ticks_label, minor=False)
 		ax.set_yticklabels(ticks_label, minor=False)
 
-		plt.title(title, y=1.1)
+		str_title = "UST kernel i.e. transfer current matrix"
+		plt.title(title if title else str_title, y=1.1)
 
 		plt.colorbar(heatmap)
 		plt.show()
 
 	def plot_sample(self, title=""):
+		""" Display the last realization (spanning tree) of the corresponding :class:`UST` object.
+
+		:param title:
+			Plot title
+
+		:type title:
+			string
+
+		.. seealso::
+
+			- :func:`sample <sample>`
+		"""
 
 		graph_to_plot = self.list_of_samples[-1]
 
 		fig = plt.figure(figsize=(4,4))
 		nx.draw_circular(graph_to_plot, node_color='orange', with_labels = True)
-		plt.title(title)
+		str_title = "Uniform spanning sampled using {} algorithm".format(self.mode)
+		plt.title(title if title else str_title)
 		plt.show()
 
 	def __wilson(self, root=None):
