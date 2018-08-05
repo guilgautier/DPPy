@@ -6,8 +6,9 @@ Finite DPPs
 .. toctree::
   :maxdepth: 2
 
-  finite_dpps.definition
-  finite_dpps.properties
-  finite_dpps.exact_sampling
-  finite_dpps.mcmc_sampling
-  finite_dpps.approximate_sampling
+  definition
+  properties
+  exact_sampling
+  mcmc_sampling
+  approximate_sampling
+  api

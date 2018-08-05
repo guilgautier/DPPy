@@ -10,4 +10,5 @@ Continuous DPPs
   properties
   sampling
   beta_ensembles
+  api
 
