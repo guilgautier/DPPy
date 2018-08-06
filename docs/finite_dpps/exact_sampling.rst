@@ -138,7 +138,7 @@ Projection DPPs
 		A = np.random.randn(r, N)
 		eig_vecs, _ = la.qr(A.T, mode="economic")
 		eig_vals = np.ones(r)
-		# K = (eig_vecs*eig_vals)@eig_vecs.T
+		# K = (eig_vecs*eig_vals).dot(eig_vecs.T)
 
 		DPP = FiniteDPP("inclusion", projection=True, **{"K_eig_dec":(eig_vals, eig_vecs)})
 		# DPP = FiniteDPP("inclusion", projection=True, **{"K":K})

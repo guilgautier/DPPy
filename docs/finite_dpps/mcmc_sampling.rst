@@ -64,7 +64,7 @@ Mix of exchange and add-delete moves
 
   r, N = 4, 10
   A = np.random.randn(r, N)
-  L = A.T@A
+  L = A.T.dot(A)
   DPP = FiniteDPP("marginal", **{"L":L})
 
   DPP.sample_mcmc("AED")

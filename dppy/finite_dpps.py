@@ -493,7 +493,7 @@ class FiniteDPP:
 										"- K = U U.T")
 				print("\n".join(str_print))
 				self.eig_vecs, _ = la.qr(self.A_zono.T, mode="economic")
-				self.K = self.eig_vecs@self.eig_vecs.T
+				self.K = self.eig_vecs.dot(self.eig_vecs.T)
 
 			elif self.K_eig_vals is not None:
 				print("- U diag(eig_K) U.T")

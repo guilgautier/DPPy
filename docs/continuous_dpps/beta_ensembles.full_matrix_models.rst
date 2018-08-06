@@ -263,7 +263,7 @@ Circular Ensemble
 	.. code-block:: python
 
 		A = np.random.randn(N, N)
-		Q, R = np.linalg.qr(A)
+		Q, R = la.qr(A)
 		d = np.diagonal(R)
 		U = np.multiply(Q, d/np.abs(d), Q)
 		return eigvals(U)
@@ -288,7 +288,7 @@ Circular Ensemble
 
 		A = np.random.randn(N, N) + 1j*np.random.randn(N, N)
 		A /= np.sqrt(2.0)
-		Q, R = np.linalg.qr(A)
+		Q, R = la.qr(A)
 		d = np.diagonal(R)
 		U = np.multiply(Q, d/np.abs(d), Q)
 		return eigvals(U)

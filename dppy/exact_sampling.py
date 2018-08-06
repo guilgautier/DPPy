@@ -577,7 +577,7 @@ def proj_dpp_sampler_eig_KuTa12(eig_vecs, size=None):
 		# Cancel the contribution of the remaining vectors along e_i, but stay in the subspace spanned by V i.e. get the subspace of V orthogonal to \{e_i ; i \in Y\}
 		V -= np.outer(V[:,j]/V[i,j], V[i,:])
 		# V_:j is set to 0 so we delete it and we can derive an orthononormal basis of the subspace under consideration
-		V, _ = np.linalg.qr(np.delete(V, j, axis=1))
+		V, _ = la.qr(np.delete(V, j, axis=1),  mode="economic")
 
 		norms_2 = np_inner1d(V, V)
 		# Pick an item

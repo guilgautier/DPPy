@@ -196,7 +196,7 @@ def jacobi_sampler_full(M_1, M_2, N, beta=2):
 	X_tmp = X.dot(X.conj().T)
 	Y_tmp = Y.dot(Y.conj().T)
 
-	return la.eigvals(X_tmp.dot(np.linalg.inv(X_tmp + Y_tmp))).real
+	return la.eigvals(X_tmp.dot(la.inv(X_tmp + Y_tmp))).real
 
 ## Jacobi, tridiagonal model
 def jacobi_sampler_tridiag(M_1, M_2, N, beta=2):
@@ -338,8 +338,8 @@ def circular_sampler_full(N, beta=2, haar_mode="QR"):
 							"Only beta = 1, 2 are available.\n"
 							"Given {}".format(beta))
 
-		#U, _ = np.linalg.qr(A)
-		Q, R = np.linalg.qr(A)
+		#U, _ = la.qr(A)
+		Q, R = la.qr(A)
 		d = np.diagonal(R)
 		U = np.multiply(Q, d/np.abs(d), Q)
 
@@ -386,7 +386,7 @@ def mu_ref_unif_unit_circle_sampler_quindiag(beta=2, size=10):
 	# xi_N-1 = [alpha_N-1.conj()] i.e.
 	# conjugate of a point uniformly distributed on the unit circle
 	vec_N_1 = np.random.randn(2)
-	vec_N_1 /= np.linalg.norm(vec_N_1)
+	vec_N_1 /= la.norm(vec_N_1)
 	xi_N_1 = np.array([vec_N_1[0]-1j*vec_N_1[1]], ndmin=2, dtype=np.complex_)
 
 	nu_s = beta*np.arange(size-1, 0, step=-1, dtype=int) + 1
@@ -395,7 +395,7 @@ def mu_ref_unif_unit_circle_sampler_quindiag(beta=2, size=10):
 
 		# Pick a point on the unit sphere S^nu in R^nu+1
 		vec = np.random.randn(nu+1)
-		vec /= np.linalg.norm(vec)
+		vec /= la.norm(vec)
 
 		alpha = vec[0] + 1j* vec[1]
 		rho = np.sqrt(1-np.abs(alpha)**2)

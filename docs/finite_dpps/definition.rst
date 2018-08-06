@@ -77,7 +77,7 @@ where the dagger means "conjugate transpose". For the definition via marginal pr
 
 	r, N = 4, 10
 	Phi = np.random.randn(r, N)
-	L = Phi.T@Phi
+	L = Phi.T.dot(Phi)
 	DPP = FiniteDPP("marginal", **{"L":L})
 
 	print(DPP)
@@ -96,7 +96,7 @@ where the dagger means "conjugate transpose". For the definition via marginal pr
 
 		r, N = 4, 10
 		A = np.random.randn(r, N)
-		K = A.T@la.inv(A@A.T)@A
+		K = A.T.dot(la.inv(A.dot(A.T)).dot(A))
 		proj_DPP = FiniteDPP("inclusion", projection=True, **{"K":K})
 		
 		print(proj_DPP)

@@ -112,7 +112,7 @@ class UST:
 			vert_edg_inc = nx.incidence_matrix(self.graph, oriented=True)
 			A = vert_edg_inc[:-1,:].toarray() # Discard any row e.g. the last one
 			self.kernel_eig_vecs, _ = la.qr(A.T, mode="economic") # Orthog rows of A
-			self.kernel = self.kernel_eig_vecs@self.kernel_eig_vecs.T # K = UU.T
+			self.kernel = self.kernel_eig_vecs.dot(self.kernel_eig_vecs.T) # K = UU.T
 		else:
 			pass
 
