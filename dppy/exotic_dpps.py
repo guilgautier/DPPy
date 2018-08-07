@@ -136,14 +136,17 @@ class UST:
 
 		fig = plt.figure(figsize=(4,4))
 
-		nx.draw_circular(self.graph, node_color='orange', width=3)
 		pos=nx.circular_layout(self.graph)
+		nx.draw_networkx(self.graph, pos=pos, node_color='orange', 
+			with_labels = True, width=3)
 		nx.draw_networkx_labels(self.graph, pos, node_labels)
 		nx.draw_networkx_edge_labels(self.graph, pos, edge_labels, font_size=20)
 
+		plt.axis('off')
+
 		str_title = "Original graph"
 		plt.title(title if title else str_title)
-		plt.show()
+		# plt.savefig("original_graph.eps")
 
 
 	def plot_kernel(self, title=""):
@@ -181,10 +184,10 @@ class UST:
 		ax.set_yticklabels(ticks_label, minor=False)
 
 		str_title = "UST kernel i.e. transfer current matrix"
-		plt.title(title if title else str_title, y=1.1)
+		plt.title(title if title else str_title, y=1.08)
 
 		plt.colorbar(heatmap)
-		plt.show()
+		# plt.savefig("kernel.png")
 
 	def plot_sample(self, title=""):
 		""" Display the last realization (spanning tree) of the corresponding :class:`UST` object.
@@ -203,10 +206,16 @@ class UST:
 		graph_to_plot = self.list_of_samples[-1]
 
 		fig = plt.figure(figsize=(4,4))
-		nx.draw_circular(graph_to_plot, node_color='orange', with_labels = True)
-		str_title = "Uniform spanning sampled using {} algorithm".format(self.mode)
+		
+		pos=nx.circular_layout(graph_to_plot)
+		nx.draw_networkx(graph_to_plot, pos=pos, node_color='orange', 
+			with_labels = True)
+		plt.axis('off')
+		
+		str_title = "UST with {} algorithm".format(self.mode)
 		plt.title(title if title else str_title)
-		plt.show()
+
+		# plt.savefig("sample_{}_{}.eps".format(self.mode,len(self.list_of_samples)))
 
 	def __wilson(self, root=None):
 

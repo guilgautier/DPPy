@@ -20,7 +20,38 @@ Carries process
 Uniform spanning trees
 **********************
 
-.. plot:: plots/ex_plot_ust.py
+.. code-block:: python
+
+	from exotic_dpps import *
+
+	# Build graph
+	g = nx.Graph()
+	edges = [(0,2), (0,3), (1,2), (1,4), (2,3), (2,4), (3,4)]
+	g.add_edges_from(edges)
+
+	# Initialize UST object
+	ust = UST(g)
+	# Display original graph
+	ust.plot_graph()
+	# Display some samples
+	for md in ("Aldous-Broder", "Wilson", "DPP_exact"):
+	    ust.sample(md); ust.plot_sample()
+	# Display underlyin kernel i.e. transfer current matrix
+	ust.plot_kernel()
+
+.. image:: ../_images/original_graph.png
+   :width: 45%
+.. image:: ../_images/kernel.png
+   :width: 45%
+
+.. image:: ../_images/sample_Wilson.png
+   :width: 30%
+.. image:: ../_images/sample_Aldous-Broder.png
+   :width: 30%
+.. image:: ../_images/sample_DPP_exact.png
+   :width: 30%
+
+.. image:: ../_images/ust_histo.png
 
 .. seealso::
 
