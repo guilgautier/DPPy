@@ -301,22 +301,111 @@ class UST:
 
 		return aldous_tree_graph
 
+class CarriesProcess:
 
-###################
-# Carries process #
-###################
+	def __init__(self, base=10):
 
-def carries_process(N, b=10):
+		self.base = base 
+		self.bernoulli_param = 0.5*(1-1/self.base)
+		self.list_of_samples = []
 
-	A = np.random.randint(0, b-1, N)
-	B = np.mod(np.cumsum(A), b)
+		# self.kernel = None
+		# self.kernel_eig_vecs = None
 
-	X = np.zeros(N, dtype=bool)
-	X[1:] = B[1:] < B[:-1]
+	def flush_samples(self):
+		""" Empty the ``UST.list_of_samples`` attribute.
+		"""
+		self.list_of_samples = []
 
-	carries = np.arange(0, N)[X]
+	def sample(self, size=100):
 
-	return carries
+		A = np.random.randint(0, b-1, N)
+		B = np.mod(np.cumsum(A), b)
+
+		X = np.zeros(N, dtype=bool)
+		X[1:] = B[1:] < B[:-1]
+
+		carries = np.arange(0, N)[X]
+
+		self.list_of_samples.append(carries)
+
+	def plot_carries(self, title=""):
+
+		carries = list_of_samples[-1]
+		size = len(carries)
+
+		# Display Carries and Bernoullis
+		fig, ax = plt.subplots(figsize=(17,2))
+
+		ax.scatter(carries, np.zeros(size), color='r', s=20, label='Carries')
+
+		# Spine options
+		ax.spines['bottom'].set_position('center')
+		ax.spines['left'].set_visible(False)
+		ax.spines['top'].set_visible(False)
+		ax.spines['right'].set_visible(False)
+
+		# Ticks options
+		minor_ticks = np.arange(0, size+1)                                            
+		major_ticks = np.arange(0, size+1, 20)                                               
+		ax.set_xticks(major_ticks)                                                       
+		ax.set_xticks(minor_ticks, minor=True)
+		ax.set_xticklabels(major_ticks, fontsize=15)
+		ax.xaxis.set_ticks_position('bottom')
+
+		ax.tick_params(
+		    axis='y',				# changes apply to the y-axis
+		    which='both',		# both major and minor ticks are affected
+		    left=False,			# ticks along the left edge are off
+		    right=False,		# ticks along the right edge are off
+		    labelleft=False)# labels along the left edge are off
+
+		ax.xaxis.grid(True)
+		ax.set_xlim([-1,101])
+		ax.legend(bbox_to_anchor=(0,0.85), frameon=False, prop={'size':20})
+
+		plt.show()
+
+	def plot_carries_vs_bernoullis(self, title=""):
+
+		carries = list_of_samples[-1]
+		size = len(carries)
+
+		ind_tmp = np.random.rand(size) < self.bernoulli_param
+		bernoullis = np.arange(0, size)[ind_tmp]
+
+		# Display Carries and Bernoullis
+		fig, ax = plt.subplots(figsize=(17,2))
+
+		ax.scatter(carries, np.ones(size), color='r', s=20, label='Carries')
+		ax.scatter(bernoullis, -np.ones(size), color='b', s=20, label='Bernoullis')
+
+		# Spine options
+		ax.spines['bottom'].set_position('center')
+		ax.spines['left'].set_visible(False)
+		ax.spines['top'].set_visible(False)
+		ax.spines['right'].set_visible(False)
+
+		# Ticks options
+		minor_ticks = np.arange(0, size+1)                                            
+		major_ticks = np.arange(0, size+1, 20)                                               
+		ax.set_xticks(major_ticks)                                                       
+		ax.set_xticks(minor_ticks, minor=True)
+		ax.set_xticklabels(major_ticks, fontsize=15)
+		ax.xaxis.set_ticks_position('bottom')
+
+		ax.tick_params(
+		    axis='y',				# changes apply to the y-axis
+		    which='both',		# both major and minor ticks are affected
+		    left=False,			# ticks along the left edge are off
+		    right=False,		# ticks along the right edge are off
+		    labelleft=False)# labels along the left edge are off
+
+		ax.xaxis.grid(True)
+		ax.set_xlim([-1,101])
+		ax.legend(bbox_to_anchor=(0,0.85), frameon=False, prop={'size':20})
+
+		plt.show()
 
 ################
 # Permutations #
