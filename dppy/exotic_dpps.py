@@ -5,6 +5,7 @@ import scipy.linalg as la
 import networkx as nx
 import matplotlib.pyplot as plt
 from itertools import chain
+from bisect import bisect_right
 
 try: # Local import
 	from .exact_sampling import proj_dpp_sampler_eig_GS
@@ -27,7 +28,7 @@ class UST:
 		.. seealso::
 			
 			- :ref:`finite_dpps_definition`
-			- :ref:`exotic_dpps`
+			- :ref:`UST`
 	"""
 
 	def __init__(self, graph):
@@ -302,42 +303,77 @@ class UST:
 		return aldous_tree_graph
 
 class CarriesProcess:
+	""" Carries process formed by the cumulative sum of i.i.d. digits in :math:`[0, b-1]`. This is a DPP on the natural integers with a non symmetric kernel.
+
+		:param base: 
+			Base/radix
+
+		:type base:
+			int, default 10
+
+		.. seealso::
+
+			- :cite:`BoDiFu09`
+			- :ref:`carries_process`
+	"""
 
 	def __init__(self, base=10):
 
 		self.base = base 
 		self.bernoulli_param = 0.5*(1-1/self.base)
 		self.list_of_samples = []
+		self.size = 100
 
 		# self.kernel = None
 		# self.kernel_eig_vecs = None
 
 	def flush_samples(self):
-		""" Empty the ``UST.list_of_samples`` attribute.
+		""" Empty the ``CarriesProcess.list_of_samples`` attribute.
 		"""
 		self.list_of_samples = []
 
 	def sample(self, size=100):
+		""" Compute the cumulative sum (in base :math:`b`) of a sequence of i.i.d. digits and record the position of carries.
 
-		A = np.random.randint(0, b-1, N)
-		B = np.mod(np.cumsum(A), b)
+			:param size:
+				size of the sequence of i.i.d. digits in :math:`[0, b-1]`
 
-		X = np.zeros(N, dtype=bool)
+			:type size:
+				int
+		"""
+
+		self.size = size
+		A = np.random.randint(0, self.base-1, self.size)
+		B = np.mod(np.cumsum(A), self.base)
+
+		X = np.zeros(size, dtype=bool)
 		X[1:] = B[1:] < B[:-1]
 
-		carries = np.arange(0, N)[X]
+		carries = np.arange(0, self.size)[X]
 
 		self.list_of_samples.append(carries)
 
 	def plot_carries(self, title=""):
+		"""Display the process on the real line
 
-		carries = list_of_samples[-1]
-		size = len(carries)
+		:param title:
+			Plot title
+
+		:type title:
+			string
+
+		.. seealso::
+
+			- :func:`sample <sample>`
+		"""
+
+		carries = self.list_of_samples[-1]
+		len_car = len(carries)
 
 		# Display Carries and Bernoullis
-		fig, ax = plt.subplots(figsize=(17,2))
+		fig, ax = plt.subplots(figsize=(19,2))
 
-		ax.scatter(carries, np.zeros(size), color='r', s=20, label='Carries')
+		ax.scatter(carries, np.zeros(len_car), color='blue', s=20, label='Carries')
 
 		# Spine options
 		ax.spines['bottom'].set_position('center')
@@ -346,8 +382,8 @@ class CarriesProcess:
 		ax.spines['right'].set_visible(False)
 
 		# Ticks options
-		minor_ticks = np.arange(0, size+1)                                            
-		major_ticks = np.arange(0, size+1, 20)                                               
+		minor_ticks = np.arange(0, self.size+1)                                            
+		major_ticks = np.arange(0, self.size+1, 20)                                               
 		ax.set_xticks(major_ticks)                                                       
 		ax.set_xticks(minor_ticks, minor=True)
 		ax.set_xticklabels(major_ticks, fontsize=15)
@@ -364,21 +400,36 @@ class CarriesProcess:
 		ax.set_xlim([-1,101])
 		ax.legend(bbox_to_anchor=(0,0.85), frameon=False, prop={'size':20})
 
+		str_title = r"Realization of the carries process in base $b=${}".format(self.base)
+		plt.title(title if title else str_title)
 		plt.show()
 
 	def plot_carries_vs_bernoullis(self, title=""):
+		"""Display the process on the real line and compare it to a sequence of i.i.d. Bernoullis with parameter :math:`\\frac12(1-\\frac1b)`
 
-		carries = list_of_samples[-1]
-		size = len(carries)
+		:param title:
+			Plot title
 
-		ind_tmp = np.random.rand(size) < self.bernoulli_param
-		bernoullis = np.arange(0, size)[ind_tmp]
+		:type title:
+			string
+
+		.. seealso::
+
+			- :func:`sample <sample>`
+		"""
+
+		carries = self.list_of_samples[-1]
+		len_car = len(carries)
+
+		ind_tmp = np.random.rand(self.size) < self.bernoulli_param
+		bern = np.arange(0, self.size)[ind_tmp]
+		len_ber = len(bern)
 
 		# Display Carries and Bernoullis
-		fig, ax = plt.subplots(figsize=(17,2))
+		fig, ax = plt.subplots(figsize=(19,2))
 
-		ax.scatter(carries, np.ones(size), color='r', s=20, label='Carries')
-		ax.scatter(bernoullis, -np.ones(size), color='b', s=20, label='Bernoullis')
+		ax.scatter(carries, np.ones(len_car), color='b', s=20, label='Carries')
+		ax.scatter(bern, -np.ones(len_ber), color='r', s=20, label='Bernoullis')
 
 		# Spine options
 		ax.spines['bottom'].set_position('center')
@@ -387,8 +438,8 @@ class CarriesProcess:
 		ax.spines['right'].set_visible(False)
 
 		# Ticks options
-		minor_ticks = np.arange(0, size+1)                                            
-		major_ticks = np.arange(0, size+1, 20)                                               
+		minor_ticks = np.arange(0, self.size+1)                                            
+		major_ticks = np.arange(0, self.size+1, 20)                                               
 		ax.set_xticks(major_ticks)                                                       
 		ax.set_xticks(minor_ticks, minor=True)
 		ax.set_xticklabels(major_ticks, fontsize=15)
@@ -405,55 +456,137 @@ class CarriesProcess:
 		ax.set_xlim([-1,101])
 		ax.legend(bbox_to_anchor=(0,0.85), frameon=False, prop={'size':20})
 
+		str_title = r"Realization of the carries process in base $b=${} and independent Bernoullis with parameter {}".format(self.base, r"$0.5(1-1/b)={}$".format(self.bernoulli_param))
+		plt.title(title if title else str_title)
 		plt.show()
 
 ################
 # Permutations #
 ################
 
-def unif_permutation(N):
+class PoissonizedPlancherel:
+	""" Poissonized Plancherel measure
 
-	N=10
-	tmp = np.arange(N)
-	for i in range(N-1,1,-1):
-			j = np.random.randint(0, i+1)
-			tmp[j], tmp[i] = tmp[i], tmp[j]
+		:param theta: 
+			Base/radix
 
-	return tmp
+		:type theta:
+			int, default 10
 
-### RSK
-def RSK(sigma):
-	"""Perform Robinson-Schensted-Knuth correspondence on a sequence of reals, e.g. a permutation
+		.. seealso::
+
+			- :cite:`Bor09` Section 6
+		 	- :ref:`poissonized_plancherel_measure`
 	"""
 
-	P, Q = [], [] # Insertion/Recording tableaux
+	def __init__(self, theta=10):
 
-	# Enumerate the sequence
-	for it, x in enumerate(sigma):
+		self.theta = theta # Poisson param setting the length of the permutation
+		self.list_of_samples = []
 
-		# Iterate along the rows of the tableau P
-		# to find a place for the bouncing x and
-		# record the position where it is inserted
-		for row_P, row_Q in zip(P,Q):
+	def sample(self):
+		""" Sample from the Poissonized Plancherel measure and build the associated process.
+		"""
 
-			# In case x finds a place at the end of a row of P
-			# Add it and record its position to the row of Q
-			if x >= row_P[-1]:
-				row_P.append(x); row_Q.append(it+1)
-				break
+		N = np.random.poisson(self.theta)
+		sigma = self.__unif_permutation(N)
+		P, _ = self.__RSK(sigma)
+		sampl = [len(row)-i+0.5 for i, row in enumerate(P)]
+		self.list_of_samples.append(sampl)
 
-			# Otherwise find the place where x must be added
-			# to keep the row ordered
-			ind_insert = bisect_right(row_P, x)
-			# Swap x with
-			x, row_P[ind_insert] = row_P[ind_insert], x
+	def __unif_permutation(self, N):
 
-		# In case the bouncing x cannot find a place at the end of a row of P
-		# Create a new row and save
-		else:
-			P.append([x]); Q.append([it+1])
+		tmp = np.arange(N)
+		for i in range(N-1, 1, -1):
+				j = np.random.randint(0, i+1)
+				tmp[j], tmp[i] = tmp[i], tmp[j]
 
-	return P, Q, len(P[0])
+		return tmp
+
+	def __RSK(self, sigma, len_1st_row=True):
+		"""Perform Robinson-Schensted-Knuth correspondence on a sequence of reals, e.g. a permutation
+		"""
+
+		P, Q = [], [] # Insertion/Recording tableaux
+
+		# Enumerate the sequence
+		for it, x in enumerate(sigma):
+
+			# Iterate along the rows of the tableau P to find a place for the bouncing x and record the position where it is inserted
+			for row_P, row_Q in zip(P,Q):
+
+				# In case x finds a place at the end of a row of P add it and record its position to the row of Q
+				if x >= row_P[-1]:
+					row_P.append(x); row_Q.append(it+1)
+					break
+
+				# Otherwise find the place where x must be added to keep the row ordered
+				ind_insert = bisect_right(row_P, x)
+				# Swap x with
+				x, row_P[ind_insert] = row_P[ind_insert], x
+
+			# In case the bouncing x cannot find a place at the end of a row of P create a new row and save
+			else:
+				P.append([x]); Q.append([it+1])
+
+		return P, Q
+
+	def plot(self, title=""):
+		"""Display the process on the real line
+
+		:param title:
+			Plot title
+
+		:type title:
+			string
+
+		.. seealso::
+
+			- :func:`sample <sample>`
+		"""
+
+		ppDPP = self.list_of_samples[-1]
+		len_pp = len(ppDPP)
+
+		# Display the reparametrized Plancherel sample
+		fig, ax = plt.subplots(figsize=(19,2))
+
+		ax.scatter(ppDPP, np.zeros(len_pp), color='blue', s=20)
+
+		# Spine options
+		ax.spines['bottom'].set_position('center')
+		ax.spines['left'].set_visible(False)
+		ax.spines['top'].set_visible(False)
+		ax.spines['right'].set_visible(False)
+
+		# Ticks options
+
+		end_ax = np.max(np.abs(ppDPP))+0.5
+		minor_ticks = np.arange(-end_ax, end_ax+1)                                            
+		major_ticks = np.arange(-100, 100+1, 10)                                               
+		ax.set_xticks(major_ticks)                                                       
+		ax.set_xticks(minor_ticks, minor=True)
+		ax.set_xticklabels(major_ticks, fontsize=15)
+		ax.xaxis.set_ticks_position('bottom')
+
+		ax.tick_params(
+		    axis='y',				# changes apply to the y-axis
+		    which='both',		# both major and minor ticks are affected
+		    left=False,			# ticks along the left edge are off
+		    right=False,		# ticks along the right edge are off
+		    labelleft=False)# labels along the left edge are off
+
+		ax.xaxis.grid(True)
+		ax.set_xlim([-end_ax-2, end_ax+2])
+		# ax.legend(bbox_to_anchor=(0,0.85), frameon=False, prop={'size':20})
+
+		str_title = r"Realization of the DPP associated to the poissonized Plancherel measure with parameter $\theta=${}".format(self.theta)
+		plt.title(title if title else str_title)
+		plt.show()
+
+
+
+
 
 
 

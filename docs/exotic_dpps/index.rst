@@ -3,35 +3,6 @@
 Exotic DPPs
 ###########
 
-.. _carries_process:
-
-Carries process
-***************
-
-Recording the carries appearing when computing the cumulative sum of a sequence independent random integers
-
-.. code-block:: python
-
-	b, N = 10, 100 # base, length of the sequence
-
-	A = np.random.randint(0, b-1, N) # Draw random digits in [0, b-1]
-	B = np.mod(np.cumsum(A), b) # Record first digit in cumulative sum 
-
-	# Record the carries using the digit descent process
-	X = np.zeros(N, dtype=bool)
-	X[1:] = B[1:] < B[:-1] 
-
-	carries = np.arange(0, N)[X] # in
-
-	bernoullis = np.random.rand(N) < 0.5*(1-1/p)
-
-.. plot:: plots/ex_plot_carries_process.py
-
-..	seealso::
-
-	:cite:`BoDiFu09`
-
-
 .. _UST:
 
 Uniform Spanning Trees
@@ -78,18 +49,46 @@ In fact, one can discard any row of the vertex-edge incidence matrix say :math:`
 
  :ref:`exotic_dpps_api`
 
+.. todo::
 
-.. _RSK:
+	Add references Wilson, Aldous-Broder
 
-RSK
-***
 
-.. _non_intersecting_RW:
+.. _carries_process:
 
-Non intersecting random walks
-*****************************
+Carries process
+***************
 
-cf Dyson Brownian motion
+The sequence of carries appearing when computing the cumulative sum (in base :math:`b`) of a sequence of i.i.d. digits forms a DPP on :math:`\mathbb{N}` with non symmetric kernel.
+
+.. plot:: plots/ex_plot_carries_process.py
+
+..	seealso::
+
+	:cite:`BoDiFu09`
+
+
+
+.. _poissonized_plancherel_measure:
+
+Poissonized Plancherel measure
+******************************
+
+The poissonized Plancherel measure is a measure on partitions :math:`\lambda=(\lambda_1 \geq \lambda_2 \geq \cdots \geq 0)\in \mathbb{N}^{\mathbb{N}^*}`.
+Samples from this measure can be obtained by:
+
+- Sampling :math:`N \sim \mathcal{P}(\theta)`
+- Sampling a uniform permutation :math:`\sigma\in \mathfrak{S}_N`
+- Computing the sorting tableau :math:`P` associated to the RSK (`Robinson-Schensted-Knuth correspondence <https://en.wikipedia.org/wiki/Robinson%E2%80%93Schensted%E2%80%93Knuth_correspondence>`_) applied to :math:`\sigma`
+- Considering only the shape :math:`\lambda` of :math:`P`.
+
+Finally, the point process formed by :math:`\{\lambda_i - i + \frac12\}_{i\geq 1}` is a DPP on :math:`\mathbb{Z}+\frac12`.
+
+.. plot:: plots/ex_plot_poissonized_plancherel.py
+
+.. seealso::
+
+	- :cite:`Bor09` Section 6
 
 .. _exotic_dpps_api:
 
@@ -103,4 +102,10 @@ API
 .. currentmodule:: exotic_dpps
 
 .. autoclass:: UST
+	:members:
+
+.. autoclass:: CarriesProcess
+	:members:
+
+.. autoclass:: PoissonizedPlancherel
 	:members:
