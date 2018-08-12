@@ -53,13 +53,32 @@ class UST:
 		#degrees = [g.degree(v) for v in nodesices]
 		#transition_proba = [[1./deg]*deg for deg in degrees]
 
+	def __str__(self):
+
+		str_info = ["Uniform Spanning Tree measure on a graph with:",
+								"- {} nodes",
+								"- {} edges",
+								"Sampling mode = {}.",
+								"Number of samples = {}."]
+
+		return "\n".join(str_info).format(
+									self.nb_nodes,
+									self.nb_edges
+									self.mode,
+									len(self.list_of_samples))
+
+	def info(self):
+		""" Print infos about the :class:`UST` object
+		"""
+		print(self.__str__())
+
 	def flush_samples(self):
 		""" Empty the ``UST.list_of_samples`` attribute.
 		"""
 		self.list_of_samples = []
 
 	def sample(self, mode="Wilson"):
-		""" Sample exactly from Unif :class:`BetaEnsemble <BetaEnsemble>` object by computing the eigenvalues of random matrices.
+		""" Sample exactly from Unif :class:`UST <UST>` object by computing the eigenvalues of random matrices.
 		Generates a networkx graph object.
 
 		:param mode:
@@ -327,6 +346,19 @@ class CarriesProcess:
 		# self.kernel = None
 		# self.kernel_eig_vecs = None
 
+	def __str__(self):
+		
+		str_info = ["Carries process in base {}",
+								"Number of samples = {}."]
+
+		return "\n".join(str_info).format(self.base,
+																			len(self.list_of_samples))
+
+	def info(self):
+		""" Print infos about the :class:`UST` object
+		"""
+		print(self.__str__())
+
 	def flush_samples(self):
 		""" Empty the ``CarriesProcess.list_of_samples`` attribute.
 		"""
@@ -483,6 +515,18 @@ class PoissonizedPlancherel:
 
 		self.theta = theta # Poisson param setting the length of the permutation
 		self.list_of_samples = []
+
+	def __str__(self):
+
+		str_info = ["Poissonized Plancherel measure with parameter {}",
+								"Number of samples = {}."]
+
+		return "\n".join(str_info).format(self.theta, len(self.list_of_samples))
+
+	def info(self):
+		""" Print infos about the :class:`UST` object
+		"""
+		print(self.__str__())
 
 	def sample(self):
 		""" Sample from the Poissonized Plancherel measure and build the associated process.
