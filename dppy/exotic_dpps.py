@@ -89,6 +89,11 @@ class UST:
 
 		:type mode:
 			string, default ``'Wilson'``
+
+		.. seealso::
+
+			- Wilson algorithm :cite:`PrWi98`
+			- Aldous-Broder :cite:`Ald90`
 		"""
 
 		self.mode = mode

@@ -45,13 +45,13 @@ In fact, one can discard any row of the vertex-edge incidence matrix say :math:`
 
 .. image:: ../_images/ust_histo.png
 
+
 .. seealso::
 
- :ref:`exotic_dpps_api`
-
-.. todo::
-
-	Add references Wilson, Aldous-Broder
+	- :ref:`exotic_dpps_api`
+	- Wilson algorithm :cite:`PrWi98`
+	- Aldous-Broder :cite:`Ald90`
+	- :cite:`Lyo02`
 
 
 .. _carries_process:

@@ -3,14 +3,13 @@
 Exact sampling
 **************
 
-The procedure stems from the fact that :ref:`finite_dpps_mixture`, suggesting the following two steps algorithm given the spectral decomposition of the inclusion kernel :math:`\mathbf{K}`
+The procedure stems from the fact that :ref:`generic DPPs are mixtures of projection DPPs <finite_dpps_mixture>`, suggesting the following two steps algorithm given the spectral decomposition of the inclusion kernel :math:`\mathbf{K}`
 
 .. math::
 
 	\mathbf{K} = \sum_{n=1}^{N} \lambda_n u_n u_n^{\dagger}
 
-1. Subsample the set of eigenvectors by drawing independent Bernoulli variables :math:`\mathcal{B}(\lambda_n)` and store the selected vectors in :math:`\tilde{U}`.
-
+1. Draw independent :math:`\operatorname{\mathcal{B}er}(\lambda_n)` for each eigenvector :math:`u_n` and store the selected ones in :math:`\tilde{U}`.
 2. Sample from the corresponding *projection* :math:`\operatorname{DPP}(\tilde{U}\tilde{U}^{\top})`.
 
 :cite:`HKPV06` Algorithm 18 gives the procedure for sampling *projection* DPPs. It is based on the chain rule and the geometrical interpretations are reflected through the conditionals.
@@ -157,6 +156,7 @@ Projection DPPs
 		- :cite:`Gil14` Algorithm 2, for the :math:`\mathcal{O}(N r^2)` implementation
 		- :cite:`TrBaAm18` Algorithm 3, for a technical report on DPP sampling
 		- :cite:`LaGaDe18` for a different perspective on exact sampling using Cholesky decomposition instead of the spectral decomposition
+		- :ref:`UST`
 
 
 	.. attention::

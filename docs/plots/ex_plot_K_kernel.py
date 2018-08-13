@@ -15,4 +15,4 @@ print(DPP)
 # - sampling mode = None
 # - number of samples = 0
 
-DPP.plot()
+DPP.plot_kernel()

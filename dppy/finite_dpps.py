@@ -569,7 +569,7 @@ class FiniteDPP:
 
 
 
-	def plot(self, title=""):
+	def plot_kernel(self, title=""):
 		"""Display a heatmap of the kernel used to define the :class:`FiniteDPP` object (inclusion kernel :math:`\mathbf{K}` or marginal kernel :math:`\mathbf{L}`)
 
 		:param title:

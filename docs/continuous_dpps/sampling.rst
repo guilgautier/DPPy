@@ -9,16 +9,55 @@ Exact sampling
 Chain rule
 ----------
 
-.. important::
+The procedure stems from the fact that :ref:`generic DPPs are mixtures of projection DPPs <continuous_dpps_mixture>`, suggesting the following two steps algorithm given the spectral decomposition of the kernel
 
-	In the same vein as the finite case, the spectral decomposition of the kernel is required for applying the chain rule to sample generic continuous DPPs.
+.. math::
 
-The chain rule still applies except that now conditionals have a density and it becomes tricky to sample from them.
-One could use rejection sampling but a good proposal is difficult to tailor, the acceptance rate that is difficult to control.
+	K(x,y)=\sum_{i=1}^{\infty} \lambda_i \phi_i(x) \overline{\phi_i(y)}
+
+1. Draw :math:`B_i\sim\operatorname{\mathcal{B}er}(\lambda_i)` independently and note :math:`\{i_1,\dots,i_{N}\} = \{i~;~B_i=1\}`.
+2. Sample from the *projection* DPP with kernel :math:`\tilde{K}(x,y) = \sum_{n=1}^{N}\phi_{i_n}(x) \overline{\phi_{i_n}(y)}`.
+
+
+The remaining question of sampling from \textit{projection} DPPs is addressed by Algorithm 18 :cite:`HKPV06`.
+It based on the chain rule and the fact that \textit{projection} :math:`\operatorname{DPP}(\tilde{K})` generates configurations of
+:math:`N=\operatorname{Tr} \tilde{K}` :ref:`points almost surely <continuous_dpps_number_of_points>`.
+In the first phase each point :math:`x\in \mathbb{X}` is associated to the random feature vector :math:`\Phi(x)=(\phi_{i_1}(x),\dots,\phi_{i_N}(x))`, therefore :math:`\tilde{K}(x,y) = \Phi(y)^{\dagger} \Phi(x)`.
+
+In this setting, the joint distribution of :math:`(X_1,\dots,X_N)` reads
+
+
+.. math::
+
+  \frac{1}{N!} \det \left[K(x_m,x_n)\right]_{m,n=1}^N \prod_{n=1}^N\mu(d x_n)
+    = \frac{1}{N!} \operatorname{Vol}^2\{\Phi(x_1),\dots,\Phi(x_n)\} \prod_{n=1}^N\mu(d x_n)
+
+so that the conditional densities appearing in the chain rule are ratios of 2 determinants that can be expressed as
+
+.. math::
+
+  g_1(x)           &= \frac{1}{N} \|\phi(x)\|^2
+                   = \frac{1}{N} K(x,x) \\
+  g_{n | 1:n-1}(x) &= \frac{1}{N-(n-1)}
+                      \| \Pi_{H_{n-1}^{\perp}} \phi(x) \|^2 \\
+                   &= \frac{1}{N-(n-1)}
+                      \left[
+	                      K(x,x) 
+	                      - \overline{K(x,x_{1:n-1})}
+	                      \left[\left[K(x_k,x_l)\right]_{k,l=1}^{n-1}\right]^{-1} 
+	                      K(x_{1:n-1},x)
+                      \right]
+
+.. caution::
+
+	On the one hand, like in the finite case, the eigendecomposition of the kernel is required.
+	On the other hand, conditionals have now a density.
+	One could use rejection sampling but finding good proposals is a challenging problem, the acceptance rate that is difficult to control.
 
 .. seealso::
 
-	Algorithm 18 :cite:`HKPV06`
+	- Algorithm 18 :cite:`HKPV06`
+	- :ref:`beta_ensembles_definition_OPE`
 
 Perfect sampling
 ----------------
