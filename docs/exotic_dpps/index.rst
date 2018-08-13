@@ -27,7 +27,7 @@ In fact, one can discard any row of the vertex-edge incidence matrix say :math:`
 	ust.plot_graph()
 	# Display some samples
 	for md in ("Wilson", "Aldous-Broder", "DPP_exact"):
-	    ust.sample(md); ust.plot_sample()
+	    ust.sample(md); ust.plot()
 	# Display underlyin kernel i.e. transfer current matrix
 	ust.plot_kernel()
 
@@ -65,7 +65,7 @@ The sequence of carries appearing when computing the cumulative sum (in base :ma
 
 ..	seealso::
 
-	:cite:`BoDiFu09`
+	:cite:`BoDiFu10`
 
 
 

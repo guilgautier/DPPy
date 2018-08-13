@@ -3,7 +3,7 @@
 Bibliography
 ############
 
-.. bibliography:: biblio.bib
+.. bibliography:: biblio_new.bib
 	:encoding: latin
 	:style: alpha
 	:all:	

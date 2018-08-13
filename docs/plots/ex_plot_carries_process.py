@@ -6,4 +6,4 @@ cp = CarriesProcess(base)
 size = 100
 cp.sample(size)
 
-cp.plot_carries_vs_bernoullis()
+cp.plot_vs_bernoullis()

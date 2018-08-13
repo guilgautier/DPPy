@@ -63,7 +63,7 @@ class UST:
 
 		return "\n".join(str_info).format(
 									self.nb_nodes,
-									self.nb_edges
+									self.nb_edges,
 									self.mode,
 									len(self.list_of_samples))
 
@@ -135,6 +135,34 @@ class UST:
 			self.kernel = self.kernel_eig_vecs.dot(self.kernel_eig_vecs.T) # K = UU.T
 		else:
 			pass
+
+	def plot(self, title=""):
+		""" Display the last realization (spanning tree) of the corresponding :class:`UST` object.
+
+		:param title:
+			Plot title
+
+		:type title:
+			string
+
+		.. seealso::
+
+			- :func:`sample <sample>`
+		"""
+
+		graph_to_plot = self.list_of_samples[-1]
+
+		fig = plt.figure(figsize=(4,4))
+		
+		pos=nx.circular_layout(graph_to_plot)
+		nx.draw_networkx(graph_to_plot, pos=pos, node_color='orange', 
+			with_labels = True)
+		plt.axis('off')
+		
+		str_title = "UST with {} algorithm".format(self.mode)
+		plt.title(title if title else str_title)
+
+		# plt.savefig("sample_{}_{}.eps".format(self.mode,len(self.list_of_samples)))
 
 	def plot_graph(self, title=""):
 		"""Display the original graph defining the :class:`UST` object
@@ -208,34 +236,6 @@ class UST:
 
 		plt.colorbar(heatmap)
 		# plt.savefig("kernel.png")
-
-	def plot_sample(self, title=""):
-		""" Display the last realization (spanning tree) of the corresponding :class:`UST` object.
-
-		:param title:
-			Plot title
-
-		:type title:
-			string
-
-		.. seealso::
-
-			- :func:`sample <sample>`
-		"""
-
-		graph_to_plot = self.list_of_samples[-1]
-
-		fig = plt.figure(figsize=(4,4))
-		
-		pos=nx.circular_layout(graph_to_plot)
-		nx.draw_networkx(graph_to_plot, pos=pos, node_color='orange', 
-			with_labels = True)
-		plt.axis('off')
-		
-		str_title = "UST with {} algorithm".format(self.mode)
-		plt.title(title if title else str_title)
-
-		# plt.savefig("sample_{}_{}.eps".format(self.mode,len(self.list_of_samples)))
 
 	def __wilson(self, root=None):
 
@@ -322,7 +322,7 @@ class UST:
 		return aldous_tree_graph
 
 class CarriesProcess:
-	""" Carries process formed by the cumulative sum of i.i.d. digits in :math:`[0, b-1]`. This is a DPP on the natural integers with a non symmetric kernel.
+	""" Carries process formed by the cumulative sum of i.i.d. digits in :math:`\{0, \dots, b-1\}`. This is a DPP on the natural integers with a non symmetric kernel.
 
 		:param base: 
 			Base/radix
@@ -332,7 +332,7 @@ class CarriesProcess:
 
 		.. seealso::
 
-			- :cite:`BoDiFu09`
+			- :cite:`BoDiFu10`
 			- :ref:`carries_process`
 	"""
 
@@ -368,7 +368,7 @@ class CarriesProcess:
 		""" Compute the cumulative sum (in base :math:`b`) of a sequence of i.i.d. digits and record the position of carries.
 
 			:param size:
-				size of the sequence of i.i.d. digits in :math:`[0, b-1]`
+				size of the sequence of i.i.d. digits in :math:`\{0, \dots, b-1\}`
 
 			:type size:
 				int
@@ -385,7 +385,7 @@ class CarriesProcess:
 
 		self.list_of_samples.append(carries)
 
-	def plot_carries(self, title=""):
+	def plot(self, title=""):
 		"""Display the process on the real line
 
 		:param title:
@@ -397,6 +397,7 @@ class CarriesProcess:
 		.. seealso::
 
 			- :func:`sample <sample>`
+			- :func:`plot_vs_bernoullis <plot_vs_bernoullis>`
 		"""
 
 		carries = self.list_of_samples[-1]
@@ -436,7 +437,7 @@ class CarriesProcess:
 		plt.title(title if title else str_title)
 		plt.show()
 
-	def plot_carries_vs_bernoullis(self, title=""):
+	def plot_vs_bernoullis(self, title=""):
 		"""Display the process on the real line and compare it to a sequence of i.i.d. Bernoullis with parameter :math:`\\frac12(1-\\frac1b)`
 
 		:param title:
@@ -448,6 +449,7 @@ class CarriesProcess:
 		.. seealso::
 
 			- :func:`sample <sample>`
+			- :func:`plot <plot>`
 		"""
 
 		carries = self.list_of_samples[-1]
