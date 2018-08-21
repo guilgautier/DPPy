@@ -19,7 +19,7 @@ The procedure stems from the fact that :ref:`generic DPPs are mixtures of projec
 2. Sample from the *projection* DPP with kernel :math:`\tilde{K}(x,y) = \sum_{n=1}^{N}\phi_{i_n}(x) \overline{\phi_{i_n}(y)}`.
 
 
-The remaining question of sampling from \textit{projection} DPPs is addressed by Algorithm 18 :cite:`HKPV06`.
+The remaining question of sampling from *projection* DPPs is addressed by Algorithm 18 :cite:`HKPV06`.
 It based on the chain rule and the fact that \textit{projection} :math:`\operatorname{DPP}(\tilde{K})` generates configurations of
 :math:`N=\operatorname{Tr} \tilde{K}` :ref:`points almost surely <continuous_dpps_number_of_points>`.
 In the first phase each point :math:`x\in \mathbb{X}` is associated to the random feature vector :math:`\Phi(x)=(\phi_{i_1}(x),\dots,\phi_{i_N}(x))`, therefore :math:`\tilde{K}(x,y) = \Phi(y)^{\dagger} \Phi(x)`.
