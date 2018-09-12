@@ -232,8 +232,8 @@ class BetaEnsemble:
 					if self.mode == "banded":
 						N	= self.params['size']
 
-						points = (points - self.params['loc'])/\
-											(np.sqrt(0.5)*self.params['scale'])
+						points -= self.params['loc']
+						points /= np.sqrt(0.5)*self.params['scale']
 
 					elif self.mode == "full":
 						N = self.params['N']
@@ -314,7 +314,7 @@ class BetaEnsemble:
 
 			ax.scatter(points.real, points.imag, c='blue', label="sample")
 
-		str_title = "Last realization of {} ensemble with {} points {}".format(
+		str_title = "Realization of {} ensemble with {} points {}".format(
 									self.name,
 									self.params['N'] if ("N" in self.params) else self.params['size'],
 									r"($\beta={}$)".format(self.beta) if self.name!="ginibre" else "")
@@ -364,8 +364,8 @@ class BetaEnsemble:
 				if self.mode == "banded":
 					N	= self.params['size']
 
-					points = (points - self.params['loc'])/\
-										(np.sqrt(0.5)*self.params['scale'])
+					points -= self.params['loc']
+					points /= np.sqrt(0.5)*self.params['scale']
 
 				elif self.mode == "full":
 					N = self.params['N']
