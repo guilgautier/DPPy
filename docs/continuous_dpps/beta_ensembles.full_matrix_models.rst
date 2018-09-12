@@ -3,7 +3,7 @@
 Full matrix models
 ------------------
 
-As mentioned earlier, for specific reference measures the :math:`\beta = 1, 2, 4` cases are very singular in the sense that the corresponding ensembles coincide with the eigenvalues of random matrices.
+For specific reference measures the :math:`\beta = 1, 2, 4` cases are very singular in the sense that the corresponding ensembles coincide with the eigenvalues of random matrices.
 
 This is a highway for sampling exactly such ensembles in :math:`\mathcal{O}(N^3)`!
 
@@ -12,9 +12,7 @@ This is a highway for sampling exactly such ensembles in :math:`\mathcal{O}(N^3)
 Hermite Ensemble
 ^^^^^^^^^^^^^^^^
 
-.. hint::
-
-	Random symmetric matrices
+Take for reference measure :math:`\mu=\mathcal{N}(0, 2)`, the pdf of the corresponding :math:`\beta`-Ensemble reads
 
 .. math::
 
@@ -25,6 +23,11 @@ Hermite Ensemble
 			e^{- \frac{1}{2}\frac{x_i^2}{2}} 
 			% \indic_{\bbR}(x_i)
 		\ d x_i
+
+.. hint::
+
+	The Hermite ensemble (whose name comes from the fact that Hermite polynomials are orthogonal w.r.t the Gaussian distribution) refers to the eigenvalue distribution of random matrices formed by i.i.d. Gaussian vectors.
+
 
 - :math:`\beta=1`
 
@@ -77,9 +80,9 @@ Normalization :math:`\sqrt{\beta N}` to concentrate as the semi-circle law.
 Laguerre Ensemble
 ^^^^^^^^^^^^^^^^^
 
-.. hint::
-
-	Random covariance matrices
+Take for reference measure 
+:math:`\mu=\Gamma\left(\frac{\beta}{2}(M-N+1), 2\right)=\chi_{\beta(M-N+1)}^2`, 
+the pdf of the corresponding :math:`\beta`-Ensemble reads
 
 .. math::
 
@@ -93,7 +96,9 @@ Laguerre Ensemble
 			% \indic_{\bbR}(x_i)
 		\ d x_i
 
+.. hint::
 
+	The Laguerre ensemble (whose name comes from the fact that Laguerre polynomials are orthogonal w.r.t the Gamma distribution) refers to the eigenvalue distribution of empirical covariance matrices of i.i.d. Gaussian vectors.
 
 - :math:`\beta=1`
 
@@ -156,6 +161,10 @@ where
 Jacobi Ensemble
 ^^^^^^^^^^^^^^^
 
+Take for reference measure 
+:math:`\mu=\operatorname{\mathcal{B}eta}\left(\frac{\beta}{2}(M_1-N+1), \frac{\beta}{2}(M_2-N+1)\right)`, 
+the pdf of the corresponding :math:`\beta`-Ensemble reads
+
 .. math::
 
 	(x_1,\dots,x_N) 
@@ -167,6 +176,10 @@ Jacobi Ensemble
 	        (1-x_i)^{\frac{\beta}{2}(M_2-N+1)-1}
 			% \indic_{\bbR}(x_i)
 		\ d x_i
+
+.. hint::
+
+	The Jacobi ensemble (whose name comes from the fact that Jacobi polynomials are orthogonal w.r.t the Beta distribution) is associated with the multivariate analysis of variance (MANOVA) model.
 
 - :math:`\beta=1`
 
