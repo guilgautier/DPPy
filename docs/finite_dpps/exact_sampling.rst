@@ -57,7 +57,10 @@ Projection DPPs
 
 		Finally, we will see that the chain rule is akin to Gram-Schmidt orthogonalization of these somewhat artificial feature vectors.
 
-	**Chain rule**
+	.. _finite_dpps_exact_sampling_chain_rule:
+
+Chain rule
+----------
 
 	Let :math:`S=\{s_1, \dots, s_r\}` with :math:`r=\operatorname{rank}(\mathbf{K})`, equation :eq:`number_points_projection_K` yields 
 
@@ -158,14 +161,18 @@ Projection DPPs
 		- :cite:`LaGaDe18` for a different perspective on exact sampling using Cholesky decomposition instead of the spectral decomposition
 		- :ref:`UST`
 
+	.. _finite_dpps_exact_sampling_caution:
+
+Caution
+-------
 
 	.. attention::
 
-		The fact that :math:`\mathbf{K}` is a *projection* kernel is **crucial**.
-		It is the very reason why the normalization constants of the conditionals in :eq:`chain_rule` are independent of the previous points and that :math:`S=\{s_1, \dots, s_r\}` is a sample of :math:`\operatorname{DPP}(\mathbf{K})`.
+		For the chain rule as described in :eq:`chain_rule_K` to be valid, it is **crucial** that :math:`\mathbf{K}` is a *projection* kernel.
+		It is the very reason why the normalization constants of the conditionals  are independent of the previous points and that :math:`S=\{s_1, \dots, s_r\}` is a valid sample of :math:`\operatorname{DPP}(\mathbf{K})`.
 
-		Consider :math:`\mathbf{K}` satisfying :eq:`suff_cond_K` with Gram factorization :math:`\mathbf{K} = VV^{\dagger}` and set :math:`Y=\{s_1, \dots, s_{j-1}\}`.
-		Without prior asumption on :math:`V`, the Schur complement formula allows to express the conditionals in :eq:`chain_rule_K` as
+		To see this, consider :math:`\mathbf{K}` satisfying :eq:`suff_cond_K` with Gram factorization :math:`\mathbf{K} = VV^{\dagger}` and denote :math:`Y=\{s_1, \dots, s_{j-1}\}`.
+		Without prior asumption on :math:`V`, the Schur complement formula allows to express the ratio of determinants appearing in the conditionals as
 
 		.. math::
 
@@ -225,8 +232,6 @@ Projection DPPs
 
 Generic DPPs
 ============
-
-	**Generic DPPs are mixtures of projection DPPs**
 
 	When considering non-projection DPPs, the eigendecomposition of the underlying kernel is required; adding an initial extra :math:`\mathcal{O}(N^3)` cost to sampling a *projection DPP*
 
