@@ -47,15 +47,23 @@ pip install .
 ```
 
 ### How to cite this work?
-If you use this package for your own work, please consider citing it with this piece of BibTeX:
+
+We plan to submit [DPPy](https://github.com/guilgautier/DPPy) to the Machine Learning Open Source Software [MLOSS](http://www.jmlr.org/mloss/) track of JMLR.
+
+If you use this package, please consider citing it with this piece of BibTeX:
 
 ```bibtex
 @misc{DPPy,
-    title =   {{DPPy: an Open-Source project for sampling Determinantal Point Processes in Python}},
-    author =  {Guillaume Gautier},
+    title =   {{DPPy: Sampling Determinantal Point Processes with Python}},
+    author =  {Guillaume Gautier, Rémi Bardenet, Michal Valko},
     year =    {2018},
     url =     {https://github.com/guilgautier/DPPy/},
     howpublished = {Online at: \url{github.com/guilgautier/DPPy/}},
     note =    {Code at https://github.com/guilgautier/DPPy/, documentation at https://dppy.readthedocs.io/}
 }
 ```
+
+## Reproducibility
+
+[DPPy](https://github.com/guilgautier/DPPy) would have never existed without [Guillermo Polito](https://github.com/guillep) who is leading the [reproducible work group](https://github.com/CRIStAL-PADR/reproducible-research-SE-notes).
+Take a look at the corresponding [booklet](https://github.com/CRIStAL-PADR/reproducible-research-SE-notes) to learn more on how to make your research reproducible!
