@@ -17,6 +17,8 @@ The documentation can thus be read in different ways:
 	- for more a traditional library documentation please refer to the corresponding API sections documenting the methods in each class, along with pointers to the mathematical definitions if needed. 
 	- you can also directly jump to the Jupyter `notebooks <https://github.com/guilgautier/DPPy/tree/master/notebooks>`_, which showcase the use of some DPPy objects in more detail.
 
+For another entry point to DPPy see the `companion paper <https://arxiv.org/abs/1809.07258>`_ :cite:`GaBaVa18`.
+
 .. image:: _images/original_graph.png
    :width: 25%
 .. image:: _images/kernel.png
@@ -30,7 +32,6 @@ Installation instructions
 =========================
 
 See `README <https://github.com/guilgautier/DPPy/blob/master/README.md>`_
-
 
 Documentation contents
 ======================

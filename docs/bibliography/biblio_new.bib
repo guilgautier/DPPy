@@ -50,7 +50,7 @@ abstract = {Spatstat is a package for analyzing spatial point pattern data. Its 
 author = {Baddeley, Adrian and Turner, Rolf},
 isbn = {9780387759685},
 issn = {15487660},
-journal = {Journal Of Statistical Software},
+journal = {Journal of Statistical Software},
 keywords = {conditional intensity,edge corrections,exploratory data analysis,generalised,hood,inhomogeneous point patterns,linear models,marked point patterns,maximum pseudolikeli-,spatial clustering},
 mendeley-groups = {DPPy},
 pmid = {3023},
@@ -158,7 +158,6 @@ year = {2002}
 }
 @inproceedings{DuBa18,
 abstract = {We propose a new class of determinantal point processes (DPPs) which can be manipulated for inference and parameter learning in potentially sublinear time in the number of items. This class, based on a specific low-rank factorization of the marginal kernel, is particularly suited to a subclass of continuous DPPs and DPPs defined on exponentially many items. We apply this new class to modelling text documents as sampling a DPP of sentences, and propose a conditional maximum likelihood formulation to model topic proportions, which is made possible with no approximation for our class of DPPs. We present an application to document summarization with a DPP on {\$}2{\^{}}{\{}500{\}}{\$} items.},
-address = {Lanzarote, Spain},
 archivePrefix = {arXiv},
 arxivId = {1610.05925},
 author = {Dupuy, Christophe and Bach, Francis},
@@ -191,6 +190,17 @@ arxivId = {1705.10498},
 title = {{Zonotope Hit-and-run for Efficient Sampling from Projection DPPs}},
 url = {http://proceedings.mlr.press/v70/gautier17a},
 year = {2017}
+}
+@article{GaBaVa18,,
+archivePrefix = {arXiv},
+arxivId = {1809.07258},
+author = {Gautier, Guillaume and Bardenet, R{\'{e}}mi and Valko, Michal},
+eprint = {1809.07258},
+journal = {ArXiv e-prints},
+title = {{DPPy: Sampling Determinantal Point Processes with Python}},
+keywords = {Computer Science - Machine Learning, Computer Science - Mathematical Software, Statistics - Machine Learning},
+url = {http://github.com/guilgautier/DPPy/, http://dppy.readthedocs.io/},
+year = {2018}
 }
 @phdthesis{Gil14,
 author = {Gillenwater, Jennifer A.},
@@ -339,7 +349,6 @@ year = {2016}
 }
 @inproceedings{LiJeSr16b,
 abstract = {The Nystr{\"{o}}m method has long been popular for scaling up kernel methods. Its theoretical guarantees and empirical performance rely critically on the quality of the landmarks selected. We study landmark selection for Nystr{\"{o}}m using Determinantal Point Processes (DPPs), discrete probability models that allow tractable generation of diverse samples. We prove that landmarks selected via DPPs guarantee bounds on approximation errors; subsequently, we analyze implications for kernel ridge regression. Contrary to prior reservations due to cubic complexity of DPPsampling, we show that (under certain conditions) Markov chain DPP sampling requires only linear time in the size of the data. We present several empirical results that support our theoretical analysis, and demonstrate the superior performance of DPP-based landmark selection compared with existing approaches.},
-address = {New York, USA},
 archivePrefix = {arXiv},
 arxivId = {1603.06052},
 author = {Li, Chengtao and Jegelka, Stefanie and Sra, Suvrit},
@@ -354,7 +363,6 @@ year = {2016}
 }
 @inproceedings{LiJeSr16a,
 abstract = {Determinantal Point Processes (DPPs) are elegant probabilistic models of repulsion and diversity over discrete sets of items. But their applicability to large sets is hindered by expensive cubic-complexity matrix operations for basic tasks such as sampling. In light of this, we propose a new method for approximate sampling from discrete {\$}k{\$}-DPPs. Our method takes advantage of the diversity property of subsets sampled from a DPP, and proceeds in two stages: first it constructs coresets for the ground set of items; thereafter, it efficiently samples subsets based on the constructed coresets. As opposed to previous approaches, our algorithm aims to minimize the total variation distance to the original distribution. Experiments on both synthetic and real datasets indicate that our sampling algorithm works efficiently on large data sets, and yields more accurate samples than previous approaches.},
-address = {Cadiz, Spain},
 archivePrefix = {arXiv},
 arxivId = {1509.01618},
 author = {Li, Chengtao and Jegelka, Stefanie and Sra, Suvrit},

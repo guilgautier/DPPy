@@ -1,7 +1,7 @@
 [![Documentation Status](https://readthedocs.org/projects/dppy/badge/?version=latest)](https://dppy.readthedocs.io/en/latest/?badge=latest)
 [![Build Status](https://travis-ci.com/guilgautier/DPPy.svg?branch=master)](https://travis-ci.com/guilgautier/DPPy)
 
-# DPPy is a Python library for sampling Determinantal Point Processes.
+# DPPy: Sampling Determinantal Point Processes with Python
 
 > Anything that can go wrong, will go wrong. − [Murphy's Law](http://phdcomics.com/comics/archive.php?comicid=1867)
 
@@ -47,15 +47,31 @@ pip install .
 ```
 
 ### How to cite this work?
-If you use this package for your own work, please consider citing it with this piece of BibTeX:
 
+We wrote a companion paper to [DPPy](https://github.com/guilgautier/DPPy) for latter submission to the [MLOSS](http://www.jmlr.org/mloss/) track of JMLR.
+
+The companion paper is available on:
+    - [arXiv](http://arxiv.org/abs/1809.07258)
+    - [GitHub](https://github.com/guilgautier/DPPy_paper), see the [`arxiv`](https://github.com/guilgautier/DPPy_paper/tree/arxiv) branch
+
+If you use this package, please consider citing it with this piece of BibTeX
 ```bibtex
-@misc{DPPy,
-    title =   {{DPPy: an Open-Source project for sampling Determinantal Point Processes in Python}},
-    author =  {Guillaume Gautier},
-    year =    {2018},
-    url =     {https://github.com/guilgautier/DPPy/},
-    howpublished = {Online at: \url{github.com/guilgautier/DPPy/}},
-    note =    {Code at https://github.com/guilgautier/DPPy/, documentation at https://dppy.readthedocs.io/}
+@article{GaBaVa18,,
+    archivePrefix = {arXiv},
+    arxivId = {1809.07258},
+    author = {Gautier, Guillaume and Bardenet, R{\'{e}}mi and Valko, Michal},
+    eprint = {1809.07258},
+    journal = {ArXiv e-prints},
+    title = {{DPPy: Sampling Determinantal Point Processes with Python}},
+    keywords = {Computer Science - Machine Learning, Computer Science - Mathematical Software, Statistics - Machine Learning},
+    url = {http://arxiv.org/abs/1809.07258},
+    year = {2018},
+    note = {Code at http://github.com/guilgautier/DPPy/ Documentation at http://dppy.readthedocs.io/}
 }
 ```
+
+## Reproducibility
+
+We would like to thank [Guillermo Polito](https://guillep.github.io/) for leading our reproducible research [workgroup](https://github.com/CRIStAL-PADR/reproducible-research-SE-notes), this project owes him a lot.
+
+Take a look at the corresponding [booklet](https://github.com/CRIStAL-PADR/reproducible-research-SE-notes) to learn more on how to make your research reproducible!
