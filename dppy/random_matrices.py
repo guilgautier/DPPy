@@ -25,9 +25,9 @@ def hermite_sampler_full(N, beta=2):
 		A = np.block([[X, Y],[-Y.conj(), X.conj()]])
 
 	else:
-		raise ValueError("Invalid beta parameter.\n"
-						"beta coefficient must be equal to 1, 2 or 4"
-						"Given beta={}".format(beta))
+		raise ValueError('Invalid beta parameter.\n'
+						'beta coefficient must be equal to 1, 2 or 4'
+						'Given beta={}'.format(beta))
 
 	# return la.eigvalsh(A+A.conj().T)
 	return la.eigvalsh(A+A.conj().T)/np.sqrt(2.0)
@@ -47,12 +47,12 @@ def hermite_sampler_tridiag(N, beta=2):
 
 # Semi-circle law
 def semi_circle_law(x, R=2.0):
-	# [Dubbs & Edelman, Table 1] https://arxiv.org/pdf/1502.04931.pdf
+	# :cite:`DuEd15` Table 1
 	# https://en.wikipedia.org/wiki/Wigner_semicircle_distribution
 	return 2/(np.pi*R**2) * np.sqrt(R**2 - x**2)
 
 ## mu_ref == normal
-def muref_normal_sampler_tridiag(loc=0.0, scale=1.0, beta=2, size=10):
+def mu_ref_normal_sampler_tridiag(loc=0.0, scale=1.0, beta=2, size=10):
 	"""
 	.. seealso::
 
@@ -89,9 +89,9 @@ def laguerre_sampler_full(M, N, beta=2):
 		A = np.block([[X, Y],[-Y.conj(), X.conj()]])
 
 	else:
-		raise ValueError("Invalid beta parameter.\n"
-						"beta coefficient must be equal to 1, 2 or 4"
-						"Given beta={}".format(beta))
+		raise ValueError('Invalid beta parameter.\n'
+						'beta coefficient must be equal to 1, 2 or 4'
+						'Given beta={}'.format(beta))
 
 	return la.eigvalsh(A.dot(A.conj().T))
 
@@ -185,9 +185,9 @@ def jacobi_sampler_full(M_1, M_2, N, beta=2):
 		Y = np.block([[Y_1, Y_2],[-Y_2.conj(), Y_1.conj()]])
 
 	else:
-		raise ValueError("Invalid beta parameter.\n"
-										"beta coefficient must be equal to 1, 2 or 4"
-										"Given beta={}".format(beta))
+		raise ValueError('Invalid beta parameter.\n'
+										'beta coefficient must be equal to 1, 2 or 4'
+										'Given beta={}'.format(beta))
 
 	X_tmp = X.dot(X.conj().T)
 	Y_tmp = Y.dot(Y.conj().T)
@@ -230,7 +230,7 @@ def jacobi_sampler_tridiag(M_1, M_2, N, beta=2):
 # Wachter law
 def wachter_law(x, M_1, M_2, N):
 	# M_1, M_2>=N
-	# [Dubbs & Edelman, Table 1] https://arxiv.org/pdf/1502.04931.pdf
+	# :cite:`DuEd15` Table 1
 	a, b = M_1/N, M_2/N
 
 	Lm = ((np.sqrt(a*(a+b-1)) - np.sqrt(b))/(a+b))**2
@@ -285,14 +285,14 @@ def mu_ref_beta_sampler_tridiag(a, b, beta=2, size=10):
 #########################
 
 # Full matrix model
-def circular_sampler_full(N, beta=2, haar_mode="QR"):
+def circular_sampler_full(N, beta=2, haar_mode='QR'):
 	"""
 	.. seealso::
 
-		[Mezzadri, Sec 5] https://arxiv.org/pdf/math-ph/0609050.pdf
+		:cite:`Mez06` Section 5
 	"""
 
-	if haar_mode == "hermite":
+	if haar_mode == 'hermite':
 		size_sym_mat = int(N*(N-1)/2)
 
 		if beta==1:#COE
@@ -308,13 +308,13 @@ def circular_sampler_full(N, beta=2, haar_mode="QR"):
 			A = np.block([[X, Y], [-Y.conj(), X.conj()]])
 
 		else:
-			raise ValueError("Invalid beta parameter, in 'hermite' mode."
-							"Only beta = 1, 2, 4 are available.\n"
-							"Given {}".format(beta))
+			raise ValueError('Invalid beta parameter for `haar_mode=hermite`'
+							'Only beta = 1, 2, 4 are available\n'
+							'Given {}'.format(beta))
 
 		_, U = la.eigh(A+A.conj().T)
 
-	elif haar_mode == "QR":
+	elif haar_mode == 'QR':
 
 		if beta == 1: #COE
 			A = np.random.randn(N, N)
@@ -325,17 +325,14 @@ def circular_sampler_full(N, beta=2, haar_mode="QR"):
 
 		# elif beta==4:
 		else:
-			raise ValueError("Invalid beta parameter, in 'QR' mode."
-							"Only beta = 1, 2 are available.\n"
-							"Given {}".format(beta))
+			raise ValueError('Invalid beta parameter, for `haar_mode=QR`'
+							'Only beta = 1, 2 are available\n'
+							'Given {}'.format(beta))
 
 		#U, _ = la.qr(A)
 		Q, R = la.qr(A)
 		d = np.diagonal(R)
 		U = np.multiply(Q, d/np.abs(d), Q)
-
-	else:
-		raise ValueError("haar_mode != 'hermite' or 'QR'")
 
 	return la.eigvals(U)
 
@@ -364,11 +361,11 @@ def mu_ref_unif_unit_circle_sampler_quindiag(beta=2, size=10):
 
 	.. see also::
 
-		:cite:`KiNe04` Theorem 1, https://arxiv.org/abs/math/0410034
+		:cite:`KiNe04` Theorem 1
 	"""
 
 	if not ((beta > 0) & isinstance(beta, int)):
-		raise ValueError("beta must be positive integer")
+		raise ValueError('beta must be positive integer. Given: '.format(beta))
 
 	# Xi_-1 = [1]
 	xi_1 = np.array([1], ndmin=2, dtype=np.complex_)

@@ -8,7 +8,7 @@ import scipy.linalg as la
 ################# DPPs #################
 ########################################
 
-def dpp_sampler_exact(kernel, proj_kernel=False, mode="GS"):
+def dpp_sampler_exact(kernel, proj_kernel=False, mode='GS'):
 	""" Sample from :math:`\operatorname{DPP}(K)`, where :math:`K` is the inclusion probability kernel.
 
 	:param kernel: Real symmetric kernel with eigenvalues in :math:`[0,1]`
@@ -62,7 +62,7 @@ def dpp_sampler_exact(kernel, proj_kernel=False, mode="GS"):
 ### Projection kernel ###
 #########################
 
-def proj_dpp_sampler_kernel(kernel, mode="GS"):
+def proj_dpp_sampler_kernel(kernel, mode='GS'):
 	"""
 	.. seealso::
 		- :func:`proj_dpp_sampler_kernel_GS <proj_dpp_sampler_kernel_GS>`
@@ -73,18 +73,18 @@ def proj_dpp_sampler_kernel(kernel, mode="GS"):
 
 	#### Phase 2: Sample from orthogonal projection kernel K = K^2 = K.T K
 	# Chain rule, conditionals are updated using:
-	if mode == "GS": # Gram-Schmidt equiv Cholesky
+	if mode == 'GS': # Gram-Schmidt equiv Cholesky
 		sampl = proj_dpp_sampler_kernel_GS(kernel)
 
-	# elif mode == "Schur": # Schur complement
+	# elif mode == 'Schur': # Schur complement
 	# 	sampl = proj_dpp_sampler_kernel_Schur(kernel)
 
 	else:
-		str_list = ["Invalid 'mode' parameter, choose among:",
-								"- 'GS' (default)",
-								# "- 'Schur'",
-								"Given 'mode' = {}".format(mode)]
-		raise ValueError("\n".join(str_list))
+		str_list = ['Invalid `mode` parameter, choose among:',
+								'- `GS` (default)',
+								# '- 'Schur'',
+								'Given {}'.format(mode)]
+		raise ValueError('\n'.join(str_list))
 
 	return sampl
 
@@ -240,7 +240,7 @@ def proj_dpp_sampler_kernel_GS(K, size=None):
 ### Generic kernel ###
 ######################
 
-def dpp_sampler_eig(eig_vecs_sel, mode="GS"):
+def dpp_sampler_eig(eig_vecs_sel, mode='GS'):
 	"""
 	.. seealso::
 
@@ -259,22 +259,22 @@ def dpp_sampler_eig(eig_vecs_sel, mode="GS"):
 	if eig_vecs_sel.shape[1]:
 	#### Phase 2: Sample from projection kernel VV.T
 	# Chain rule, conditionals are updated using:
-		if mode == "GS": # Gram-Schmidt
+		if mode == 'GS': # Gram-Schmidt
 			sampl = proj_dpp_sampler_eig_GS(eig_vecs_sel)
 
-		elif mode == "GS_bis": # Slight modif of "GS"
+		elif mode == 'GS_bis': # Slight modif of 'GS'
 			sampl = proj_dpp_sampler_eig_GS_bis(eig_vecs_sel)
 
-		elif mode == "KuTa12": # cf Kulesza-Taskar
+		elif mode == 'KuTa12': # cf Kulesza-Taskar
 			sampl = proj_dpp_sampler_eig_KuTa12(eig_vecs_sel)
 
 		else:
-			str_list = ["Invalid 'mode' parameter, choose among:",
-									"- 'GS' (default)",
-									"- 'GS_bis'",
-									"- 'KuTa12'",
-									"Given 'mode' = {}".format(mode)]
-			raise ValueError("\n".join(str_list))
+			str_list = ['Invalid `mode` parameter, choose among:',
+									'- `GS` (default)',
+									'- `GS_bis`',
+									'- `KuTa12`',
+									'Given {}'.format(mode)]
+			raise ValueError('\n'.join(str_list))
 	else:
 		sampl = []
 
@@ -483,7 +483,7 @@ def proj_dpp_sampler_eig_GS_bis(eig_vecs, size=None):
 
 		## 1) Orthogonalize V_j w.r.t. orthonormal basis of Span(V_Y)
 		#    V'_j = P_{V_Y}^{orthog} V_j
-		#         = V_j - <V_j,∑_Y V'_k>V"_k
+		#         = V_j - <V_j,∑_Y V'_k>V'_k
 		# Note V'_j is not normalized
 		V[j,:] -= contrib[j,:it].dot(V[Y,:])
 
@@ -497,12 +497,12 @@ def proj_dpp_sampler_eig_GS_bis(eig_vecs, size=None):
 
 		## 3) Normalize V'_j with norm^2 and not norm
 		#              V'_j         P_{V_Y}^{orthog} V_j
-		#    V"_j  =  -------  =  --------------------------
+		#    V'_j  =  -------  =  --------------------------
 		#             |V'j|^2      |P_{V_Y}^{orthog} V_j|^2
 		V[j,:] /= norms_2[j]
 		# for next orthogonalization in 1)
 		#                          	<V_i,P_{V_Y}^{orthog} V_j> P_{V_Y}^{orthog} V_j
-		#  V_i - <V_i,V'_j>V"_j = V_i - -----------------------------------------
+		#  V_i - <V_i,V'_j>V'_j = V_i - -----------------------------------------
 		#                                           |P_{V_Y}^{orthog} V_j|^2
 
 
@@ -575,7 +575,7 @@ def proj_dpp_sampler_eig_KuTa12(eig_vecs, size=None):
 		# Cancel the contribution of the remaining vectors along e_i, but stay in the subspace spanned by V i.e. get the subspace of V orthogonal to \{e_i ; i \in Y\}
 		V -= np.outer(V[:,j]/V[i,j], V[i,:])
 		# V_:j is set to 0 so we delete it and we can derive an orthononormal basis of the subspace under consideration
-		V, _ = la.qr(np.delete(V, j, axis=1),  mode="economic")
+		V, _ = la.qr(np.delete(V, j, axis=1),  mode='economic')
 
 		norms_2 = np_inner1d(V, V)
 		# Pick an item
@@ -605,7 +605,7 @@ def proj_dpp_sampler_eig_KuTa12(eig_vecs, size=None):
 ################# k-DPPs #################
 ##########################################
 
-def k_dpp_sampler(kernel, size, proj_kernel=False, mode="GS"):
+def k_dpp_sampler(kernel, size, proj_kernel=False, mode='GS'):
 	""" Sample from :math:`\operatorname{DPP}(K)`, where :math:`K` is real symmetric with eigenvalues in :math:`[0,1]`.
 
 	:param kernel: Real symmetric kernel with eigenvalues in :math:`[0,1]`
@@ -622,13 +622,13 @@ def k_dpp_sampler(kernel, size, proj_kernel=False, mode="GS"):
 		Indicate how the conditional probabilities i.e. the ratio of 2 determinants must be updated.
 
 		If ``proj_kernel=True``:
-			- "GS" (default): Gram-Schmidt on the columns of :math:`K`
-			# - "Schur": Schur complement updates
+			- 'GS' (default): Gram-Schmidt on the columns of :math:`K`
+			# - 'Schur': Schur complement updates
 
 		If ``proj_kernel=False``:
-			- "GS" (default): Gram-Schmidt on the columns of :math:`K` equiv
-			- "GS_bis": Slight modif of "GS"
-			- "KuTa12": Algorithm 1 in :cite:`KuTa12`
+			- 'GS' (default): Gram-Schmidt on the columns of :math:`K` equiv
+			- 'GS_bis': Slight modif of 'GS'
+			- 'KuTa12': Algorithm 1 in :cite:`KuTa12`
 	:type mode:
 		string, default 'GS_bis'
 
@@ -655,7 +655,7 @@ def k_dpp_sampler(kernel, size, proj_kernel=False, mode="GS"):
 #########################
 ### Projection kernel ###
 #########################
-def proj_k_dpp_sampler_kernel(kernel, size, mode="GS"):
+def proj_k_dpp_sampler_kernel(kernel, size, mode='GS'):
 	"""
 	.. seealso::
 		- :func:`proj_dpp_sampler_kernel_GS_bis <proj_dpp_sampler_kernel_GS_bis>`
@@ -667,18 +667,18 @@ def proj_k_dpp_sampler_kernel(kernel, size, mode="GS"):
 
 	#### Phase 2: Sample from orthogonal projection kernel K = K^2 = K.T K
 	# Chain rule, conditionals are updated using:
-	if mode == "GS": # Gram-Schmidt equiv Cholesky
+	if mode == 'GS': # Gram-Schmidt equiv Cholesky
 		sampl = proj_dpp_sampler_kernel_GS(kernel, size)
 
-	# elif mode == "Shur": # Schur complement
+	# elif mode == 'Shur': # Schur complement
 	# 	sampl = proj_dpp_sampler_kernel_Schur(kernel, size)
 
 	else:
-		str_list = ["Invalid 'mode' parameter, choose among:",
-								"- 'GS' (default)",
-								# "- 'Schur'",
-								"Given 'mode' = {}".format(mode)]
-		raise ValueError("\n".join(str_list))
+		str_list = ['Invalid `mode` parameter, choose among:',
+								'- `GS` (default)',
+								# '- 'Schur'',
+								'Given `mode` = {}'.format(mode)]
+		raise ValueError('\n'.join(str_list))
 
 	return sampl
 
@@ -689,7 +689,7 @@ def proj_k_dpp_sampler_kernel(kernel, size, mode="GS"):
 ### Generic kernel ###
 ######################
 
-def k_dpp_sampler_eig(eig_vals, eig_vecs, size, mode="GS",
+def k_dpp_sampler_eig(eig_vals, eig_vecs, size, mode='GS',
 											el_sym_pol_eval=None):
 	"""
 	.. seealso::
@@ -711,22 +711,22 @@ def k_dpp_sampler_eig(eig_vals, eig_vecs, size, mode="GS",
 	#### Phase 2: Sample from projection kernel VV.T
 	# Chain rule, conditionals are updated using:
 
-	if mode == "GS": # Gram-Schmidt
+	if mode == 'GS': # Gram-Schmidt
 		sampl = proj_dpp_sampler_eig_GS(eig_vecs_sel)
 
-	elif mode == "GS_bis": # Slight modif of "GS"
+	elif mode == 'GS_bis': # Slight modif of 'GS'
 		sampl = proj_dpp_sampler_eig_GS_bis(eig_vecs_sel)
 
-	elif mode == "KuTa12": # cf Kulesza-Taskar
+	elif mode == 'KuTa12': # cf Kulesza-Taskar
 		sampl = proj_dpp_sampler_eig_KuTa12(eig_vecs_sel)
 
 	else:
-		str_list = ["Invalid 'mode' parameter, choose among:",
-								"- 'GS' (default)",
-								"- 'GS_bis'",
-								"- 'KuTa12'",
-								"Given 'mode' = {}".format(mode)]
-		raise ValueError("\n".join(str_list))
+		str_list = ['Invalid `mode` parameter, choose among:',
+								'- `GS` (default)',
+								'- `GS_bis`',
+								'- `KuTa12`',
+								'Given {}'.format(mode)]
+		raise ValueError('\n'.join(str_list))
 
 	return sampl
 

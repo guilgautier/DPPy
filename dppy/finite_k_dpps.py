@@ -40,27 +40,27 @@ class Finite_k_DPP:
 		self.list_of_samples = []
 
 	def __str__(self):
-		str_info = ["Finite k-DPP(L) defined on {} items by:",
-								"- Projection kernel: {}",
-								"- sampling mode = {}",
-								"- number of samples = {}"]
+		str_info = ['Finite k-DPP(L) defined on {} items by:',
+								'- Projection kernel: {}',
+								'- sampling mode = {}',
+								'- number of samples = {}']
 
-		return "\n".join(str_info).format(self.nb_items,
-																		"Yes" if self.projection_kernel else "No",
+		return '\n'.join(str_info).format(self.nb_items,
+																		'Yes' if self.projection_kernel else 'No',
 																		self.mode,
 																		len(self.list_of_samples))
 
 	def __check_size_param_validity(self):
 		if (self.size <= 0) & (not isinstance(self.size, int)):
-			raise ValueError("Invalid size parameter: must be a positive integer.\nGiven size = {}".format(self.size))
+			raise ValueError('Invalid size parameter: must be a positive integer.\nGiven size = {}'.format(self.size))
 
 	def __check_projection_kernel_param_validity(self):
 		# Recall we first checked the kernel to be symmetric (K=K.T), here we check the reproducing property of the (orthogonal) projection kernel.
 		# For this we perform a cheap test to check K^2 = K K.T = K
 		if not isinstance(self.projection_kernel, bool):
-			str_list = ["Invalid projection_kernel argument: must be True/False",
-									"Given projection_kernel={}".format(self.projection_kernel)]
-			raise ValueError("\n".join(str_list))
+			str_list = ['Invalid projection_kernel argument: must be True/False',
+									'Given projection_kernel={}'.format(self.projection_kernel)]
+			raise ValueError('\n'.join(str_list))
 
 	def __check_kernel_for_k_dpp_validity(self, kernel):
 		"""Check symmetry, projection, and validity:
@@ -69,7 +69,7 @@ class Finite_k_DPP:
 
 		# Check symmetry: L.T = L
 		if not np.allclose(self.L, self.L.T):
-			raise ValueError("Invalid kernel: not symmetric")
+			raise ValueError('Invalid kernel: not symmetric')
 
 		# Check if 'L' kernel is orthogonal projection L^2 = L L.T = L
 		# Only case for which eigendecomposition is not necessary
@@ -83,7 +83,7 @@ class Finite_k_DPP:
 			if np.allclose(np_inner1d(L_i_, L_i_), L_ii):
 					self.L = kernel
 			else:
-				raise ValueError("Invalid kernel: doesn't seem to be a projection")
+				raise ValueError('Invalid kernel: does not seem to be a projection')
 
 		else:
 			# Eigendecomposition necessary for non projection kernel
@@ -96,7 +96,7 @@ class Finite_k_DPP:
 				self.eig_vals = eig_vals
 				self.eig_vecs = eig_vecs
 			else:
-				raise ValueError("Invalid kernel for marginal kernel. Eigen values !>= 0")
+				raise ValueError('Invalid kernel for marginal kernel. Eigen values !>= 0')
 
 	def info(self):
 		print(self.__str__())
@@ -105,7 +105,7 @@ class Finite_k_DPP:
 		self.list_of_samples = []
 
 	### Exact sampling
-	def sample_exact(self, mode="GS"):
+	def sample_exact(self, mode='GS'):
 
 		self.mode = mode
 		if self.projection_kernel:
@@ -122,14 +122,14 @@ class Finite_k_DPP:
 		self.list_of_samples.append(sampl)
 
 	# ### Approximate sampling
-	# def sample_approx(self, mode="AED", nb_iter=10, T_max=None):
+	# def sample_approx(self, mode='AED', nb_iter=10, T_max=None):
 
 	# 	self.list_of_samples.append(sampl)
 
 	# def plot(self):
 	# 	"""Display a heatmap of the kernel provided, either K- or marginal kernel"""
 
-	# 	print("Heat map of L-kernel")
+	# 	print('Heat map of L-kernel')
 	# 	fig, ax = plt.subplots(1,1)
 
 	# 	heatmap = ax.pcolor(self.L, cmap='jet')

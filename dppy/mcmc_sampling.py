@@ -22,13 +22,13 @@ def det_kernel_ST(kernel, S, T=None):
 		return 1
 
 	else:
-		raise ValueError("Big problem")
+		raise ValueError('Big problem')
 
 ###############################################################
 ############## Approximate samplers for projection DPPs #######
 ###############################################################
 
-def dpp_sampler_mcmc(kernel, mode="AED", **params):
+def dpp_sampler_mcmc(kernel, mode='AED', **params):
 	""" Interface function with initializations and samplers for MCMC schemes.
 
 	.. seealso::
@@ -41,22 +41,22 @@ def dpp_sampler_mcmc(kernel, mode="AED", **params):
 		- :func:`initialize_AD_and_E_sampler <initialize_AD_and_E_sampler>`
 	"""
 
-	s_init = params.get("s_init", None)
-	nb_it_max = params.get("nb_it_max", 10)
-	T_max = params.get("T_max", None)
-	size = params.get("size", None) # For projection inclusion kernel = Tr(K)
+	s_init = params.get('s_init', None)
+	nb_it_max = params.get('nb_it_max', 10)
+	T_max = params.get('T_max', None)
+	size = params.get('size', None) # For projection inclusion kernel = Tr(K)
 
-	if mode == "AED": # Add-Exchange-Delete S'=S+t, S-t+u, S-t
+	if mode == 'AED': # Add-Exchange-Delete S'=S+t, S-t+u, S-t
 		if s_init is None:
 			s_init = initialize_AED_sampler(kernel)
 		sampl = add_exchange_delete_sampler(kernel, s_init, nb_it_max, T_max)
 
-	elif mode == "AD": # Add-Delete S'=S+t, S-t
+	elif mode == 'AD': # Add-Delete S'=S+t, S-t
 		if s_init is None:
 			s_init = initialize_AD_and_E_sampler(kernel)
 		sampl = add_delete_sampler(kernel, s_init, nb_it_max, T_max)
 
-	elif mode == "E": # Exchange S'=S-t+u
+	elif mode == 'E': # Exchange S'=S-t+u
 		if s_init is None:
 			s_init = initialize_AD_and_E_sampler(kernel, size)
 		sampl = basis_exchange_sampler(kernel, s_init, nb_it_max, T_max)
@@ -87,7 +87,7 @@ def initialize_AED_sampler(kernel):
 			S0 = np.intersect1d(T, ground_set).tolist()
 			det_S0 = det_kernel_ST(kernel, S0)
 	else:
-		raise ValueError("Initialization problem!")
+		raise ValueError('Initialization problem!')
 
 	return S0
 
@@ -116,7 +116,7 @@ def initialize_AD_and_E_sampler(kernel, size=None):
 			S0 = np.random.choice(ground_set, size=sz, replace=False).tolist()
 			det_S0 = det_kernel_ST(kernel, S0)
 	else:
-		raise ValueError("Initialization problem!")
+		raise ValueError('Initialization problem!')
 
 	return S0
 
@@ -462,11 +462,11 @@ def zonotope_sampler(A_zono, **params):
 
 	r, N = A_zono.shape # Sizes of r=samples=rank(A_zono), N=ground set
 	# Linear objective
-	c = params.get("lin_obj", matrix(np.random.randn(N)))
+	c = params.get('lin_obj', matrix(np.random.randn(N)))
 	# Initial point x0 = A*u, u~U[0,1]^n
-	x0 = params.get("x0", matrix(A_zono.dot(np.random.rand(N))))
-	nb_it_max = params.get("nb_it_max", 10)
-	T_max = params.get("T_max", None)
+	x0 = params.get('x0', matrix(A_zono.dot(np.random.rand(N))))
+	nb_it_max = params.get('nb_it_max', 10)
+	T_max = params.get('T_max', None)
 	#################################################
 	############### Linear problems #################
 	#################################################
