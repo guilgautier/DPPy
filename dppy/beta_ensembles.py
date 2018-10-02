@@ -142,8 +142,7 @@ class BetaEnsemble:
 																					size=self.params["size"])
 
 			elif self.name == "laguerre":
-					sampl = mu_ref_gamma_sampler_tridiag(
-																					shape=self.params["shape"],
+					sampl = mu_ref_gamma_sampler_tridiag(shape=self.params["shape"],
 																					scale=self.params["scale"],
 																					beta=self.beta,
 																					size=self.params["size"])
@@ -240,7 +239,7 @@ class BetaEnsemble:
 
 					points /= np.sqrt(self.beta * N)
 
-					x = np.linspace(-2,2,100)
+					x = np.linspace(-2, 2, 100)
 					ax.plot(x, semi_circle_law(x),
 									'r-', lw=2, alpha=0.6,
 									label=r'$f_{sc}$')
@@ -264,7 +263,7 @@ class BetaEnsemble:
 					x = np.linspace(1e-3, np.max(points)+0.3, 200)
 					ax.plot(x, marcenko_pastur_law(x, M, N),
 									'r-', lw=2, alpha=0.6,
-									label=r'$f_{MP}$')
+									label=r'$Marcenko Pastur law$')
 
 			elif self.name == "jacobi":
 
@@ -372,7 +371,7 @@ class BetaEnsemble:
 
 				points /= np.sqrt(self.beta * N)
 
-				x = np.linspace(-2,2,100)
+				x = np.linspace(-2, 2, 100)
 				ax.plot(x, semi_circle_law(x),
 								'r-', lw=2, alpha=0.6,
 								label=r'$f_{sc}$')
@@ -393,10 +392,10 @@ class BetaEnsemble:
 
 				points /= self.beta * M
 
-				x = np.linspace(1e-3,np.max(points)+0.3,100)
+				x = np.linspace(1e-3, np.max(points)+0.3, 100)
 				ax.plot(x, marcenko_pastur_law(x, M, N),
 								'r-', lw=2, alpha=0.6,
-								label=r'$f_{MP}$')
+								label=r'$Marcenko Pastur law$')
 
 		elif self.name == "jacobi":
 
@@ -413,7 +412,7 @@ class BetaEnsemble:
 					M_2 = self.params['M_2']
 
 				eps = 1e-5
-				x = np.linspace(eps,1.0-eps,500)
+				x = np.linspace(eps, 1.0-eps, 500)
 				ax.plot(x, wachter_law(x, M_1, M_2, N),
 								'r-', lw=2, alpha=0.6,
 								label='Wachter Law')
@@ -439,8 +438,8 @@ class BetaEnsemble:
 
 		str_title = "Histogram of {} ensemble with {} points {}".format(
 									self.name,
-										self.params['N'] if ("N" in self.params) else self.params['size'],
-										r"($\beta={}$)".format(self.beta) if self.name!="ginibre" else "")
+									self.params['N'] if ("N" in self.params) else self.params['size'],
+									r"($\beta={}$)".format(self.beta) if self.name!="ginibre" else "")
 		plt.title(title if title else str_title)
 
 		ax.legend(loc='best', frameon=False)
@@ -457,9 +456,7 @@ class BetaEnsemble:
 
 	def __check_name_validity(self):
 
-		supported_ensembles = ("hermite, laguerre, jacobi,\
-													circular,\
-													ginibre")
+		supported_ensembles = ("hermite, laguerre, jacobi, circular, ginibre")
 
 		if self.name not in supported_ensembles:
 			str_list = ["- {}".format(OPE) for OPE in supported_ensembles]
@@ -488,22 +485,19 @@ class BetaEnsemble:
 		if self.mode == "banded":
 
 			if self.name == "hermite":
-				if ("loc" not in self.params) |\
-					 ("scale" not in self.params):
+				if ("loc" not in self.params) | ("scale" not in self.params):
 					raise ValueError("Missing 'loc' or 'scale' parameter.\nGiven {}".format(self.params))
 				else:
 					np.random.normal(self.params["loc"], self.params["scale"])
 
 			elif self.name == "laguerre":
-				if ("shape" not in self.params) |\
-					 ("scale" not in self.params):
+				if ("shape" not in self.params) | ("scale" not in self.params):
 					raise ValueError("Missing 'shape' or 'scale' parameter.\nGiven {}".format(self.params))
 				else:
 					np.random.gamma(self.params["shape"], scale=self.params["scale"])
 
 			elif self.name == "jacobi":
-				if ('a' not in self.params) |\
-					 ('b' not in self.params):
+				if ('a' not in self.params) | ('b' not in self.params):
 					raise ValueError("Missing 'a' or 'b' parameter.\nGiven {}".format(self.params))
 				else:
 					np.random.beta(self.params["a"], self.params["b"])
@@ -538,8 +532,7 @@ class BetaEnsemble:
 
 				elif self.name == "jacobi":
 
-					if ('M_1' not in self.params) |\
-						 ('M_2' not in self.params):
+					if ('M_1' not in self.params) | ('M_2' not in self.params):
 						raise ValueError("Missing keys 'M_1', 'M_2', with M_1, M_2>=N.\nGiven {}".format(self.params))
 
 					elif (self.params['M_1'] < self.params['N']) |\

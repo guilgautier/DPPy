@@ -64,8 +64,8 @@ def dpp_sampler_exact(kernel, proj_kernel=False, mode="GS"):
 
 def proj_dpp_sampler_kernel(kernel, mode="GS"):
 	"""
-		.. seealso::
-			- :func:`proj_dpp_sampler_kernel_GS <proj_dpp_sampler_kernel_GS>`
+	.. seealso::
+		- :func:`proj_dpp_sampler_kernel_GS <proj_dpp_sampler_kernel_GS>`
 	"""
 
 	#### Phase 1: Select eigenvectors
@@ -436,9 +436,7 @@ def proj_dpp_sampler_eig_GS_bis(eig_vecs, size=None):
 		A sample from projection :math:`\operatorname{DPP}(K)`.
 	:rtype:
 		list, array_type
-
-	:Example:
-
+		
 	.. seealso::
 
 		- This is a slight modification of :func:`proj_dpp_sampler_eig_GS <proj_dpp_sampler_eig_GS>`
@@ -659,9 +657,9 @@ def k_dpp_sampler(kernel, size, proj_kernel=False, mode="GS"):
 #########################
 def proj_k_dpp_sampler_kernel(kernel, size, mode="GS"):
 	"""
-		.. seealso::
-			- :func:`proj_dpp_sampler_kernel_GS_bis <proj_dpp_sampler_kernel_GS_bis>`
-			# - :func:`proj_dpp_sampler_kernel_Schur <proj_dpp_sampler_kernel_Schur>`
+	.. seealso::
+		- :func:`proj_dpp_sampler_kernel_GS_bis <proj_dpp_sampler_kernel_GS_bis>`
+		# - :func:`proj_dpp_sampler_kernel_Schur <proj_dpp_sampler_kernel_Schur>`
 	"""
 
 	#### Phase 1: Select eigenvectors
@@ -694,17 +692,17 @@ def proj_k_dpp_sampler_kernel(kernel, size, mode="GS"):
 def k_dpp_sampler_eig(eig_vals, eig_vecs, size, mode="GS",
 											el_sym_pol_eval=None):
 	"""
-		.. seealso::
+	.. seealso::
 
-			Phase 1:
+		Phase 1:
 
-			- :func:`k_dpp_eig_vecs_selector <k_dpp_eig_vecs_selector>`
+		- :func:`k_dpp_eig_vecs_selector <k_dpp_eig_vecs_selector>`
 
-			Phase 2:
+		Phase 2:
 
-			- :func:`proj_dpp_sampler_eig_GS_bis <proj_dpp_sampler_eig_GS_bis>`
-			- :func:`proj_dpp_sampler_eig_GS <proj_dpp_sampler_eig_GS>`
-			- :func:`proj_dpp_sampler_eig_KuTa12 <proj_dpp_sampler_eig_KuTa12>`
+		- :func:`proj_dpp_sampler_eig_GS_bis <proj_dpp_sampler_eig_GS_bis>`
+		- :func:`proj_dpp_sampler_eig_GS <proj_dpp_sampler_eig_GS>`
+		- :func:`proj_dpp_sampler_eig_KuTa12 <proj_dpp_sampler_eig_KuTa12>`
 	"""
 	#### Phase 1: Select eigenvectors
 	eig_vecs_sel = k_dpp_eig_vecs_selector(eig_vals, eig_vecs, size,

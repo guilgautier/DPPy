@@ -12,46 +12,46 @@ from warnings import warn
 class FiniteDPP:
 	""" Finite DPP object parametrized by
 
-		:param kernel_type:
+	:param kernel_type:
 
-			- ``'inclusion'`` :math:`\mathbf{K}` kernel
-			- ``'marginal'`` :math:`\mathbf{L}` kernel
+		- ``'inclusion'`` :math:`\mathbf{K}` kernel
+		- ``'marginal'`` :math:`\mathbf{L}` kernel
 
-		:type kernel_type:
-			string
+	:type kernel_type:
+		string
 
-		:param projection:
-			Indicate whether the provided kernel is of projection type. This may be useful when the :class:`FiniteDPP` object is defined through its inclusion kernel :math:`\mathbf{K}`.
+	:param projection:
+		Indicate whether the provided kernel is of projection type. This may be useful when the :class:`FiniteDPP` object is defined through its inclusion kernel :math:`\mathbf{K}`.
 
-		:type projection:
-			bool, default ``False``
+	:type projection:
+		bool, default ``False``
 
-		:param params:
-			Dictionary containing the parametrization of the underlying
+	:param params:
+		Dictionary containing the parametrization of the underlying
 
-			- inclusion kernel
+		- inclusion kernel
 
-				- ``{'K': K}``, with :math:`0 \preceq \mathbf{K} \preceq I`
-				- ``{'K_eig_dec': (eig_vals, eig_vecs)}``, with :math:`0 \leq eigvals \leq 1`
-				- ``{'A_zono': A}``, with :math:`A (d \\times N)` and :math:`\operatorname{rank}(A)=d`
+			- ``{'K': K}``, with :math:`0 \preceq \mathbf{K} \preceq I`
+			- ``{'K_eig_dec': (eig_vals, eig_vecs)}``, with :math:`0 \leq eigvals \leq 1`
+			- ``{'A_zono': A}``, with :math:`A (d \\times N)` and :math:`\operatorname{rank}(A)=d`
 
-			- marginal kernel
+		- marginal kernel
 
-				- ``{"L": L}``, with :math:`\mathbf{L}\succeq 0`
-				- ``{"L_eig_dec": (eig_vals, eig_vecs)}``, with :math:`eigvals \geq 0`
-				- ``{"L_gram_factor": Phi}``, with :math:`\mathbf{L} = \Phi^{ \\top} \Phi`
+			- ``{"L": L}``, with :math:`\mathbf{L}\succeq 0`
+			- ``{"L_eig_dec": (eig_vals, eig_vecs)}``, with :math:`eigvals \geq 0`
+			- ``{"L_gram_factor": Phi}``, with :math:`\mathbf{L} = \Phi^{ \\top} \Phi`
 
-		:type params:
-			dict
+	:type params:
+		dict
 
-		.. caution::
+	.. caution::
 
-			For now we only consider real valued matrices :math:`\mathbf{K}, \mathbf{L}, A, \Phi`.
+		For now we only consider real valued matrices :math:`\mathbf{K}, \mathbf{L}, A, \Phi`.
 
-		.. seealso::
-			
-			- :ref:`finite_dpps_definition`
-			- :ref:`finite_dpps_exact_sampling_projection_dpps`
+	.. seealso::
+		
+		- :ref:`finite_dpps_definition`
+		- :ref:`finite_dpps_exact_sampling_projection_dpps`
 	"""
 
 ###################
@@ -111,7 +111,7 @@ class FiniteDPP:
 
 	def __str__(self):
 		str_info = ("DPP defined through {}{} kernel".format(\
-											"projection " if self.projection else "",
+										"projection " if self.projection else "",
 											self.kernel_type),
 								"Parametrized by {}".format(self.params_keys),
 								"- sampling mode = {}".format(self.mode),
@@ -129,8 +129,8 @@ class FiniteDPP:
 		### Ensemble type
 		if self.kernel_type not in ("inclusion", "marginal"):
 			err_print = ("Invalid 'kernel_type' argument, choose among:",
-									"- 'inclusion': inclusion kernel, P(S C X) = det(K_S)",
-									"- 'marginal': marginal kernel, P(X=S) propto det(L_S)")
+				"- 'inclusion': inclusion kernel, P(S C X) = det(K_S)",
+				"- 'marginal': marginal kernel, P(X=S) propto det(L_S)")
 			raise ValueError("\n".join(err_print))
 
 	def __check_projection_arg(self):
@@ -166,9 +166,9 @@ class FiniteDPP:
 					self.__full_row_rank(self.A_zono)
 
 			else:
-				err_print = ("Invalid parameter(s) for inclusion kernel, choose among:",
+				err_print = ("Invalid parameter for inclusion kernel, choose among:",
 										"- 'K': 0 <= K <= I",
-										"- 'K_eig_dec': (eig_vals, eig_vecs)",
+										"- 'K_eig_dec': (eig_vals, eig_vecs) 0 <= eig_vals <= 1",
 										"- 'A_zono': A is dxN matrix, with rank(A)=d corresponding to K = A.T (AA.T)^-1 A",
 										"Given: {}".format(self.params_keys))
 				raise ValueError("\n".join(err_print))
@@ -293,10 +293,10 @@ class FiniteDPP:
 	def flush_samples(self):
 		""" Empty the ``FiniteDPP.list_of_samples`` attribute.
 
-			.. see also::
+		.. see also::
 
-				- :func:`sample_exact <sample_exact>`
-				- :func:`sample_mcmc <sample_mcmc>`
+			- :func:`sample_exact <sample_exact>`
+			- :func:`sample_mcmc <sample_mcmc>`
 		"""
 		self.list_of_samples = []
 
@@ -444,8 +444,7 @@ class FiniteDPP:
 					MC_samples = zonotope_sampler(self.A_zono, **params)
 
 				else:
-					err_print = ("Invalid 'mode':",
-											"DPP must be defined via 'A_zono' to use 'zonotope' as sampling mode")
+					err_print = ("Invalid 'mode': DPP must be defined via 'A_zono' to use 'zonotope' as sampling mode")
 					raise ValueError("\n".join(err_print))
 
 			elif self.mode == "E":
@@ -479,9 +478,9 @@ class FiniteDPP:
 	def compute_K(self, msg=None):
 		""" Compute the inclusion kernel :math:`\mathbf{K}` from the original parametrization of the :class:`FiniteDPP` object.
 
-			.. seealso::
+		.. seealso::
 
-				:ref:`finite_dpps_relation_kernels`
+			:ref:`finite_dpps_relation_kernels`
 		"""
 		if self.K is None:
 			if not msg:
@@ -520,13 +519,13 @@ class FiniteDPP:
 	def compute_L(self, msg=False):
 		""" Compute the marginal kernel :math:`\mathbf{L}` from the original parametrization of the :class:`FiniteDPP` object.
 
-			.. seealso::
+		.. seealso::
 
-				:ref:`finite_dpps_relation_kernels`
+			:ref:`finite_dpps_relation_kernels`
 		"""
 		if (self.kernel_type == "inclusion") and self.projection:
 			err_print = ("L = K(I-K)^-1 = (I-K)^-1 - I kernel cannot be computed:",
-									"K being a projection kernel it has some eigenvalues equal to 1")
+				"K being a projection kernel it has some eigenvalues equal to 1")
 			raise ValueError("\n".join(err_print))
 
 		elif self.L is None:

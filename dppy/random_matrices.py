@@ -22,8 +22,7 @@ def hermite_sampler_full(N, beta=2):
 		X = np.random.randn(N, N) + 1j*np.random.randn(N, N)
 		Y = np.random.randn(N, N) + 1j*np.random.randn(N, N)
 
-		A = np.block([  [X,            Y       ],\
-						[-Y.conj(),    X.conj()]])
+		A = np.block([[X, Y],[-Y.conj(), X.conj()]])
 
 	else:
 		raise ValueError("Invalid beta parameter.\n"
@@ -87,8 +86,7 @@ def laguerre_sampler_full(M, N, beta=2):
 	elif beta==4:
 		X = np.random.randn(N, M) + 1j*np.random.randn(N, M)
 		Y = np.random.randn(N, M) + 1j*np.random.randn(N, M)
-		A = np.block([  [X,         Y       ],\
-						[-Y.conj(), X.conj()]])
+		A = np.block([[X, Y],[-Y.conj(), X.conj()]])
 
 	else:
 		raise ValueError("Invalid beta parameter.\n"
@@ -183,10 +181,8 @@ def jacobi_sampler_full(M_1, M_2, N, beta=2):
 		Y_1 = np.random.randn(N, M_2) + 1j*np.random.randn(N, M_2)
 		Y_2 = np.random.randn(N, M_2) + 1j*np.random.randn(N, M_2)
 
-		X = np.block([  [X_1,         X_2         ],\
-										[-X_2.conj(), X_1.conj()]])
-		Y = np.block([  [Y_1,         Y_2         ],\
-										[-Y_2.conj(), Y_1.conj()]])
+		X = np.block([[X_1, X_2],[-X_2.conj(), X_1.conj()]])
+		Y = np.block([[Y_1, Y_2],[-Y_2.conj(), Y_1.conj()]])
 
 	else:
 		raise ValueError("Invalid beta parameter.\n"
@@ -207,15 +203,13 @@ def jacobi_sampler_tridiag(M_1, M_2, N, beta=2):
 	"""
 
 	# c_odd = c_1, c_2, ..., c_2N-1
-	c_odd = np.random.beta(
-				0.5*beta*np.arange(M_1, M_1-N, step=-1),
-				0.5*beta*np.arange(M_2, M_2-N, step=-1))
+	c_odd = np.random.beta(0.5*beta*np.arange(M_1, M_1-N, step=-1),
+		0.5*beta*np.arange(M_2, M_2-N, step=-1))
 
 	# c_even = c_0, c_2, c_2N-2
 	c_even = np.zeros(N)
-	c_even[1:] = np.random.beta(
-					0.5*beta*np.arange(N-1, 0, step=-1),
-					0.5*beta*np.arange(M_1+M_2-N, M_1+M_2-2*N+1,step=-1))
+	c_even[1:] = np.random.beta(0.5*beta*np.arange(N-1, 0, step=-1),
+		0.5*beta*np.arange(M_1+M_2-N, M_1+M_2-2*N+1,step=-1))
 
 	# xi_odd = xi_2i-1 = (1-c_2i-2) c_2i-1
 	xi_odd = (1-c_even)*c_odd
@@ -261,9 +255,7 @@ def mu_ref_beta_sampler_tridiag(a, b, beta=2, size=10):
 	b_2_Ni = 0.5*beta*np.arange(size-1,-1,step=-1)
 
 	# c_odd = c_1, c_2, ..., c_2N-1
-	c_odd = np.random.beta(
-				b_2_Ni + a,
-				b_2_Ni + b)
+	c_odd = np.random.beta(b_2_Ni + a, b_2_Ni + b)
 
 	# c_even = c_0, c_2, c_2N-2
 	c_even = np.zeros(size)
@@ -313,8 +305,7 @@ def circular_sampler_full(N, beta=2, haar_mode="QR"):
 			X = np.random.randn(N, N) + 1j*np.random.randn(N, N)
 			Y = np.random.randn(N, N) + 1j*np.random.randn(N, N)
 
-			A = np.block([  [X,            Y       ],\
-											[-Y.conj(),    X.conj()]])
+			A = np.block([[X, Y], [-Y.conj(), X.conj()]])
 
 		else:
 			raise ValueError("Invalid beta parameter, in 'hermite' mode."
@@ -400,8 +391,7 @@ def mu_ref_unif_unit_circle_sampler_quindiag(beta=2, size=10):
 		alpha = vec[0] + 1j* vec[1]
 		rho = np.sqrt(1-np.abs(alpha)**2)
 
-		xi_list[ind,:,:] = [[alpha.conj(),	rho		],
-												[rho,					 -alpha]]
+		xi_list[ind,:,:] = [[alpha.conj(), rho], [rho, -alpha]]
 
 	# L = diag(xi_0,xi_2,\dots)
 	L = block_diag(xi_list[::2,:,:])

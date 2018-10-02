@@ -124,14 +124,14 @@ def add_exchange_delete_sampler(kernel, s_init=None, nb_it_max=10, T_max=None):
 	""" MCMC sampler for generic DPPs, it is a mix of add/delete and basis exchange MCMC samplers.
 
 	:param kernel:
-			Kernel martrix
+		Kernel martrix
 	:type kernel:
-			array_type
+		array_type
 
 	:param s_init:
-			Initial sample.
+		Initial sample.
 	:type s_init:
-			list
+		list
 
 	:param nb_it_max:
 		Maximum number of iterations performed by the the algorithm.
@@ -142,7 +142,7 @@ def add_exchange_delete_sampler(kernel, s_init=None, nb_it_max=10, T_max=None):
 	:param T_max:
 		Maximum running time of the algorithm (in seconds).
 	:type T_max:
-			float
+		float
 
 	:return:
 		list of `nb_it_max` approximate sample of DPP(kernel)
@@ -227,26 +227,26 @@ def add_delete_sampler(kernel, s_init, nb_it_max=10, T_max=10):
 	""" MCMC sampler for generic DPP(kernel), it performs local moves by removing/adding one element at a time.
 
 	:param kernel:
-			Kernel martrix
+		Kernel martrix
 	:type kernel:
-			array_type
+		array_type
 
 	:param s_init:
-			Initial sample.
+		Initial sample.
 	:type s_init:
-			list
+		list
 
 	:param nb_it_max:
-			Maximum number of iterations performed by the the algorithm.
-			Default is 10.
+		Maximum number of iterations performed by the the algorithm.
+		Default is 10.
 	:type nb_it_max:
-			int
+		int
 
 	:param T_max:
-			Maximum running time of the algorithm (in seconds).
-			Default is 10s.
+		Maximum running time of the algorithm (in seconds).
+		Default is 10s.
 	:type T_max:
-			float
+		float
 
 	:return:
 		list of `nb_it_max` approximate sample of DPP(kernel)
@@ -255,7 +255,7 @@ def add_delete_sampler(kernel, s_init, nb_it_max=10, T_max=10):
 
 	.. seealso::
 
-			Algorithm 1 in :cite:`LiJeSr16c`
+		Algorithm 1 in :cite:`LiJeSr16c`
 	"""
 
 	# Initialization
@@ -304,36 +304,36 @@ def basis_exchange_sampler(kernel, s_init, nb_it_max=10, T_max=10):
 	""" MCMC sampler for projection DPPs, based on the basis exchange property.
 
 	:param kernel:
-			Feature vector matrix, feature vectors are stacked columnwise.
-			It is assumed to be full row rank.
+		Feature vector matrix, feature vectors are stacked columnwise.
+		It is assumed to be full row rank.
 	:type kernel:
-			array_type
+		array_type
 
 	:param s_init:
-			Initial sample.
+		Initial sample.
 	:type s_init:
-			list
+		list
 
 	:param nb_it_max:
-			Maximum number of iterations performed by the the algorithm.
-			Default is 10.
+		Maximum number of iterations performed by the the algorithm.
+		Default is 10.
 	:type nb_it_max:
-			int
+		int
 
 	:param T_max:
-			Maximum running time of the algorithm (in seconds).
-			Default is 10s.
+		Maximum running time of the algorithm (in seconds).
+		Default is 10s.
 	:type T_max:
-			float
+		float
 
 	:return:
-			MCMC chain of approximate sample (stacked row_wise i.e. nb_it_max rows).
+		MCMC chain of approximate sample (stacked row_wise i.e. nb_it_max rows).
 	:rtype:
-			array_type
+		array_type
 
 	.. seealso::
 
-			Algorithm 2 in :cite:`LiJeSr16c`
+		Algorithm 2 in :cite:`LiJeSr16c`
 	"""
 
 	# Initialization
@@ -393,26 +393,26 @@ def extract_basis(y_sol, eps=1e-5):
 	of LP :eq:`Px` that are in (0,1).
 
 	:param y_sol:
-			Optimal solution of LP :eq:`Px`
+		Optimal solution of LP :eq:`Px`
 	:type y_sol:
-			list
+		list
 
 	:param eps:
-			Tolerance :math:`y_i^* \in (\epsilon, 1-\epsilon), \quad \epsilon \geq 0`
+		Tolerance :math:`y_i^* \in (\epsilon, 1-\epsilon), \quad \epsilon \geq 0`
 	:eps type:
-			float
+		float
 
 	:return:
-			Indices of the feature vectors spanning the tile in which the point is lies.
-			:math:`B_{x} = \left\{ i \, ; \, y_i^* \in (0,1) \\right\}`
+		Indices of the feature vectors spanning the tile in which the point is lies.
+		:math:`B_{x} = \left\{ i \, ; \, y_i^* \in (0,1) \\right\}`
 	:rtype:
-			list
+		list
 
 	.. seealso::
 
-			Algorithm 3 in :cite:`GaBaVa17`
+		Algorithm 3 in :cite:`GaBaVa17`
 
-			- :func:`zono_sampling <zono_sampling>`
+		- :func:`zono_sampling <zono_sampling>`
 	"""
 
 	basis = np.where((eps<y_sol)&(y_sol<1-eps))[0]
@@ -427,38 +427,37 @@ def zonotope_sampler(A_zono, **params):
 	also equal to the rank of the feature matrix (assumed to be full row rank).
 
 	:param A_zono:
-			Feature vector matrix, feature vectors are stacked columnwise.
-			It is assumed to be full row rank.
+		Feature vector matrix, feature vectors are stacked columnwise.
+		It is assumed to be full row rank.
 	:type A_zono:
-			array_type
+		array_type
 
-	:param c: Linear objective of the linear program used to identify
-			the tile in which a point lies.
+	:param c: Linear objective of the linear program used to identify the tile in which a point lies.
 	:type c: list
 
 	:param nb_it_max:
-			Maximum number of iterations performed by the the algorithm.
-			Default is 10.
+		Maximum number of iterations performed by the the algorithm.
+		Default is 10.
 	:type nb_it_max:
-			int
+		int
 
 	:param T_max:
-			Maximum running time of the algorithm (in seconds).
-			Default is 10s.
+		Maximum running time of the algorithm (in seconds).
+		Default is 10s.
 	:type T_max:
-			float
+		float
 
 	:return:
-			MCMC chain of approximate sample (stacked row_wise i.e. nb_it_max rows).
+		MCMC chain of approximate sample (stacked row_wise i.e. nb_it_max rows).
 	:rtype:
-			array_type
+		array_type
 
 	.. seealso::
 
-			Algorithm 5 in :cite:`GaBaVa17`
+		Algorithm 5 in :cite:`GaBaVa17`
 
-			- :func:`extract_basis <extract_basis>`
-			- :func:`basis_exchange_sampler <basis_exchange_sampler>`
+		- :func:`extract_basis <extract_basis>`
+		- :func:`basis_exchange_sampler <basis_exchange_sampler>`
 	"""
 
 	r, N = A_zono.shape # Sizes of r=samples=rank(A_zono), N=ground set

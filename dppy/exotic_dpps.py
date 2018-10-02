@@ -19,16 +19,16 @@ except (SystemError, ImportError):
 class UST:
 	""" Uniform Spanning Tree object parametrized by
 
-		:param graph: 
-			Connected undirected graph
+	:param graph: 
+		Connected undirected graph
 
-		:type graph:
-			networkx graph
+	:type graph:
+		networkx graph
 
-		.. seealso::
-			
-			- :ref:`finite_dpps_definition`
-			- :ref:`UST`
+	.. seealso::
+		
+		- :ref:`finite_dpps_definition`
+		- :ref:`UST`
 	"""
 
 	def __init__(self, graph):
@@ -56,8 +56,8 @@ class UST:
 	def __str__(self):
 
 		str_info = ["Uniform Spanning Tree measure on a graph with:",
-								"- {} nodes",
-								"- {} edges",
+									"- {} nodes",
+									"- {} edges",
 								"Sampling mode = {}.",
 								"Number of samples = {}."]
 
@@ -123,14 +123,13 @@ class UST:
 		self.list_of_samples.append(sampl)
 		
 	def compute_kernel(self):
-		"""
-			Compute the orthogonal projection kernel :math:`\mathbf{K}` onto the row span of the vertex-edge incidence matrix, refering to the transfer current matrix.
-			In fact, one can discard any row of the vertex-edge incidence matrix (:math:`A`) to compute :math:`\mathbf{K}=A^{\top}[AA^{\top}]^{-1}A`.
-			In practice, we orthogonalize the rows of :math:`A` to get the eigenvectors :math:`U` of :math:`\mathbf{K}` and thus compute :math:`\mathbf{K}=UU^{\top}`.
+		""" Compute the orthogonal projection kernel :math:`\mathbf{K}` onto the row span of the vertex-edge incidence matrix, refering to the transfer current matrix.
+		In fact, one can discard any row of the vertex-edge incidence matrix (:math:`A`) to compute :math:`\mathbf{K}=A^{\top}[AA^{\top}]^{-1}A`.
+		In practice, we orthogonalize the rows of :math:`A` to get the eigenvectors :math:`U` of :math:`\mathbf{K}` and thus compute :math:`\mathbf{K}=UU^{\top}`.
 
-			.. seealso::
+		.. seealso::
 
-				- :func:`plot_kernel <plot_kernel>`
+			- :func:`plot_kernel <plot_kernel>`
 		"""
 
 		if self.kernel is None:
@@ -329,16 +328,16 @@ class UST:
 class CarriesProcess:
 	""" Carries process formed by the cumulative sum of i.i.d. digits in :math:`\{0, \dots, b-1\}`. This is a DPP on the natural integers with a non symmetric kernel.
 
-		:param base: 
-			Base/radix
+	:param base: 
+		Base/radix
 
-		:type base:
-			int, default 10
+	:type base:
+		int, default 10
 
-		.. seealso::
+	.. seealso::
 
-			- :cite:`BoDiFu10`
-			- :ref:`carries_process`
+		- :cite:`BoDiFu10`
+		- :ref:`carries_process`
 	"""
 
 	def __init__(self, base=10):
@@ -372,11 +371,11 @@ class CarriesProcess:
 	def sample(self, size=100):
 		""" Compute the cumulative sum (in base :math:`b`) of a sequence of i.i.d. digits and record the position of carries.
 
-			:param size:
-				size of the sequence of i.i.d. digits in :math:`\{0, \dots, b-1\}`
+		:param size:
+			size of the sequence of i.i.d. digits in :math:`\{0, \dots, b-1\}`
 
-			:type size:
-				int
+		:type size:
+			int
 		"""
 
 		self.size = size
@@ -506,16 +505,16 @@ class CarriesProcess:
 class PoissonizedPlancherel:
 	""" Poissonized Plancherel measure
 
-		:param theta: 
-			Base/radix
+	:param theta: 
+		Base/radix
 
-		:type theta:
-			int, default 10
+	:type theta:
+		int, default 10
 
-		.. seealso::
+	.. seealso::
 
-			- :cite:`Bor09` Section 6
-		 	- :ref:`poissonized_plancherel_measure`
+		- :cite:`Bor09` Section 6
+	 	- :ref:`poissonized_plancherel_measure`
 	"""
 
 	def __init__(self, theta=10):
