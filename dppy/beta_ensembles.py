@@ -36,23 +36,20 @@ class BetaEnsemble:
 		self.beta = beta
 		self.__check_beta_validity()
 
-		self.mode = "banded" if self.name != "ginibre" else None
+		self.mode = 'banded' if self.name != 'ginibre' else None
 		self.params = {}
+		self.__nb_points = 0
 		self.list_of_samples = []
 		# self.nb_of_samples = len(self.list_of_samples)
 
 	def __str__(self):
-		str_info = ["ensemble name = {}.",
-								"beta parameter = {}.",
-								"sampling mode = {}.",
-								"sampling parameters = {}.",
-								"number of samples = {}."]
+		str_info = ('ensemble name = {}'.format(self.name),
+								'beta parameter = {}'.format(self.beta),
+								'sampling mode = {}'.format(self.mode),
+								'sampling parameters = {}'.format(self.params),
+								'number of samples = {}'.format(len(self.list_of_samples)))
 
-		return "\n".join(str_info).format(self.name,
-																			self.beta,
-																			self.mode,
-																			self.params,
-																			len(self.list_of_samples))
+		return '\n'.join(str_info)
 
 	def info(self):
 		""" Print infos about the :class:`BetaEnsemble` object
@@ -133,64 +130,67 @@ class BetaEnsemble:
 		self.params = params
 		self.__check_params_validity()
 
-		if self.mode == "banded":
+		if self.mode == 'banded':
 
-			if self.name == "hermite":
-					sampl = muref_normal_sampler_tridiag(loc=self.params["loc"],
-																					scale=self.params["scale"],
+			self.__nb_points = self.params['size']
+
+			if self.name == 'hermite':
+					sampl = mu_ref_normal_sampler_tridiag(loc=self.params['loc'],
+																					scale=self.params['scale'],
 																					beta=self.beta,
-																					size=self.params["size"])
+																					size=self.__nb_points)
 
-			elif self.name == "laguerre":
-					sampl = mu_ref_gamma_sampler_tridiag(
-																					shape=self.params["shape"],
-																					scale=self.params["scale"],
+			elif self.name == 'laguerre':
+					sampl = mu_ref_gamma_sampler_tridiag(shape=self.params['shape'],
+																					scale=self.params['scale'],
 																					beta=self.beta,
-																					size=self.params["size"])
+																					size=self.__nb_points)
 
-			elif self.name == "jacobi":
-					sampl = mu_ref_beta_sampler_tridiag(a=self.params["a"],
-																						b=self.params["b"],
+			elif self.name == 'jacobi':
+					sampl = mu_ref_beta_sampler_tridiag(a=self.params['a'],
+																						b=self.params['b'],
 																						beta=self.beta,
-																						size=self.params["size"])
+																						size=self.__nb_points)
 
-			elif self.name == "circular":
+			elif self.name == 'circular':
 					sampl = mu_ref_unif_unit_circle_sampler_quindiag(beta=self.beta,
-																		  			size=self.params["size"])
+																		  			size=self.__nb_points)
 
-			elif self.name == "ginibre":
+			elif self.name == 'ginibre':
 
-					raise ValueError("In valid 'mode' argument. No banded model for Ginibre ensemble. Use 'full'.\nGiven {}".format(mode))
+					raise ValueError('In valid `mode` argument. No banded model for Ginibre ensemble. Use `mode=full.\nGiven {}'.format(mode))
 
-		elif self.mode == "full":
+		elif self.mode == 'full':
 
-			if self.name == "hermite":
-				sampl = hermite_sampler_full(N=self.params['N'],
+			self.__nb_points = self.params['N']
+
+			if self.name == 'hermite':
+				sampl = hermite_sampler_full(N=self.__nb_points,
 																		beta=self.beta)
 
-			elif self.name == "laguerre":
+			elif self.name == 'laguerre':
 				sampl = laguerre_sampler_full(M=self.params['M'],
-																			N=self.params['N'],
+																			N=self.__nb_points,
 																			beta=self.beta)
 
-			elif self.name == "jacobi":
+			elif self.name == 'jacobi':
 				sampl = jacobi_sampler_full(M_1=self.params['M_1'],
 																		M_2=self.params['M_2'],
-																		N=self.params['N'],
+																		N=self.__nb_points,
 																		beta=self.beta)
 
-			elif self.name == "circular":
-				sampl = circular_sampler_full(N=self.params['N'],
+			elif self.name == 'circular':
+				sampl = circular_sampler_full(N=self.__nb_points,
 																			beta=self.beta,
-																			haar_mode=self.params["haar_mode"])
+																			haar_mode=self.params['haar_mode'])
 
-			elif self.name == "ginibre":
-				sampl = ginibre_sampler_full(N=self.params['N'])
+			elif self.name == 'ginibre':
+				sampl = ginibre_sampler_full(N=self.__nb_points)
 
 		self.list_of_samples.append(sampl)
 
 
-	def plot(self, normalization=True, title=""):
+	def plot(self, normalization=True, title=''):
 		""" Display the last realization of the corresponding :class:`BetaEnsemble` object.
 
 		:param normalization:
@@ -218,44 +218,44 @@ class BetaEnsemble:
 		"""
 
 		if not self.list_of_samples:
-			raise ValueError("list_of_samples is empty, you must sample first")
+			raise ValueError('list_of_samples is empty, you must sample first')
 
 		fig, ax = plt.subplots(1, 1)
 		points = self.list_of_samples[-1].copy()
 
-		if self.name in ("hermite", "laguerre", "jacobi"):
+		if self.name in ('hermite', 'laguerre', 'jacobi'):
 
-			if self.name == "hermite":
+			if self.name == 'hermite':
 
 				if normalization:
 
-					if self.mode == "banded":
+					if self.mode == 'banded':
 						N	= self.params['size']
 
 						points -= self.params['loc']
 						points /= np.sqrt(0.5)*self.params['scale']
 
-					elif self.mode == "full":
+					elif self.mode == 'full':
 						N = self.params['N']
 
 					points /= np.sqrt(self.beta * N)
 
-					x = np.linspace(-2,2,100)
+					x = np.linspace(-2, 2, 100)
 					ax.plot(x, semi_circle_law(x),
 									'r-', lw=2, alpha=0.6,
 									label=r'$f_{sc}$')
 
-			elif self.name == "laguerre":
+			elif self.name == 'laguerre':
 
 				if normalization:
 
-					if self.mode == "banded":
+					if self.mode == 'banded':
 						N	= self.params['size']
 						M = 2/self.beta * self.params['shape'] + N -1
 
 						points /= 0.5*self.params['scale']
 
-					elif self.mode == "full":
+					elif self.mode == 'full':
 						N = self.params['N']
 						M	= self.params['M']
 
@@ -264,18 +264,18 @@ class BetaEnsemble:
 					x = np.linspace(1e-3, np.max(points)+0.3, 200)
 					ax.plot(x, marcenko_pastur_law(x, M, N),
 									'r-', lw=2, alpha=0.6,
-									label=r'$f_{MP}$')
+									label=r'$Marcenko Pastur law$')
 
-			elif self.name == "jacobi":
+			elif self.name == 'jacobi':
 
 				if normalization:
 
-					if self.mode == "banded":
+					if self.mode == 'banded':
 						N	= self.params['size']
 						M_1 = 2/self.beta * self.params['a'] + N -1
 						M_2 = 2/self.beta * self.params['b'] + N -1
 
-					elif self.mode == "full":
+					elif self.mode == 'full':
 						N	= self.params['N']
 						M_1 = self.params['M_1']
 						M_2 = self.params['M_2']
@@ -286,11 +286,11 @@ class BetaEnsemble:
 									'r-', lw=2, alpha=0.6,
 									label='Wachter Law')
 
-			ax.scatter(points, np.zeros(len(points)), c='blue', label="sample")
+			ax.scatter(points, np.zeros(len(points)), c='blue', label='sample')
 
-		elif self.name in ("circular", "ginibre"):
+		elif self.name in ('circular', 'ginibre'):
 
-			if self.name == "circular":
+			if self.name == 'circular':
 
 				unit_circle = plt.Circle((0,0), 1, color='r', fill=False)
 				ax.add_artist(unit_circle)
@@ -299,7 +299,7 @@ class BetaEnsemble:
 				ax.set_ylim([-1.3, 1.3])
 				ax.set_aspect('equal')
 
-			if self.name == "ginibre":
+			if self.name == 'ginibre':
 
 				if normalization:
 
@@ -312,18 +312,19 @@ class BetaEnsemble:
 					ax.set_ylim([-1.3, 1.3])
 					ax.set_aspect('equal')
 
-			ax.scatter(points.real, points.imag, c='blue', label="sample")
+			ax.scatter(points.real, points.imag, c='blue', label='sample')
 
-		str_title = "Realization of {} ensemble with {} points {}".format(
-									self.name,
-									self.params['N'] if ("N" in self.params) else self.params['size'],
-									r"($\beta={}$)".format(self.beta) if self.name!="ginibre" else "")
+		str_title = ('Realization of {} ensemble'.format(self.name),
+			'with {} points'.format(self.__nb_points),
+			r'and $\beta={}$'.format(self.beta))
+		str_title = ' '.join(str_title)
+
 		plt.title(title if title else str_title)
 		ax.legend(loc='best', frameon=False)
 		plt.show()
 
 
-	def hist(self, normalization=True, title=""):
+	def hist(self, normalization=True, title=''):
 		""" Display the histogram of the last realization of corresponding :class:`BetaEnsemble` object.
 
 		:param normalization:
@@ -351,74 +352,74 @@ class BetaEnsemble:
 		"""
 
 		if not self.list_of_samples:
-			raise ValueError("list_of_samples is empty, you must sample first")
+			raise ValueError('list_of_samples is empty, you must sample first')
 
 		fig, ax = plt.subplots(1, 1)
 		points = self.list_of_samples[-1].copy()
 		# points = np.array(self.list_of_samples).flatten()
 
-		if self.name == "hermite":
+		if self.name == 'hermite':
 
 			if normalization:
 
-				if self.mode == "banded":
+				if self.mode == 'banded':
 					N	= self.params['size']
 
 					points -= self.params['loc']
 					points /= np.sqrt(0.5)*self.params['scale']
 
-				elif self.mode == "full":
+				elif self.mode == 'full':
 					N = self.params['N']
 
 				points /= np.sqrt(self.beta * N)
 
-				x = np.linspace(-2,2,100)
+				x = np.linspace(-2, 2, 100)
 				ax.plot(x, semi_circle_law(x),
 								'r-', lw=2, alpha=0.6,
 								label=r'$f_{sc}$')
 
-		elif self.name == "laguerre":
+		elif self.name == 'laguerre':
 
 			if normalization:
 
-				if self.mode == "banded":
+				if self.mode == 'banded':
 					N	= self.params['size']
 					M = 2/self.beta * self.params['shape'] + N -1
 
 					points /= 0.5*self.params['scale']
 
-				elif self.mode == "full":
+				elif self.mode == 'full':
 					N = self.params['N']
 					M	= self.params['M']
 
 				points /= self.beta * M
 
-				x = np.linspace(1e-3,np.max(points)+0.3,100)
+				x = np.linspace(1e-3, np.max(points)+0.3, 100)
 				ax.plot(x, marcenko_pastur_law(x, M, N),
 								'r-', lw=2, alpha=0.6,
-								label=r'$f_{MP}$')
+								label=r'$Marcenko Pastur law$')
 
-		elif self.name == "jacobi":
+		elif self.name == 'jacobi':
 
 			if normalization:
 
-				if self.mode == "banded":
+				if self.mode == 'banded':
 					N	= self.params['size']
 					M_1 = 2/self.beta * self.params['a'] + N -1
 					M_2 = 2/self.beta * self.params['b'] + N -1
 
-				elif self.mode == "full":
+				elif self.mode == 'full':
 					N	= self.params['N']
 					M_1 = self.params['M_1']
 					M_2 = self.params['M_2']
 
 				eps = 1e-5
-				x = np.linspace(eps,1.0-eps,500)
+				x = np.linspace(eps, 1.0-eps, 500)
 				ax.plot(x, wachter_law(x, M_1, M_2, N),
 								'r-', lw=2, alpha=0.6,
 								label='Wachter Law')
 
-		elif self.name == "circular":
+		elif self.name == 'circular':
 
 			if normalization:
 
@@ -426,21 +427,22 @@ class BetaEnsemble:
 
 				ax.axhline(y=1/(2*np.pi),
 									color='r',
-									label=r"$\frac{1}{2\pi}$")
+									label=r'$\frac{1}{2\pi}$')
 
-		elif self.name == "ginibre":
+		elif self.name == 'ginibre':
 
-			raise ValueError("No 'hist' method for Ginibre.")
+			raise ValueError('No `hist` method for Ginibre.')
 
 		ax.hist(points,
 						bins=30, density=1,
 						facecolor='blue', alpha=0.5,
 						label='hist')
 
-		str_title = "Histogram of {} ensemble with {} points {}".format(
-									self.name,
-										self.params['N'] if ("N" in self.params) else self.params['size'],
-										r"($\beta={}$)".format(self.beta) if self.name!="ginibre" else "")
+		str_title = ('Histogram of {} ensemble'.format(self.name),
+			'with {} points'.format(self.__nb_points),
+			r'and $\beta={}$'.format(self.beta))
+		str_title = ' '.join(str_title)
+
 		plt.title(title if title else str_title)
 
 		ax.legend(loc='best', frameon=False)
@@ -451,108 +453,104 @@ class BetaEnsemble:
 	# 	# return the matrix [K(x,y)]_x,y in list_of_points
 	# 	# maybe plot the heatmap
 	# 	if self.beta != 2:
-	# 		raise ValueError("Invalid beta parameter, {} != 2. The OPE is not a DPP, there is no notion of kernel".format(self.beta))
+	# 		raise ValueError('Invalid beta parameter, {} != 2. The OPE is not a DPP, there is no notion of kernel'.format(self.beta))
 	# 	else:
 	# 		pass
 
 	def __check_name_validity(self):
 
-		supported_ensembles = ("hermite, laguerre, jacobi,\
-													circular,\
-													ginibre")
+		supp_OPEs = ('hermite', 'laguerre', 'jacobi', 'circular', 'ginibre')
 
-		if self.name not in supported_ensembles:
-			str_list = ["- {}".format(OPE) for OPE in supported_ensembles]
-			raise ValueError("\n".join(["Supported OPEs:"] + str_list))
+		if self.name not in supp_OPEs:
+			err_print = ['Invalid name `{}`.'.format(self.name),'Supported OPEs:']
+			err_print.extend('- {}'.format(OPE) for OPE in supp_OPEs)
+
+			raise ValueError('\n'.join(err_print))
 
 	def __check_beta_validity(self):
 
 		if not (self.beta > 0):
-			raise ValueError("beta must be positive")
+			raise ValueError('beta must be positive')
 
-		elif self.name == "circular":
+		elif self.name == 'circular':
 			if not isinstance(self.beta, int):
-				raise ValueError("Invalid beta parameter. For cicurlar ensembles, DPPy only treats positive integers. Given beta={}".format(self.beta))
+				raise ValueError('Invalid beta parameter. For cicurlar ensembles, DPPy only treats positive integers. Given beta={}'.format(self.beta))
 
-		elif self.name == "ginibre":
+		elif self.name == 'ginibre':
 			if not (self.beta == 2):
-				raise ValueError("Invalid beta parameter. For the Ginibre ensemble beta must be equal to 2. Given beta={}".format(self.beta))
+				raise ValueError('Invalid beta parameter. For the Ginibre ensemble beta must be equal to 2. Given beta={}'.format(self.beta))
 
 	def __check_mode_validity(self):
 
-		if self.mode not in ("banded", "full"):
-			raise ValueError("Invalid mode attribute. Use 'full'(default) or 'banded'.\nGiven {}".format(self.mode))
+		if self.mode not in ('banded', 'full'):
+			raise ValueError('Invalid mode attribute. Use `full` (default) or `banded`.\nGiven {}'.format(self.mode))
 
 	def __check_params_validity(self):
 
-		if self.mode == "banded":
+		if self.mode == 'banded':
 
-			if self.name == "hermite":
-				if ("loc" not in self.params) |\
-					 ("scale" not in self.params):
-					raise ValueError("Missing 'loc' or 'scale' parameter.\nGiven {}".format(self.params))
+			if self.name == 'hermite':
+				if ('loc' not in self.params) | ('scale' not in self.params):
+					raise ValueError('Missing `loc` or `scale` parameter.\nGiven {}'.format(self.params))
 				else:
-					np.random.normal(self.params["loc"], self.params["scale"])
+					np.random.normal(self.params['loc'], self.params['scale'])
 
-			elif self.name == "laguerre":
-				if ("shape" not in self.params) |\
-					 ("scale" not in self.params):
-					raise ValueError("Missing 'shape' or 'scale' parameter.\nGiven {}".format(self.params))
+			elif self.name == 'laguerre':
+				if ('shape' not in self.params) | ('scale' not in self.params):
+					raise ValueError('Missing `shape` or `scale` parameter.\nGiven {}'.format(self.params))
 				else:
-					np.random.gamma(self.params["shape"], scale=self.params["scale"])
+					np.random.gamma(self.params['shape'], scale=self.params['scale'])
 
-			elif self.name == "jacobi":
-				if ('a' not in self.params) |\
-					 ('b' not in self.params):
-					raise ValueError("Missing 'a' or 'b' parameter.\nGiven {}".format(self.params))
+			elif self.name == 'jacobi':
+				if ('a' not in self.params) | ('b' not in self.params):
+					raise ValueError('Missing `a` or `b` parameter.\nGiven {}'.format(self.params))
 				else:
-					np.random.beta(self.params["a"], self.params["b"])
+					np.random.beta(self.params['a'], self.params['b'])
 
-			elif self.name == "circular":
+			elif self.name == 'circular':
 				pass
 
-			elif self.name == "ginibre":  
-				raise ValueError("Invalid 'mode'. Ginibre has no banded model. Use 'mode=full'.")
+			elif self.name == 'ginibre':  
+				raise ValueError('Invalid `mode`. Ginibre has no banded model. Use `mode=full.')
 
-		elif self.mode == "full":
+		elif self.mode == 'full':
 
 			if self.beta not in (1, 2, 4):
 
-				raise ValueError("Invalid match between 'mode' and 'beta'. Sampling using 'mode=full' computes the eigenvalues of a fully filled random matrix and refers to beta = 1, 2 or 4.\nGiven beta={}".format(self.beta))
+				raise ValueError('Invalid match between `mode` and `beta`. Sampling using `mode=full` computes the eigenvalues of a fully filled random matrix and refers to beta = 1, 2 or 4.\nGiven beta={}'.format(self.beta))
 
 			else:
 
-				if "N" not in self.params:
-						raise ValueError("Missing key 'N' in the dict of sampling parameters. It corresponds to the number of points of the ensemble i.e. the size of the matrix to be diagonalized.\nGiven {}".format(self.params))
+				if 'N' not in self.params:
+						raise ValueError('Missing key `N` in the dict of sampling parameters. It corresponds to the number of points of the ensemble i.e. the size of the matrix to be diagonalized.\nGiven {}'.format(self.params))
 
-				if self.name == "hermite":
+				if self.name == 'hermite':
 					pass
 
-				elif self.name == "laguerre":
+				elif self.name == 'laguerre':
 
 					if ('M' not in self.params):
-						raise ValueError("Missing key 'M', with M>=N.\nGiven {}".format(self.params))
+						raise ValueError('Missing key `M`, with M>=N.\nGiven {}'.format(self.params))
 
 					elif self.params['M'] < self.params['N']:
-						raise ValueError("M<N instead of M>=N.\nGiven {}".format(self.params))
+						raise ValueError('M<N instead of M>=N.\nGiven {}'.format(self.params))
 
-				elif self.name == "jacobi":
+				elif self.name == 'jacobi':
 
-					if ('M_1' not in self.params) |\
-						 ('M_2' not in self.params):
-						raise ValueError("Missing keys 'M_1', 'M_2', with M_1, M_2>=N.\nGiven {}".format(self.params))
+					if ('M_1' not in self.params) | ('M_2' not in self.params):
+						raise ValueError('Missing keys `M_1`, `M_2`, with M_1, M_2>=N.\nGiven {}'.format(self.params))
 
 					elif (self.params['M_1'] < self.params['N']) |\
 							 (self.params['M_2'] < self.params['N']):
-						raise ValueError("M_1 or M_2<N instead of M_1 and M_2 >= N.\nGiven {}".format(self.params))
+						raise ValueError('M_1 or M_2<N instead of M_1 and M_2 >= N.\nGiven {}'.format(self.params))
 
-				elif self.name == "circular":
+				elif self.name == 'circular':
 
-					if "haar_mode" not in self.params:
-						raise ValueError("Missing 'haar_mode' parameter under 'mode=full'. Use 'haar_mode=hermite'(default) or 'QR'.\nGiven {}".format(self.params))
+					if 'haar_mode' not in self.params:
+						raise ValueError('Missing `haar_mode` parameter under `mode=full`. Use `haar_mode=hermite` or `QR`.\nGiven {}'.format(self.params))
 
-					elif self.params["haar_mode"] not in ("hermite", "QR"):
-						raise ValueError("Invalid 'haar_mode' parameter when. Use 'hermite' or 'QR'.\nGiven {}".format(self.params))
+					elif self.params['haar_mode'] not in ('hermite', 'QR'):
+						raise ValueError('Invalid `haar_mode` parameter. Use `haar_mode=hermite` or `QR`.\nGiven {}'.format(self.params))
 
-				elif self.name == "ginibre":
+				elif self.name == 'ginibre':
 					pass

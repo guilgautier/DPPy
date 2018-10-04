@@ -51,8 +51,8 @@ pip install .
 We wrote a companion paper to [DPPy](https://github.com/guilgautier/DPPy) for latter submission to the [MLOSS](http://www.jmlr.org/mloss/) track of JMLR.
 
 The companion paper is available on:
-    - [arXiv](http://arxiv.org/abs/1809.07258)
-    - [GitHub](https://github.com/guilgautier/DPPy_paper), see the [`arxiv`](https://github.com/guilgautier/DPPy_paper/tree/arxiv) branch
+ - [arXiv](http://arxiv.org/abs/1809.07258)
+ - [GitHub](https://github.com/guilgautier/DPPy_paper), see the [`arxiv`](https://github.com/guilgautier/DPPy_paper/tree/arxiv) branch
 
 If you use this package, please consider citing it with this piece of BibTeX
 ```bibtex
