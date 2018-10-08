@@ -320,8 +320,79 @@ class UST:
 		aldous_tree_graph.add_edges_from(tree_edges)
 
 		return aldous_tree_graph
+class Descent: 
+	def __str__(self):
+		pass 
+	def info(self):
+		""" Print infos about the :class:`UST` object
+		"""
+		print(self.__str__())
+	
+	def flush_samples(self):
+		""" Empty the ``CarriesProcess.list_of_samples`` attribute.
+		"""
+		self.list_of_samples = []
+	def sample(self, size=100):
+		pass
+	def plot_vs_bernoullis(self, title='', process_name='',str_title=''):
+		"""Display the process on the real line and compare it to a sequence of i.i.d. Bernoullis with parameter :math:`\\frac12(1-\\frac1b)`
 
-class CarriesProcess:
+		:param title:
+			Plot title
+
+		:type title:
+			string
+
+		.. seealso::
+
+			- :func:`sample <sample>`
+			- :func:`plot <plot>`
+		"""
+
+		carries = self.list_of_samples[-1]
+		len_car = len(carries)
+
+		ind_tmp = np.random.rand(self.size) < self.bernoulli_param
+		bern = np.arange(0, self.size)[ind_tmp]
+		len_ber = len(bern)
+
+		# Display Carries and Bernoullis
+		fig, ax = plt.subplots(figsize=(19,2))
+
+		ax.scatter(carries, np.ones(len_car), color='b', s=20, label=process_name)
+		ax.scatter(bern, -np.ones(len_ber), color='r', s=20, label='Bernoullis')
+
+		# Spine options
+		ax.spines['bottom'].set_position('center')
+		ax.spines['left'].set_visible(False)
+		ax.spines['top'].set_visible(False)
+		ax.spines['right'].set_visible(False)
+
+		# Ticks options
+		minor_ticks = np.arange(0, self.size+1)                                            
+		major_ticks = np.arange(0, self.size+1, 20)                                               
+		ax.set_xticks(major_ticks)                                                       
+		ax.set_xticks(minor_ticks, minor=True)
+		ax.set_xticklabels(major_ticks, fontsize=15)
+		ax.xaxis.set_ticks_position('bottom')
+
+		ax.tick_params(
+		    axis='y',				# changes apply to the y-axis
+		    which='both',		# both major and minor ticks are affected
+		    left=False,			# ticks along the left edge are off
+		    right=False,		# ticks along the right edge are off
+		    labelleft=False)# labels along the left edge are off
+
+		ax.xaxis.grid(True)
+		ax.set_xlim([-1,101])
+		ax.legend(bbox_to_anchor=(0,0.85), frameon=False, prop={'size':20})
+
+		str_title = str_title
+		plt.title(title if title else str_title)
+		plt.show()
+
+
+class CarriesProcess(Descent):
 	""" Carries process formed by the cumulative sum of i.i.d. digits in :math:`\{0, \dots, b-1\}`. This is a DPP on the natural integers with a non symmetric kernel.
 
 	:param base: 
@@ -354,15 +425,6 @@ class CarriesProcess:
 		return '\n'.join(str_info).format(self.base,
 																			len(self.list_of_samples))
 
-	def info(self):
-		""" Print infos about the :class:`UST` object
-		"""
-		print(self.__str__())
-
-	def flush_samples(self):
-		""" Empty the ``CarriesProcess.list_of_samples`` attribute.
-		"""
-		self.list_of_samples = []
 
 	def sample(self, size=100):
 		""" Compute the cumulative sum (in base :math:`b`) of a sequence of i.i.d. digits and record the position of carries.
@@ -436,63 +498,8 @@ class CarriesProcess:
 		str_title = r'Realization of the carries process in base $b=${}'.format(self.base)
 		plt.title(title if title else str_title)
 		plt.show()
-
-	def plot_vs_bernoullis(self, title=''):
-		"""Display the process on the real line and compare it to a sequence of i.i.d. Bernoullis with parameter :math:`\\frac12(1-\\frac1b)`
-
-		:param title:
-			Plot title
-
-		:type title:
-			string
-
-		.. seealso::
-
-			- :func:`sample <sample>`
-			- :func:`plot <plot>`
-		"""
-
-		carries = self.list_of_samples[-1]
-		len_car = len(carries)
-
-		ind_tmp = np.random.rand(self.size) < self.bernoulli_param
-		bern = np.arange(0, self.size)[ind_tmp]
-		len_ber = len(bern)
-
-		# Display Carries and Bernoullis
-		fig, ax = plt.subplots(figsize=(19,2))
-
-		ax.scatter(carries, np.ones(len_car), color='b', s=20, label='Carries')
-		ax.scatter(bern, -np.ones(len_ber), color='r', s=20, label='Bernoullis')
-
-		# Spine options
-		ax.spines['bottom'].set_position('center')
-		ax.spines['left'].set_visible(False)
-		ax.spines['top'].set_visible(False)
-		ax.spines['right'].set_visible(False)
-
-		# Ticks options
-		minor_ticks = np.arange(0, self.size+1)                                            
-		major_ticks = np.arange(0, self.size+1, 20)                                               
-		ax.set_xticks(major_ticks)                                                       
-		ax.set_xticks(minor_ticks, minor=True)
-		ax.set_xticklabels(major_ticks, fontsize=15)
-		ax.xaxis.set_ticks_position('bottom')
-
-		ax.tick_params(
-		    axis='y',				# changes apply to the y-axis
-		    which='both',		# both major and minor ticks are affected
-		    left=False,			# ticks along the left edge are off
-		    right=False,		# ticks along the right edge are off
-		    labelleft=False)# labels along the left edge are off
-
-		ax.xaxis.grid(True)
-		ax.set_xlim([-1,101])
-		ax.legend(bbox_to_anchor=(0,0.85), frameon=False, prop={'size':20})
-
-		str_title = r'Realization of the carries process in base $b=${} and independent Bernoullis with parameter {}'.format(self.base, r'$0.5(1-1/b)={}$'.format(self.bernoulli_param))
-		plt.title(title if title else str_title)
-		plt.show()
+	def  plot_vs_bernoullis(self, title=''):
+		return(Descent.plot_vs_bernoullis(self,title=title, process_name='Carries',str_title = r'Realization of the carries process in base $b=${} and independent Bernoullis with parameter {}'.format(self.base, r'$0.5(1-1/b)={}$'.format(self.bernoulli_param))))
 
 class DescentProcess:
 	""" This is a DPP on :math:'\{1,2,\dots,n-1}' with a non symmetric kernel appearing in (or as a limite) of the descent process on the symmetric group.
