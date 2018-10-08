@@ -1,8 +1,8 @@
 from exotic_dpps import *
 
-size = 100
 
-cp = DescentProcess(size)
+
+cp = VirtualDescentProcess(size=100,x_0=0.5)
 
 cp.sample()
 

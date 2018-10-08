@@ -69,6 +69,32 @@ The sequence of carries appearing when computing the cumulative sum (in base :ma
 
 
 
+.. _Descent_process:
+
+Descent process
+***************
+The descent process obtained from a uniformly chosen  permutation of  :math:`\{1,2,\dots,n\}` forms a DPP on :math:`\{1,2,\dots,n-1\}` with non symmetric kernel. It can be seen as the limit of the carries process as the base goes to infinity. 
+
+
+.. plot:: plots/ex_plot_descent_process.py
+
+..	seealso::
+
+	:cite:`BoDiFu10`
+
+
+
+Descent process
+***************
+For non uniform permutations the descent process is not necessarely determinantal but in the particular case of virtual permutations with law stable under conjugation of the symmetric group the limitting descent process is a mixture of determinantal point processes.  
+
+
+.. plot:: plots/ex_plot_virt_descent_process.py
+
+..	seealso::
+
+	:cite:`Kam18`
+
 .. _poissonized_plancherel_measure:
 
 Poissonized Plancherel measure
