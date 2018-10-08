@@ -599,6 +599,107 @@ class DescentProcess(Descent):
 	def  plot_vs_bernoullis(self, title=''):
 		return(Descent.plot_vs_bernoullis(self,title=title, process_name='Descent',str_title = r'Realization of the Decent process  and independent Bernoullis with parameter 0.5'))
 
+
+
+class VirtualDescentProcess(Descent):
+	""" This is a DPP on :math:'\{1,2,\dots,n-1}' with a non symmetric kernel appearing in (or as a limite) of the descent process on the symmetric group.
+
+			"""
+
+	def __init__(self, size = 100,x_0=0.5):
+
+		if (x_0 > 1) or (x_0 <0):
+			raise NameError("X_0 must be  in [0,1]")
+		self.bernoulli_param = 0.5*(1-x_0**2)
+		self.x_0=x_0
+		self.list_of_samples = []
+		self.size = size
+        	
+		# self.kernel = None
+		# self.kernel_eig_vecs = None
+
+	def __str__(self):
+		
+		str_info = ["Limitting Descent process for vitural permutations ",
+								"Number of samples = {}."]
+
+		return "\n".join(str_info).format(self.base,
+																			len(self.list_of_samples))
+
+
+	def __unif_permutation(self, N):
+
+		tmp = np.arange(N)
+		for i in range(N-1, 1, -1):
+				j = np.random.randint(0, i+1)
+				tmp[j], tmp[i] = tmp[i], tmp[j]
+
+		return tmp
+    
+	def sample(self):
+
+		sigma = self.__unif_permutation(self.size+1)
+		X = np.zeros(self.size, dtype=bool)
+		X = sigma[1:] < sigma[:-1]
+		Y = np.random.binomial(2,self.x_0,self.size+1) != np.ones(self.size+1)
+		Z = [i for i in range(self.size) if  (((not Y[i]) and Y[i+1]) or ((not Y[i]) and (not Y[i+1]) and X[i]))] 
+		descent = np.arange(0, self.size)[Z]
+		self.list_of_samples.append(descent)
+
+	def plot(self, title=""):
+		"""Display the process on the real line
+
+		:param title:
+			Plot title
+
+		:type title:
+			string
+
+		.. seealso::
+
+			- :func:`sample <sample>`
+			- :func:`plot_vs_bernoullis <plot_vs_bernoullis>`
+		"""
+
+		descent = self.list_of_samples[-1]
+		len_car = len(descent)
+
+		# Display Carries and Bernoullis
+		fig, ax = plt.subplots(figsize=(19,2))
+
+		ax.scatter(descent, np.zeros(len_car), color='blue', s=20, label='Lim Descent')
+
+		# Spine options
+		ax.spines['bottom'].set_position('center')
+		ax.spines['left'].set_visible(False)
+		ax.spines['top'].set_visible(False)
+		ax.spines['right'].set_visible(False)
+
+		# Ticks options
+		minor_ticks = np.arange(0, self.size+1)                                            
+		major_ticks = np.arange(0, self.size+1, 20)                                               
+		ax.set_xticks(major_ticks)                                                       
+		ax.set_xticks(minor_ticks, minor=True)
+		ax.set_xticklabels(major_ticks, fontsize=15)
+		ax.xaxis.set_ticks_position('bottom')
+
+		ax.tick_params(
+		    axis='y',				# changes apply to the y-axis
+		    which='both',		# both major and minor ticks are affected
+		    left=False,			# ticks along the left edge are off
+		    right=False,		# ticks along the right edge are off
+		    labelleft=False)# labels along the left edge are off
+
+		ax.xaxis.grid(True)
+		ax.set_xlim([-1,101])
+		ax.legend(bbox_to_anchor=(0,0.85), frameon=False, prop={'size':20})
+
+		str_title = r"Realization of the limitting descent process".format(self.base)
+		plt.title(title if title else str_title)
+		plt.show()
+	
+	def  plot_vs_bernoullis(self, title=''):
+		return(Descent.plot_vs_bernoullis(self,title=title, process_name='Descent',str_title = "Realization of the limiting descent process with parameter " +str(self.x_0)+ " and independent Bernoullis with parameter " + str(self.bernoulli_param)))
 ################
 # Permutations #
 ################
