@@ -53,6 +53,18 @@ In fact, one can discard any row of the vertex-edge incidence matrix say :math:`
 	- Aldous-Broder :cite:`Ald90`
 	- :cite:`Lyo02`
 
+.. _Stationary_1-dependant_process:
+
+Stationary 1-dependant process
+***************
+
+A point process :math:`\mathbb{X}` on :math:`\mathbb{Z}` (resp. :math:`\mathbb{N}`) is called 1-dependant if for any :math:`A,B\subset \mathbb{Z}` (resp. :math:`\mathbb{N}`), such as the distance between :math:`A` and :math:`B` is greater than 1,
+
+:math:`\mathbb{P}(A\cup B\subset \mathbb{X})=\mathbb{P}(A\subset \mathbb{X})\mathbb{P}(B\subset \mathbb{X}).`
+
+If :math:`\mathbb{X}` is stationary and 1-dependant then :math:`\mathbb{X}` forms a DPP.
+
+The following 3 examples are stationary and 1-dependant process. 
 
 .. _carries_process:
 
@@ -69,8 +81,7 @@ The sequence of carries appearing when computing the cumulative sum (in base :ma
 
 
 
-.. _Descent_process:
-
+.. _descent_process:
 Descent process
 ***************
 The descent process obtained from a uniformly chosen  permutation of  :math:`\{1,2,\dots,n\}` forms a DPP on :math:`\{1,2,\dots,n-1\}` with non symmetric kernel. It can be seen as the limit of the carries process as the base goes to infinity. 
@@ -82,9 +93,8 @@ The descent process obtained from a uniformly chosen  permutation of  :math:`\{1
 
 	:cite:`BoDiFu10`
 
-
-
-Descent process
+.. _Limitting_descent_process:
+Limmiting Descent process for virtual permutations
 ***************
 For non uniform permutations the descent process is not necessarely determinantal but in the particular case of virtual permutations with law stable under conjugation of the symmetric group the limitting descent process is a mixture of determinantal point processes.  
 
