@@ -127,14 +127,17 @@ class UST:
 
 			- :func:`plot_kernel <plot_kernel>`
 		"""
-
 		if self.kernel is None:
-			vert_edg_inc = nx.incidence_matrix(self.graph, oriented=True)
-			A = vert_edg_inc[:-1,:].toarray() # Discard any row e.g. the last one
-			self.kernel_eig_vecs, _ = la.qr(A.T, mode='economic') # Orthog rows of A
+			if self.kernel_eig_vecs is None:
+				self.__compute_kernel_eig_vecs()
 			self.kernel = self.kernel_eig_vecs.dot(self.kernel_eig_vecs.T) # K = UU.T
 		else:
 			pass
+
+	def __compute_kernel_eig_vecs(self):
+		vert_edg_inc = nx.incidence_matrix(self.graph, oriented=True)
+		A = vert_edg_inc[:-1,:].toarray() # Discard any row e.g. the last one
+		self.kernel_eig_vecs, _ = la.qr(A.T, mode='economic') # Orthog rows of A
 
 	def plot(self, title=''):
 		""" Display the last realization (spanning tree) of the corresponding :class:`UST` object.
@@ -184,7 +187,7 @@ class UST:
 
 		fig = plt.figure(figsize=(4,4))
 
-		pos=nx.circular_layout(self.graph)
+		pos = nx.circular_layout(self.graph)
 		nx.draw_networkx(self.graph, pos=pos, node_color='orange', 
 			with_labels = True, width=3)
 		nx.draw_networkx_labels(self.graph, pos, node_labels)
