@@ -7,6 +7,8 @@ import matplotlib.pyplot as plt
 from itertools import chain
 from bisect import bisect_right
 
+import functools
+
 try: # Local import
 	from .exact_sampling import proj_dpp_sampler_eig_GS
 except (SystemError, ImportError):
@@ -324,22 +326,104 @@ class UST:
 		aldous_tree_graph.add_edges_from(tree_edges)
 
 		return aldous_tree_graph
+
+
+#############
+## Descent ##
+#############
+
 class Descent: 
-	def __str__(self):
-		pass 
-	def info(self):
-		""" Print infos about the :class:`UST` object
-		"""
-		print(self.__str__())
+
+	def __init__(self):
+
+		self.bernoulli_param = 0.5
+		self.list_of_samples = []
+		self.size = 100
 	
 	def flush_samples(self):
-		""" Empty the ``CarriesProcess.list_of_samples`` attribute.
+		""" Empty the ``list_of_samples`` attribute.
 		"""
 		self.list_of_samples = []
+
+	def _unif_permutation(self, N):
+
+		tmp = np.arange(N)
+		for i in range(N-1, 1, -1):
+				j = np.random.randint(0, i+1)
+				tmp[j], tmp[i] = tmp[i], tmp[j]
+
+		return tmp
+
 	def sample(self, size=100):
 		pass
-	def plot_vs_bernoullis(self, title='', process_name='',str_title=''):
-		"""Display the process on the real line and compare it to a sequence of i.i.d. Bernoullis with parameter :math:`\\frac12(1-\\frac1b)`
+
+	def overplot_descent(func):
+		@functools.wraps(func)
+		def wrapper(*args, **kwargs):
+
+			ax, size = func(*args, **kwargs)
+
+			# Spine options
+			ax.spines['bottom'].set_position('center')
+			ax.spines['left'].set_visible(False)
+			ax.spines['top'].set_visible(False)
+			ax.spines['right'].set_visible(False)
+
+			# Ticks options
+			minor_ticks = np.arange(0, size+1)                               
+			major_ticks = np.arange(0, size+1, 10)                                               
+			ax.set_xticks(major_ticks)                                                       
+			ax.set_xticks(minor_ticks, minor=True)
+			ax.set_xticklabels(major_ticks, fontsize=15)
+			ax.xaxis.set_ticks_position('bottom')
+
+			ax.tick_params(
+			    axis='y',				# changes apply to the y-axis
+			    which='both',		# both major and minor ticks are affected
+			    left=False,			# ticks along the left edge are off
+			    right=False,		# ticks along the right edge are off
+			    labelleft=False)# labels along the left edge are off
+
+			ax.xaxis.grid(True)
+			ax.set_xlim([-1, size+1])
+			ax.legend(bbox_to_anchor=(0,0.85), frameon=False, prop={'size':15})
+
+			# plt.show()
+
+		return wrapper
+
+	@overplot_descent
+	def plot(self, title=''):
+		"""Display the process on the real line
+
+		:param title:
+			Plot title
+
+		:type title:
+			string
+
+		.. seealso::
+
+			- :func:`sample <sample>`
+			- :func:`plot_vs_bernoullis <plot_vs_bernoullis>`
+		"""
+
+		proc_name = self.__class__.__name__
+
+		fig, ax = plt.subplots(figsize=(19,2))
+	
+		sampl = self.list_of_samples[-1]
+		len_sam = len(sampl)
+		ax.scatter(sampl, np.zeros(len_sam), color='blue', s=20, label=proc_name)
+
+		str_title = 'Realization of the {} process'.format(proc_name)
+		plt.title(title if title else str_title)
+
+		return ax, self.size
+		
+	@overplot_descent
+	def plot_vs_bernoullis(self, title=''):
+		"""Display the process on the real line and compare it to a sequence of i.i.d. Bernoullis
 
 		:param title:
 			Plot title
@@ -353,48 +437,24 @@ class Descent:
 			- :func:`plot <plot>`
 		"""
 
-		carries = self.list_of_samples[-1]
-		len_car = len(carries)
+		proc_name = self.__class__.__name__
+
+		fig, ax = plt.subplots(figsize=(19,2))
+	
+		sampl = self.list_of_samples[-1]
+		len_sam = len(sampl)
 
 		ind_tmp = np.random.rand(self.size) < self.bernoulli_param
 		bern = np.arange(0, self.size)[ind_tmp]
 		len_ber = len(bern)
 
-		# Display Carries and Bernoullis
-		fig, ax = plt.subplots(figsize=(19,2))
-
-		ax.scatter(carries, np.ones(len_car), color='b', s=20, label=process_name)
+		ax.scatter(sampl, np.ones(len_sam), color='b', s=20, label=proc_name)
 		ax.scatter(bern, -np.ones(len_ber), color='r', s=20, label='Bernoullis')
 
-		# Spine options
-		ax.spines['bottom'].set_position('center')
-		ax.spines['left'].set_visible(False)
-		ax.spines['top'].set_visible(False)
-		ax.spines['right'].set_visible(False)
-
-		# Ticks options
-		minor_ticks = np.arange(0, self.size+1)                                            
-		major_ticks = np.arange(0, self.size+1, 20)                                               
-		ax.set_xticks(major_ticks)                                                       
-		ax.set_xticks(minor_ticks, minor=True)
-		ax.set_xticklabels(major_ticks, fontsize=15)
-		ax.xaxis.set_ticks_position('bottom')
-
-		ax.tick_params(
-		    axis='y',				# changes apply to the y-axis
-		    which='both',		# both major and minor ticks are affected
-		    left=False,			# ticks along the left edge are off
-		    right=False,		# ticks along the right edge are off
-		    labelleft=False)# labels along the left edge are off
-
-		ax.xaxis.grid(True)
-		ax.set_xlim([-1,101])
-		ax.legend(bbox_to_anchor=(0,0.85), frameon=False, prop={'size':20})
-
-		str_title = str_title
+		str_title = r'Realization of the {} process vs independent Bernoulli variables with parameter p={}'.format(proc_name, self.bernoulli_param)
 		plt.title(title if title else str_title)
-		plt.show()
 
+		return ax, self.size
 
 class CarriesProcess(Descent):
 	""" Carries process formed by the cumulative sum of i.i.d. digits in :math:`\{0, \dots, b-1\}`. This is a DPP on the natural integers with a non symmetric kernel.
@@ -412,23 +472,15 @@ class CarriesProcess(Descent):
 	"""
 
 	def __init__(self, base=10):
-
-		self.base = base 
-		self.bernoulli_param = 0.5*(1-1/self.base)
-		self.list_of_samples = []
-		self.size = 100
-
-		# self.kernel = None
-		# self.kernel_eig_vecs = None
+		super().__init__()
+		self.base = base
+		self.bernoulli_param = 0.5*(1-1/base)
 
 	def __str__(self):
 		
-		str_info = ['Carries process in base {}',
-								'Number of samples = {}.']
-
-		return '\n'.join(str_info).format(self.base,
-																			len(self.list_of_samples))
-
+		str_info = ('Carries process in base {}'.format(self.base),
+								'Number of samples = {}.'.format(len(self.list_of_samples)))
+		return '\n'.join(str_info)
 
 	def sample(self, size=100):
 		""" Compute the cumulative sum (in base :math:`b`) of a sequence of i.i.d. digits and record the position of carries.
@@ -445,68 +497,14 @@ class CarriesProcess(Descent):
 		B = np.mod(np.cumsum(A), self.base)
 
 		X = np.zeros(size, dtype=bool)
-		X[1:] = B[1:] < B[:-1]
+		X[1:] = B[1:] < B[:-1] # Record the descents i.e. carries
 
 		carries = np.arange(0, self.size)[X]
 
 		self.list_of_samples.append(carries)
 
-	def plot(self, title=''):
-		"""Display the process on the real line
-
-		:param title:
-			Plot title
-
-		:type title:
-			string
-
-		.. seealso::
-
-			- :func:`sample <sample>`
-			- :func:`plot_vs_bernoullis <plot_vs_bernoullis>`
-		"""
-
-		carries = self.list_of_samples[-1]
-		len_car = len(carries)
-
-		# Display Carries and Bernoullis
-		fig, ax = plt.subplots(figsize=(19,2))
-
-		ax.scatter(carries, np.zeros(len_car), color='blue', s=20, label='Carries')
-
-		# Spine options
-		ax.spines['bottom'].set_position('center')
-		ax.spines['left'].set_visible(False)
-		ax.spines['top'].set_visible(False)
-		ax.spines['right'].set_visible(False)
-
-		# Ticks options
-		minor_ticks = np.arange(0, self.size+1)                                            
-		major_ticks = np.arange(0, self.size+1, 20)                                               
-		ax.set_xticks(major_ticks)                                                       
-		ax.set_xticks(minor_ticks, minor=True)
-		ax.set_xticklabels(major_ticks, fontsize=15)
-		ax.xaxis.set_ticks_position('bottom')
-
-		ax.tick_params(
-		    axis='y',				# changes apply to the y-axis
-		    which='both',		# both major and minor ticks are affected
-		    left=False,			# ticks along the left edge are off
-		    right=False,		# ticks along the right edge are off
-		    labelleft=False)# labels along the left edge are off
-
-		ax.xaxis.grid(True)
-		ax.set_xlim([-1,101])
-		ax.legend(bbox_to_anchor=(0,0.85), frameon=False, prop={'size':20})
-
-		str_title = r'Realization of the carries process in base $b=${}'.format(self.base)
-		plt.title(title if title else str_title)
-		plt.show()
-	def  plot_vs_bernoullis(self, title=''):
-		return(Descent.plot_vs_bernoullis(self,title=title, process_name='Carries',str_title = r'Realization of the carries process in base $b=${} and independent Bernoullis with parameter {}'.format(self.base, r'$0.5(1-1/b)={}$'.format(self.bernoulli_param))))
-
 class DescentProcess(Descent):
-	""" This is a DPP on :math:'\{1,2,\dots,n-1}' with a non symmetric kernel appearing in (or as a limite) of the descent process on the symmetric group.
+	""" This is a DPP on :math:'\{1,2,\dots,n-1}' with a non symmetric kernel appearing in (or as a limit) of the descent process on the symmetric group.
 
 		.. seealso::
 
@@ -514,199 +512,96 @@ class DescentProcess(Descent):
 			- :ref:`carries_process`
 	"""
 
-	def __init__(self, size = 100):
-
+	def __init__(self):
+		super().__init__()
 		self.bernoulli_param = 0.5
-		self.list_of_samples = []
-		self.size = size
-        	
 
 	def __str__(self):
 		
-		str_info = ["Descent process",
-								"Number of samples = {}."]
+		str_info = ('Descent process',
+								'Number of samples = {}.'.format(len(self.list_of_samples)))
 
-		return "\n".join(str_info).format(self.base,
-																			len(self.list_of_samples))
-
-
-
-	def __unif_permutation(self, N):
-
-		tmp = np.arange(N)
-		for i in range(N-1, 1, -1):
-				j = np.random.randint(0, i+1)
-				tmp[j], tmp[i] = tmp[i], tmp[j]
-
-		return tmp
+		return '\n'.join(str_info)
     
-	def sample(self):
+	def sample(self, size=100):
+		""" Draw a permutation uniformly at random and record the descents i.e. indices where :math:`\sigma(i+1) < \sigma(i)`.
 
-         sigma = self.__unif_permutation(self.size+1)
-         X = np.zeros(self.size, dtype=bool)
-         X = sigma[1:] < sigma[:-1]
-         descent = np.arange(0, self.size)[X]
-         self.list_of_samples.append(descent)
+		:param size:
+			size of the sequence of i.i.d. digits in :math:`\{0, \dots, b-1\}`
 
-	def plot(self, title=""):
-		"""Display the process on the real line
-
-		:param title:
-			Plot title
-
-		:type title:
-			string
-
-		.. seealso::
-
-			- :func:`sample <sample>`
-			- :func:`plot_vs_bernoullis <plot_vs_bernoullis>`
+		:type size:
+			int
 		"""
 
-		descent = self.list_of_samples[-1]
-		len_car = len(descent)
+		self.size = size
 
-		# Display Carries and Bernoullis
-		fig, ax = plt.subplots(figsize=(19,2))
+		sigma = self._unif_permutation(self.size+1)
 
-		ax.scatter(descent, np.zeros(len_car), color='blue', s=20, label='Descent')
+		X = np.zeros(self.size, dtype=bool)
+		X = sigma[1:] < sigma[:-1] # Record the descents
+		descent = np.arange(0, self.size)[X]
 
-		# Spine options
-		ax.spines['bottom'].set_position('center')
-		ax.spines['left'].set_visible(False)
-		ax.spines['top'].set_visible(False)
-		ax.spines['right'].set_visible(False)
-
-		# Ticks options
-		minor_ticks = np.arange(0, self.size+1)                                            
-		major_ticks = np.arange(0, self.size+1, 20)                                               
-		ax.set_xticks(major_ticks)                                                       
-		ax.set_xticks(minor_ticks, minor=True)
-		ax.set_xticklabels(major_ticks, fontsize=15)
-		ax.xaxis.set_ticks_position('bottom')
-
-		ax.tick_params(
-		    axis='y',				# changes apply to the y-axis
-		    which='both',		# both major and minor ticks are affected
-		    left=False,			# ticks along the left edge are off
-		    right=False,		# ticks along the right edge are off
-		    labelleft=False)# labels along the left edge are off
-
-		ax.xaxis.grid(True)
-		ax.set_xlim([-1,101])
-		ax.legend(bbox_to_anchor=(0,0.85), frameon=False, prop={'size':20})
-
-		str_title = r"Realization of the descent process".format(self.base)
-		plt.title(title if title else str_title)
-		plt.show()
-
-	def  plot_vs_bernoullis(self, title=''):
-		return(Descent.plot_vs_bernoullis(self,title=title, process_name='Descent',str_title = r'Realization of the Decent process  and independent Bernoullis with parameter 0.5'))
-
-
+		self.list_of_samples.append(descent)
 
 class VirtualDescentProcess(Descent):
 	""" This is a DPP on :math:'\{1,2,\dots,n-1}' with a non symmetric kernel appearing in (or as a limite) of the descent process on the symmetric group.
 
-			"""
+	.. seealso::
 
-	def __init__(self, size = 100,x_0=0.5):
+		- :cite:`Kam18`
+	"""
 
-		if (x_0 > 1) or (x_0 <0):
-			raise NameError("X_0 must be  in [0,1]")
-		self.bernoulli_param = 0.5*(1-x_0**2)
+	def __init__(self, x_0=0.5):
+
+		super().__init__()
+		if not ((0<=x_0) and (x_0<=1)):
+			raise ValueError("x_0 must be in [0,1]")
 		self.x_0=x_0
-		self.list_of_samples = []
-		self.size = size
-        	
-		# self.kernel = None
-		# self.kernel_eig_vecs = None
+		self.bernoulli_param = 0.5*(1-x_0**2)
 
 	def __str__(self):
 		
-		str_info = ["Limitting Descent process for vitural permutations ",
-								"Number of samples = {}."]
+		str_info = ("Limitting Descent process for vitural permutations",
+								"Number of samples = {}.".format(len(self.list_of_samples)))
 
-		return "\n".join(str_info).format(self.base,
-																			len(self.list_of_samples))
-
-
-	def __unif_permutation(self, N):
-
-		tmp = np.arange(N)
-		for i in range(N-1, 1, -1):
-				j = np.random.randint(0, i+1)
-				tmp[j], tmp[i] = tmp[i], tmp[j]
-
-		return tmp
+		return "\n".join(str_info)
     
-	def sample(self):
+	def sample(self, size=100):
+		""" Draw a permutation uniformly at random and record the descents i.e. indices where :math:`\sigma(i+1) < \sigma(i)` and something else...
 
-		sigma = self.__unif_permutation(self.size+1)
-		X = np.zeros(self.size, dtype=bool)
-		X = sigma[1:] < sigma[:-1]
-		Y = np.random.binomial(2,self.x_0,self.size+1) != np.ones(self.size+1)
-		Z = [i for i in range(self.size) if  (((not Y[i]) and Y[i+1]) or ((not Y[i]) and (not Y[i+1]) and X[i]))] 
-		descent = np.arange(0, self.size)[Z]
-		self.list_of_samples.append(descent)
+		:param size:
+			size of the sequence of i.i.d. digits in :math:`\{0, \dots, b-1\}`
 
-	def plot(self, title=""):
-		"""Display the process on the real line
-
-		:param title:
-			Plot title
-
-		:type title:
-			string
+		:type size:
+			int
 
 		.. seealso::
 
-			- :func:`sample <sample>`
-			- :func:`plot_vs_bernoullis <plot_vs_bernoullis>`
+			- :cite:`Kam18`, Sec ??
+
+		.. todo::
+
+			ask @kammmoun to complete the docsting and Section in see also
 		"""
 
-		descent = self.list_of_samples[-1]
-		len_car = len(descent)
+		self.size = size
 
-		# Display Carries and Bernoullis
-		fig, ax = plt.subplots(figsize=(19,2))
+		sigma = self._unif_permutation(self.size+1)
 
-		ax.scatter(descent, np.zeros(len_car), color='blue', s=20, label='Lim Descent')
+		X = np.zeros(self.size, dtype=bool)
+		X = sigma[1:] < sigma[:-1] # Record the descents
 
-		# Spine options
-		ax.spines['bottom'].set_position('center')
-		ax.spines['left'].set_visible(False)
-		ax.spines['top'].set_visible(False)
-		ax.spines['right'].set_visible(False)
+		Y = np.random.binomial(2, self.x_0, self.size+1) != np.ones(self.size+1)
+		Z = [i for i in range(self.size) if (((not Y[i]) and Y[i+1]) or ((not Y[i]) and (not Y[i+1]) and X[i]))] 
 
-		# Ticks options
-		minor_ticks = np.arange(0, self.size+1)                                            
-		major_ticks = np.arange(0, self.size+1, 20)                                               
-		ax.set_xticks(major_ticks)                                                       
-		ax.set_xticks(minor_ticks, minor=True)
-		ax.set_xticklabels(major_ticks, fontsize=15)
-		ax.xaxis.set_ticks_position('bottom')
+		descent = np.arange(0, self.size)[Z]
 
-		ax.tick_params(
-		    axis='y',				# changes apply to the y-axis
-		    which='both',		# both major and minor ticks are affected
-		    left=False,			# ticks along the left edge are off
-		    right=False,		# ticks along the right edge are off
-		    labelleft=False)# labels along the left edge are off
+		self.list_of_samples.append(descent)
 
-		ax.xaxis.grid(True)
-		ax.set_xlim([-1,101])
-		ax.legend(bbox_to_anchor=(0,0.85), frameon=False, prop={'size':20})
 
-		str_title = r"Realization of the limitting descent process".format(self.base)
-		plt.title(title if title else str_title)
-		plt.show()
-	
-	def  plot_vs_bernoullis(self, title=''):
-		return(Descent.plot_vs_bernoullis(self,title=title, process_name='Descent',str_title = "Realization of the limiting descent process with parameter " +str(self.x_0)+ " and independent Bernoullis with parameter " + str(self.bernoulli_param)))
-################
-# Permutations #
-################
+##################
+## Permutations ##
+##################
 
 class PoissonizedPlancherel:
 	""" Poissonized Plancherel measure
@@ -745,12 +640,12 @@ class PoissonizedPlancherel:
 		"""
 
 		N = np.random.poisson(self.theta)
-		sigma = self.__unif_permutation(N)
+		sigma = self._unif_permutation(N)
 		P, _ = self.__RSK(sigma)
 		sampl = [len(row)-i+0.5 for i, row in enumerate(P)]
 		self.list_of_samples.append(sampl)
 
-	def __unif_permutation(self, N):
+	def _unif_permutation(self, N):
 
 		tmp = np.arange(N)
 		for i in range(N-1, 1, -1):
@@ -839,72 +734,3 @@ class PoissonizedPlancherel:
 		str_title = r'Realization of the DPP associated to the poissonized Plancherel measure with parameter $\theta=${}'.format(self.theta)
 		plt.title(title if title else str_title)
 		plt.show()
-
-
-
-
-
-
-
-# def r_hahn(N, a=0, b=0):
-
-# 	if (N<=0) | (a<-1) | (b<-1):
-# 		raise ValueError('Arguments(s) out of range: N>0, a,b>-1')
-
-# 	alpha_beta_coef = np.zeros((N+1,2))
-# 	ind_0_Np1 = np.arange(1,N+2)
-# 	alpha_beta_coef[0,1] = np.prod(1+(a+b+1)/ind_0_Np1)
-
-# 	if (a+b)==0:
-# 		aux = ind_0_Np1
-# 		alpha_beta_coef[:,0] = ((2*aux+a+b-1)*N+(b-a)*aux+a)\
-# 												/(2*(2*aux-1))
-# 		aux = ind_0_Np1[:-1]
-# 		alpha_beta_coef[1:,1] = .25\
-# 													*((N+1)**2)*(1+a/aux)*(1+b/aux)*(1-(aux/(N+1))**2)\
-# 									 				/(4-(1/aux)**2);
-# 	elif (a+b+1)==0:
-# 		aux = ind_0_Np1
-# 		alpha_beta_coef[:,0] = ((2*(aux-1)**2+b)*N+(2*b+1)*(aux-1)**2)\
-# 												/(4*(aux-1)**2-1)
-
-# 		aux = ind_0_Np1[:-1]
-# 		alpha_beta_coef[1:,1] = .25\
-# 													*((N+1)**2)\
-# 													*(1+a/aux)\
-# 													*(1+b/aux)\
-# 													*(1-aux/(N+1))\
-# 													*(1+(aux-1)/(N+1))\
-# 													/(4-(1/aux)**2)
-# 	else:
-# 		aux = ind_0_Np1
-# 		alpha_beta_coef[:,0]=((aux+a+b)*(aux+a)*(N-aux+1)/(2*aux+a+b)\
-# 							 						+(aux-1)*(aux+b-1)*(N+aux+a+b)/(2*aux+a+b-2))\
-# 												/(2*aux+a+b-1)
-
-# 		aux = ind_0_Np1[:-1]
-# 		alpha_beta_coef[1:,1]=((N+1)**2)\
-# 												*(1+a/aux)*(1+b/aux)\
-# 												*(1+(a+b)/aux)\
-# 												*(1-aux/(N+1))\
-# 												*(1+(aux+a+b)/(N+1))\
-# 						 						/(((2+(a+b)/aux)**2)*((2+(a+b)/aux)**2-(1/aux)**2))
-
-# 	return alpha_beta_coef
-
-# #### Kravchuk
-# M, p = 10, 0.5
-# mu = [binom(M,p).pmf(k) for k in range(M+1)]
-
-# def alpha_coef(M, N, p):
-
-# 	return (1-2*p)*np.arange(N) + p*M
-
-# def beta_coef(M, N, p):
-# 	# beta_0=1.0 b_k = p*(1-p)*k*(N-k+1)
-# 	tmp = np.arange(N)
-
-# 	coef = p*(1-p)*tmp*(M-tmp+1)
-# 	coef[0]=1.0
-
-# 	return coef

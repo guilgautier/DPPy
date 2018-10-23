@@ -7,3 +7,4 @@ size = 100
 cp.sample(size)
 
 cp.plot_vs_bernoullis()
+plt.show()

@@ -1,9 +1,9 @@
 from exotic_dpps import *
 
+dp = DescentProcess()
+
 size = 100
+dp.sample(size)
 
-cp = DescentProcess(size)
-
-cp.sample()
-
-cp.plot_vs_bernoullis()
+dp.plot_vs_bernoullis()
+plt.show()
