@@ -3,7 +3,7 @@
 Banded matrix models
 --------------------
 
-Computing the eigenvalues of a full :math:`N\times N` random matrix is :math:`\mathcal{O}(N^3)` can become prohibitive for large :math:`N`.
+Computing the eigenvalues of a full :math:`N\times N` random matrix is :math:`\mathcal{O}(N^3)`, and can thus become prohibitive for large :math:`N`.
 A way to circumvent the problem is to adopt the equivalent banded models i.e. diagonalize banded matrices.
 
 The first tridiagonal models for the :ref:`hermite_ensemble_banded` and :ref:`laguerre_ensemble_banded` were revealed by :cite:`DuEd02`, who left the :ref:`jacobi_ensemble_banded` as an open question, addressed by :cite:`KiNe04`.
