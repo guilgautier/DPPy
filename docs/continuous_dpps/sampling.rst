@@ -50,7 +50,7 @@ so that the conditional densities appearing in the chain rule are ratios of 2 de
 
 .. caution::
 
-	As in the finite case, the eigendecomposition of the kernel is required. The main difference is that we now have to resort to rejection sampling to sample the conditionals. Finding the right proposal density is a challenging problem, though for some specific kernels, there are natural choices :cite:`BaHa16Sub`.
+  As in the finite case, the eigendecomposition of the kernel is required. The main difference is that we now have to resort to rejection sampling to sample the conditionals. Finding the right proposal density is a challenging problem, though for some specific kernels, there are natural choices :cite:`BaHa16`.
 
 .. seealso::
 

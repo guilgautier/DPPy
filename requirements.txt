@@ -2,7 +2,7 @@ numpy
 scipy
 matplotlib
 cvxopt
-# for the documentation
 networkx 
+# for the documentation
 sphinxcontrib-bibtex
 sphinx_rtd_theme
