@@ -135,6 +135,7 @@ class UST:
 			pass
 
 	def __compute_kernel_eig_vecs(self):
+		"""Orthogonalize the rows of vertex-edge incidence matrix (:math:`A`) to get the eigenvectors :math:`U` of the kernel :math:`\mathbf{K}`."""
 		vert_edg_inc = nx.incidence_matrix(self.graph, oriented=True)
 		A = vert_edg_inc[:-1,:].toarray() # Discard any row e.g. the last one
 		self.kernel_eig_vecs, _ = la.qr(A.T, mode='economic') # Orthog rows of A

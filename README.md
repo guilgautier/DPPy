@@ -7,7 +7,7 @@
 
 ## Introduction
 
-Determinantal point processes (DPPs) are specific probability distributions over clouds of points that have been popular as models or computational tools across physics, probability, statistics, and more recently of booming interest in machine learning. 
+Determinantal point processes (DPPs) are specific probability distributions over clouds of points that have been popular as models or computational tools across physics, probability, statistics, and more recently of booming interest in machine learning.
 Sampling from DPPs is a nontrivial matter, and many approaches have been proposed. 
 DPPy is a Python library that puts together all exact and approximate sampling algorithms for DPPs.
 
@@ -16,33 +16,35 @@ DPPy is a Python library that puts together all exact and approximate sampling a
 DPPy works with [Python 3.4+](http://docs.python.org/3/)
 
 ### Dependencies
- - [NumPy](http://www.numpy.org)
- - [SciPy](http://www.scipy.org/)
- - [Matplotlib](http://matplotlib.org/)
- - [Networkx](http://networkx.github.io/)
-
-The `zono_sampling` mcmc sampler for finite DPPs requires CVXOPT which itself requires GCC
- - [CVXOPT](http://cvxopt.org)
- - [GCC](http://gcc.gnu.org)
-    - On MAC it comes with [Xcode](https://developer.apple.com/xcode/)
-    - On UNIX, use your package manager (`apt`, `yum` etc)
+- [NumPy](http://www.numpy.org)
+- [SciPy](http://www.scipy.org/)
+- [Matplotlib](http://matplotlib.org/)
+- [Networkx](http://networkx.github.io/) to play with [uniform spanning trees](https://dppy.readthedocs.io/en/latest/exotic_dpps/index.html#uniform-spanning-trees)
+- [CVXOPT](http://cvxopt.org) to use the `zono_sampling` MCMC sampler for finite DPPs. **CVXOPT itself requires [GCC](http://gcc.gnu.org)**,
+    + On MAC it comes with [Xcode](https://developer.apple.com/xcode/)
+    + On UNIX, use your package manager (`apt`, `yum` etc)
         ```bash
         sudo apt install -qq gcc g++
         ```
 
-## Download
-### Install from sources
+## Installation
+1. If you have a GitHub account
+    - Please consider forking DPPy
+    - Use git to clone your copy of the repo
+        ```bash
+        cd <directory_of_your_choice>
+        git clone https://github.com/<username>/DPPy.git
+        ```
+2. If you only use git, clone this repository
+    ```bash
+    cd <directory_of_your_choice>
+    git clone https://github.com/guilgautier/DPPy.git
+    ```
+3. Otherwise simply dowload the project
 
-Clone this repository
-
+Finally, in any case, install the project
 ```bash
-git clone https://github.com/guilgautier/DPPy.git
 cd DPPy
-```
-
-And execute `setup.py`
-
-```bash
 pip install .
 ```
 
@@ -50,11 +52,12 @@ pip install .
 
 We wrote a companion paper to [DPPy](https://github.com/guilgautier/DPPy) for latter submission to the [MLOSS](http://www.jmlr.org/mloss/) track of JMLR.
 
-The companion paper is available on:
- - [arXiv](http://arxiv.org/abs/1809.07258)
- - [GitHub](https://github.com/guilgautier/DPPy_paper), see the [`arxiv`](https://github.com/guilgautier/DPPy_paper/tree/arxiv) branch
+The companion paper is available on
 
-If you use this package, please consider citing it with this piece of BibTeX
+- [arXiv](http://arxiv.org/abs/1809.07258)
+- [GitHub](https://github.com/guilgautier/DPPy_paper), see the [`arxiv`](https://github.com/guilgautier/DPPy_paper/tree/arxiv) branch
+
+If you use this package, please consider citing it with this piece of BibTeX:
 ```bibtex
 @article{GaBaVa18,,
     archivePrefix = {arXiv},
