@@ -56,7 +56,7 @@ In fact, one can discard any row of the vertex-edge incidence matrix say :math:`
 .. _Stationary_1-dependant_process:
 
 Stationary 1-dependant process
-***************
+******************************
 
 A point process :math:`\mathbb{X}` on :math:`\mathbb{Z}` (resp. :math:`\mathbb{N}`) is called 1-dependant if for any :math:`A,B\subset \mathbb{Z}` (resp. :math:`\mathbb{N}`), such as the distance between :math:`A` and :math:`B` is greater than 1,
 
@@ -79,11 +79,11 @@ The sequence of carries appearing when computing the cumulative sum (in base :ma
 
 	:cite:`BoDiFu10`
 
-
-
 .. _descent_process:
+
 Descent process
 ***************
+
 The descent process obtained from a uniformly chosen  permutation of  :math:`\{1,2,\dots,n\}` forms a DPP on :math:`\{1,2,\dots,n-1\}` with non symmetric kernel. It can be seen as the limit of the carries process as the base goes to infinity. 
 
 
@@ -94,8 +94,10 @@ The descent process obtained from a uniformly chosen  permutation of  :math:`\{1
 	:cite:`BoDiFu10`
 
 .. _Limitting_descent_process:
+
 Limmiting Descent process for virtual permutations
-***************
+**************************************************
+
 For non uniform permutations the descent process is not necessarely determinantal but in the particular case of virtual permutations with law stable under conjugation of the symmetric group the limitting descent process is a mixture of determinantal point processes.  
 
 
@@ -137,11 +139,10 @@ API
 
 .. currentmodule:: exotic_dpps
 
-.. autoclass:: UST
+.. autoclass:: Descent
 	:members:
 
-.. autoclass:: CarriesProcess
+.. automodule:: exotic_dpps
 	:members:
-
-.. autoclass:: PoissonizedPlancherel
-	:members:
+	:inherited-members:
+	:show-inheritance:
