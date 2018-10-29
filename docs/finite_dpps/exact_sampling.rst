@@ -319,3 +319,18 @@ Generic DPPs
 	.. currentmodule:: finite_dpps
 
 	:func:`FiniteDPP.sample_exact <FiniteDPP.sample_exact>`
+	
+	
+	
+	
+Alternative generic sampling
+===================================
+
+.. seealso:: 
+
+	- :cite:`LaGaDe18` Sequential thinning algorithm to sample DPPs without eigendecomposition (Section 4, Algorithm 3).
+	
+.. todo::
+
+	- Fill in this section
+	- Python code

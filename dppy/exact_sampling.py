@@ -809,3 +809,13 @@ def elem_symm_poly(eig_vals, size):
 			poly[l, n] = poly[l, n-1] + eig_vals[n-1] * poly[l-1, n-1]
 
 	return poly
+
+
+
+def seq_thin_sampler(K):
+    """Sample generic DPPS with the Sequential Thinning Algorithm"""
+    return ``Hello world``
+    
+    
+    
+    

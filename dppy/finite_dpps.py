@@ -313,6 +313,7 @@ class FiniteDPP:
 				- ``'GS'`` (default):
 				- ``'GS_bis'``: Slight modification of ``'GS'``
 				- ``'KuTa12'``: Algorithm 1 in :cite:`KuTa12`
+                - ``'Seq_thin'``: Sequential thinning algorithm in :cite:`LaGaDe18`
 		:type mode:
 			string, default ``'GS'``
 
