@@ -39,8 +39,8 @@ Add-Delete
 
 Pure addition/deletion moves
 
-  - Delete :math:`S' \leftrightarrow S \setminus s`
   - Add :math:`S' \leftrightarrow S \cup t`
+  - Delete :math:`S' \leftrightarrow S \setminus s`
 
 .. _finite_dpps_mcmc_sampling_AED:
 

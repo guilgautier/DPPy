@@ -53,18 +53,18 @@ In fact, one can discard any row of the vertex-edge incidence matrix say :math:`
 	- Aldous-Broder :cite:`Ald90`
 	- :cite:`Lyo02`
 
-.. _Stationary_1-dependant_process:
+.. _Stationary_1-dependent_process:
 
 Stationary 1-dependent process
 ******************************
 
-A point process :math:`\mathbb{X}` on :math:`\mathbb{Z}` (resp. :math:`\mathbb{N}`) is called 1-dependant if for any :math:`A,B\subset \mathbb{Z}` (resp. :math:`\mathbb{N}`), such as the distance between :math:`A` and :math:`B` is greater than 1,
+A point process :math:`\mathbb{X}` on :math:`\mathbb{Z}` (resp. :math:`\mathbb{N}`) is called 1-dependent if for any :math:`A,B\subset \mathbb{Z}` (resp. :math:`\mathbb{N}`), such as the distance between :math:`A` and :math:`B` is greater than 1,
 
 :math:`\mathbb{P}(A\cup B\subset \mathbb{X})=\mathbb{P}(A\subset \mathbb{X})\mathbb{P}(B\subset \mathbb{X}).`
 
-If :math:`\mathbb{X}` is stationary and 1-dependant then :math:`\mathbb{X}` forms a DPP.
+If :math:`\mathbb{X}` is stationary and 1-dependent then :math:`\mathbb{X}` forms a DPP.
 
-The following 3 examples are stationary and 1-dependant process. 
+The following 3 examples are stationary and 1-dependent process. 
 
 .. _carries_process:
 
@@ -95,10 +95,10 @@ The descent process obtained from a uniformly chosen  permutation of  :math:`\{1
 
 .. _Limitting_descent_process:
 
-Limmiting Descent process for virtual permutations
+Limiting Descent process for virtual permutations
 ==================================================
 
-For non uniform permutations the descent process is not necessarely determinantal but in the particular case of virtual permutations with law stable under conjugation of the symmetric group the limitting descent process is a mixture of determinantal point processes.  
+For non uniform permutations the descent process is not necessarily determinantal but in the particular case of virtual permutations with law stable under conjugation of the symmetric group the limiting descent process is a mixture of determinantal point processes.  
 
 
 .. plot:: plots/ex_plot_virt_descent_process.py
