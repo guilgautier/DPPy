@@ -28,6 +28,15 @@ Take for reference measure :math:`\mu=\mathcal{N}(\mu, \sigma)`
 			% \indic_{\bbR}(x_i)
 		\ d x_i
 
+.. note::
+
+	Recall that from the definition in :eq:`abs_vandermonde_det`
+	
+	.. math::
+
+		\left|\Delta(x_1,\dots,x_N)\right| = \prod_{i<j} |x_i - x_j|
+
+
 The equivalent tridiagonal model reads
 
 .. math::
@@ -80,7 +89,7 @@ That is to say,
 .. seealso::
 
 	- :cite:`DuEd02` II-C
-	- Full matrix model for :ref:`hermite_ensemble_full`
+	- :ref:`Full matrix model <hermite_ensemble_full>` for Hermite ensemble
 
 .. _laguerre_ensemble_banded:
 
@@ -100,6 +109,14 @@ Take for reference measure :math:`\mu=\Gamma(k,\theta)`
 			e^{- \frac{x_i}{\theta}} 
 			% \indic_{\bbR}(x_i)
 		\ d x_i
+
+.. note::
+
+	Recall that from the definition in :eq:`abs_vandermonde_det`
+	
+	.. math::
+
+		\left|\Delta(x_1,\dots,x_N)\right| = \prod_{i<j} |x_i - x_j|
 
 
 The equivalent tridiagonal model reads
@@ -167,7 +184,7 @@ That is to say,
 .. seealso::
 
 	- :cite:`DuEd02` III-B
-	- Full matrix model for :ref:`laguerre_ensemble_full`
+	- :ref:`Full matrix model <laguerre_ensemble_full>` for Laguerre ensemble
 
 .. _jacobi_ensemble_banded:
 
@@ -187,6 +204,14 @@ Take for reference measure :math:`\mu=\operatorname{\mathcal{B}eta}(a,b)`
 					(1-x_i)^{b-1}
 			% \indic_{\bbR}(x_i)
 		\ d x_i
+
+.. note::
+
+	Recall that from the definition in :eq:`abs_vandermonde_det`
+	
+	.. math::
+
+		\left|\Delta(x_1,\dots,x_N)\right| = \prod_{i<j} |x_i - x_j|
 
 
 The equivalent tridiagonal model reads
@@ -274,7 +299,7 @@ That is to say,
 .. seealso::
 
 	- :cite:`KiNe04` Theorem 2
-	- Full matrix model for :ref:`jacobi_ensemble_full`
+	- :ref:`Full matrix model <jacobi_ensemble_full>` for Jacobi ensemble
 
 .. _circular_ensemble_banded:
 
@@ -285,6 +310,15 @@ Circular Ensemble
 
 	\left|\Delta(e^{i \theta_1},\dots, e^{i \theta_N})\right|^{\beta}
 		\prod_{j = 1}^N \frac{1}{2\pi} \mathbf{1}_{[0,2\pi]} (\theta_j) d\theta_j
+
+.. note::
+
+	Recall that from the definition in :eq:`abs_vandermonde_det`
+	
+	.. math::
+
+		\left|\Delta(x_1,\dots,x_N)\right| = \prod_{i<j} |x_i - x_j|
+
 
 .. important::
 
@@ -332,4 +366,4 @@ and where
 .. seealso::
 
 	- :cite:`KiNe04` Theorem 1
-	- Full matrix model for :ref:`circular_ensemble_full`
+	- :ref:`Full matrix model <circular_ensemble_full>` for Circular ensemble

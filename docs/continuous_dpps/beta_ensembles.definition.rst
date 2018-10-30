@@ -17,12 +17,13 @@ Let :math:`\beta>0`, the joint distribution of the :math:`\beta`-Ensemble associ
 
 .. hint::
 	
-	- :math:`|\Delta(x_1,\dots,x_N)| = \prod_{i<j} (x_i - x_j)` is the  determinant of the Vandermonde matrix, 
+	- :math:`|\Delta(x_1,\dots,x_N)| = \prod_{i<j} |x_i - x_j|` is the absolute value of the determinant of the Vandermonde matrix, 
 
 		.. math::
+			:label: abs_vandermonde_det
 
 			\Delta(x_1,\dots,x_N)
-			= \begin{bmatrix}
+			= \det \begin{bmatrix}
 				1 				& \dots 	& 1				\\
 				x_1 			& \dots 	& x_N			\\
 				\vdots		& 				& \vdots	\\

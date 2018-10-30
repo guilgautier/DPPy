@@ -24,6 +24,14 @@ Take for reference measure :math:`\mu=\mathcal{N}(0, 2)`, the pdf of the corresp
 			% \indic_{\bbR}(x_i)
 		\ d x_i
 
+.. note::
+
+	Recall that from the definition in :eq:`abs_vandermonde_det`
+
+	.. math::
+
+		\left|\Delta(x_1,\dots,x_N)\right| = \prod_{i<j} |x_i - x_j|
+
 .. hint::
 
 	The Hermite ensemble (whose name comes from the fact that Hermite polynomials are orthogonal w.r.t the Gaussian distribution) refers to the eigenvalue distribution of random matrices formed by i.i.d. Gaussian vectors.
@@ -73,7 +81,7 @@ Normalization :math:`\sqrt{\beta N}` to concentrate as the semi-circle law.
 
 .. seealso::
 
-	- Banded matrix model for :ref:`hermite_ensemble_banded`
+	- :ref:`Banded matrix model <hermite_ensemble_banded>` for Hermite ensemble
 
 .. _laguerre_ensemble_full:
 
@@ -95,6 +103,15 @@ the pdf of the corresponding :math:`\beta`-Ensemble reads
 			e^{- \frac12 x_i}
 			% \indic_{\bbR}(x_i)
 		\ d x_i
+
+.. note::
+
+	Recall that from the definition in :eq:`abs_vandermonde_det`
+	
+	.. math::
+
+		\left|\Delta(x_1,\dots,x_N)\right| = \prod_{i<j} |x_i - x_j|
+
 
 .. hint::
 
@@ -154,7 +171,7 @@ where
 
 .. seealso::
 
-	- Banded matrix model for :ref:`laguerre_ensemble_banded`
+	- :ref:`Banded matrix model <laguerre_ensemble_banded>` for Laguerre ensemble
 
 .. _jacobi_ensemble_full:
 
@@ -176,6 +193,15 @@ the pdf of the corresponding :math:`\beta`-Ensemble reads
 	        (1-x_i)^{\frac{\beta}{2}(M_2-N+1)-1}
 			% \indic_{\bbR}(x_i)
 		\ d x_i
+
+.. note::
+
+	Recall that from the definition in :eq:`abs_vandermonde_det`
+	
+	.. math::
+
+		\left|\Delta(x_1,\dots,x_N)\right| = \prod_{i<j} |x_i - x_j|
+
 
 .. hint::
 
@@ -249,7 +275,7 @@ itself tending to the arcsine law in the limit
 
 .. seealso::
 
-	- Banded matrix model for :ref:`jacobi_ensemble_banded`
+	- :ref:`Banded matrix model <jacobi_ensemble_banded>` for Jacobi ensemble
 
 .. _circular_ensemble_full:
 
@@ -260,6 +286,15 @@ Circular Ensemble
 
 	\left|\Delta(e^{i \theta_1 },\dots, e^{i \theta_N})\right|^{\beta}
     \prod_{j = 1}^N \frac{1}{2\pi} \mathbf{1}_{[0,2\pi]} (\theta_j) d\theta_j
+
+.. note::
+
+	Recall that from the definition in :eq:`abs_vandermonde_det`
+	
+	.. math::
+
+		\left|\Delta(x_1,\dots,x_N)\right| = \prod_{i<j} |x_i - x_j|
+
 
 .. hint::
 
@@ -342,7 +377,7 @@ Circular Ensemble
 
 .. seealso::
 
-	- Banded matrix model for :ref:`laguerre_ensemble_banded`
+	- :ref:`Banded matrix model <circular_ensemble_banded>` for Circular ensemble
 
 .. _ginibre_ensemble_full:
 
@@ -354,6 +389,15 @@ Ginibre Ensemble
 	\left|\Delta(z_1,\dots,z_N)\right|^{2}
 	\prod_{i = 1}^N e^{ - \frac{1}{2}|z_i|^2 }
 	d z_i
+
+.. note::
+
+	Recall that from the definition in :eq:`abs_vandermonde_det`
+	
+	.. math::
+
+		\left|\Delta(x_1,\dots,x_N)\right| = \prod_{i<j} |x_i - x_j|
+
 
 .. math::
 	
