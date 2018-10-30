@@ -48,6 +48,28 @@ cd DPPy
 pip install .
 ```
 
+### Contribute to the documentation
+
+The [documentation](https://readthedocs.org/projects/dppy/badge/?version=latest) is generated locally with [Sphinx](http://www.sphinx-doc.org/en/master/) and then built online by [ReadTheDocs](https://readthedocs.org/projects/dppy/).
+
+If you wish to contribute to the documentation or just play with it locally, you can:
+
+- Install Sphinx 
+```bash
+pip install -U sphinx
+```
+- Generate the docs locally
+```bash
+cd DPPy/docs
+make html
+```
+- Open the local HTML version of the documentation located at `DPPy/docs/_build/html/index.html`
+```bash
+open _build/html/index.html
+```
+
+If you wish pull request your contribution, please use the `docs` branch.
+
 ### How to cite this work?
 
 We wrote a companion paper to [DPPy](https://github.com/guilgautier/DPPy) for latter submission to the [MLOSS](http://www.jmlr.org/mloss/) track of JMLR.
