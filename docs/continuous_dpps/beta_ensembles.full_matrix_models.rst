@@ -179,7 +179,7 @@ Jacobi Ensemble
 ^^^^^^^^^^^^^^^
 
 Take for reference measure 
-:math:`\mu=\operatorname{\mathcal{B}eta}\left(\frac{\beta}{2}(M_1-N+1), \frac{\beta}{2}(M_2-N+1)\right)`, 
+:math:`\mu=\operatorname{Beta}\left(\frac{\beta}{2}(M_1-N+1), \frac{\beta}{2}(M_2-N+1)\right)`, 
 the pdf of the corresponding :math:`\beta`-Ensemble reads
 
 .. math::

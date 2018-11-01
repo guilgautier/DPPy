@@ -41,13 +41,13 @@ Let :math:`\beta>0`, the joint distribution of the :math:`\beta`-Ensemble associ
 
 	The associated ensembles actually correspond to the eigenvalues of random matrices whose distribution is invariant to the action of the orthogonal (:math:`\beta=1`), unitary (:math:`\beta=2`) and symplectic (:math:`\beta=4`) group respectively.
 
-	+---------------+---------------------+----------------------+---------------------------------------+
-	| :math:`\mu`   | :math:`\mathcal{N}` | :math:`\Gamma`       | :math:`\operatorname{\mathcal{B}eta}` |
-	+===============+=====================+======================+=======================================+
-	| Ensemble name | Hermite             | Laguerre             | Jacobi                                |
-	+---------------+---------------------+----------------------+---------------------------------------+
-	| support       | :math:`\mathbb{R}`  | :math:`\mathbb{R}^+` | :math:`[0,1]`                         |
-	+---------------+---------------------+----------------------+---------------------------------------+
+	+---------------+---------------------+----------------------+-----------------------------+
+	| :math:`\mu`   | :math:`\mathcal{N}` | :math:`\Gamma`       | :math:`\operatorname{Beta}` |
+	+===============+=====================+======================+=============================+
+	| Ensemble name | Hermite             | Laguerre             | Jacobi                      |
+	+---------------+---------------------+----------------------+-----------------------------+
+	| support       | :math:`\mathbb{R}`  | :math:`\mathbb{R}^+` | :math:`[0,1]`               |
+	+---------------+---------------------+----------------------+-----------------------------+
 
 .. note::
 

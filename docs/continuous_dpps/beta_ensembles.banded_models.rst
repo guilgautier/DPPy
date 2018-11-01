@@ -191,7 +191,7 @@ That is to say,
 Jacobi Ensemble
 ^^^^^^^^^^^^^^^
 
-Take for reference measure :math:`\mu=\operatorname{\mathcal{B}eta}(a,b)`
+Take for reference measure :math:`\mu=\operatorname{Beta}(a,b)`
 
 .. math::
 

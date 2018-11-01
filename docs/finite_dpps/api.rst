@@ -10,4 +10,4 @@ API
 .. currentmodule:: finite_dpps
 
 .. autoclass:: FiniteDPP
-	:members:
+	:members: 

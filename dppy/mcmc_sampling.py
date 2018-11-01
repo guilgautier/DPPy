@@ -42,24 +42,24 @@ def dpp_sampler_mcmc(kernel, mode='AED', **params):
 	"""
 
 	s_init = params.get('s_init', None)
-	nb_it_max = params.get('nb_it_max', 10)
+	nb_iter = params.get('nb_iter', 10)
 	T_max = params.get('T_max', None)
 	size = params.get('size', None) # For projection inclusion kernel = Tr(K)
 
 	if mode == 'AED': # Add-Exchange-Delete S'=S+t, S-t+u, S-t
 		if s_init is None:
 			s_init = initialize_AED_sampler(kernel)
-		sampl = add_exchange_delete_sampler(kernel, s_init, nb_it_max, T_max)
+		sampl = add_exchange_delete_sampler(kernel, s_init, nb_iter, T_max)
 
 	elif mode == 'AD': # Add-Delete S'=S+t, S-t
 		if s_init is None:
 			s_init = initialize_AD_and_E_sampler(kernel)
-		sampl = add_delete_sampler(kernel, s_init, nb_it_max, T_max)
+		sampl = add_delete_sampler(kernel, s_init, nb_iter, T_max)
 
 	elif mode == 'E': # Exchange S'=S-t+u
 		if s_init is None:
 			s_init = initialize_AD_and_E_sampler(kernel, size)
-		sampl = basis_exchange_sampler(kernel, s_init, nb_it_max, T_max)
+		sampl = basis_exchange_sampler(kernel, s_init, nb_iter, T_max)
 
 	return sampl
 
@@ -76,10 +76,10 @@ def initialize_AED_sampler(kernel):
 	ground_set = np.arange(N)
 
 	S0, det_S0 = [], 0.0
-	nb_it_max = 100
+	nb_iter = 100
 	tol = 1e-9
 
-	for _ in range(nb_it_max):
+	for _ in range(nb_iter):
 		if det_S0 > tol:
 			break
 		else:
@@ -105,10 +105,10 @@ def initialize_AD_and_E_sampler(kernel, size=None):
 	ground_set = np.arange(N)
 
 	S0, det_S0 = [], 0.0
-	nb_it_max = 100
+	nb_iter = 100
 	tol = 1e-9
 
-	for _ in range(nb_it_max):
+	for _ in range(nb_iter):
 		if det_S0 > tol:
 			break
 		else:
@@ -120,7 +120,7 @@ def initialize_AD_and_E_sampler(kernel, size=None):
 
 	return S0
 
-def add_exchange_delete_sampler(kernel, s_init=None, nb_it_max=10, T_max=None):
+def add_exchange_delete_sampler(kernel, s_init=None, nb_iter=10, T_max=None):
 	""" MCMC sampler for generic DPPs, it is a mix of add/delete and basis exchange MCMC samplers.
 
 	:param kernel:
@@ -133,10 +133,10 @@ def add_exchange_delete_sampler(kernel, s_init=None, nb_it_max=10, T_max=None):
 	:type s_init:
 		list
 
-	:param nb_it_max:
+	:param nb_iter:
 		Maximum number of iterations performed by the the algorithm.
 		Default is 10.
-	:type nb_it_max:
+	:type nb_iter:
 		int
 
 	:param T_max:
@@ -145,7 +145,7 @@ def add_exchange_delete_sampler(kernel, s_init=None, nb_it_max=10, T_max=None):
 		float
 
 	:return:
-		list of `nb_it_max` approximate sample of DPP(kernel)
+		list of `nb_iter` approximate sample of DPP(kernel)
 	:rtype:
 		array_type
 
@@ -219,11 +219,11 @@ def add_exchange_delete_sampler(kernel, s_init=None, nb_it_max=10, T_max=None):
 			samples.append(S0)
 
 		it += 1
-		flag = (it < nb_it_max) if not T_max else ((time.time()-t_start) < T_max)
+		flag = (it < nb_iter) if not T_max else ((time.time()-t_start) < T_max)
 
 	return samples
 
-def add_delete_sampler(kernel, s_init, nb_it_max=10, T_max=10):
+def add_delete_sampler(kernel, s_init, nb_iter=10, T_max=10):
 	""" MCMC sampler for generic DPP(kernel), it performs local moves by removing/adding one element at a time.
 
 	:param kernel:
@@ -236,10 +236,10 @@ def add_delete_sampler(kernel, s_init, nb_it_max=10, T_max=10):
 	:type s_init:
 		list
 
-	:param nb_it_max:
+	:param nb_iter:
 		Maximum number of iterations performed by the the algorithm.
 		Default is 10.
-	:type nb_it_max:
+	:type nb_iter:
 		int
 
 	:param T_max:
@@ -249,7 +249,7 @@ def add_delete_sampler(kernel, s_init, nb_it_max=10, T_max=10):
 		float
 
 	:return:
-		list of `nb_it_max` approximate sample of DPP(kernel)
+		list of `nb_iter` approximate sample of DPP(kernel)
 	:rtype:
 		array_type
 
@@ -296,11 +296,11 @@ def add_delete_sampler(kernel, s_init, nb_it_max=10, T_max=10):
 			samples.append(S0)
 
 		it += 1
-		flag = (it < nb_it_max) if not T_max else ((time.time()-t_start) < T_max)
+		flag = (it < nb_iter) if not T_max else ((time.time()-t_start) < T_max)
 
 	return samples
 
-def basis_exchange_sampler(kernel, s_init, nb_it_max=10, T_max=10):
+def basis_exchange_sampler(kernel, s_init, nb_iter=10, T_max=10):
 	""" MCMC sampler for projection DPPs, based on the basis exchange property.
 
 	:param kernel:
@@ -314,10 +314,10 @@ def basis_exchange_sampler(kernel, s_init, nb_it_max=10, T_max=10):
 	:type s_init:
 		list
 
-	:param nb_it_max:
+	:param nb_iter:
 		Maximum number of iterations performed by the the algorithm.
 		Default is 10.
-	:type nb_it_max:
+	:type nb_iter:
 		int
 
 	:param T_max:
@@ -327,7 +327,7 @@ def basis_exchange_sampler(kernel, s_init, nb_it_max=10, T_max=10):
 		float
 
 	:return:
-		MCMC chain of approximate sample (stacked row_wise i.e. nb_it_max rows).
+		MCMC chain of approximate sample (stacked row_wise i.e. nb_iter rows).
 	:rtype:
 		array_type
 
@@ -377,7 +377,7 @@ def basis_exchange_sampler(kernel, s_init, nb_it_max=10, T_max=10):
 			samples.append(S0)
 
 		it += 1
-		flag = (it < nb_it_max) if not T_max else ((time.time()-t_start) < T_max)
+		flag = (it < nb_iter) if not T_max else ((time.time()-t_start) < T_max)
 
 	return samples
 
@@ -432,23 +432,17 @@ def zonotope_sampler(A_zono, **params):
 	:type A_zono:
 		array_type
 
-	:param c: Linear objective of the linear program used to identify the tile in which a point lies.
-	:type c: list
+	:param params: Dictionary containing the parameters
 
-	:param nb_it_max:
-		Maximum number of iterations performed by the the algorithm.
-		Default is 10.
-	:type nb_it_max:
-		int
-
-	:param T_max:
-		Maximum running time of the algorithm (in seconds).
+		- ``'lin_obj'`` (list): Linear objective (:math:`c`) of the linear program used to identify the tile in which a point lies. Default is a random Gaussian vector.
+		- ``'x_0'` (list): Initial point.
+		- ``'nb_iter'`` (int): Number of iterations of the MCMC chain. Default is 10.
+		- ``'T_max'`` (float): Maximum running time of the algorithm (in seconds).
 		Default is 10s.
-	:type T_max:
-		float
+	:type params: dict
 
 	:return:
-		MCMC chain of approximate sample (stacked row_wise i.e. nb_it_max rows).
+		MCMC chain of approximate samples (stacked row_wise i.e. nb_iter rows).
 	:rtype:
 		array_type
 
@@ -462,11 +456,13 @@ def zonotope_sampler(A_zono, **params):
 
 	r, N = A_zono.shape # Sizes of r=samples=rank(A_zono), N=ground set
 	# Linear objective
-	c = params.get('lin_obj', matrix(np.random.randn(N)))
+	c = matrix(params.get('lin_obj', np.random.randn(N)))
 	# Initial point x0 = A*u, u~U[0,1]^n
-	x0 = params.get('x0', matrix(A_zono.dot(np.random.rand(N))))
-	nb_it_max = params.get('nb_it_max', 10)
+	x0 = matrix(params.get('x_0', A_zono.dot(np.random.rand(N))))
+
+	nb_iter = params.get('nb_iter', 10)
 	T_max = params.get('T_max', None)
+
 	#################################################
 	############### Linear problems #################
 	#################################################
@@ -539,7 +535,7 @@ def zonotope_sampler(A_zono, **params):
 	det_B_x0 = la.det(A_zono[:,B_x0])
 
 	it, t_start = 1, time.time()
-	flag = it < nb_it_max
+	flag = it < nb_iter
 	while flag:
 
 		# Take uniform direction d defining D_x0
@@ -572,6 +568,6 @@ def zonotope_sampler(A_zono, **params):
 					Bases.append(B_x0)
 
 		it += 1
-		flag = (it < nb_it_max) if not T_max else ((time.time()-t_start) < T_max)
+		flag = (it < nb_iter) if not T_max else ((time.time()-t_start) < T_max)
 
 	return np.array(Bases)
