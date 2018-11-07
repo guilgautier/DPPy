@@ -7,7 +7,7 @@ API
 
 	Check out the Notebook :math:`\beta`-`Ensembles <https://github.com/guilgautier/DPPy/blob/master/notebooks/beta_ensembles.ipynb>`_
 
-.. currentmodule:: beta_ensembles
-
-.. autoclass:: BetaEnsemble
+.. automodule:: beta_ensembles
 	:members:
+	:inherited-members:
+	:show-inheritance:

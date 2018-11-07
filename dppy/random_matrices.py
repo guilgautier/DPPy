@@ -25,9 +25,8 @@ def hermite_sampler_full(N, beta=2):
 		A = np.block([[X, Y],[-Y.conj(), X.conj()]])
 
 	else:
-		raise ValueError('Invalid beta parameter.\n'
-						'beta coefficient must be equal to 1, 2 or 4'
-						'Given beta={}'.format(beta))
+		err_print = ('`beta` parameter must be 1, 2 or 4. Given: {}'.format(beta))
+		raise ValueError(err_print)
 
 	# return la.eigvalsh(A+A.conj().T)
 	return la.eigvalsh(A+A.conj().T)/np.sqrt(2.0)
@@ -39,6 +38,9 @@ def hermite_sampler_tridiag(N, beta=2):
 
 		:cite:`DuEd02` II-C
 	"""
+
+	if not (beta > 0):
+		raise ValueError('`beta` must be positive. Given: {}'.format(beta))
 
 	alpha_coef = np.sqrt(2)*np.random.randn(N)
 	beta_coef = np.random.chisquare(beta*np.arange(N-1, 0, step=-1))
@@ -58,6 +60,9 @@ def mu_ref_normal_sampler_tridiag(loc=0.0, scale=1.0, beta=2, size=10):
 
 		:cite:`DuEd02` II-C
 	"""
+
+	if not (beta > 0):
+		raise ValueError('`beta` must be positive. Given: {}'.format(beta))
 
 	# beta/2*[N-1, N-2, ..., 1]
 	b_2_Ni = 0.5*beta*np.arange(size-1, 0, step=-1)
@@ -89,9 +94,8 @@ def laguerre_sampler_full(M, N, beta=2):
 		A = np.block([[X, Y],[-Y.conj(), X.conj()]])
 
 	else:
-		raise ValueError('Invalid beta parameter.\n'
-						'beta coefficient must be equal to 1, 2 or 4'
-						'Given beta={}'.format(beta))
+		err_print = ('`beta` parameter must be 1, 2 or 4. Given: {}'.format(beta))
+		raise ValueError(err_print)
 
 	return la.eigvalsh(A.dot(A.conj().T))
 
@@ -102,6 +106,9 @@ def laguerre_sampler_tridiag(M, N, beta=2):
 
 		:cite:`DuEd02` III-B
 	"""
+
+	if not (beta > 0):
+		raise ValueError('`beta` must be positive. Given: {}'.format(beta))
 	# M=>N
 
 	# xi_odd = xi_1, ... , xi_2N-1
@@ -135,6 +142,9 @@ def mu_ref_gamma_sampler_tridiag(shape=1.0, scale=1.0, beta=2, size=10):
 
 		:cite:`DuEd02` III-B
 	"""
+
+	if not (beta > 0):
+		raise ValueError('`beta` must be positive. Given: {}'.format(beta))
 
 	# beta/2*[N-1, N-2, ..., 1, 0]
 	b_2_Ni = 0.5*beta*np.arange(size-1,-1,step=-1)
@@ -185,9 +195,8 @@ def jacobi_sampler_full(M_1, M_2, N, beta=2):
 		Y = np.block([[Y_1, Y_2],[-Y_2.conj(), Y_1.conj()]])
 
 	else:
-		raise ValueError('Invalid beta parameter.\n'
-										'beta coefficient must be equal to 1, 2 or 4'
-										'Given beta={}'.format(beta))
+		err_print = ('`beta` parameter must be 1, 2 or 4. Given: {}'.format(beta))
+		raise ValueError(err_print)
 
 	X_tmp = X.dot(X.conj().T)
 	Y_tmp = Y.dot(Y.conj().T)
@@ -201,6 +210,9 @@ def jacobi_sampler_tridiag(M_1, M_2, N, beta=2):
 
 		:cite:`KiNe04` Theorem 2
 	"""
+
+	if not (beta > 0):
+		raise ValueError('`beta` must be positive. Given: {}'.format(beta))
 
 	# c_odd = c_1, c_2, ..., c_2N-1
 	c_odd = np.random.beta(0.5*beta*np.arange(M_1, M_1-N, step=-1),
@@ -251,6 +263,9 @@ def mu_ref_beta_sampler_tridiag(a, b, beta=2, size=10):
 		:cite:`KiNe04` Theorem 2
 	"""
 
+	if not (beta > 0):
+		raise ValueError('`beta` must be positive. Given: {}'.format(beta))
+
 	# beta/2*[N-1, N-2, ..., 1, 0]
 	b_2_Ni = 0.5*beta*np.arange(size-1,-1,step=-1)
 
@@ -292,7 +307,7 @@ def circular_sampler_full(N, beta=2, haar_mode='QR'):
 		:cite:`Mez06` Section 5
 	"""
 
-	if haar_mode == 'hermite':
+	if haar_mode == 'Hermite':
 		size_sym_mat = int(N*(N-1)/2)
 
 		if beta==1:#COE
@@ -308,9 +323,8 @@ def circular_sampler_full(N, beta=2, haar_mode='QR'):
 			A = np.block([[X, Y], [-Y.conj(), X.conj()]])
 
 		else:
-			raise ValueError('Invalid beta parameter for `haar_mode=hermite`'
-							'Only beta = 1, 2, 4 are available\n'
-							'Given {}'.format(beta))
+			err_print = ('For `haar_mode="hermite"`, `beta` parameter must be 1, 2 or 4. Given: {}'.format(beta))
+			raise ValueError(err_print)
 
 		_, U = la.eigh(A+A.conj().T)
 
@@ -325,14 +339,17 @@ def circular_sampler_full(N, beta=2, haar_mode='QR'):
 
 		# elif beta==4:
 		else:
-			raise ValueError('Invalid beta parameter, for `haar_mode=QR`'
-							'Only beta = 1, 2 are available\n'
-							'Given {}'.format(beta))
+			err_print = ('For `haar_mode="QR", `beta` parameter must be 1 or 2. Given: {}'.format(beta))
+			raise ValueError(err_print)
 
 		#U, _ = la.qr(A)
 		Q, R = la.qr(A)
 		d = np.diagonal(R)
 		U = np.multiply(Q, d/np.abs(d), Q)
+
+	else:
+		err_print = ('Invalid `haar_mode`. Choose from `haar_mode="Hermite" or "QR". Given: {}'.format(haar_mode))
+		raise ValueError(err_print)
 
 	return la.eigvals(U)
 
@@ -365,7 +382,7 @@ def mu_ref_unif_unit_circle_sampler_quindiag(beta=2, size=10):
 	"""
 
 	if not ((beta > 0) & isinstance(beta, int)):
-		raise ValueError('beta must be positive integer. Given: '.format(beta))
+		raise ValueError('`beta` must be positive integer. Given: {}'.format(beta))
 
 	# Xi_-1 = [1]
 	xi_1 = np.array([1], ndmin=2, dtype=np.complex_)

@@ -1,556 +1,1048 @@
 # coding: utf-8
-try: # Local import
-	from .random_matrices import *
-except (SystemError, ImportError):
-	from random_matrices import *
+
+import numpy as np
+import scipy.linalg as la
 import matplotlib.pyplot as plt
 
-class BetaEnsemble:
-	""" Finite DPP object parametrized by
+from re import findall as re_findall # to convert class names to string
 
-	:param name:
-		- ``'hermite'``
-		- ``'laguerre'``
-		- ``'jacobi'``
-		- ``'circular'``
-		- ``'ginibre'``
-	:type name:
-		string
+import random_matrices as rm
+
+class BetaEnsemble:
+	""" :math:`\\beta`-Ensemble object parametrized by
 
 	:param beta:
-		:math:`\\beta > 0` inverse temperature parameter.
-		Default ``beta=2`` corresponds to the DPP case, see :ref:`beta_ensembles_definition_OPE`
+		:math:`\\beta >= 0` inverse temperature parameter.
+		
+		The default ``beta=2`` corresponds to the DPP case, see :ref:`beta_ensembles_definition_OPE`
 	:type beta:
-		int, float, default 2
+		int, float, default :math:`2`
 
 	.. seealso::
 
-		- :math:`\\beta`-Ensembles :ref:`beta_ensembles_definition`
+		- :math:`\\beta`-Ensembles :ref:`definition <beta_ensembles_definition>`
 	"""
 
-	def __init__(self, name, beta=2):
-
-		self.name = name.lower()
-		self.__check_name_validity()
+	def __init__(self, beta=2):
 
 		self.beta = beta
-		self.__check_beta_validity()
+		self.__check_beta_non_negative()
 
-		self.mode = 'banded' if self.name != 'ginibre' else None
-		self.params = {}
-		self.__nb_points = 0
+		# Split object name at uppercase
+		self.name = ' '.join(re_findall('[A-Z][^A-Z]*', self.__class__.__name__)) 
+		self.params = {'size_N':10} # Number of points and reference measure params
+
+		self.sampling_mode = '' # 
 		self.list_of_samples = []
-		# self.nb_of_samples = len(self.list_of_samples)
+
+		self._str_title = r'Realization of {} points of {} with $\beta={}$'.format(									self.params['size_N'], self.name, self.beta)
 
 	def __str__(self):
-		str_info = ('ensemble name = {}'.format(self.name),
-								'beta parameter = {}'.format(self.beta),
-								'sampling mode = {}'.format(self.mode),
+		str_info = ('{} with beta = {}'.format(self.name, self.beta),
 								'sampling parameters = {}'.format(self.params),
 								'number of samples = {}'.format(len(self.list_of_samples)))
 
 		return '\n'.join(str_info)
 
-	def info(self):
-		""" Print infos about the :class:`BetaEnsemble` object
-		"""
-		print(self.__str__())
+	def __check_beta_non_negative(self):
+		if not (self.beta >= 0):
+			err_print = ('Invalid `beta` argument:',
+									'`beta` must be non negative. Given: {}'.format(self.beta))
+			raise ValueError('\n'.join(err_print))
+		else:
+			pass
+
+	# def info(self):
+	# 	""" Print infos about the :class:`BetaEnsemble` object
+	# 	"""
+	# 	print(self.__str__())
 
 	def flush_samples(self):
-		""" Empty the ``BetaEnsemble.list_of_samples`` attribute.
+		""" Empty the ``list_of_samples`` attribute.
 		"""
 		self.list_of_samples = []
 
-	def sample(self, mode='banded', **params):
-		""" Sample exactly from the corresponding :class:`BetaEnsemble <BetaEnsemble>` object by computing the eigenvalues of random matrices.
+class HermiteEnsemble(BetaEnsemble):
+	""" Hermite Ensemble object
 
-		:param mode:
+	.. seealso::
 
-			- ``'banded'``: tri/quindiagonal matrix model
-			- ``'full'``: full matrix model
+		- :ref:`Full matrix model <hermite_ensemble_full>` for Hermite ensemble
+		- :ref:`Tridiagonal matrix model <hermite_ensemble_banded>` for Hermite ensemble
+	"""
 
-		:type mode:
-			string, default ``'banded'``
+	def __init__(self, beta=2):
 
-		:param params:
-			Dictionary containing the parametrization of the underlying :class:`BetaEnsemble <BetaEnsemble>` object viewed as the eigenvalues of a full or banded random matrix.
+		super().__init__(beta=beta)
 
-			For ``mode='full'``, the ``'N'`` key refers to the number of points i.e. the size of the matrix to be diagonalized.
+		# Default parameters for ``loc`` and ``scale`` correspond to the reference measure N(0,2) in the full matrix model
+		params = {'loc':0.0, 'scale':np.sqrt(2.0), 'size_N':10}
+		self.params.update(params)
 
-				- for ``BetaEnsemble.name='hermite'``
+	def sample_full_model(self, size_N=10):
+		""" Sample from :ref:`tridiagonal matrix model <Hermite_ensemble_full>` for Hermite ensemble. Only available for ``HermiteEnsemble.beta`` attribute :math:`\\beta\\in\\{1, 2, 4\\}` and the degenerate case :math:`\\beta=0` corresponding to i.i.d. points from the Gaussian :math:`\\mathcal{N}(\\mu,\\sigma)` reference measure
 
-					``params={'N':N}``
+		:param size_N:
+			Number :math:`N` of points i.e. size of the matrix to be diagonalized
+		:type size_N:
+			int, default :math:`10`
 
-				- for ``BetaEnsemble.name='laguerre'``
+		.. note::
 
-					``params={'M':M, 'N':N}`` where :math:`M \geq N`
+			The reference measure associated with the :ref:`full matrix model <hermite_ensemble_full>` is :math:`\\mathcal{N}(0,2)`.
+			For this reason, in the ``sampling_params`` attribute, the values of the parameters are set to ``loc``:math:`=0` and ``scale``:math:`=\\sqrt{2}`.
 
-				- for ``BetaEnsemble.name='jacobi'``
-
-					``params={'M_1': M_1, 'M_2':M_2, 'N':N}`` where :math:`M_{1,2}\geq N`
-
-				- for ``BetaEnsemble.name='circular'``
-
-					``params={'N':N, 'haar_mode':'QR'/'hermite'}``
-
-				- for ``BetaEnsemble.name='ginibre'``
-
-					``params={'N':N}``
-
-			For ``mode='banded'``, the ``'size'`` key refers to the number of points i.e. the size of the matrix to be diagonalized.
-
-				- for ``BetaEnsemble.name='hermite'``
-
-					- ``params={'loc':, 'scale':, 'size':}``, where ``'loc', 'scale'`` are respectively the mean and standard deviation of the corresponding Gaussian reference measure. To recover the full matrix model take, ``loc`` :math:`=0`, ``scale`` :math:`=\sqrt{2}` and ``size``:math:`=N`.
-
-				- for ``BetaEnsemble.name='laguerre'``
-
-					- ``params={'shape':, 'scale':, 'size':}``, where ``'shape', 'scale'`` are respectively the shape and standard deviation of the corresponding Gamma reference measure. To recover the full matrix model take ``shape`` :math:`=\\frac{1}{2} \\beta (M-N+1)`, ``scale``:math:`=2` and ``size`` :math:`=N`.
-
-				- for ``BetaEnsemble.name='jacobi'``
-
-					- ``params={'a':, 'b':, 'size':}``, where ``'a', 'b'`` are the respective parameters of the corresponding Beta reference measure. To recover the full matrix model take :math:`a=\\frac{1}{2} \\beta (M_1-N+1)`, :math:`b=\\frac{1}{2} \\beta (M_2-N+1)` and ``size``:math:`=N`.
-
-				- for ``BetaEnsemble.name='circular'``
-
-					- ``params={size:}``.
-
-		:type params:
-			dict
+			To compare :func:`sample_banded_model <sample_banded_model>` with :func:`sample_full_model <sample_full_model>` simply use the ``size_N`` parameter.
 
 		.. seealso::
 
-			- :func:`flush_samples <flush_samples>`
-			- :ref:`full_matrix_models` and :ref:`banded_matrix_models`
+			- :ref:`Full matrix model <hermite_ensemble_full>` for Hermite ensemble
+			- :func:`sample_banded_model <sample_banded_model>`
 		"""
 
-		self.mode = mode
-		self.__check_mode_validity()
+		self.sampling_mode = 'full'
+		params = {'loc':0.0, 'scale':np.sqrt(2.0), 'size_N':size_N}
+		self.params.update(params)
 
-		self.params = params
-		self.__check_params_validity()
-
-		if self.mode == 'banded':
-
-			self.__nb_points = self.params['size']
-
-			if self.name == 'hermite':
-					sampl = mu_ref_normal_sampler_tridiag(loc=self.params['loc'],
-																					scale=self.params['scale'],
-																					beta=self.beta,
-																					size=self.__nb_points)
-
-			elif self.name == 'laguerre':
-					sampl = mu_ref_gamma_sampler_tridiag(shape=self.params['shape'],
-																					scale=self.params['scale'],
-																					beta=self.beta,
-																					size=self.__nb_points)
-
-			elif self.name == 'jacobi':
-					sampl = mu_ref_beta_sampler_tridiag(a=self.params['a'],
-																						b=self.params['b'],
-																						beta=self.beta,
-																						size=self.__nb_points)
-
-			elif self.name == 'circular':
-					sampl = mu_ref_unif_unit_circle_sampler_quindiag(beta=self.beta,
-																		  			size=self.__nb_points)
-
-			elif self.name == 'ginibre':
-
-					raise ValueError('In valid `mode` argument. No banded model for Ginibre ensemble. Use `mode=full.\nGiven {}'.format(mode))
-
-		elif self.mode == 'full':
-
-			self.__nb_points = self.params['N']
-
-			if self.name == 'hermite':
-				sampl = hermite_sampler_full(N=self.__nb_points,
-																		beta=self.beta)
-
-			elif self.name == 'laguerre':
-				sampl = laguerre_sampler_full(M=self.params['M'],
-																			N=self.__nb_points,
-																			beta=self.beta)
-
-			elif self.name == 'jacobi':
-				sampl = jacobi_sampler_full(M_1=self.params['M_1'],
-																		M_2=self.params['M_2'],
-																		N=self.__nb_points,
-																		beta=self.beta)
-
-			elif self.name == 'circular':
-				sampl = circular_sampler_full(N=self.__nb_points,
-																			beta=self.beta,
-																			haar_mode=self.params['haar_mode'])
-
-			elif self.name == 'ginibre':
-				sampl = ginibre_sampler_full(N=self.__nb_points)
+		if self.beta == 0: # Answer issue #28 raised by @rbardenet
+			sampl = np.random.normal(loc=params['loc'], scale=params['scale'],
+															size=params['size_N'])
+		else:
+			sampl = rm.hermite_sampler_full(N=params['size_N'], beta=self.beta)
 
 		self.list_of_samples.append(sampl)
 
+	def sample_banded_model(self, loc=0.0, scale=np.sqrt(2.0), size_N=10):
+		""" Sample from :ref:`tridiagonal matrix model <Hermite_ensemble_full>` for Hermite Ensemble. Available for ``HermiteEnsemble.beta`` attribute :math:`\\beta>0` and the degenerate case :math:`\\beta=0` corresponding to i.i.d. points from the Gaussian :math:`\\mathcal{N}(\\mu,\\sigma)` reference measure
 
-	def plot(self, normalization=True, title=''):
-		""" Display the last realization of the corresponding :class:`BetaEnsemble` object.
+		:param loc:
+			Mean of :math:`\\mu` of the Gamma :math:`\\mathcal{N}(\\mu, \\sigma)`
+		:type loc:
+			float, default :math:`0`
 
-		:param normalization:
-			If ``True``, the points will be normalized so that concentrate as
+		:param scale:
+			Standard deviation :math:`\\sigma` of the Gamma :math:`\\mathcal{N}(\\mu, \\sigma^2)`
+		:type scale:
+			float, default :math:`\\sqrt{2}`
 
-		:type normalization:
-			bool, default ``True``
+		:param size_N:
+			Number :math:`N` of points i.e. size of the matrix to be diagonalized
+		:type size_N:
+			int, default :math:`10`
 
-		:param title:
-			Plot title
+		.. note::
 
-		:type title:
-			string
+			The reference measure associated with the :ref:`full matrix model <hermite_ensemble_full>` is :math:`\\mathcal{N}(0,2)`.
+			For this reason, in the ``sampling_params`` attribute, the default values are set to ``loc``:math:`=0` and ``scale``:math:`=\\sqrt{2}`.
 
-		.. caution::
-
-			An initial call to :func:`sample <sample>` is necessary
-
-		.. seealso::
-
-			- :func:`sample <sample>`
-			- :func:`hist <hist>`
-			- :ref:`full_matrix_models`
-			- :ref:`banded_matrix_models`
-		"""
-
-		if not self.list_of_samples:
-			raise ValueError('list_of_samples is empty, you must sample first')
-
-		fig, ax = plt.subplots(1, 1)
-		points = self.list_of_samples[-1].copy()
-
-		if self.name in ('hermite', 'laguerre', 'jacobi'):
-
-			if self.name == 'hermite':
-
-				if normalization:
-
-					if self.mode == 'banded':
-						N	= self.params['size']
-
-						points -= self.params['loc']
-						points /= np.sqrt(0.5)*self.params['scale']
-
-					elif self.mode == 'full':
-						N = self.params['N']
-
-					points /= np.sqrt(self.beta * N)
-
-					x = np.linspace(-2, 2, 100)
-					ax.plot(x, semi_circle_law(x),
-									'r-', lw=2, alpha=0.6,
-									label=r'$f_{sc}$')
-
-			elif self.name == 'laguerre':
-
-				if normalization:
-
-					if self.mode == 'banded':
-						N	= self.params['size']
-						M = 2/self.beta * self.params['shape'] + N -1
-
-						points /= 0.5*self.params['scale']
-
-					elif self.mode == 'full':
-						N = self.params['N']
-						M	= self.params['M']
-
-					points /= self.beta * M
-
-					x = np.linspace(1e-3, np.max(points)+0.3, 200)
-					ax.plot(x, marcenko_pastur_law(x, M, N),
-									'r-', lw=2, alpha=0.6,
-									label=r'$Marcenko Pastur law$')
-
-			elif self.name == 'jacobi':
-
-				if normalization:
-
-					if self.mode == 'banded':
-						N	= self.params['size']
-						M_1 = 2/self.beta * self.params['a'] + N -1
-						M_2 = 2/self.beta * self.params['b'] + N -1
-
-					elif self.mode == 'full':
-						N	= self.params['N']
-						M_1 = self.params['M_1']
-						M_2 = self.params['M_2']
-
-					eps = 1e-5
-					x = np.linspace(eps, 1.0-eps, 500)
-					ax.plot(x, wachter_law(x, M_1, M_2, N),
-									'r-', lw=2, alpha=0.6,
-									label='Wachter Law')
-
-			ax.scatter(points, np.zeros(len(points)), c='blue', label='sample')
-
-		elif self.name in ('circular', 'ginibre'):
-
-			if self.name == 'circular':
-
-				unit_circle = plt.Circle((0,0), 1, color='r', fill=False)
-				ax.add_artist(unit_circle)
-
-				ax.set_xlim([-1.3, 1.3])
-				ax.set_ylim([-1.3, 1.3])
-				ax.set_aspect('equal')
-
-			if self.name == 'ginibre':
-
-				if normalization:
-
-					points /= np.sqrt(self.params['N'])
-
-					unit_circle = plt.Circle((0,0), 1, color='r', fill=False)
-					ax.add_artist(unit_circle)
-
-					ax.set_xlim([-1.3, 1.3])
-					ax.set_ylim([-1.3, 1.3])
-					ax.set_aspect('equal')
-
-			ax.scatter(points.real, points.imag, c='blue', label='sample')
-
-		str_title = ('Realization of {} ensemble'.format(self.name),
-			'with {} points'.format(self.__nb_points),
-			r'and $\beta={}$'.format(self.beta))
-		str_title = ' '.join(str_title)
-
-		plt.title(title if title else str_title)
-		ax.legend(loc='best', frameon=False)
-		plt.show()
-
-
-	def hist(self, normalization=True, title=''):
-		""" Display the histogram of the last realization of corresponding :class:`BetaEnsemble` object.
-
-		:param normalization:
-			If ``True``, the points will be normalized so that concentrate as
-
-		:type normalization:
-			bool, default ``True``
-
-		:param title:
-			Plot title
-
-		:type title:
-			string
-
-		.. caution::
-
-			An initial call to :func:`sample <sample>` is necessary
+			To compare :func:`sample_banded_model <sample_banded_model>` with :func:`sample_full_model <sample_full_model>` simply use the ``size_N`` parameter.
 
 		.. seealso::
 
-			- :func:`sample <sample>`
-			- :func:`plot <plot>`
-			- :ref:`full_matrix_models`
-			- :ref:`banded_matrix_models`
+			- :ref:`Tridiagonal matrix model <hermite_ensemble_banded>` for Hermite ensemble
+			- :cite:`DuEd02` II-C
+			- :func:`sample_full_model <sample_full_model>`
 		"""
 
+		self.sampling_mode = 'banded'
+		params = {'loc':loc, 'scale':scale, 'size_N':size_N}
+		self.params.update(params)
+
+		if self.beta == 0: # Answer issue #28 raised by @rbardenet
+			sampl = np.random.normal(loc=params['loc'], scale=params['scale'],
+															size=params['size_N'])
+		else:
+			sampl = rm.mu_ref_normal_sampler_tridiag(loc=params['loc'],
+																					scale=params['scale'],
+																					beta=self.beta,
+																					size=params['size_N'])
+
+		self.list_of_samples.append(sampl)
+
+	def normalize_points(self, points):
+		""" Normalize points obtained after sampling to match the limiting distribution i.e. semi-circle
+
+			.. math::
+
+				f(x) = \\frac{1}{2\\pi} \\sqrt{4-x^2}
+
+		:param points:
+			A sample from Hermite ensemble, accessible through the ``list_of_samples`` attributes
+		:type points:
+			array_like
+
+		- If sampled using :func:`sample_banded_model <sample_banded_model>` with reference measure :math:`\\mathcal{N}(\\mu,\\sigma)`
+
+			.. math::
+
+				x \\mapsto \\sqrt{2}\\frac{x-\\mu}{\\sigma}
+				\\quad \\text{and} \\quad
+				x \\mapsto \\frac{x}{\\beta N}
+
+		- If sampled using :func:`sample_full_model <sample_full_model>`
+
+			.. math::
+				
+				x \\mapsto \\frac{x}{\\beta N}
+
+		.. note::
+
+			This method is called in :func:`plot <plot>` and :func:`hist <hist>` when ``normalization=True``.
+		"""
+
+		if self.sampling_mode == 'banded':
+			points -= self.params['loc']
+			points /= np.sqrt(0.5)*self.params['scale']
+
+		else: # 'full'
+			pass
+
+		points /= np.sqrt(self.beta * self.params['size_N'])
+
+		return points
+
+	def __display_and_normalization(self, display_type, normalization):
+
 		if not self.list_of_samples:
-			raise ValueError('list_of_samples is empty, you must sample first')
+			raise ValueError('Empty attribute `list_of_samples`, sample first!')
+		else:
+			points = self.list_of_samples[-1].copy() # Pick last sample
 
 		fig, ax = plt.subplots(1, 1)
-		points = self.list_of_samples[-1].copy()
-		# points = np.array(self.list_of_samples).flatten()
+		# Title
+		plt.title(self._str_title)
 
-		if self.name == 'hermite':
+		if normalization:
+			points = self.normalize_points(points)
 
-			if normalization:
+			# Limiting distribution: semi circle law
+			x = np.linspace(-2, 2, 100)
+			ax.plot(x, rm.semi_circle_law(x), 
+						'r-', lw=2, alpha=0.6,
+						label=r'$f_{sc}$')
+		else:
+			pass
 
-				if self.mode == 'banded':
-					N	= self.params['size']
+		if display_type == 'scatter':
+			ax.scatter(points, np.zeros(points.shape[0]),
+								c='blue', 
+								label='sample')
 
-					points -= self.params['loc']
-					points /= np.sqrt(0.5)*self.params['scale']
-
-				elif self.mode == 'full':
-					N = self.params['N']
-
-				points /= np.sqrt(self.beta * N)
-
-				x = np.linspace(-2, 2, 100)
-				ax.plot(x, semi_circle_law(x),
-								'r-', lw=2, alpha=0.6,
-								label=r'$f_{sc}$')
-
-		elif self.name == 'laguerre':
-
-			if normalization:
-
-				if self.mode == 'banded':
-					N	= self.params['size']
-					M = 2/self.beta * self.params['shape'] + N -1
-
-					points /= 0.5*self.params['scale']
-
-				elif self.mode == 'full':
-					N = self.params['N']
-					M	= self.params['M']
-
-				points /= self.beta * M
-
-				x = np.linspace(1e-3, np.max(points)+0.3, 100)
-				ax.plot(x, marcenko_pastur_law(x, M, N),
-								'r-', lw=2, alpha=0.6,
-								label=r'$Marcenko Pastur law$')
-
-		elif self.name == 'jacobi':
-
-			if normalization:
-
-				if self.mode == 'banded':
-					N	= self.params['size']
-					M_1 = 2/self.beta * self.params['a'] + N -1
-					M_2 = 2/self.beta * self.params['b'] + N -1
-
-				elif self.mode == 'full':
-					N	= self.params['N']
-					M_1 = self.params['M_1']
-					M_2 = self.params['M_2']
-
-				eps = 1e-5
-				x = np.linspace(eps, 1.0-eps, 500)
-				ax.plot(x, wachter_law(x, M_1, M_2, N),
-								'r-', lw=2, alpha=0.6,
-								label='Wachter Law')
-
-		elif self.name == 'circular':
-
-			if normalization:
-
-				points = np.angle(points)
-
-				ax.axhline(y=1/(2*np.pi),
-									color='r',
-									label=r'$\frac{1}{2\pi}$')
-
-		elif self.name == 'ginibre':
-
-			raise ValueError('No `hist` method for Ginibre.')
-
-		ax.hist(points,
-						bins=30, density=1,
+		elif display_type == 'hist':
+			ax.hist(points, bins=30, density=1,
 						facecolor='blue', alpha=0.5,
 						label='hist')
+		else:
+			pass
 
-		str_title = ('Histogram of {} ensemble'.format(self.name),
-			'with {} points'.format(self.__nb_points),
-			r'and $\beta={}$'.format(self.beta))
-		str_title = ' '.join(str_title)
+		plt.legend(loc='best', frameon=False)
 
-		plt.title(title if title else str_title)
+	def plot(self, normalization=True):
+		""" Display the last realization of the :class:`HermiteEnsemble` object
 
-		ax.legend(loc='best', frameon=False)
-		plt.show()
-		# fig.savefig('foo.pdf')
+		:param normalization:
 
-	# def kernel(self, list_of_points):
-	# 	# return the matrix [K(x,y)]_x,y in list_of_points
-	# 	# maybe plot the heatmap
-	# 	if self.beta != 2:
-	# 		raise ValueError('Invalid beta parameter, {} != 2. The OPE is not a DPP, there is no notion of kernel'.format(self.beta))
-	# 	else:
-	# 		pass
+			If ``True``, the points are normalized so as to concentrate as the lititing distribution: semi-circle using :func:`normalize_points <normalize_points>`
 
-	def __check_name_validity(self):
+		:type normalization:
+			bool, default ``True``
 
-		supp_OPEs = ('hermite', 'laguerre', 'jacobi', 'circular', 'ginibre')
+		.. seealso::
 
-		if self.name not in supp_OPEs:
-			err_print = ['Invalid name `{}`.'.format(self.name),'Supported OPEs:']
-			err_print.extend('- {}'.format(OPE) for OPE in supp_OPEs)
+			- :func:`sample_full_model <sample_full_model>`, :func:`sample_banded_model <sample_banded_model>`
+			- :func:`normalize_points <normalize_points>`
+			- :func:`hist <hist>`
+			- :ref:`Full matrix model <hermite_ensemble_full>` for Hermite ensemble
+			- :ref:`Tridiagonal matrix model <hermite_ensemble_banded>` for Hermite ensemble
+		"""
 
-			raise ValueError('\n'.join(err_print))
+		self.__display_and_normalization('scatter', normalization)
 
-	def __check_beta_validity(self):
+	def hist(self, normalization=True):
+		""" Display the histogram of the last realization of the :class:`HermiteEnsemble` object.
 
-		if not (self.beta > 0):
-			raise ValueError('beta must be positive')
+		:param normalization:
 
-		elif self.name == 'circular':
-			if not isinstance(self.beta, int):
-				raise ValueError('Invalid beta parameter. For cicurlar ensembles, DPPy only treats positive integers. Given beta={}'.format(self.beta))
+			If ``True``, the points are normalized so as to concentrate as the lititing distribution: semi-circle using :func:`normalize_points <normalize_points>`
 
-		elif self.name == 'ginibre':
-			if not (self.beta == 2):
-				raise ValueError('Invalid beta parameter. For the Ginibre ensemble beta must be equal to 2. Given beta={}'.format(self.beta))
+		:type normalization:
+			bool, default ``True``
 
-	def __check_mode_validity(self):
+		.. seealso::
 
-		if self.mode not in ('banded', 'full'):
-			raise ValueError('Invalid mode attribute. Use `full` (default) or `banded`.\nGiven {}'.format(self.mode))
+			- :func:`sample_full_model <sample_full_model>`, :func:`sample_banded_model <sample_banded_model>`
+			- :func:`normalize_points <normalize_points>`
+			- :func:`plot <plot>`
+			- :ref:`Full matrix model <hermite_ensemble_full>` for Hermite ensemble
+			- :ref:`Tridiagonal matrix model <hermite_ensemble_banded>` for Hermite ensemble
+		"""
+		self.__display_and_normalization('hist', normalization)
+		
 
-	def __check_params_validity(self):
 
-		if self.mode == 'banded':
+class LaguerreEnsemble(BetaEnsemble):
+	""" Laguerre Ensemble object
 
-			if self.name == 'hermite':
-				if ('loc' not in self.params) | ('scale' not in self.params):
-					raise ValueError('Missing `loc` or `scale` parameter.\nGiven {}'.format(self.params))
-				else:
-					np.random.normal(self.params['loc'], self.params['scale'])
+	.. seealso::
 
-			elif self.name == 'laguerre':
-				if ('shape' not in self.params) | ('scale' not in self.params):
-					raise ValueError('Missing `shape` or `scale` parameter.\nGiven {}'.format(self.params))
-				else:
-					np.random.gamma(self.params['shape'], scale=self.params['scale'])
+		- :ref:`Full matrix model <laguerre_ensemble_full>` for Laguerre ensemble
+		- :ref:`Tridiagonal matrix model <laguerre_ensemble_banded>` for Laguerre ensemble
+	"""
 
-			elif self.name == 'jacobi':
-				if ('a' not in self.params) | ('b' not in self.params):
-					raise ValueError('Missing `a` or `b` parameter.\nGiven {}'.format(self.params))
-				else:
-					np.random.beta(self.params['a'], self.params['b'])
+	def __init__(self, beta=2):
 
-			elif self.name == 'circular':
-				pass
+		super().__init__(beta=beta)
 
-			elif self.name == 'ginibre':  
-				raise ValueError('Invalid `mode`. Ginibre has no banded model. Use `mode=full.')
+		params = {'shape':0.0, 'scale':2.0, 'size_N':10, 'size_M':100}
+		self.params.update(params)
 
-		elif self.mode == 'full':
+	def sample_full_model(self, size_N=10, size_M=100):
+		""" Sample from :ref:`full matrix model <Laguerre_ensemble_full>` for Laguerre ensemble. Only available for ``LaguerreEnsemble.beta`` attribute :math:`\\beta\\in\\{1, 2, 4\\}` and the degenerate case :math:`\\beta=0` corresponding to i.i.d. points from the :math:`\\Gamma(k,\\theta)` reference measure
 
-			if self.beta not in (1, 2, 4):
+		:param size_N:
+			Number :math:`N` of points i.e. size of the matrix to be diagonalized.
+			First dimension of the matrix used to form the covariance matrix to be diagonalized, see :ref:`full matrix model <laguerre_ensemble_full>`.
+		:type size_N:
+			int, default :math:`10`
 
-				raise ValueError('Invalid match between `mode` and `beta`. Sampling using `mode=full` computes the eigenvalues of a fully filled random matrix and refers to beta = 1, 2 or 4.\nGiven beta={}'.format(self.beta))
+		:param size_M:
+			Second dimension :math:`M` of the matrix used to form the covariance matrix to be diagonalized, see :ref:`full matrix model <laguerre_ensemble_full>`.
+
+		:type size_M:
+			int, default :math:`100`
+
+		.. note::
+
+			The reference measure associated with the :ref:`full matrix model <laguerre_ensemble_full>` is :math:`\\Gamma\\left(\\frac{\\beta}{2}(M-N+1), 2\\right)`.
+			For this reason, in the ``LaguerreEnsemble.sampling_params`` attribute, the values of the parameters are set to ``shape``:math:`=\\frac{\\beta}{2}(M-N+1)` and ``scale``:math:`=2`.
+
+			To compare :func:`sample_banded_model <sample_banded_model>` with :func:`sample_full_model <sample_full_model>` simply use the ``size_N`` and ``size_M`` parameters.
+
+		.. seealso::
+
+			- :ref:`Full matrix model <Laguerre_ensemble_full>` for Laguerre ensemble
+			- :func:`sample_banded_model <sample_banded_model>`
+		"""
+
+		self.sampling_mode = 'full'
+		
+		if size_M >= size_N:
+			shape, scale = 0.5*self.beta*(size_M-size_N+1), 2.0
+
+		else:
+			err_print = ('Must have M >= N.',
+									'Given: M={} < N={}'.format(size_M, size_N))
+			raise ValueError(' '.join(err_print))
+
+		params = {'shape':shape, 'scale':scale, 'size_N':size_N, 'size_M':size_M}
+		self.params.update(params)
+
+		if self.beta == 0: # Answer issue #28 raised by @rbardenet
+			sampl = np.random.gamma(shape=params['shape'], scale=params['scale'],
+														size=params['size_N'])
+
+		else:
+			sampl = rm.laguerre_sampler_full(M=params['size_M'], N=params['size_N'],
+																			beta=self.beta)
+
+		self.list_of_samples.append(sampl)
+
+	def sample_banded_model(self, shape=1.0, scale=2.0, size_N=10, size_M=None):
+		""" Sample from :ref:`tridiagonal matrix model <Laguerre_ensemble_full>` for Laguerre ensemble. Available for ``LaguerreEnsemble.beta`` attribute :math:`\\beta>0` and the degenerate case :math:`\\beta=0` corresponding to i.i.d. points from the :math:`\\Gamma(k,\\theta)` reference measure
+
+		:param shape:
+			Shape parameter :math:`k` of the Gamma :math:`\\Gamma(k, \\theta)` reference measure
+		:type shape:
+			float, default :math:`1`
+
+		:param scale:
+			Scale parameter :math:`\\theta` of the Gamma :math:`\\Gamma(k, \\theta)` reference measure
+		:type scale:
+			float, default :math:`2.0`
+
+		:param size_N:
+			Number :math:`N` of points i.e. size of the matrix to be diagonalized.
+			First dimension :math:`N` of the matrix used to form the covariance matrix to be diagonalized, see :ref:`full matrix model <laguerre_ensemble_full>`.
+		:type size_N:
+			int, default :math:`10`
+
+		:param size_M:
+			Second dimension :math:`M` of the matrix used to form the covariance matrix to be diagonalized, see :ref:`full matrix model <laguerre_ensemble_full>`.
+
+		:type size_M:
+			int, default None
+
+		- If ``size_M`` is not provided:
+			
+			In the ``LaguerreEnsemble.sampling_params`` attribute, ``size_M`` is set to 
+			``size_M``:math:`= \\frac{2k}{\\beta} + N - 1`, to give an idea of the corresponding second dimension :math:`M`.
+			
+
+		- If ``size_M`` is provided:
+			
+			In the ``LaguerreEnsemble.sampling_params`` attribute, ``shape`` and ``scale`` are set to: 
+			``shape``:math:`=\\frac{1}{2} \\beta (M-N+1)` and 
+			``scale``:math:`=2`
+
+
+		.. note::
+
+			The reference measure associated with the :ref:`full matrix model <laguerre_ensemble_full>` is :math:`\\Gamma\\left(\\frac{\\beta}{2}(M-N+1), 2\\right)`. This explains the role of the ``size_M`` parameter.
+
+			To compare :func:`sample_banded_model <sample_banded_model>` with :func:`sample_full_model <sample_full_model>` simply use the ``size_N`` and ``size_M`` parameters
+
+		.. seealso::
+
+			- :ref:`Tridiagonal matrix model <Laguerre_ensemble_banded>` for Laguerre ensemble
+			- :cite:`DuEd02` III-B
+			- :func:`sample_full_model <sample_full_model>`
+		"""
+
+		self.sampling_mode = 'banded'
+
+		if not size_M: # Default setting
+			size_M = 2/self.beta * shape + size_N - 1 if self.beta>0 else np.inf
+
+		elif size_M >= size_N:
+			shape, scale = 0.5*self.beta*(size_M-size_N+1), 2.0
+
+		else:
+			err_print = ('Must have M >= N.',
+									'Given: M={} < N={}'.format(size_M, size_N))
+			raise ValueError(' '.join(err_print))
+			
+		params = {'shape':shape, 'scale':scale, 'size_N':size_N, 'size_M':size_M}
+		self.params.update(params)
+
+		if self.beta == 0: # Answer issue #28 raised by @rbardenet
+			sampl = np.random.gamma(shape=params['shape'], scale=params['scale'],
+														size=params['size_N'])
+		else:
+			sampl = rm.mu_ref_gamma_sampler_tridiag(shape=params['shape'],
+																					scale=params['scale'],
+																					beta=self.beta,
+																					size=params['size_N'])
+
+		self.list_of_samples.append(sampl)
+
+	def normalize_points(self, points):
+		""" Normalize points obtained after sampling to match the limiting distribution i.e. Marcenko Pastur law
+
+		.. math::
+
+			\\frac{1}{2\\pi}
+			\\frac{\\sqrt{(\\lambda_+-x)(x-\\lambda_-)}}{cx} 
+			1_{[\\lambda_-,\\lambda_+]}
+			dx
+
+		where	:math:`c = \\frac{M}{N}` and :math:`\\lambda_\\pm = (1\\pm\\sqrt{c})^2`
+
+		:param points:
+			A sample from Laguerre ensemble, accessible through the ``list_of_samples`` attributes
+		:type points:
+			array_like
+
+		- If sampled using :func:`sample_banded_model <sample_banded_model>` with reference measure :math:`\\Gamma(k,\\theta)`
+
+			.. math::
+
+				x \\mapsto \\frac{2x}{\\theta}
+				\\quad \\text{and} \\quad
+				x \\mapsto \\frac{x}{\\beta M}
+
+		- If sampled using :func:`sample_full_model <sample_full_model>`
+
+			.. math::
+				
+				x \\mapsto \\frac{x}{\\beta M}
+
+		.. note::
+
+			This method is called in :func:`plot <plot>` and :func:`hist <hist>` when ``normalization=True``.
+		"""
+
+		if self.sampling_mode == 'banded':
+			points /= 0.5*self.params['scale']
+		else: # self.sampling_mode == 'full':
+			pass
+
+		if self.beta > 0:
+			points /= self.beta * self.params['size_M']
+
+		return points
+
+	def __display_and_normalization(self, display_type, normalization):
+
+		if not self.list_of_samples:
+			raise ValueError('Empty attribute `list_of_samples`, sample first!')
+		else:
+			points = self.list_of_samples[-1].copy() # Pick last sample
+
+		N, M = [self.params.get(key) for key in ('size_N', 'size_M')]
+
+		fig, ax = plt.subplots(1, 1)
+		# Title
+		str_ratio = r'\nwith ratio $M/N \approx {}$'.format(M/N)
+		# Answers Issue #33 raised by @adrienhardy
+		self._str_title = '\n'.join([self._str_title, str_ratio])	 
+		plt.title(self._str_title)
+
+		if normalization:
+			points = self.normalize_points(points)
+
+			# Limiting distribution: Marcenko Pastur law
+			x = np.linspace(1e-2, np.max(points)+0.3, 100)
+			ax.plot(x, rm.marcenko_pastur_law(x, M, N),
+						'r-', lw=2, alpha=0.6,
+						label=r'$f_{MP}$')
+		else:
+			pass
+
+		if display_type == 'scatter':
+			ax.scatter(points, np.zeros(points.shape[0]),
+								c='blue', 
+								label='sample')
+
+		elif display_type == 'hist':
+			ax.hist(points, bins=30, density=1,
+						facecolor='blue', alpha=0.5,
+						label='hist')
+		else:
+			pass
+
+		plt.legend(loc='best', frameon=False)
+
+	def plot(self, normalization=True):
+		""" Display the last realization of the :class:`LaguerreEnsemble` object
+
+		:param normalization:
+
+			If ``True``, the points are normalized so as to concentrate as the lititing distribution: Marcenko-Pastur using :func:`normalize_points <normalize_points>`
+
+		:type normalization:
+			bool, default ``True``
+
+		.. seealso::
+
+			- :func:`sample_full_model <sample_full_model>`, :func:`sample_banded_model <sample_banded_model>`
+			- :func:`normalize_points <normalize_points>`
+			- :func:`hist <hist>`
+			- :ref:`Full matrix model <Laguerre_ensemble_full>` for Laguerre ensemble
+			- :ref:`Tridiagonal matrix model <Laguerre_ensemble_banded>` for Laguerre ensemble
+		"""
+
+		self.__display_and_normalization('scatter', normalization)
+
+	def hist(self, normalization=True):
+		""" Display the histogram of the last realization of the :class:`LaguerreEnsemble` object.
+
+		:param normalization:
+
+			If ``True``, the points are normalized so as to concentrate as the lititing distribution: Marcenko-Pastur using :func:`normalize_points <normalize_points>`
+
+		:type normalization:
+			bool, default ``True``
+
+		.. seealso::
+
+			- :func:`sample_full_model <sample_full_model>`, :func:`sample_banded_model <sample_banded_model>`
+			- :func:`normalize_points <normalize_points>`
+			- :func:`plot <plot>`
+			- :ref:`Full matrix model <Laguerre_ensemble_full>` for Laguerre ensemble
+			- :ref:`Tridiagonal matrix model <Laguerre_ensemble_banded>` for Laguerre ensemble
+		"""
+		self.__display_and_normalization('hist', normalization)
+		
+
+
+class JacobiEnsemble(BetaEnsemble):
+	""" Jacobi Ensemble object
+
+	.. seealso::
+
+		- :ref:`Full matrix model <jacobi_ensemble_full>` for Jacobi ensemble
+		- :ref:`Tridiagonal matrix model <jacobi_ensemble_banded>` for Jacobi ensemble
+	"""
+
+	def __init__(self, beta=2):
+
+		super().__init__(beta=beta)
+
+		params = {'a':1.0, 'b':1.0, 'size_N':10, 'size_M1':20, 'size_M2':20}
+		self.params.update(params)
+
+	def sample_full_model(self, size_N=100, size_M1=150, size_M2=200):
+		""" Sample from :ref:`full matrix model <Jacobi_ensemble_full>` for Jacobi ensemble. Only available for ``JacobiEnsemble.beta`` attribute :math:`\\beta\\in\\{1, 2, 4\\}` and the degenerate case :math:`\\beta=0` corresponding to i.i.d. points from the :math:`\\operatorname{Beta}(a,b)` reference measure
+
+		:param size_N:
+			Number :math:`N` of points i.e. size of the matrix to be diagonalized.
+			First dimension of the matrix used to form the covariance matrix to be diagonalized, see :ref:`full matrix model <jacobi_ensemble_full>`.
+		:type size_N:
+			int, default :math:`100`
+
+		:param size_M1:
+			Second dimension :math:`M_1` of the first matrix used to form the matrix to be diagonalized, see :ref:`full matrix model <jacobi_ensemble_full>`.
+		:type size_M1:
+			int, default :math:`150`
+
+		:param size_M2:
+			Second dimension :math:`M_2` of the second matrix used to form the matrix to be diagonalized, see :ref:`full matrix model <jacobi_ensemble_full>`.
+		:type size_M2:
+			int, default :math:`200`
+
+		.. note::
+
+			The reference measure associated with the :ref:`full matrix model <jacobi_ensemble_full>` is 
+
+			.. math::
+
+				\\operatorname{Beta}\\left(\\frac{\\beta}{2}(M_1-N+1), \\frac{\\beta}{2}(M_2-N+1)\\right)
+
+			For this reason, in the ``JacobiEnsemble.sampling_params`` attribute, the values of the parameters are set to ``a``:math:`=\\frac{\\beta}{2}(M_1-N+1)` and ``b``:math:`=\\frac{\\beta}{2}(M_2-N+1)`.
+
+			To compare :func:`sample_banded_model <sample_banded_model>` with :func:`sample_full_model <sample_full_model>` simply use the ``size_N``, ``size_M2`` and ``size_M2`` parameters.
+
+		.. seealso::
+
+			- :ref:`Full matrix model <Jacobi_ensemble_full>` for Jacobi ensemble
+			- :func:`sample_banded_model <sample_banded_model>`
+		"""
+
+		self.sampling_mode = 'full'
+
+		if (size_M1 >= size_N) and (size_M2 >= size_N):
+		# all([var >= size_N for var in [size_M1, size_M2]]
+			a = 0.5*self.beta*(size_M1 - size_N + 1)
+			b = 0.5*self.beta*(size_M2 - size_N + 1)
+
+		else:
+			err_print = ('Must have M1, M2 >= N.',
+									'Given: M1={}, M2={} and N={}'.format(size_M1, size_M2, size_N))
+			raise ValueError(' '.join(err_print))
+
+		params = {'a':a, 'b':b, 'size_N':size_N, 'size_M1':size_M1, 'size_M2':size_M2}
+		self.params.update(params)
+
+		if self.beta == 0: # Answer issue #28 raised by @rbardenet
+			sampl = np.random.beta(a=params['a'], b=params['b'],
+														size=params['size_N'])
+
+		else:
+			sampl = rm.jacobi_sampler_full(M_1=params['size_M1'],
+																	M_2=params['size_M2'],
+																	N=params['size_N'],
+																	beta=self.beta)
+
+		self.list_of_samples.append(sampl)
+
+	def sample_banded_model(self, a=1.0, b=2.0, size_N=10, size_M1=None, size_M2=None):
+		""" Sample from :ref:`tridiagonal matrix model <Jacobi_ensemble_full>` for Jacobi ensemble. Available for ``JacobiEnsemble.beta`` attribute :math:`\\beta>0` and the degenerate case :math:`\\beta=0` corresponding to i.i.d. points from the :math:`\\operatorname{Beta}(a,b)` reference measure
+
+		:param shape:
+			Shape parameter :math:`k` of the Gamma :math:`\\Gamma(k, \\theta)` reference measure
+		:type shape:
+			float, default :math:`1`
+
+		:param scale:
+			Scale parameter :math:`\\theta` of the Gamma :math:`\\Gamma(k, \\theta)` reference measure
+		:type scale:
+			float, default :math:`2.0`
+
+		:param size_N:
+			Number :math:`N` of points i.e. size of the matrix to be diagonalized.
+			First dimension :math:`N` of the matrix used to form the covariance matrix to be diagonalized, see :ref:`full matrix model <jacobi_ensemble_full>`.
+		:type size_N:
+			int, default :math:`10`
+
+		:param size_M1:
+			Second dimension :math:`M_1` of the first matrix used to form the matrix to be diagonalized, see :ref:`full matrix model <jacobi_ensemble_full>`.
+		:type size_M1:
+			int, default :math:`150`
+
+		:param size_M2:
+			Second dimension :math:`M_2` of the second matrix used to form the matrix to be diagonalized, see :ref:`full matrix model <jacobi_ensemble_full>`.
+		:type size_M2:
+			int, default :math:`200`
+
+		.. note::
+
+			The reference measure associated with the :ref:`full matrix model <jacobi_ensemble_full>` is :
+
+			.. math::
+
+				\\operatorname{Beta}\\left(\\frac{\\beta}{2}(M_1-N+1), \\frac{\\beta}{2}(M_2-N+1)\\right)
+
+			For this reason, in the ``JacobiEnsemble.sampling_params`` attribute, the values of the parameters are set to ``a``:math:`=\\frac{\\beta}{2}(M_1-N+1)` and ``b``:math:`=\\frac{\\beta}{2}(M_2-N+1)`.
+
+			To compare :func:`sample_banded_model <sample_banded_model>` with :func:`sample_full_model <sample_full_model>` simply use the ``size_N``, ``size_M2`` and ``size_M2`` parameters.
+
+		- If ``size_M1`` and ``size_M2`` are not provided:
+			
+			In the ``JacobiEnsemble.sampling_params`` attribute, ``size_M1,2`` are set to 
+			``size_M1``:math:`= \\frac{2a}{\\beta} + N - 1` and ``size_M2``:math:`= \\frac{2b}{\\beta} + N - 1`, to give an idea of the corresponding second dimensions :math:`M_{1,2}`.
+			
+
+		- If ``size_M1`` and ``size_M2`` are provided:
+			
+			In the ``JacobiEnsemble.sampling_params`` attribute, ``a`` and ``b`` are set to: 
+			``a``:math:`=\\frac{\\beta}{2}(M_1-N+1)` and 
+			``b``:math:`=\\frac{\\beta}{2}(M_2-N+1)`.
+
+		.. seealso::
+
+			- :ref:`Tridiagonal matrix model <Jacobi_ensemble_banded>` for Jacobi ensemble
+			- :cite:`KiNe04` Theorem 2
+			- :func:`sample_full_model <sample_full_model>`
+		"""
+
+		self.sampling_mode = 'banded'
+
+		if not (size_M1 and size_M2): # default setting
+
+			if self.beta > 0:
+				size_M1 = 2/self.beta * a + size_N -1
+				size_M2 = 2/self.beta * b + size_N -1
 
 			else:
+				size_M1, size_M2 = inf, inf
 
-				if 'N' not in self.params:
-						raise ValueError('Missing key `N` in the dict of sampling parameters. It corresponds to the number of points of the ensemble i.e. the size of the matrix to be diagonalized.\nGiven {}'.format(self.params))
+		elif (size_M1 >= size_N) and (size_M2 >= size_N):
+			# all([var >= size_N for var in [size_M1, size_M2]]
+			a = 0.5*self.beta*(size_M1 - size_N + 1)
+			b = 0.5*self.beta*(size_M2 - size_N + 1)
 
-				if self.name == 'hermite':
-					pass
+		else:
+			err_print = ('Must have M1, M2 >= N.',
+									'Given: M1={}, M2={} and N={}'.format(size_M1, size_M2, size_N))
+			raise ValueError(' '.join(err_print))
 
-				elif self.name == 'laguerre':
 
-					if ('M' not in self.params):
-						raise ValueError('Missing key `M`, with M>=N.\nGiven {}'.format(self.params))
+		params = {'a':a, 'b':b, 'size_N':size_N, 'size_M1':size_M1, 'size_M2':size_M2}
+		self.params.update(params)
 
-					elif self.params['M'] < self.params['N']:
-						raise ValueError('M<N instead of M>=N.\nGiven {}'.format(self.params))
+		if self.beta == 0: # Answer issue #28 raised by @rbardenet
+				sampl = np.random.beta(a=params['a'], b=params['b'],
+															size=params['size_N'])
+		else:
+			sampl = rm.mu_ref_beta_sampler_tridiag(a=params['a'],
+																					b=params['b'],
+																					beta=self.beta,
+																					size=params['size_N'])
 
-				elif self.name == 'jacobi':
+		self.list_of_samples.append(sampl)
 
-					if ('M_1' not in self.params) | ('M_2' not in self.params):
-						raise ValueError('Missing keys `M_1`, `M_2`, with M_1, M_2>=N.\nGiven {}'.format(self.params))
+	def __display_and_normalization(self, display_type, normalization):
 
-					elif (self.params['M_1'] < self.params['N']) |\
-							 (self.params['M_2'] < self.params['N']):
-						raise ValueError('M_1 or M_2<N instead of M_1 and M_2 >= N.\nGiven {}'.format(self.params))
+		if not self.list_of_samples:
+			raise ValueError('Empty attribute `list_of_samples`, sample first!')
+		else:
+			points = self.list_of_samples[-1].copy() # Pick last sample
 
-				elif self.name == 'circular':
+		N, M_1, M_2 = [self.params.get(key) for key in ('size_N', 'size_M1', 'size_M1')]
 
-					if 'haar_mode' not in self.params:
-						raise ValueError('Missing `haar_mode` parameter under `mode=full`. Use `haar_mode=hermite` or `QR`.\nGiven {}'.format(self.params))
+		fig, ax = plt.subplots(1, 1)
+		# Title
+		str_ratios = r'with ratios $M_1/N \approx {:.3f}, M_2/N \approx {:.3f}$'.format(M_1/N, M_2/N) # Answers Issue #33 raised by @adrienhardy
+		title = '\n'.join([self._str_title, str_ratios])
+		plt.title(title)
 
-					elif self.params['haar_mode'] not in ('hermite', 'QR'):
-						raise ValueError('Invalid `haar_mode` parameter. Use `haar_mode=hermite` or `QR`.\nGiven {}'.format(self.params))
+		if normalization:
+			# Limiting distribution: Marcenko Pastur law
+			eps = 5e-3
+			x = np.linspace(eps, 1.0-eps, 500)
+			ax.plot(x, rm.wachter_law(x, M_1, M_2, N),
+							'r-', lw=2, alpha=0.6,
+							label='Wachter Law')
+		else:
+			pass
 
-				elif self.name == 'ginibre':
-					pass
+		if display_type == 'scatter':
+			ax.scatter(points, np.zeros(points.shape[0]),
+								c='blue', 
+								label='sample')
+
+		elif display_type == 'hist':
+			ax.hist(points, bins=30, density=1,
+						facecolor='blue', alpha=0.5,
+						label='hist')
+		else:
+			pass
+
+		plt.legend(loc='best', frameon=False)
+
+	def plot(self, normalization=True):
+		""" Display the last realization of the :class:`JacobiEnsemble` object
+
+		:param normalization:
+
+			If ``True``, the points are normalized so as to concentrate as the lititing distribution: Marcenko-Pastur using :func:`normalize_points <normalize_points>`
+
+		:type normalization:
+			bool, default ``True``
+
+		.. seealso::
+
+			- :func:`sample_full_model <sample_full_model>`, :func:`sample_banded_model <sample_banded_model>`
+			- :func:`hist <hist>`
+			- :ref:`Full matrix model <Jacobi_ensemble_full>` for Jacobi ensemble
+			- :ref:`Tridiagonal matrix model <Jacobi_ensemble_banded>` for Jacobi ensemble
+		"""
+
+		self.__display_and_normalization('scatter', normalization)
+
+	def hist(self, normalization=True):
+		""" Display the histogram of the last realization of the :class:`JacobiEnsemble` object.
+
+		:param normalization:
+
+			If ``True``, the points are normalized so as to concentrate as the lititing distribution: Marcenko-Pastur using :func:`normalize_points <normalize_points>`
+
+		:type normalization:
+			bool, default ``True``
+
+		.. seealso::
+
+			- :func:`sample_full_model <sample_full_model>`, :func:`sample_banded_model <sample_banded_model>`
+			- :func:`normalize_points <normalize_points>`
+			- :func:`plot <plot>`
+			- :ref:`Full matrix model <Jacobi_ensemble_full>` for Jacobi ensemble
+			- :ref:`Tridiagonal matrix model <Jacobi_ensemble_banded>` for Jacobi ensemble
+		"""
+		self.__display_and_normalization('hist', normalization)
+
+
+
+class CircularEnsemble(BetaEnsemble):
+	""" Circular Ensemble object
+
+	.. seealso::
+
+		- :ref:`Full matrix model <circular_ensemble_full>` for Circular ensemble
+		- :ref:`Quindiagonal matrix model <circular_ensemble_banded>` for Circular ensemble
+	"""
+
+	def __init__(self, beta=2):
+
+		super().__init__(beta=beta)
+		# Check positive integer!
+
+		params = {'size_N':10}
+		self.params.update(params)
+
+	def sample_full_model(self, size_N=10, haar_mode='Hermite'):
+		""" Sample from :ref:`tridiagonal matrix model <Circular_ensemble_full>` for Circular ensemble. Only available for ``CircularEnsemble.beta`` attribute :math:`\\beta\\in\\{1, 2, 4\\}` and the degenerate case :math:`\\beta=0` corresponding to i.i.d. uniform points on the unit circle
+
+		:param size_N:
+			Number :math:`N` of points i.e. size of the matrix to be diagonalized
+		:type size_N:
+			int, default :math:`10`
+
+		:param haar_mode:
+			Sample Haar measure i.e. uniformly on the orthogonal/unitary/symplectic group using:
+			- 'QR', 
+			- 'Hermite'
+		:type haar_mode:
+			str, default 'hermite'
+
+		.. seealso::
+
+			- :ref:`Full matrix model <circular_ensemble_full>` for Circular ensemble
+			- :func:`sample_banded_model <sample_banded_model>`
+		"""
+
+		self.sampling_mode = 'full'
+		params = {'size_N':size_N, 'haar_mode':haar_mode}
+		self.params.update(params)
+
+		if self.beta == 0: # i.i.d. points uniformly on the circle
+			# Answer issue #28 raised by @rbardenet
+			sampl = np.exp(2*1j*np.pi*np.random.rand(size=params['size_N']))
+		else:
+			sampl = rm.circular_sampler_full(N=params['size_N'],
+																			beta=self.beta,
+																			haar_mode=params['haar_mode'])
+
+		self.list_of_samples.append(sampl)
+
+	def sample_banded_model(self, size_N=10):
+		""" Sample from :ref:`tridiagonal matrix model <Circular_ensemble_full>` for Circular Ensemble. 
+		Available for ``CircularEnsemble.beta`` attribute :math:`\\beta\\in\\mathbb{N}^*`, and the degenerate case :math:`\\beta=0` corresponding to i.i.d. uniform points on the unit circle
+
+		:param size_N:
+			Number :math:`N` of points i.e. size of the matrix to be diagonalized
+		:type size_N:
+			int, default :math:`10`
+
+		.. note::
+
+			To compare :func:`sample_banded_model <sample_banded_model>` with :func:`sample_full_model <sample_full_model>` simply use the ``size_N`` parameter.
+
+		.. seealso::
+
+			- :ref:`Quindiagonal matrix model <circular_ensemble_banded>` for Circular ensemble
+			- :func:`sample_full_model <sample_full_model>`
+		"""
+
+		self.sampling_mode = 'banded'
+		params = {'size_N':size_N}
+		self.params.update(params)
+
+		if self.beta == 0: # i.i.d. points uniformly on the circle
+			# Answer issue #28 raised by @rbardenet
+			sampl = np.exp(2*1j*np.pi*np.random.rand(size=params['size_N']))
+		else:
+			sampl = rm.mu_ref_unif_unit_circle_sampler_quindiag(beta=self.beta,
+																		  									size=params['size_N'])
+
+		self.list_of_samples.append(sampl)
+
+	def __display_and_normalization(self, display_type):
+
+		if not self.list_of_samples:
+			raise ValueError('Empty attribute `list_of_samples`, sample first!')
+		else:
+			points = self.list_of_samples[-1].copy() # Pick last sample
+
+		fig, ax = plt.subplots(1, 1)
+
+		# Title
+		samp_mod = ''
+		if self.sampling_mode == 'full':
+			samp_mod = 'full matrix model with haar_mode={}'.format(self.params['haar_mode'])
+		else:
+			samp_mod = 'quindiag model'
+
+		self._str_title = '\n'.join([self._str_title, 'using {}'.format(samp_mod)])
+		plt.title(self._str_title)
+
+		if display_type == 'scatter':
+			# Draw unit circle
+			unit_circle = plt.Circle((0,0), 1, color='r', fill=False)
+			ax.add_artist(unit_circle)
+
+			ax.set_xlim([-1.3, 1.3])
+			ax.set_ylim([-1.3, 1.3])
+			ax.set_aspect('equal')
+			ax.scatter(points.real, points.imag, c='blue', label='sample')
+
+		elif display_type == 'hist':
+			points = np.angle(points)
+
+			# Uniform distribution on [0, 2pi]
+			ax.axhline(y=1/(2*np.pi), color='r', label=r'$\frac{1}{2\pi}$')
+
+			ax.hist(points, bins=30, density=1,
+						facecolor='blue', alpha=0.5,
+						label='hist')
+		else:
+			pass
+
+		plt.legend(loc='best', frameon=False)
+
+	def plot(self):
+		""" Display the last realization of the :class:`CircularEnsemble` object
+
+		.. seealso::
+
+			- :func:`sample_full_model <sample_full_model>`, :func:`sample_banded_model <sample_banded_model>`
+			- :func:`hist <hist>`
+			- :ref:`Full matrix model <circular_ensemble_full>` for Circular ensemble
+			- :ref:`Quindiagonal matrix model <circular_ensemble_banded>` for Circular ensemble
+		"""
+
+		self.__display_and_normalization('scatter')
+
+	def hist(self):
+		""" Display the histogram of the last realization of the :class:`CircularEnsemble` object.
+
+		:param normalization:
+
+			If ``True``, the points are normalized so as to concentrate as the lititing distribution: semi-circle using :func:`normalize_points <normalize_points>`
+
+		:type normalization:
+			bool, default ``True``
+
+		.. seealso::
+
+			- :func:`sample_full_model <sample_full_model>`, :func:`sample_banded_model <sample_banded_model>`
+			- :func:`plot <plot>`
+			- :ref:`Full matrix model <circular_ensemble_full>` for Circular ensemble
+			- :ref:`Quindiagonal matrix model <circular_ensemble_banded>` for Circular ensemble
+		"""
+		self.__display_and_normalization('hist')
+		
+
+class GinibreEnsemble(BetaEnsemble):
+	""" Ginibre Ensemble object
+
+	.. seealso::
+
+		- :ref:`Full matrix model <ginibre_ensemble_full>` for Ginibre ensemble
+	"""
+
+	def __init__(self, beta=2):
+
+		super().__init__(beta=beta)
+		# Check beta=2!
+
+		params = {'size_N':10}
+		self.params.update(params)
+
+	def sample_full_model(self, size_N=10):
+		""" Sample from :ref:`full matrix model <Ginibre_ensemble_full>` for Ginibre ensemble. Only available for ``GinibreEnsemble.beta`` attribute :math:`\\beta=2`
+
+		:param size_N:
+			Number :math:`N` of points i.e. size of the matrix to be diagonalized
+		:type size_N:
+			int, default :math:`10`
+
+		.. seealso::
+
+			- :ref:`Full matrix model <ginibre_ensemble_full>` for Ginibre ensemble
+			- :func:`sample_banded_model <sample_banded_model>`
+		"""
+
+		self.params.update({'size_N':size_N})
+		sampl = rm.ginibre_sampler_full(N=self.params['size_N'])
+
+		self.list_of_samples.append(sampl)
+
+	def plot(self, normalization=True):
+		""" Display the last realization of the :class:`GinibreEnsemble` object
+
+		:param normalization:
+
+			If ``True``, the points are normalized so as to concentrate as the lititing distribution: semi-circle using :func:`normalize_points <normalize_points>`
+
+		:type normalization:
+			bool, default ``True``
+
+		.. seealso::
+
+			- :func:`sample_full_model <sample_full_model>`
+			- :ref:`Full matrix model <ginibre_ensemble_full>` for Ginibre ensemble ensemble
+		"""	
+
+		if not self.list_of_samples:
+			raise ValueError('Empty attribute `list_of_samples`, sample first!')
+		else:
+			points = self.list_of_samples[-1].copy() # Pick last sample
+
+		# Plot
+		fig, ax = plt.subplots(1, 1)
+	
+		plt.title(self._str_title) # Title
+
+		if normalization:
+			points /= np.sqrt(self.params['size_N'])
+			# Draw unit circle
+			unit_circle = plt.Circle((0,0), 1, color='r', fill=False)
+			ax.add_artist(unit_circle)
+
+			ax.set_xlim([-1.3, 1.3])
+			ax.set_ylim([-1.3, 1.3])
+			ax.set_aspect('equal')
+
+		ax.scatter(points.real, points.imag, c='blue', label='sample')
+
+		plt.legend(loc='best', frameon=False)
