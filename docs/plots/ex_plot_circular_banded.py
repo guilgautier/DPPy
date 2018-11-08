@@ -1,16 +1,10 @@
-from beta_ensembles import *
+from beta_ensembles import CircularEnsemble
 
-ensemble_name, beta = "circular", 3 # beta \in N^*
-circular = BetaEnsemble(ensemble_name, beta=beta) # Create the circular object
+circular = CircularEnsemble(beta=2) # beta must be >=0 integer, default beta=2
 
-# First, plot the eigenvalues
-circular_params = {"size":30} # Number of points N
-mode = "banded" # banded (quindiagonal) model
-
-# Plot the eigenvalues for increasing beta to see the cristallization
-for b in  (1, 10, 20):
+# See the cristallization of the configuration as beta increases
+for b in (0, 1, 5, 10):
 
 	circular.beta = b
-	circular.flush_samples()
-	circular.sample(mode, **circular_params) # Sample
-	circular.plot() # Plot of the eigenvalues
+	circular.sample_banded_model(size_N=30)
+	circular.plot()

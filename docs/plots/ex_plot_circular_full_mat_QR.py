@@ -1,20 +1,13 @@
-from beta_ensembles import *
+from beta_ensembles import CircularEnsemble
 
-ensemble_name, beta = "circular", 2 # beta = 1, 2, 4
-circular = BetaEnsemble(ensemble_name, beta=beta) # Create the circular object
+circular = CircularEnsemble(beta=2) # beta must be in {0,1,2,4}, default beta=2
 
-# First, plot the eigenvalues
-circular_params = {"N":30, "haar_mode":"QR"} #/ "haar_mode":"hermite"
-mode = "full" # Full matrix model
-
-circular.sample(mode, **circular_params) # Sample
+# 1. Plot the eigenvalues, they lie on the unit circle
+circular.sample_full_model(size_N=30, haar_mode='QR') # Sample
 circular.plot() # Plot of the eigenvalues
 
-# Then, display the histogram of more eigenvalues
-circular.flush_samples()
+# 2. Histogram of the angle of more points, should look uniform on [0,2pi]
+circular.flush_samples() # Flush previous sample
 
-circular_params["N"] = 1000
-mode = "full" # Full matrix model
-
-circular.sample(mode, **circular_params) # Sample
-circular.hist() # Histogram of the eigenvalues
+circular.sample_full_model(size_N=1000, haar_mode='QR') # Sample
+circular.hist()

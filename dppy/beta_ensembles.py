@@ -35,7 +35,8 @@ class BetaEnsemble:
 		self.sampling_mode = '' # 
 		self.list_of_samples = []
 
-		self._str_title = r'Realization of {} points of {} with $\beta={}$'.format(									self.params['size_N'], self.name, self.beta)
+	def _str_title(self):
+		return r'Realization of {} points of {} with $\beta={}$'.format(									self.params['size_N'], self.name, self.beta)
 
 	def __str__(self):
 		str_info = ('{} with beta = {}'.format(self.name, self.beta),
@@ -210,7 +211,7 @@ class HermiteEnsemble(BetaEnsemble):
 
 		fig, ax = plt.subplots(1, 1)
 		# Title
-		plt.title(self._str_title)
+		plt.title(self._str_title())
 
 		if normalization:
 			points = self.normalize_points(points)
@@ -484,8 +485,8 @@ class LaguerreEnsemble(BetaEnsemble):
 		# Title
 		str_ratio = r'\nwith ratio $M/N \approx {}$'.format(M/N)
 		# Answers Issue #33 raised by @adrienhardy
-		self._str_title = '\n'.join([self._str_title, str_ratio])	 
-		plt.title(self._str_title)
+		title = '\n'.join([self._str_title(), str_ratio])	 
+		plt.title(title)
 
 		if normalization:
 			points = self.normalize_points(points)
@@ -743,7 +744,7 @@ class JacobiEnsemble(BetaEnsemble):
 		fig, ax = plt.subplots(1, 1)
 		# Title
 		str_ratios = r'with ratios $M_1/N \approx {:.3f}, M_2/N \approx {:.3f}$'.format(M_1/N, M_2/N) # Answers Issue #33 raised by @adrienhardy
-		title = '\n'.join([self._str_title, str_ratios])
+		title = '\n'.join([self._str_title(), str_ratios])
 		plt.title(title)
 
 		if normalization:
@@ -856,7 +857,7 @@ class CircularEnsemble(BetaEnsemble):
 
 		if self.beta == 0: # i.i.d. points uniformly on the circle
 			# Answer issue #28 raised by @rbardenet
-			sampl = np.exp(2*1j*np.pi*np.random.rand(size=params['size_N']))
+			sampl = np.exp(2*1j*np.pi*np.random.rand(params['size_N']))
 		else:
 			sampl = rm.circular_sampler_full(N=params['size_N'],
 																			beta=self.beta,
@@ -889,7 +890,7 @@ class CircularEnsemble(BetaEnsemble):
 
 		if self.beta == 0: # i.i.d. points uniformly on the circle
 			# Answer issue #28 raised by @rbardenet
-			sampl = np.exp(2*1j*np.pi*np.random.rand(size=params['size_N']))
+			sampl = np.exp(2*1j*np.pi*np.random.rand(params['size_N']))
 		else:
 			sampl = rm.mu_ref_unif_unit_circle_sampler_quindiag(beta=self.beta,
 																		  									size=params['size_N'])
@@ -907,13 +908,15 @@ class CircularEnsemble(BetaEnsemble):
 
 		# Title
 		samp_mod = ''
-		if self.sampling_mode == 'full':
+		if self.beta ==0:
+			samp_mod = r'i.i.d samples from $\mathcal{U}_{[0,2\pi]}$'
+		elif self.sampling_mode == 'full':
 			samp_mod = 'full matrix model with haar_mode={}'.format(self.params['haar_mode'])
-		else:
+		else: # self.sampling_mode == 'banded':
 			samp_mod = 'quindiag model'
 
-		self._str_title = '\n'.join([self._str_title, 'using {}'.format(samp_mod)])
-		plt.title(self._str_title)
+		title = '\n'.join([self._str_title(), 'using {}'.format(samp_mod)])
+		plt.title(title)
 
 		if display_type == 'scatter':
 			# Draw unit circle
@@ -1031,7 +1034,7 @@ class GinibreEnsemble(BetaEnsemble):
 		# Plot
 		fig, ax = plt.subplots(1, 1)
 	
-		plt.title(self._str_title) # Title
+		plt.title(self._str_title()) # Title
 
 		if normalization:
 			points /= np.sqrt(self.params['size_N'])
