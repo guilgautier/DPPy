@@ -407,5 +407,6 @@ Ginibre Ensemble
 
 Nomalization :math:`\sqrt{N}` to concentrate in the unit circle
 
+
 .. plot:: plots/ex_plot_ginibre_full_mat.py
   :include-source:

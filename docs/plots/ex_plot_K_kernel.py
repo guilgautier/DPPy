@@ -1,4 +1,4 @@
-from finite_dpps import *
+from dppy.finite_dpps import *
 
 r, N = 4, 10
 A = np.random.randn(r, N)

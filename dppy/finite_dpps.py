@@ -3,8 +3,8 @@ try: # Local import
 	from .exact_sampling import *
 	from .mcmc_sampling import *
 except (SystemError, ImportError):
-	from exact_sampling import *
-	from mcmc_sampling import *
+	from dppy.exact_sampling import *
+	from dppy.mcmc_sampling import *
 
 import matplotlib.pyplot as plt
 from warnings import warn

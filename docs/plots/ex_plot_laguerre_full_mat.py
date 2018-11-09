@@ -1,11 +1,9 @@
-from beta_ensembles import *
+from dppy.beta_ensembles import LaguerreEnsemble
 
-ensemble_name, beta = "laguerre", 2 # beta = 1, 2, 4
-laguerre = BetaEnsemble(ensemble_name, beta=beta) # Create the laguerre object
+laguerre = LaguerreEnsemble(beta=1)# beta must be in {1,2,4}, default beta=2
+laguerre.sample_full_model(size_N=500, size_M=800)
+# laguerre.plot(normalization=True)
+laguerre.hist(normalization=True)
 
-laguerre_params = {"M":1500, "N":1000} # Size of the matrix MxN (M>=N)
-mode = "full" # Full matrix model
-
-laguerre.sample(mode, **laguerre_params) # Sample
-
-laguerre.hist(normalization=True) # Histogram of the eigenvalues/(beta*M)
+# To compare with the sampling speed of the tridiagonal model simply use
+# laguerre.sample_banded_model(size_N=500, size_M=800)

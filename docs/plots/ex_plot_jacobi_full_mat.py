@@ -1,11 +1,9 @@
-from beta_ensembles import *
+from dppy.beta_ensembles import JacobiEnsemble
 
-ensemble_name, beta = "jacobi", 2 # beta = 1, 2, 4
-jacobi = BetaEnsemble(ensemble_name, beta=beta) # Create the jacobi object
+jacobi = JacobiEnsemble(beta=2) # beta must be in {1,2,4}, default beta=2
+jacobi.sample_full_model(size_N=400, size_M1=500, size_M2=600) # M_1, M_2 >= N
+# jacobi.plot(normalization=True)
+jacobi.hist(normalization=True)
 
-jacobi_params = {"M_1":1500, "M_2":1200, "N":1000} # Size of the matrices NxM_1,M_2 (M_1,M_2>=N)
-mode = "full" # Full matrix model
-
-jacobi.sample(mode, **jacobi_params) # Sample
-
-jacobi.hist(normalization=True) # Histogram of the eigenvalues
+# To compare with the sampling speed of the triadiagonal model simply use
+# jacobi.sample_banded_model(size_N=400, size_M1=500, size_M2=600)

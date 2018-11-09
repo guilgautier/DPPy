@@ -137,12 +137,12 @@ API
 
 	Check out the Notebook `Exotic DPPs <https://github.com/guilgautier/DPPy/blob/master/notebooks/exotic_dpps.ipynb>`_ 
 
-.. currentmodule:: exotic_dpps
+.. currentmodule:: dppy.exotic_dpps
 
 .. autoclass:: Descent
 	:members:
 
-.. automodule:: exotic_dpps
+.. automodule:: dppy.exotic_dpps
 	:members:
 	:inherited-members:
 	:show-inheritance:

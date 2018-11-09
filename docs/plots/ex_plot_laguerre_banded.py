@@ -1,17 +1,7 @@
-from beta_ensembles import *
+from dppy.beta_ensembles import LaguerreEnsemble
 
-ensemble_name, beta = "laguerre", 4.15 # beta > 0
-laguerre = BetaEnsemble(ensemble_name, beta=beta) # Create the laguerre object
-
-# Parameters of the Gamma(shape, scale)/number of points
-laguerre_params = {"shape":10000, "scale":2.0, "size":2000} 
-# To match the full matrix model
-# shape = 0.5*beta*(M-N+1)
-# scale = 2.0
-# size = N
-
-mode = "banded"  # Banded (tridiagonal) matrix model
-
-laguerre.sample(mode, **laguerre_params) # Sample
-
-laguerre.hist(normalization=True) # Histogram of the eigenvalues/(beta*M)
+laguerre = LaguerreEnsemble(beta=2.98) # beta must be in {1,2,4}, default beta=2
+# Reference measure is Gamma(k, theta)
+laguerre.sample_banded_model(shape=600, scale=2.0, size_N=400)
+# laguerre.plot(normalization=True)
+laguerre.hist(normalization=True)

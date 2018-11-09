@@ -1,4 +1,4 @@
-from beta_ensembles import CircularEnsemble
+from dppy.beta_ensembles import CircularEnsemble
 
 circular = CircularEnsemble(beta=2) # beta must be >=0 integer, default beta=2
 

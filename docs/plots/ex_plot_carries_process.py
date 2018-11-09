@@ -1,4 +1,4 @@
-from exotic_dpps import *
+from dppy.exotic_dpps import *
 
 base = 10 # base
 cp = CarriesProcess(base)

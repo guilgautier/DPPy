@@ -1,17 +1,7 @@
-from beta_ensembles import *
+from dppy.beta_ensembles import HermiteEnsemble
 
-ensemble_name, beta = "hermite", 4.15 # beta >0
-hermite = BetaEnsemble(ensemble_name, beta=beta) # Create the hermite object
-
-# Parameters of the Gaussian/number of points
-hermite_params = {"loc":0.0, "scale":np.sqrt(2), "size":1000} 
-# To match the full matrix model use
-# loc = 0.0
-# scale = np.sqrt(2)
-# size = N
-
-mode = "banded" # Banded (tridiagonal) matrix model
-
-hermite.sample(mode, **hermite_params) # Sample
-
-hermite.hist(normalization=True) # Histogram of the eigenvalues/sqrt(beta*size)
+hermite = HermiteEnsemble(beta=5.43)
+# Reference measure is N(mu, sigma^2)
+hermite.sample_banded_model(loc=0.0, scale=1.0, size_N=500)
+# hermite.plot(normalization=True)
+hermite.hist(normalization=True)

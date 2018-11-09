@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 
 from re import findall as re_findall # to convert class names to string
 
-import random_matrices as rm
+import dppy.random_matrices as rm
 
 class BetaEnsemble:
 	""" :math:`\\beta`-Ensemble object parametrized by
@@ -220,7 +220,7 @@ class HermiteEnsemble(BetaEnsemble):
 			x = np.linspace(-2, 2, 100)
 			ax.plot(x, rm.semi_circle_law(x), 
 						'r-', lw=2, alpha=0.6,
-						label=r'$f_{sc}$')
+						label=r'$f_{semi-circle}$')
 		else:
 			pass
 
@@ -483,7 +483,7 @@ class LaguerreEnsemble(BetaEnsemble):
 
 		fig, ax = plt.subplots(1, 1)
 		# Title
-		str_ratio = r'\nwith ratio $M/N \approx {}$'.format(M/N)
+		str_ratio = r'with ratio $M/N \approx {}$'.format(M/N)
 		# Answers Issue #33 raised by @adrienhardy
 		title = '\n'.join([self._str_title(), str_ratio])	 
 		plt.title(title)
@@ -495,7 +495,7 @@ class LaguerreEnsemble(BetaEnsemble):
 			x = np.linspace(1e-2, np.max(points)+0.3, 100)
 			ax.plot(x, rm.marcenko_pastur_law(x, M, N),
 						'r-', lw=2, alpha=0.6,
-						label=r'$f_{MP}$')
+						label=r'$f_{Marcenko-Pastur}$')
 		else:
 			pass
 
@@ -739,7 +739,7 @@ class JacobiEnsemble(BetaEnsemble):
 		else:
 			points = self.list_of_samples[-1].copy() # Pick last sample
 
-		N, M_1, M_2 = [self.params.get(key) for key in ('size_N', 'size_M1', 'size_M1')]
+		N, M_1, M_2 = [self.params.get(key) for key in ('size_N', 'size_M1', 'size_M2')]
 
 		fig, ax = plt.subplots(1, 1)
 		# Title
@@ -753,7 +753,7 @@ class JacobiEnsemble(BetaEnsemble):
 			x = np.linspace(eps, 1.0-eps, 500)
 			ax.plot(x, rm.wachter_law(x, M_1, M_2, N),
 							'r-', lw=2, alpha=0.6,
-							label='Wachter Law')
+							label=r'$f_{Wachter}$')
 		else:
 			pass
 
