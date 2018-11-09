@@ -81,7 +81,7 @@ class HermiteEnsemble(BetaEnsemble):
 		self.params.update(params)
 
 	def sample_full_model(self, size_N=10):
-		""" Sample from :ref:`tridiagonal matrix model <Hermite_ensemble_full>` for Hermite ensemble. Only available for ``HermiteEnsemble.beta`` attribute :math:`\\beta\\in\\{1, 2, 4\\}` and the degenerate case :math:`\\beta=0` corresponding to i.i.d. points from the Gaussian :math:`\\mathcal{N}(\\mu,\\sigma)` reference measure
+		""" Sample from :ref:`tridiagonal matrix model <Hermite_ensemble_full>` for Hermite ensemble. Only available for ``HermiteEnsemble.beta`` attribute :math:`\\beta\\in\\{1, 2, 4\\}` and the degenerate case :math:`\\beta=0` corresponding to i.i.d. points from the Gaussian :math:`\\mathcal{N}(\\mu,\\sigma^2)` reference measure
 
 		:param size_N:
 			Number :math:`N` of points i.e. size of the matrix to be diagonalized
@@ -114,15 +114,15 @@ class HermiteEnsemble(BetaEnsemble):
 		self.list_of_samples.append(sampl)
 
 	def sample_banded_model(self, loc=0.0, scale=np.sqrt(2.0), size_N=10):
-		""" Sample from :ref:`tridiagonal matrix model <Hermite_ensemble_full>` for Hermite Ensemble. Available for ``HermiteEnsemble.beta`` attribute :math:`\\beta>0` and the degenerate case :math:`\\beta=0` corresponding to i.i.d. points from the Gaussian :math:`\\mathcal{N}(\\mu,\\sigma)` reference measure
+		""" Sample from :ref:`tridiagonal matrix model <Hermite_ensemble_full>` for Hermite Ensemble. Available for ``HermiteEnsemble.beta`` attribute :math:`\\beta>0` and the degenerate case :math:`\\beta=0` corresponding to i.i.d. points from the Gaussian :math:`\\mathcal{N}(\\mu,\\sigma^2)` reference measure
 
 		:param loc:
-			Mean of :math:`\\mu` of the Gamma :math:`\\mathcal{N}(\\mu, \\sigma)`
+			Mean of :math:`\\mu` of the Gaussian :math:`\\mathcal{N}(\\mu, \\sigma^2)`
 		:type loc:
 			float, default :math:`0`
 
 		:param scale:
-			Standard deviation :math:`\\sigma` of the Gamma :math:`\\mathcal{N}(\\mu, \\sigma^2)`
+			Standard deviation :math:`\\sigma` of the Gaussian :math:`\\mathcal{N}(\\mu, \\sigma^2)`
 		:type scale:
 			float, default :math:`\\sqrt{2}`
 
@@ -172,7 +172,7 @@ class HermiteEnsemble(BetaEnsemble):
 		:type points:
 			array_like
 
-		- If sampled using :func:`sample_banded_model <sample_banded_model>` with reference measure :math:`\\mathcal{N}(\\mu,\\sigma)`
+		- If sampled using :func:`sample_banded_model <sample_banded_model>` with reference measure :math:`\\mathcal{N}(\\mu,\\sigma^2)`
 
 			.. math::
 
@@ -352,12 +352,12 @@ class LaguerreEnsemble(BetaEnsemble):
 		""" Sample from :ref:`tridiagonal matrix model <Laguerre_ensemble_full>` for Laguerre ensemble. Available for ``LaguerreEnsemble.beta`` attribute :math:`\\beta>0` and the degenerate case :math:`\\beta=0` corresponding to i.i.d. points from the :math:`\\Gamma(k,\\theta)` reference measure
 
 		:param shape:
-			Shape parameter :math:`k` of the Gamma :math:`\\Gamma(k, \\theta)` reference measure
+			Shape parameter :math:`k` of :math:`\\Gamma(k, \\theta)` reference measure
 		:type shape:
 			float, default :math:`1`
 
 		:param scale:
-			Scale parameter :math:`\\theta` of the Gamma :math:`\\Gamma(k, \\theta)` reference measure
+			Scale parameter :math:`\\theta` of :math:`\\Gamma(k, \\theta)` reference measure
 		:type scale:
 			float, default :math:`2.0`
 
@@ -483,7 +483,7 @@ class LaguerreEnsemble(BetaEnsemble):
 
 		fig, ax = plt.subplots(1, 1)
 		# Title
-		str_ratio = r'with ratio $M/N \approx {}$'.format(M/N)
+		str_ratio = r'with ratio $M/N \approx {:.3f}$'.format(M/N)
 		# Answers Issue #33 raised by @adrienhardy
 		title = '\n'.join([self._str_title(), str_ratio])	 
 		plt.title(title)
@@ -640,12 +640,12 @@ class JacobiEnsemble(BetaEnsemble):
 		""" Sample from :ref:`tridiagonal matrix model <Jacobi_ensemble_full>` for Jacobi ensemble. Available for ``JacobiEnsemble.beta`` attribute :math:`\\beta>0` and the degenerate case :math:`\\beta=0` corresponding to i.i.d. points from the :math:`\\operatorname{Beta}(a,b)` reference measure
 
 		:param shape:
-			Shape parameter :math:`k` of the Gamma :math:`\\Gamma(k, \\theta)` reference measure
+			Shape parameter :math:`k` of :math:`\\Gamma(k, \\theta)` reference measure
 		:type shape:
 			float, default :math:`1`
 
 		:param scale:
-			Scale parameter :math:`\\theta` of the Gamma :math:`\\Gamma(k, \\theta)` reference measure
+			Scale parameter :math:`\\theta` of :math:`\\Gamma(k, \\theta)` reference measure
 		:type scale:
 			float, default :math:`2.0`
 
@@ -958,13 +958,6 @@ class CircularEnsemble(BetaEnsemble):
 	def hist(self):
 		""" Display the histogram of the last realization of the :class:`CircularEnsemble` object.
 
-		:param normalization:
-
-			If ``True``, the points are normalized so as to concentrate as the lititing distribution: semi-circle using :func:`normalize_points <normalize_points>`
-
-		:type normalization:
-			bool, default ``True``
-
 		.. seealso::
 
 			- :func:`sample_full_model <sample_full_model>`, :func:`sample_banded_model <sample_banded_model>`
@@ -1015,7 +1008,11 @@ class GinibreEnsemble(BetaEnsemble):
 
 		:param normalization:
 
-			If ``True``, the points are normalized so as to concentrate as the lititing distribution: semi-circle using :func:`normalize_points <normalize_points>`
+			If ``True``, the points are normalized so as to concentrate in the unit disk.
+
+			.. math::
+
+				x \\mapsto \\frac{x}{\\sqrt{N}}
 
 		:type normalization:
 			bool, default ``True``

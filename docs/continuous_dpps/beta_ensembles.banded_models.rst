@@ -90,6 +90,7 @@ That is to say,
 
 	- :cite:`DuEd02` II-C
 	- :ref:`Full matrix model <hermite_ensemble_full>` for Hermite ensemble
+	- ``class``:class:`HermiteEnsemble <dppy.beta_ensembles.HermiteEnsemble>` in API
 
 .. _laguerre_ensemble_banded:
 
@@ -185,6 +186,7 @@ That is to say,
 
 	- :cite:`DuEd02` III-B
 	- :ref:`Full matrix model <laguerre_ensemble_full>` for Laguerre ensemble
+	- ``class``:class:`LaguerreEnsemble <dppy.beta_ensembles.LaguerreEnsemble>` in API
 
 .. _jacobi_ensemble_banded:
 
@@ -300,6 +302,7 @@ That is to say,
 
 	- :cite:`KiNe04` Theorem 2
 	- :ref:`Full matrix model <jacobi_ensemble_full>` for Jacobi ensemble
+	- ``class``:class:`JacobiEnsemble <dppy.beta_ensembles.JacobiEnsemble>` in API
 
 .. _circular_ensemble_banded:
 
@@ -356,9 +359,8 @@ and where
 
 .. hint::
 
-	The effect of increasing the :math:`\beta` parameter can be nicely vizualized on this :ref:`circular_ensemble_banded`
-	Viewing :math:`\beta` as the inverse temperature, the configuration of the eigenvalues cristallizes with :math:`\beta`.
-	The following pictures display realizations for :math:`\beta=1, 10, 20` respectively.
+	The effect of increasing the :math:`\beta` parameter can be nicely vizualized on this :ref:`circular_ensemble_banded`.
+	Viewing :math:`\beta` as the inverse temperature, the configuration of the eigenvalues cristallizes with :math:`\beta`, see the figure below.
 
 .. plot:: plots/ex_plot_circular_banded.py
 	:include-source:
@@ -367,3 +369,4 @@ and where
 
 	- :cite:`KiNe04` Theorem 1
 	- :ref:`Full matrix model <circular_ensemble_full>` for Circular ensemble
+	- ``class``:class:`CircularEnsemble <dppy.beta_ensembles.CircularEnsemble>` in API
