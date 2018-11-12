@@ -2,6 +2,9 @@
 
 import numpy as np
 import scipy.linalg as la
+from scipy.stats import norm as sp_gaussian
+from scipy.stats import gamma as sp_gamma
+from scipy.stats import beta as sp_beta
 import matplotlib.pyplot as plt
 
 from re import findall as re_findall # to convert class names to string
@@ -106,9 +109,10 @@ class HermiteEnsemble(BetaEnsemble):
 		self.params.update(params)
 
 		if self.beta == 0: # Answer issue #28 raised by @rbardenet
+		# Sample N i.i.d. gaussian N(0,2)
 			sampl = np.random.normal(loc=params['loc'], scale=params['scale'],
 															size=params['size_N'])
-		else:
+		else: # if beta > 0
 			sampl = rm.hermite_sampler_full(N=params['size_N'], beta=self.beta)
 
 		self.list_of_samples.append(sampl)
@@ -150,9 +154,10 @@ class HermiteEnsemble(BetaEnsemble):
 		self.params.update(params)
 
 		if self.beta == 0: # Answer issue #28 raised by @rbardenet
+		# Sample N i.i.d. gaussian N(mu, sigma^2)
 			sampl = np.random.normal(loc=params['loc'], scale=params['scale'],
 															size=params['size_N'])
-		else:
+		else: # if beta > 0
 			sampl = rm.mu_ref_normal_sampler_tridiag(loc=params['loc'],
 																					scale=params['scale'],
 																					beta=self.beta,
@@ -161,7 +166,7 @@ class HermiteEnsemble(BetaEnsemble):
 		self.list_of_samples.append(sampl)
 
 	def normalize_points(self, points):
-		""" Normalize points obtained after sampling to match the limiting distribution i.e. semi-circle
+		""" Normalize points obtained after sampling to fit the limiting distribution i.e. semi-circle
 
 			.. math::
 
@@ -174,31 +179,39 @@ class HermiteEnsemble(BetaEnsemble):
 
 		- If sampled using :func:`sample_banded_model <sample_banded_model>` with reference measure :math:`\\mathcal{N}(\\mu,\\sigma^2)`
 
-			.. math::
+			1. Normalize the points to fit the :math:`\\mathcal{N}(0,2)` reference measure of the :ref:`full matrix model <hermite_ensemble_full>`
 
-				x \\mapsto \\sqrt{2}\\frac{x-\\mu}{\\sigma}
-				\\quad \\text{and} \\quad
-				x \\mapsto \\frac{x}{\\beta N}
+				.. math::
 
-		- If sampled using :func:`sample_full_model <sample_full_model>`
+					x \\mapsto \\sqrt{2}\\frac{x-\\mu}{\\sigma}
 
-			.. math::
-				
-				x \\mapsto \\frac{x}{\\beta N}
+			2. If ``Hermite.beta``:math:`>0`, normalize the points to fit the semi-circle distribution
+
+				.. math::
+
+					x \\mapsto \\frac{x}{\\beta N}
+
+				Otherwise if ``Hermite.beta``:math:`=0` do nothing more
+
+		- If sampled using :func:`sample_full_model <sample_full_model>`, apply 2. above
 
 		.. note::
 
-			This method is called in :func:`plot <plot>` and :func:`hist <hist>` when ``normalization=True``.
+			This method is called in :func:`plot <plot>` and :func:`hist <hist>` when ``normalization=True``
 		"""
 
-		if self.sampling_mode == 'banded':
+		if self.sampling_mode == 'banded': 
+		# Normalize to fit N(0,2) reference measure of the full matrix model
 			points -= self.params['loc']
 			points /= np.sqrt(0.5)*self.params['scale']
-
 		else: # 'full'
 			pass
 
-		points /= np.sqrt(self.beta * self.params['size_N'])
+		if self.beta > 0:
+		# Normalize to fit the semi-circle distribution
+			points /= np.sqrt(self.beta * self.params['size_N'])
+		else:
+			pass
 
 		return points
 
@@ -208,21 +221,44 @@ class HermiteEnsemble(BetaEnsemble):
 			raise ValueError('Empty attribute `list_of_samples`, sample first!')
 		else:
 			points = self.list_of_samples[-1].copy() # Pick last sample
+			if normalization:
+				points = self.normalize_points(points)
 
 		fig, ax = plt.subplots(1, 1)
 		# Title
-		plt.title(self._str_title())
+		str_beta = '' if self.beta > 0 else 'with i.i.d. draws'
+		title = '\n'.join([self._str_title(), str_beta])	 
+		plt.title(title)
 
 		if normalization:
+
 			points = self.normalize_points(points)
 
-			# Limiting distribution: semi circle law
-			x = np.linspace(-2, 2, 100)
-			ax.plot(x, rm.semi_circle_law(x), 
-						'r-', lw=2, alpha=0.6,
-						label=r'$f_{semi-circle}$')
+			if self.beta == 0: 
+			# Display N(0,2) reference measure of the full matrix model
+				mu, sigma = 0.0, np.sqrt(2.0)
+				x = mu + 3.5*sigma*np.linspace(-1, 1, 100)
+				ax.plot(x, sp_gaussian.pdf(x, mu, sigma), 
+							'r-', lw=2, alpha=0.6,
+							label=r'$\mathcal{{N}}(0,2)$')
+
+			else: # self.beta > 0
+				# Display the limiting distribution: semi circle law
+				x = np.linspace(-2, 2, 100)
+				ax.plot(x, rm.semi_circle_law(x), 
+							'r-', lw=2, alpha=0.6,
+							label=r'$f_{semi-circle}$')
 		else:
-			pass
+			
+			if self.beta == 0: 
+			# Display N(mu, sigma^2) reference measure
+				mu, sigma = [self.params[key] for key in ['loc', 'scale']]
+				x = mu + 3.5*sigma*np.linspace(-1, 1, 100)
+				ax.plot(x, sp_gaussian.pdf(x, mu, sigma), 
+							'r-', lw=2, alpha=0.6,
+							label=r'$\mathcal{{N}}({:.2f},{:.2f})$'.format(mu, sigma**2))
+			else: # if beta > 0
+				pass
 
 		if display_type == 'scatter':
 			ax.scatter(points, np.zeros(points.shape[0]),
@@ -241,9 +277,11 @@ class HermiteEnsemble(BetaEnsemble):
 	def plot(self, normalization=True):
 		""" Display the last realization of the :class:`HermiteEnsemble` object
 
-		:param normalization:
+		:param normalization: 
+			When ``True``, using :func:`normalize_points <normalize_points>`, display:
 
-			If ``True``, the points are normalized so as to concentrate as the lititing distribution: semi-circle using :func:`normalize_points <normalize_points>`
+			- If ``HermiteEnsemble.beta = 0`` :math:`\\mathcal{N}(0, 2)`
+			- If ``HermiteEnsemble.beta > 0`` limiting distribution: semi-circle
 
 		:type normalization:
 			bool, default ``True``
@@ -262,9 +300,11 @@ class HermiteEnsemble(BetaEnsemble):
 	def hist(self, normalization=True):
 		""" Display the histogram of the last realization of the :class:`HermiteEnsemble` object.
 
-		:param normalization:
+		:param normalization: 
+			When ``True``, using :func:`normalize_points <normalize_points>`, display:
 
-			If ``True``, the points are normalized so as to concentrate as the lititing distribution: semi-circle using :func:`normalize_points <normalize_points>`
+			- If ``HermiteEnsemble.beta = 0`` :math:`\\mathcal{N}(0, 2)`
+			- If ``HermiteEnsemble.beta > 0`` limiting distribution: semi-circle
 
 		:type normalization:
 			bool, default ``True``
@@ -294,7 +334,7 @@ class LaguerreEnsemble(BetaEnsemble):
 
 		super().__init__(beta=beta)
 
-		params = {'shape':0.0, 'scale':2.0, 'size_N':10, 'size_M':100}
+		params = {'shape':0.0, 'scale':2.0, 'size_N':10, 'size_M':None}
 		self.params.update(params)
 
 	def sample_full_model(self, size_N=10, size_M=100):
@@ -328,8 +368,8 @@ class LaguerreEnsemble(BetaEnsemble):
 		self.sampling_mode = 'full'
 		
 		if size_M >= size_N:
+			# define the parameters of the associated Gamma distribution
 			shape, scale = 0.5*self.beta*(size_M-size_N+1), 2.0
-
 		else:
 			err_print = ('Must have M >= N.',
 									'Given: M={} < N={}'.format(size_M, size_N))
@@ -339,10 +379,16 @@ class LaguerreEnsemble(BetaEnsemble):
 		self.params.update(params)
 
 		if self.beta == 0: # Answer issue #28 raised by @rbardenet
-			sampl = np.random.gamma(shape=params['shape'], scale=params['scale'],
+			# np.random.gamma(shape=0,...) when doesn't return error! contrary to sp.stats.gamma(a=0).rvs(), see https://github.com/numpy/numpy/issues/12367
+			# sampl = sp_gamma.rvs(a=params['shape'], loc=0.0, scale=params['scale'],										size=params['size_N'])
+			if params['shape'] > 0:
+				sampl = np.random.gamma(shape=params['shape'], scale=params['scale'],
 														size=params['size_N'])
+			else:
+				err_print = ('shape<=0. Here beta=0, hence shape=beta/2*(M-N+1)=0')
+				raise ValueError(err_print)
 
-		else:
+		else: # if beta > 0
 			sampl = rm.laguerre_sampler_full(M=params['size_M'], N=params['size_N'],
 																			beta=self.beta)
 
@@ -402,9 +448,13 @@ class LaguerreEnsemble(BetaEnsemble):
 		self.sampling_mode = 'banded'
 
 		if not size_M: # Default setting
-			size_M = 2/self.beta * shape + size_N - 1 if self.beta>0 else np.inf
+			if self.beta>0:
+				size_M = 2/self.beta * shape + size_N - 1
+			else:
+				size_M = np.inf
 
 		elif size_M >= size_N:
+			# define the parameters of the associated Gamma distribution
 			shape, scale = 0.5*self.beta*(size_M-size_N+1), 2.0
 
 		else:
@@ -416,9 +466,16 @@ class LaguerreEnsemble(BetaEnsemble):
 		self.params.update(params)
 
 		if self.beta == 0: # Answer issue #28 raised by @rbardenet
-			sampl = np.random.gamma(shape=params['shape'], scale=params['scale'],
+			# np.random.gamma(shape=0,...) when doesn't return error! contrary to sp.stats.gamma(a=0).rvs(), see https://github.com/numpy/numpy/issues/12367
+			# sampl = sp_gamma.rvs(a=params['shape'], loc=0.0, scale=params['scale'],										size=params['size_N'])
+			if params['shape'] > 0:
+				sampl = np.random.gamma(shape=params['shape'], scale=params['scale'],
 														size=params['size_N'])
-		else:
+			else:
+				err_print = ('shape<=0. Here beta=0, hence shape=beta/2*(M-N+1)=0')
+				raise ValueError(err_print)
+
+		else: # if beta > 0
 			sampl = rm.mu_ref_gamma_sampler_tridiag(shape=params['shape'],
 																					scale=params['scale'],
 																					beta=self.beta,
@@ -427,7 +484,7 @@ class LaguerreEnsemble(BetaEnsemble):
 		self.list_of_samples.append(sampl)
 
 	def normalize_points(self, points):
-		""" Normalize points obtained after sampling to match the limiting distribution i.e. Marcenko Pastur law
+		""" Normalize points obtained after sampling to fit the limiting distribution i.e. Marcenko Pastur law
 
 		.. math::
 
@@ -463,41 +520,55 @@ class LaguerreEnsemble(BetaEnsemble):
 		"""
 
 		if self.sampling_mode == 'banded':
+			# Normalize to fit Gamma(*,2) reference measure of the full matrix model
 			points /= 0.5*self.params['scale']
 		else: # self.sampling_mode == 'full':
 			pass
 
 		if self.beta > 0:
+		# Normalize to fit the Marcenko Pastur distribution
 			points /= self.beta * self.params['size_M']
+		else:
+			pass
+		# set a warning, won't concentrate as semi circle, they are i.i.d.
 
 		return points
-
+		
 	def __display_and_normalization(self, display_type, normalization):
 
 		if not self.list_of_samples:
 			raise ValueError('Empty attribute `list_of_samples`, sample first!')
 		else:
 			points = self.list_of_samples[-1].copy() # Pick last sample
+			if normalization:
+				points = self.normalize_points(points)
 
-		N, M = [self.params.get(key) for key in ('size_N', 'size_M')]
+		N, M = [self.params[key] for key in ['size_N', 'size_M']]
 
 		fig, ax = plt.subplots(1, 1)
 		# Title
 		str_ratio = r'with ratio $M/N \approx {:.3f}$'.format(M/N)
 		# Answers Issue #33 raised by @adrienhardy
-		title = '\n'.join([self._str_title(), str_ratio])	 
+		str_beta = '' if self.beta > 0 else 'with i.i.d. draws'
+		title = '\n'.join([self._str_title(), ' '.join([str_ratio, str_beta])])	 
 		plt.title(title)
 
-		if normalization:
-			points = self.normalize_points(points)
+		if self.beta == 0:
+			if normalization:
+			# Display Gamma(k,2) reference measure of the full matrix model
+				k, theta = self.params['shape'], 2
+				x = np.linspace(0, np.max(points)+4, 100)
+				ax.plot(x, sp_gamma.pdf(x, a=k, loc=0.0, scale=theta), 
+							'r-', lw=2, alpha=0.6,
+							label=r'$\Gamma({},{})$'.format(k, theta))
 
-			# Limiting distribution: Marcenko Pastur law
-			x = np.linspace(1e-2, np.max(points)+0.3, 100)
-			ax.plot(x, rm.marcenko_pastur_law(x, M, N),
-						'r-', lw=2, alpha=0.6,
-						label=r'$f_{Marcenko-Pastur}$')
-		else:
-			pass
+		else: # self.beta > 0
+			if normalization:
+			# Display the limiting distribution: Marcenko Pastur
+				x = np.linspace(1e-2, np.max(points)+0.3, 100)
+				ax.plot(x, rm.marcenko_pastur_law(x, M, N),
+							'r-', lw=2, alpha=0.6,
+							label=r'$f_{Marcenko-Pastur}$')
 
 		if display_type == 'scatter':
 			ax.scatter(points, np.zeros(points.shape[0]),
@@ -516,9 +587,11 @@ class LaguerreEnsemble(BetaEnsemble):
 	def plot(self, normalization=True):
 		""" Display the last realization of the :class:`LaguerreEnsemble` object
 
-		:param normalization:
+		:param normalization: 
+			When ``True``, using :func:`normalize_points <normalize_points>`, display:
 
-			If ``True``, the points are normalized so as to concentrate as the lititing distribution: Marcenko-Pastur using :func:`normalize_points <normalize_points>`
+			- If ``LaguerreEnsemble.beta = 0`` :math:`\\Gamma(k, 2)`
+			- If ``LaguerreEnsemble.beta > 0`` limiting distribution: Marcenko-Pastur
 
 		:type normalization:
 			bool, default ``True``
@@ -537,9 +610,11 @@ class LaguerreEnsemble(BetaEnsemble):
 	def hist(self, normalization=True):
 		""" Display the histogram of the last realization of the :class:`LaguerreEnsemble` object.
 
-		:param normalization:
+		:param normalization: 
+			When ``True``, using :func:`normalize_points <normalize_points>`, display:
 
-			If ``True``, the points are normalized so as to concentrate as the lititing distribution: Marcenko-Pastur using :func:`normalize_points <normalize_points>`
+			- If ``LaguerreEnsemble.beta = 0`` :math:`\\Gamma(k, 2)`
+			- If ``LaguerreEnsemble.beta > 0`` limiting distribution: Marcenko-Pastur
 
 		:type normalization:
 			bool, default ``True``
@@ -569,7 +644,7 @@ class JacobiEnsemble(BetaEnsemble):
 
 		super().__init__(beta=beta)
 
-		params = {'a':1.0, 'b':1.0, 'size_N':10, 'size_M1':20, 'size_M2':20}
+		params = {'a':1.0, 'b':1.0, 'size_N':10, 'size_M1':None, 'size_M2':None}
 		self.params.update(params)
 
 	def sample_full_model(self, size_N=100, size_M1=150, size_M2=200):
@@ -625,9 +700,8 @@ class JacobiEnsemble(BetaEnsemble):
 		self.params.update(params)
 
 		if self.beta == 0: # Answer issue #28 raised by @rbardenet
-			sampl = np.random.beta(a=params['a'], b=params['b'],
-														size=params['size_N'])
-
+		# Sample i.i.d. Beta(a,b) if size_M1,2 were used a,b = beta/2 (M_1,2 - N + 1) = 0 => ERROR
+			sampl = np.random.beta(a=params['a'], b=params['b'], size=params['size_N'])
 		else:
 			sampl = rm.jacobi_sampler_full(M_1=params['size_M1'],
 																	M_2=params['size_M2'],
@@ -705,7 +779,7 @@ class JacobiEnsemble(BetaEnsemble):
 				size_M2 = 2/self.beta * b + size_N -1
 
 			else:
-				size_M1, size_M2 = inf, inf
+				size_M1, size_M2 = np.inf, np.inf
 
 		elif (size_M1 >= size_N) and (size_M2 >= size_N):
 			# all([var >= size_N for var in [size_M1, size_M2]]
@@ -717,13 +791,12 @@ class JacobiEnsemble(BetaEnsemble):
 									'Given: M1={}, M2={} and N={}'.format(size_M1, size_M2, size_N))
 			raise ValueError(' '.join(err_print))
 
-
 		params = {'a':a, 'b':b, 'size_N':size_N, 'size_M1':size_M1, 'size_M2':size_M2}
 		self.params.update(params)
 
 		if self.beta == 0: # Answer issue #28 raised by @rbardenet
-				sampl = np.random.beta(a=params['a'], b=params['b'],
-															size=params['size_N'])
+		# Sample i.i.d. Beta(a,b) if size_M1,2 were used a,b = beta/2 (M_1,2 - N + 1) = 0 => ERROR
+			sampl = np.random.beta(a=params['a'], b=params['b'], size=params['size_N'])
 		else:
 			sampl = rm.mu_ref_beta_sampler_tridiag(a=params['a'],
 																					b=params['b'],
@@ -739,23 +812,31 @@ class JacobiEnsemble(BetaEnsemble):
 		else:
 			points = self.list_of_samples[-1].copy() # Pick last sample
 
-		N, M_1, M_2 = [self.params.get(key) for key in ('size_N', 'size_M1', 'size_M2')]
+		N, M_1, M_2 = [self.params[key] for key in ['size_N','size_M1','size_M2']]
 
 		fig, ax = plt.subplots(1, 1)
 		# Title
-		str_ratios = r'with ratios $M_1/N \approx {:.3f}, M_2/N \approx {:.3f}$'.format(M_1/N, M_2/N) # Answers Issue #33 raised by @adrienhardy
-		title = '\n'.join([self._str_title(), str_ratios])
+		str_ratio = r'with ratios $M_1/N \approx {:.3f}, M_2/N \approx {:.3f}$'.format(M_1/N, M_2/N) # Answers Issue #33 raised by @adrienhardy
+		str_beta = '' if self.beta > 0 else 'with i.i.d. draws'
+		title = '\n'.join([self._str_title(), ' '.join([str_ratio, str_beta])])
 		plt.title(title)
 
-		if normalization:
-			# Limiting distribution: Marcenko Pastur law
-			eps = 5e-3
-			x = np.linspace(eps, 1.0-eps, 500)
-			ax.plot(x, rm.wachter_law(x, M_1, M_2, N),
+		if self.beta == 0:
+			if normalization:
+			# Display Beta(a,b) reference measure 
+				a, b = [self.params[key] for key in ['a', 'b']]
+				x = np.linspace(0, 1, 100)
+				ax.plot(x, sp_beta.pdf(x, a=a, b=b), 
 							'r-', lw=2, alpha=0.6,
-							label=r'$f_{Wachter}$')
-		else:
-			pass
+							label=r'$\operatorname{{Beta}}({},{})$'.format(a, b))
+		else: # self.beta > 0
+			if normalization:
+			# Display the limiting distribution: Wachter law
+				eps = 5e-3
+				x = np.linspace(eps, 1.0-eps, 500)
+				ax.plot(x, rm.wachter_law(x, M_1, M_2, N),
+								'r-', lw=2, alpha=0.6,
+								label=r'$f_{Wachter}$')
 
 		if display_type == 'scatter':
 			ax.scatter(points, np.zeros(points.shape[0]),
@@ -774,9 +855,11 @@ class JacobiEnsemble(BetaEnsemble):
 	def plot(self, normalization=True):
 		""" Display the last realization of the :class:`JacobiEnsemble` object
 
-		:param normalization:
+		:param normalization: 
+			When ``True``, display:
 
-			If ``True``, the points are normalized so as to concentrate as the lititing distribution: Marcenko-Pastur using :func:`normalize_points <normalize_points>`
+			- If ``JacobiEnsemble.beta = 0`` :math:`\\operatorname{Beta}(a, b)`
+			- If ``JacobiEnsemble.beta > 0`` limiting distribution: Wachter
 
 		:type normalization:
 			bool, default ``True``
@@ -794,9 +877,11 @@ class JacobiEnsemble(BetaEnsemble):
 	def hist(self, normalization=True):
 		""" Display the histogram of the last realization of the :class:`JacobiEnsemble` object.
 
-		:param normalization:
+		:param normalization: 
+			When ``True``, display:
 
-			If ``True``, the points are normalized so as to concentrate as the lititing distribution: Marcenko-Pastur using :func:`normalize_points <normalize_points>`
+			- If ``JacobiEnsemble.beta = 0`` :math:`\\operatorname{Beta}(a, b)`
+			- If ``JacobiEnsemble.beta > 0`` limiting distribution: Wachter
 
 		:type normalization:
 			bool, default ``True``
@@ -908,6 +993,7 @@ class CircularEnsemble(BetaEnsemble):
 
 		# Title
 		samp_mod = ''
+
 		if self.beta ==0:
 			samp_mod = r'i.i.d samples from $\mathcal{U}_{[0,2\pi]}$'
 		elif self.sampling_mode == 'full':
@@ -1006,9 +1092,8 @@ class GinibreEnsemble(BetaEnsemble):
 	def plot(self, normalization=True):
 		""" Display the last realization of the :class:`GinibreEnsemble` object
 
-		:param normalization:
-
-			If ``True``, the points are normalized so as to concentrate in the unit disk.
+		:param normalization: 
+			When ``True``, the points are normalized so as to concentrate in the unit disk.
 
 			.. math::
 
