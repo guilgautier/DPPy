@@ -230,34 +230,25 @@ class HermiteEnsemble(BetaEnsemble):
 		title = '\n'.join([self._str_title(), str_beta])	 
 		plt.title(title)
 
-		if normalization:
-
-			points = self.normalize_points(points)
-
-			if self.beta == 0: 
+		if self.beta == 0: 
+			if normalization:
 			# Display N(0,2) reference measure of the full matrix model
 				mu, sigma = 0.0, np.sqrt(2.0)
 				x = mu + 3.5*sigma*np.linspace(-1, 1, 100)
 				ax.plot(x, sp_gaussian.pdf(x, mu, sigma), 
 							'r-', lw=2, alpha=0.6,
 							label=r'$\mathcal{{N}}(0,2)$')
+			else:
+				pass
 
-			else: # self.beta > 0
-				# Display the limiting distribution: semi circle law
+		else: # self.beta > 0
+			if normalization:
+			# Display the limiting distribution: semi circle law
 				x = np.linspace(-2, 2, 100)
 				ax.plot(x, rm.semi_circle_law(x), 
 							'r-', lw=2, alpha=0.6,
 							label=r'$f_{semi-circle}$')
-		else:
-			
-			if self.beta == 0: 
-			# Display N(mu, sigma^2) reference measure
-				mu, sigma = [self.params[key] for key in ['loc', 'scale']]
-				x = mu + 3.5*sigma*np.linspace(-1, 1, 100)
-				ax.plot(x, sp_gaussian.pdf(x, mu, sigma), 
-							'r-', lw=2, alpha=0.6,
-							label=r'$\mathcal{{N}}({:.2f},{:.2f})$'.format(mu, sigma**2))
-			else: # if beta > 0
+			else:
 				pass
 
 		if display_type == 'scatter':
@@ -280,7 +271,7 @@ class HermiteEnsemble(BetaEnsemble):
 		:param normalization: 
 			When ``True``, using :func:`normalize_points <normalize_points>`, display:
 
-			- If ``HermiteEnsemble.beta = 0`` :math:`\\mathcal{N}(0, 2)`
+			- If ``HermiteEnsemble.beta = 0`` :math:`\\mathcal{N}(0, 2)` reference measure associated to full :ref:`full matrix model <hermite_ensemble_full>`
 			- If ``HermiteEnsemble.beta > 0`` limiting distribution: semi-circle
 
 		:type normalization:
@@ -303,7 +294,7 @@ class HermiteEnsemble(BetaEnsemble):
 		:param normalization: 
 			When ``True``, using :func:`normalize_points <normalize_points>`, display:
 
-			- If ``HermiteEnsemble.beta = 0`` :math:`\\mathcal{N}(0, 2)`
+			- If ``HermiteEnsemble.beta = 0`` :math:`\\mathcal{N}(0, 2)` reference measure associated to full :ref:`full matrix model <hermite_ensemble_full>`
 			- If ``HermiteEnsemble.beta > 0`` limiting distribution: semi-circle
 
 		:type normalization:
@@ -590,7 +581,7 @@ class LaguerreEnsemble(BetaEnsemble):
 		:param normalization: 
 			When ``True``, using :func:`normalize_points <normalize_points>`, display:
 
-			- If ``LaguerreEnsemble.beta = 0`` :math:`\\Gamma(k, 2)`
+			- If ``LaguerreEnsemble.beta = 0`` :math:`\\Gamma(k, 2)` reference measure associated to full :ref:`full matrix model <laguerre_ensemble_full>`
 			- If ``LaguerreEnsemble.beta > 0`` limiting distribution: Marcenko-Pastur
 
 		:type normalization:
@@ -613,7 +604,7 @@ class LaguerreEnsemble(BetaEnsemble):
 		:param normalization: 
 			When ``True``, using :func:`normalize_points <normalize_points>`, display:
 
-			- If ``LaguerreEnsemble.beta = 0`` :math:`\\Gamma(k, 2)`
+			- If ``LaguerreEnsemble.beta = 0`` :math:`\\Gamma(k, 2)` reference measure associated to full :ref:`full matrix model <laguerre_ensemble_full>`
 			- If ``LaguerreEnsemble.beta > 0`` limiting distribution: Marcenko-Pastur
 
 		:type normalization:
