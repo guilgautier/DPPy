@@ -1,15 +1,15 @@
+# DPPy: Sampling Determinantal Point Processes with Python
+
 [![Documentation Status](https://readthedocs.org/projects/dppy/badge/?version=latest)](https://dppy.readthedocs.io/en/latest/?badge=latest)
 [![Build Status](https://travis-ci.com/guilgautier/DPPy.svg?branch=master)](https://travis-ci.com/guilgautier/DPPy)
 
-# DPPy: Sampling Determinantal Point Processes with Python
-
-> Anything that can go wrong, will go wrong. − [Murphy's Law](http://phdcomics.com/comics/archive.php?comicid=1867)
+> *"Anything that can go wrong, will go wrong"*. − [Murphy's Law](http://phdcomics.com/comics/archive.php?comicid=1867)
 
 ## Introduction
 
 Determinantal point processes (DPPs) are specific probability distributions over clouds of points that have been popular as models or computational tools across physics, probability, statistics, and more recently of booming interest in machine learning.
 Sampling from DPPs is a nontrivial matter, and many approaches have been proposed. 
-DPPy is a Python library that puts together all exact and approximate sampling algorithms for DPPs.
+DPPy is a [Python](https://www.python.org/) library that puts together all exact and approximate sampling algorithms for DPPs.
 
 ## Requirements
 
@@ -47,6 +47,13 @@ Finally, in any case, install the project
 cd DPPy
 pip install .
 ```
+
+### Tutorial in [a Jupyter notebook](https://www.Jupyter.org/)
+
+You can read and work on this interactive tutorial, directly from your web browser, without having to download or install Python or anything.
+Just click, wait a little bit, and play with the notebook!
+
+- [Tutorial for DPPy (Tuto_DPPy)](Tuto_DPPy.ipynb): [![Google Colab](https://badgen.net/badge/Launch/on%20Google%20Colab/blue?icon=terminal)](https://colab.research.google.com/github/guilgautier/DPPy/blob/master/notebooks/Tuto_DPPy.ipynb)
 
 ### Contribute to the documentation
 
