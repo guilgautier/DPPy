@@ -827,7 +827,8 @@ class JacobiEnsemble(BetaEnsemble):
         self.params.update(params)
 
         if self.beta == 0:  # Answer issue #28 raised by @rbardenet
-            # Sample i.i.d. Beta(a,b) if size_M1,2 were used a,b = beta/2 (M_1,2 - N + 1) = 0 => ERROR
+            # Sample i.i.d. Beta(a,b) if size_M1,2 were used
+            # a, b = beta/2 (M_1,2 - N + 1) = 0 => ERROR
             sampl = np.random.beta(a=params['a'], b=params['b'],
                                    size=params['size_N'])
         else:
