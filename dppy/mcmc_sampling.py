@@ -105,18 +105,17 @@ def initialize_AD_and_E_sampler(kernel, size=None):
     """
 
     N = kernel.shape[0]
-    ground_set = np.arange(N)
 
     S0, det_S0 = [], 0.0
-    nb_iter = 100
+    it_max = 100
     tol = 1e-9
 
-    for _ in range(nb_iter):
+    for _ in range(it_max):
         if det_S0 > tol:
             break
         else:
-            sz = size if size else np.random.choice(ground_set[1:], size=1)[0]
-            S0 = np.random.choice(ground_set, size=sz, replace=False).tolist()
+            sz = size if size else np.random.randint(1, N + 1)
+            S0 = np.random.choice(N, size=sz, replace=False).tolist()
             det_S0 = det_kernel_ST(kernel, S0)
     else:
         raise ValueError('Initialization problem!')
@@ -130,7 +129,7 @@ def add_exchange_delete_sampler(kernel, s_init=None, nb_iter=10, T_max=None):
     :param kernel:
         Kernel martrix
     :type kernel:
-        array_type
+        array_like
 
     :param s_init:
         Initial sample.
@@ -151,7 +150,7 @@ def add_exchange_delete_sampler(kernel, s_init=None, nb_iter=10, T_max=None):
     :return:
         list of `nb_iter` approximate sample of DPP(kernel)
     :rtype:
-        array_type
+        array_like
 
     .. seealso::
 
@@ -174,9 +173,9 @@ def add_exchange_delete_sampler(kernel, s_init=None, nb_iter=10, T_max=None):
     while flag:
 
         S1 = S0.copy()  # S1 = S0
-        # Uniform s in S_0 by index
-        s = np.random.choice(sampl_size, size=1)[0]
-        # Unif t in [N]-S_0
+        # Pick one element s in S_0 by index uniformly at random
+        s_ind = np.random.choice(sampl_size, size=1)[0]
+        # Unif t in [N]-S0
         t = np.random.choice(np.delete(ground_set, S0), size=1)[0]
 
         unif_01 = np.random.rand()
@@ -184,7 +183,7 @@ def add_exchange_delete_sampler(kernel, s_init=None, nb_iter=10, T_max=None):
 
         # Add: S1 = S0 + t
         if unif_01 < 0.5 * (1 - ratio)**2:
-            S1.append(t)  # S1 = S0 + t
+            S1.extend([t])  # S1 = S0 + t
             # Accept_reject the move
             det_S1 = det_kernel_ST(kernel, S1)  # det K_S1
             if np.random.rand() < (det_S1/det_S0 * (sampl_size+1)/(N-sampl_size)):
@@ -196,8 +195,8 @@ def add_exchange_delete_sampler(kernel, s_init=None, nb_iter=10, T_max=None):
 
         # Exchange: S1 = S0 - s + t
         elif (0.5 * (1 - ratio)**2 <= unif_01) & (unif_01 < 0.5 * (1 - ratio)):
-            del S1[s]  # S1 = S0 - s
-            S1.append(t)  # S1 = S1 + t = S0 - s + t
+            del S1[s_ind]  # S1 = S0 - s
+            S1.extend([t])  # S1 = S1 + t = S0 - s + t
             # Accept_reject the move
             det_S1 = det_kernel_ST(kernel, S1)  # det K_S1
             if np.random.rand() < (det_S1 / det_S0):
@@ -209,7 +208,7 @@ def add_exchange_delete_sampler(kernel, s_init=None, nb_iter=10, T_max=None):
 
         # Delete: S1 = S0 - s
         elif (0.5*(1-ratio) <= unif_01) & (unif_01 < 0.5*(ratio**2+(1-ratio))):
-            del S1[s] # S0 - s
+            del S1[s_ind] # S0 - s
             # Accept_reject the move
             det_S1 = det_kernel_ST(kernel, S1)  # det K_S1
             if np.random.rand() < (det_S1/det_S0 * sampl_size/(N-(sampl_size-1))):
@@ -234,7 +233,7 @@ def add_delete_sampler(kernel, s_init, nb_iter=10, T_max=10):
     :param kernel:
         Kernel martrix
     :type kernel:
-        array_type
+        array_like
 
     :param s_init:
         Initial sample.
@@ -256,7 +255,7 @@ def add_delete_sampler(kernel, s_init, nb_iter=10, T_max=10):
     :return:
         list of `nb_iter` approximate sample of DPP(kernel)
     :rtype:
-        array_type
+        array_like
 
     .. seealso::
 
@@ -283,10 +282,10 @@ def add_delete_sampler(kernel, s_init, nb_iter=10, T_max=10):
             # Perform the potential add/delete move S1 = S0 +/- s
             S1 = S0.copy()  # S1 = S0
             s = np.random.choice(N, size=1)[0]  # Uniform item in [N]
-            if s in S0:
+            if s in S1:
                 S1.remove(s)  # S1 = S0 - s
             else:
-                S1.append(s)  # S1 = SO + s
+                S1.extend([s])  # S1 = SO + s
 
             # Accept_reject the move
             det_S1 = det_kernel_ST(kernel, S1)  # det K_S1
@@ -313,7 +312,7 @@ def basis_exchange_sampler(kernel, s_init, nb_iter=10, T_max=10):
         Feature vector matrix, feature vectors are stacked columnwise.
         It is assumed to be full row rank.
     :type kernel:
-        array_type
+        array_like
 
     :param s_init:
         Initial sample.
@@ -335,7 +334,7 @@ def basis_exchange_sampler(kernel, s_init, nb_iter=10, T_max=10):
     :return:
         MCMC chain of approximate sample (stacked row_wise i.e. nb_iter rows).
     :rtype:
-        array_type
+        array_like
 
     .. seealso::
 
@@ -363,11 +362,11 @@ def basis_exchange_sampler(kernel, s_init, nb_iter=10, T_max=10):
 
             # Perform the potential exchange move S1 = S0 - s + t
             S1 = S0.copy()  # S1 = S0
-            # Pick one element in S_0 by index uniformly at random
-            rnd_ind = np.random.choice(size, size=1)[0]
-            # Pick one element t in [N]\S_0 uniformly at random
+            # Pick one element s in S0 by index uniformly at random
+            s_ind = np.random.choice(size, size=1)[0]
+            # Pick one element t in [N]\S0 uniformly at random
             t = np.random.choice(np.delete(ground_set, S0), size=1)[0]
-            S1[rnd_ind] = t  # S_1 = S_0 - S_0[rnd_ind] + t
+            S1[s_ind] = t  # S_1 = S0 - S0[s_ind] + t
 
             det_S1 = det_kernel_ST(kernel, S1)  # det K_S1
 
@@ -435,7 +434,7 @@ def zonotope_sampler(A_zono, **params):
         Feature vector matrix, feature vectors are stacked columnwise.
         It is assumed to be full row rank.
     :type A_zono:
-        array_type
+        array_like
 
     :param params: Dictionary containing the parameters
 
@@ -449,7 +448,7 @@ def zonotope_sampler(A_zono, **params):
     :return:
         MCMC chain of approximate samples (stacked row_wise i.e. nb_iter rows).
     :rtype:
-        array_type
+        array_like
 
     .. seealso::
 
@@ -472,10 +471,10 @@ def zonotope_sampler(A_zono, **params):
     # Linear problems #
     ###################
     # Canonical form
-    # min       c.T*x               min     c.T*x
-    # s.t.  G*x <= h    <=> s.t.    G*x + s = h
-    #               A*x = b                         A*x = b
-    #                                                       s >= 0
+    # min       c.T*x         min     c.T*x
+    # s.t.  G*x <= h    <=>   s.t.    G*x + s = h
+    #        A*x = b                      A*x = b
+    #                                      s >= 0
     # CVXOPT
     # =====> solvers.lp(c, G, h, A, b, solver='glpk')
     #################################################
@@ -486,8 +485,8 @@ def zonotope_sampler(A_zono, **params):
     # y^* =
     # argmin  c.T*y               argmin  c.T*y
     # s.t.  A*y = x         <=>   s.t.  A  *y  = x
-    #       0 <= y <= 1                 [ I_n] *y <= [1^n]
-    #                                   [-I_n]       [0^n]
+    #       0 <= y <= 1             [ I_n] *y <= [1^n]
+    #                               [-I_n]       [0^n]
     ######################################################
     # Then B_x = \{ i ; y_i^* \in ]0,1[ \}
 
@@ -501,10 +500,10 @@ def zonotope_sampler(A_zono, **params):
     # Endpoints of segment
     # D_x \cap Z(A) = [x+alpha_m*d, x-alpha_M*d]
     ###########################################################################
-    # alpha_m/_M = argmin  +/-alpha       argmin [+/-1 0^N].T * [alpha,lambda]
-    # s.t.    x + alpha d = A lambda  <=> s.t.  [-d A] * [alpha, lambda] = x
-    #         0 <= lambda <= 1            [ 0^N I_N ] *[alpha, lambda] <= [1^N]
-    #                                     [ 0^N -I_N]                     [0^N]
+    # alpha_m/_M = argmin  +/-alpha      argmin [+/-1 0^N].T * [alpha,lambda]
+    # s.t.    x + alpha d = A lambda <=> s.t.  [-d A] *[alpha, lambda] = x
+    #         0 <= lambda <= 1             [0^N I_N] *[alpha, lambda] <= [1^N]
+    #                                      [0^N -I_N]                    [0^N]
     ##########################################################################
 
     c_mM = matrix(0.0, (N + 1, 1))
@@ -566,10 +565,10 @@ def zonotope_sampler(A_zono, **params):
         else:
             det_B_x1 = la.det(A_zono[:, B_x1])
             if np.random.rand() < abs(det_B_x1 / det_B_x0):
-                    x0, B_x0, det_B_x0 = x1, B_x1, det_B_x1
-                    Bases.append(B_x1)
+                x0, B_x0, det_B_x0 = x1, B_x1, det_B_x1
+                Bases.append(B_x1)
             else:
-                    Bases.append(B_x0)
+                Bases.append(B_x0)
 
         it += 1
         flag = (it < nb_iter) if not T_max else ((time.time()-t_start) < T_max)

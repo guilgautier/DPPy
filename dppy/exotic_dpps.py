@@ -114,7 +114,7 @@ class UST:
             dpp_sample = proj_dpp_sampler_eig_GS(self.kernel_eig_vecs)
 
             g_finite_dpp = nx.Graph()
-            edges_finite_dpp = [self.edges[ind] for ind in dpp_sample]
+            edges_finite_dpp = [self.edges[e] for e in dpp_sample]
             g_finite_dpp.add_edges_from(edges_finite_dpp)
 
             sampl = g_finite_dpp
@@ -356,9 +356,12 @@ class Descent:
 
         self.name =\
             ' '.join(re.findall('[A-Z][^A-Z]*', self.__class__.__name__))
-        self.bernoulli_param = 0.5
         self.list_of_samples = []
         self.size = 100
+
+    @property
+    def _bernoulli_param(self):
+        return 0.5
 
     def flush_samples(self):
         """ Empty the ``list_of_samples`` attribute.
@@ -464,18 +467,15 @@ class Descent:
         fig, ax = plt.subplots(figsize=(19, 2))
 
         sampl = self.list_of_samples[-1]
-
-        ind_tmp = np.random.rand(self.size) < self.bernoulli_param
-        bern = np.arange(0, self.size)[ind_tmp]
-        len_ber = len(bern)
+        bern = np.where(np.random.rand(self.size) < self._bernoulli_param)[0]
 
         ax.scatter(sampl, np.ones_like(sampl),
                    color='b', s=20, label=self.name)
-        ax.scatter(bern, -np.ones(len_ber),
+        ax.scatter(bern, -np.ones_like(bern),
                    color='r', s=20, label='Bernoullis')
 
-        str_title = r'Realization of the {} process vs independent Bernoulli variables with parameter p={}'.format(self.name,
-                                                  self.bernoulli_param)
+        str_title = r'Realization of the {} process vs independent Bernoulli variables with parameter p={:.3f}'.format(self.name,
+                                                  self._bernoulli_param)
         plt.title(title if title else str_title)
 
         return ax, self.size
@@ -484,7 +484,7 @@ class Descent:
 class CarriesProcess(Descent):
     """ Carries process formed by the cumulative sum of i.i.d. digits in :math:`\{0, \dots, b-1\}`. This is a DPP on the natural integers with a non symmetric kernel.
 
-    :param base: 
+    :param base:
         Base/radix
 
     :type base:
@@ -499,7 +499,6 @@ class CarriesProcess(Descent):
     def __init__(self, base=10):
         super().__init__()
         self.base = base
-        self.bernoulli_param = 0.5 * (1 - 1 / base)
 
     def __str__(self):
 
@@ -507,6 +506,10 @@ class CarriesProcess(Descent):
                     'Number of samples = {}'.format(len(self.list_of_samples))]
 
         return '\n'.join(str_info)
+
+    @property
+    def _bernoulli_param(self):
+        return 0.5 * (1 - 1 / self.base)
 
     def sample(self, size=100):
         """ Compute the cumulative sum (in base :math:`b`) of a sequence of i.i.d. digits and record the position of carries.
@@ -529,6 +532,7 @@ class CarriesProcess(Descent):
 
         self.list_of_samples.append(carries)
 
+
 class DescentProcess(Descent):
     """ This is a DPP on :math:'\{1,2,\dots,n-1}' with a non symmetric kernel appearing in (or as a limit) of the descent process on the symmetric group.
 
@@ -540,7 +544,6 @@ class DescentProcess(Descent):
 
     def __init__(self):
         super().__init__()
-        self.bernoulli_param = 0.5
 
     def __str__(self):
 
@@ -581,10 +584,9 @@ class VirtualDescentProcess(Descent):
     def __init__(self, x_0=0.5):
 
         super().__init__()
-        if not ((0 <= x_0) and (x_0 <= 1)):
+        if not (0 <= x_0 <= 1):
             raise ValueError("x_0 must be in [0,1]")
         self.x_0 = x_0
-        self.bernoulli_param = 0.5 * (1 - x_0**2)
 
     def __str__(self):
 
@@ -593,6 +595,9 @@ class VirtualDescentProcess(Descent):
 
         return '\n'.join(str_info)
 
+    @property
+    def _bernoulli_param(self):
+        return 0.5 * (1 - self.x_0**2)
 
     def sample(self, size=100):
         """ Draw a permutation uniformly at random and record the descents i.e. indices where :math:`\sigma(i+1) < \sigma(i)` and something else...
@@ -705,7 +710,6 @@ class PoissonizedPlancherel:
 
         P, Q = [], []  # Insertion/Recording tableau
 
-        # Enumerate the sequence
         for it, x in enumerate(sigma, start=1):
 
             # Iterate along the rows of the tableau P to find a place for the bouncing x and record the position where it is inserted

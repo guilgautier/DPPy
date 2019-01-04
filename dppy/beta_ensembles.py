@@ -26,8 +26,7 @@ class BetaEnsemble:
 
     .. seealso::
 
-        - :math:`\\beta`-Ensembles
-         :ref:`definition <beta_ensembles_definition>`
+        - :math:`\\beta`-Ensembles :ref:`definition <beta_ensembles_definition>`
     """
 
     def __init__(self, beta=2):
@@ -57,10 +56,9 @@ class BetaEnsemble:
 
     def __check_beta_non_negative(self):
         if not (self.beta >= 0):
-            err_print = ('Invalid `beta` argument:',
-                         '`beta` must be non negative. Given: {}'.format(
-                             self.beta))
-            raise ValueError('\n'.join(err_print))
+            err_print = ('`beta` must be non negative.',
+                         'Given: {}'.format(self.beta))
+            raise ValueError(' '.join(err_print))
         else:
             pass
 
@@ -80,10 +78,8 @@ class HermiteEnsemble(BetaEnsemble):
 
     .. seealso::
 
-        - :ref:`Full matrix model <hermite_ensemble_full>`
-         for Hermite ensemble
-        - :ref:`Tridiagonal matrix model <hermite_ensemble_banded>`
-         for Hermite ensemble
+        - :ref:`Full matrix model <hermite_ensemble_full>` for Hermite ensemble
+        - :ref:`Tridiagonal matrix model <hermite_ensemble_banded>` for Hermite ensemble
     """
 
     def __init__(self, beta=2):
@@ -138,14 +134,11 @@ class HermiteEnsemble(BetaEnsemble):
         self.list_of_samples.append(sampl)
 
     def sample_banded_model(self, loc=0.0, scale=np.sqrt(2.0), size_N=10):
-        """ Sample from :ref:`tridiagonal matrix model <Hermite_ensemble_full>` for Hermite Ensemble. 
-        Available for ``HermiteEnsemble.beta`` attribute 
-          :math:`\\beta>0`
-        and the degenerate case 
-         :math:`\\beta=0` corresponding to i.i.d. points from the Gaussian :math:`\\mathcal{N}(\\mu,\\sigma^2)` reference measure
+        """ Sample from :ref:`tridiagonal matrix model <Hermite_ensemble_full>` for Hermite Ensemble.
+        Available for ``HermiteEnsemble.beta`` attribute  :math:`\\beta>0` and the degenerate case :math:`\\beta=0` corresponding to i.i.d. points from the Gaussian :math:`\\mathcal{N}(\\mu,\\sigma^2)` reference measure
 
         :param loc:
-            Mean of :math:`\\mu` of the Gaussian :math:`\\mathcal{N}(\\mu, \\sigma^2)`
+            Mean :math:`\\mu` of the Gaussian :math:`\\mathcal{N}(\\mu, \\sigma^2)`
         :type loc:
             float, default :math:`0`
 
@@ -277,7 +270,7 @@ class HermiteEnsemble(BetaEnsemble):
                 pass
 
         if display_type == 'scatter':
-            ax.scatter(points, np.zeros(points.shape[0]),
+            ax.scatter(points, np.zeros_like(points),
                        c='blue',
                        label='sample')
 
@@ -403,9 +396,9 @@ class LaguerreEnsemble(BetaEnsemble):
                                         scale=params['scale'],
                                         size=params['size_N'])
             else:
-                err_print = ('shape<=0.\
-                             Here beta=0, hence shape=beta/2*(M-N+1)=0')
-                raise ValueError(err_print)
+                err_print = ('shape<=0.',
+                             'Here beta=0, hence shape=beta/2*(M-N+1)=0')
+                raise ValueError(' '.join(err_print))
 
         else:  # if beta > 0
             sampl = rm.laguerre_sampler_full(M=params['size_M'],
@@ -489,15 +482,15 @@ class LaguerreEnsemble(BetaEnsemble):
 
         if self.beta == 0:  # Answer issue #28 raised by @rbardenet
             # np.random.gamma(shape=0,...) when doesn't return error! contrary to sp.stats.gamma(a=0).rvs(), see https://github.com/numpy/numpy/issues/12367
-            # sampl = sp_gamma.rvs(a=params['shape'], loc=0.0, scale=params['scale'],                                       size=params['size_N'])
+            # sampl = sp_gamma.rvs(a=params['shape'], loc=0.0, scale=params['scale'], size=params['size_N'])
             if params['shape'] > 0:
                 sampl = np.random.gamma(shape=params['shape'],
                                         scale=params['scale'],
                                         size=params['size_N'])
             else:
-                err_print = ('shape<=0.\
-                             Here beta=0, hence shape=beta/2*(M-N+1)=0')
-                raise ValueError(err_print)
+                err_print = ('shape<=0.',
+                             'Here beta=0, hence shape=beta/2*(M-N+1)=0')
+                raise ValueError(' '.join(err_print))
 
         else:  # if beta > 0
             sampl = rm.mu_ref_gamma_sampler_tridiag(shape=params['shape'],
@@ -513,7 +506,7 @@ class LaguerreEnsemble(BetaEnsemble):
         .. math::
 
             \\frac{1}{2\\pi}
-            \\frac{\\sqrt{(\\lambda_+-x)(x-\\lambda_-)}}{cx} 
+            \\frac{\\sqrt{(\\lambda_+-x)(x-\\lambda_-)}}{cx}
             1_{[\\lambda_-,\\lambda_+]}
             dx
 
@@ -596,7 +589,7 @@ class LaguerreEnsemble(BetaEnsemble):
                         label=r'$f_{Marcenko-Pastur}$')
 
         if display_type == 'scatter':
-            ax.scatter(points, np.zeros(points.shape[0]),
+            ax.scatter(points, np.zeros_like(points),
                        c='blue',
                        label='sample')
 
@@ -612,7 +605,7 @@ class LaguerreEnsemble(BetaEnsemble):
     def plot(self, normalization=True):
         """ Display the last realization of the :class:`LaguerreEnsemble` object
 
-        :param normalization: 
+        :param normalization:
             When ``True``, using :func:`normalize_points <normalize_points>`, display:
 
             - If ``LaguerreEnsemble.beta = 0`` :math:`\\Gamma(k, 2)` reference measure associated to full :ref:`full matrix model <laguerre_ensemble_full>`
@@ -876,7 +869,7 @@ class JacobiEnsemble(BetaEnsemble):
                         label=r'$f_{Wachter}$')
 
         if display_type == 'scatter':
-            ax.scatter(points, np.zeros(points.shape[0]),
+            ax.scatter(points, np.zeros_like(points),
                        c='blue',
                        label='sample')
 
@@ -1013,8 +1006,7 @@ class CircularEnsemble(BetaEnsemble):
             # Answer issue #28 raised by @rbardenet
             sampl = np.exp(2 * 1j * np.pi * np.random.rand(params['size_N']))
         else:
-            sampl = rm.mu_ref_unif_unit_circle_sampler_quindiag(beta=self.beta,
-                                                        size=params['size_N'])
+            sampl = rm.mu_ref_unif_unit_circle_sampler_quindiag(beta=self.beta,                                         size=params['size_N'])
 
         self.list_of_samples.append(sampl)
 
@@ -1089,7 +1081,7 @@ class CircularEnsemble(BetaEnsemble):
             - :ref:`Quindiagonal matrix model <circular_ensemble_banded>` for Circular ensemble
         """
         self.__display_and_normalization('hist')
-        
+
 
 class GinibreEnsemble(BetaEnsemble):
     """ Ginibre Ensemble object

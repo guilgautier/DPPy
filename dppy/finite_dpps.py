@@ -96,21 +96,6 @@ class FiniteDPP:
 
         # Sampling
         self.mode = None
-        # Exact:
-        # if K (inclusion) kernel is projection
-        # - ``'GS'`` for Gram-Schmidt
-        # else
-        # - ``'GS'``
-        # - ``'GS_bis'`` slight modif of Gram-Schmidt
-        # - ``'KuTa12'`` for Kulesza (Algo 1).
-        #
-        # Approximate:
-        # Local chains
-        # - 'AED' Add-Exchange-Delete
-        # - 'AD' Add-Delete
-        # - 'E' Exchange
-        # Zonotope
-        # No argument to be passed, implicit if A_zono given
         self.list_of_samples = []
 
     def __str__(self):
@@ -143,7 +128,6 @@ class FiniteDPP:
             raise ValueError(err_print)
 
     def __check_params_validity(self):
-
         # Check initialization parameters of the DPP
 
         # For inclusion kernel
@@ -218,7 +202,7 @@ class FiniteDPP:
 
     def __check_is_projection_kernel(self, kernel):
             # Cheap test to check reproducing property
-            nb_to_check = np.min([5, kernel.shape[0]])
+            nb_to_check = min(5, kernel.shape[0])
             items_to_check = np.arange(nb_to_check)
             K_i_ = kernel[items_to_check, :]
             K_ii = kernel[items_to_check, items_to_check]

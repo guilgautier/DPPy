@@ -41,6 +41,7 @@ def proj_dpp_sampler_kernel(kernel, mode='GS'):
 
     return sampl
 
+
 def proj_dpp_sampler_kernel_GS(K, size=None):
     """ Sample from :math:`\operatorname{DPP}(K)` with :math:`K` orthogonal projection matrix.
     It performs sequential Gram-Schmidt orthogonalization or equivalently Cholesky decomposition updates of :math:`K`.
@@ -111,7 +112,7 @@ def proj_dpp_sampler_kernel_Schur(K, size=None):
     :param K:
         Orthogonal projection kernel.
     :type K:
-        array_type
+        array_like
     :param k:
         Size of the sample.
         Default is :math:`k=\operatorname{Tr}(K)=\operatorname{rank}(K)`.
@@ -156,7 +157,7 @@ def proj_dpp_sampler_kernel_Schur(K, size=None):
         #
         # 1) use Woodbury identity to update K[Y,Y]^-1 to K[Y+j,Y+j]^-1
         # K[Y+j,Y+j]^-1 =
-        # [ K[Y,Y]^-1 + (K[Y,Y]^-1 K[Y,j] K[j,Y] K[Y,Y]^-1)/schur_j
+        # [ K[Y,Y]^-1 + (K[Y,Y]^-1 K[Y,j] K[j,Y] K[Y,Y]^-1)/schur_j,
         #       -K[Y,Y]^-1 K[Y,j]/schur_j]
         # [ -K[j,Y] K[Y,Y]^-1/schur_j,
         #       1/schur_j]
@@ -201,7 +202,7 @@ def proj_dpp_sampler_kernel_Schur(K, size=None):
 # Phase 1: subsample eigenvectors by drawing independent Bernoulli variables with parameter the eigenvalues of the inclusion kernel K.
 def dpp_eig_vecs_selector(ber_params, eig_vecs):
     """ Phase 1 of exact sampling procedure. Subsample eigenvectors :math:`V` of the initial kernel (inclusion :math:`K`, resp. marginal :math:`L`) to build a projection DPP with kernel :math:`V V^{\top}` from which sampling is easy.
-    The selection is made based a realization of Bernoulli variables with parameters related to the eigenvalues of :math:`K`, resp. :math:`L`.
+    The selection is made based on a realization of Bernoulli variables with parameters related to the eigenvalues of :math:`K`, resp. :math:`L`.
 
     :param ber_params:
         Parameters of Bernoulli variables:
@@ -209,17 +210,17 @@ def dpp_eig_vecs_selector(ber_params, eig_vecs):
 
             \lambda^K=\lambda^L/(1+\lambda^L)
     :type ber_params:
-        list, array_type
+        list, array_like
 
     :param eig_vecs:
         Collection of eigenvectors of the kernel :math:`K`, resp. :math:`L`
     :type eig_vecs:
-        array_type
+        array_like
 
     :return:
         selected eigenvectors
     :rtype:
-        array_type
+        array_like
 
     .. seealso::
 
@@ -238,22 +239,22 @@ def dpp_eig_vecs_selector_L_dual(eig_vals, eig_vecs, gram_factor):
     :param eig_vals:
         Collection of eigenvalues of :math:`L` or :math:`L_dual` kernel.
     :type eig_vals:
-        list, array_type
+        list, array_like
 
     :param eig_vecs:
         Collection of eigenvectors of :math:`L_dual` kernel.
     :type eig_vecs:
-        array_type
+        array_like
 
     :param gram_factor:
         Feature vectors
     :type gram_factor:
-        array_type
+        array_like
 
     :return:
         selected eigenvectors
     :rtype:
-        array_type
+        array_like
 
     .. see also::
 
@@ -316,6 +317,7 @@ def proj_dpp_sampler_eig(eig_vecs, mode='GS'):
 
     return sampl
 
+
 # Using Gram-Schmidt orthogonalization
 def proj_dpp_sampler_eig_GS(eig_vecs, size=None):
     """ Sample from projection :math:`\operatorname{DPP}(K)` using the eigendecomposition of the projection kernel :math:`K=VV^{\top}` where :math:`V^{\top}V = I_r` and :math:`r=\operatorname{rank}(\mathbf{K})`.
@@ -324,12 +326,12 @@ def proj_dpp_sampler_eig_GS(eig_vecs, size=None):
     :param eig_vecs:
         Eigenvectors used to form projection kernel :math:`K=VV^{\top}`.
     :type eig_vecs:
-        array_type
+        array_like
 
     :return:
         A sample from projection :math:`\operatorname{DPP}(K)`.
     :rtype:
-        list, array_type
+        list, array_like
 
     .. seealso::
 
@@ -388,12 +390,12 @@ def proj_dpp_sampler_eig_GS_bis(eig_vecs, size=None):
     :param eig_vecs:
         Eigenvectors used to form projection kernel :math:`K=VV^{\top}`.
     :type eig_vecs:
-        array_type
+        array_like
 
     :return:
         A sample from projection :math:`\operatorname{DPP}(K)`.
     :rtype:
-        list, array_type
+        list, array_like
 
     .. seealso::
 
@@ -464,9 +466,9 @@ def proj_dpp_sampler_eig_GS_bis(eig_vecs, size=None):
         # for next orthogonalization in 1)
         #  <V_i,P_{V_Y}^{orthog} V_j> P_{V_Y}^{orthog} V_j
         #  V_i - <V_i,V'_j>V'_j = V_i - |P_{V_Y}^{orthog} V_j|^2
-
-
-        # 4) Update the residual square norm by cancelling the contribution of V_i onto V_j
+        #
+        #
+        # 4) Update the residual norm^2: cancel contribution of V_i onto V_j
         #
         # |P_{V_Y+j}^{orthog} V_i|^2
         #   = |P_{V_Y}^{orthog} V_i|^2 - <V_i,V'_j>^2 / |V'j|^2
@@ -477,6 +479,7 @@ def proj_dpp_sampler_eig_GS_bis(eig_vecs, size=None):
         norms_2[rem_set] -= (contrib[rem_set, it]**2) / norms_2[j]
 
     return Y
+
 
 def proj_dpp_sampler_eig_KuTa12(eig_vecs, size=None):
     """ Sample from :math:`\operatorname{DPP}(K)` using the eigendecomposition of the similarity kernel :math:`K`.
@@ -490,7 +493,7 @@ def proj_dpp_sampler_eig_KuTa12(eig_vecs, size=None):
     :param eig_vecs:
         Eigenvectors of the similarity kernel :math:`K`.
     :type eig_vecs:
-        array_type
+        array_like
 
     :return:
         A sample from :math:`\operatorname{DPP}(K)`.
@@ -555,7 +558,7 @@ def proj_dpp_sampler_eig_KuTa12(eig_vecs, size=None):
 
 #   :param kernel: Real symmetric kernel with eigenvalues in :math:`[0,1]`
 #   :type kernel:
-#       array_type
+#       array_like
 
 #   :param projection:
 #       Indicate :math:`K` is an orthogonal projection kernel.
@@ -679,17 +682,17 @@ def proj_dpp_sampler_eig_KuTa12(eig_vecs, size=None):
 #   :param eig_vals:
 #       Collection of eigen values of 'K' (inclusion) kernel.
 #   :type eig_vals:
-#       list, array_type
+#       list, array_like
 
 #   :param eig_vecs:
 #       Collection of eigenvectors of 'K' (or equiv 'L') kernel.
 #   :type eig_vals:
-#       array_type
+#       array_like
 
 #   :return:
 #       Selected eigenvectors
 #   :rtype:
-#       array_type
+#       array_like
 
 #   .. seealso::
 
@@ -733,14 +736,14 @@ def proj_dpp_sampler_eig_KuTa12(eig_vecs, size=None):
 #   :return:
 #       poly(size, N) = :math:`e_size(\lambda_1, \cdots, \lambda_N)`
 #   :rtype:
-#       array_type
+#       array_like
 
 #   .. seealso::
 
 #       Algorithm 7 in :cite:`KuTa12`
 #   """
 
-#   # Number of variables for the elementary symmetric polynomials to be evaluated
+#  Number of variables for the elementary symmetric polynomials to be evaluated
 #   N = eig_vals.shape[0]
 #   # Initialize output array
 #   poly = np.zeros((size+1, N+1))
