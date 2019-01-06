@@ -2,6 +2,7 @@
 
 import numpy as np
 import scipy.linalg as la
+import scipy.sparse as sp
 
 ###########
 # Hermite #
@@ -338,7 +339,6 @@ def circular_sampler_full(N, beta=2, haar_mode='QR'):
 
         elif beta == 2:  # CUE
             A = np.random.randn(N, N) + 1j * np.random.randn(N, N)
-            A /= np.sqrt(2.0)
 
         # elif beta==4:
         else:
@@ -361,29 +361,8 @@ def circular_sampler_full(N, beta=2, haar_mode='QR'):
 
 
 # Circular, quindiagonal model
-def block_diag(arrs):
-    # adapted from semi_circleipy.linalg.block_diag
-    # https://docs.semi_circleipy.org/doc/semi_circleipy-0.14.0/
-    # reference/generated/semi_circleipy.linalg.block_diag.html
-
-    shapes = np.array([a.shape for a in arrs])
-    out = np.zeros(np.sum(shapes, axis=0), dtype=np.complex_)
-
-    r, c = 0, 0
-    for (rr, cc), blck in zip(shapes, arrs):
-        out[r:r + rr, c:c + cc] = blck
-        r += rr
-        c += cc
-
-    return out
-
-
 def mu_ref_unif_unit_circle_sampler_quindiag(beta=2, size=10):
     """
-    .. todo::
-
-        LM and ML have same eigenvalues thus L.dot(M) + M.dot(L) is symmetric could use `eigvals_banded`.
-
     .. see also::
 
         :cite:`KiNe04` Theorem 1
@@ -393,43 +372,35 @@ def mu_ref_unif_unit_circle_sampler_quindiag(beta=2, size=10):
         raise ValueError('`beta` must be positive integer.\
                          Given: {}'.format(beta))
 
-    # Xi_-1 = [1]
-    xi_1 = np.array([1], ndmin=2, dtype=np.complex_)
-    # xi_0,1,...,N-2
-    xi_list = np.zeros((size - 1, 2, 2), dtype=np.complex_)
-    # xi_N-1 = [alpha_N-1.conj()] i.e.
-    # conjugate of a point uniformly distributed on the unit circle
-    vec_N_1 = np.random.randn(2)
-    vec_N_1 /= la.norm(vec_N_1)
-    xi_N_1 = np.array([vec_N_1[0] - 1j * vec_N_1[1]],
-                      ndmin=2,
-                      dtype=np.complex_)
+    alpha = np.zeros(size, dtype=np.complex_)
 
-    nu_s = beta * np.arange(size - 1, 0, step=-1, dtype=int) + 1
+    # nu = 1 + beta*(N-1, N-2, ..., 0)
+    for i, nu in enumerate(1 + beta * np.arange(size - 1, -1, step=-1)):
+        gauss_vec = np.random.randn(nu + 1)
+        alpha[i] = (gauss_vec[0] + 1j * gauss_vec[1]) / la.norm(gauss_vec)
 
-    for ind, nu in enumerate(nu_s):
+    rho = np.sqrt(1 - np.abs(alpha[:-1])**2)
 
-        # Pick a point on the unit sphere S^nu in R^nu+1
-        vec = np.random.randn(nu + 1)
-        vec /= la.norm(vec)
+    xi = np.zeros((size - 1, 2, 2), dtype=np.complex_)  # xi[0,..,N-1]
+    xi[:, 0, 0], xi[:, 0, 1] = alpha[:-1].conj(), rho
+    xi[:, 1, 0], xi[:, 1, 1] = rho, -alpha[:-1]
 
-        alpha = vec[0] + 1j * vec[1]
-        rho = np.sqrt(1 - np.abs(alpha)**2)
+    # xi[N-1] = alpha[N-1].conj()
+    # L = diag(xi_0, xi_2, ...)
+    # M = diag(1, xi_1, x_3, ...)
+    if size % 2 == 0:  # even
+        L = sp.block_diag(xi[::2, :, :],
+                          dtype=np.complex_)
+        M = sp.block_diag([1.0, *xi[1::2, :, :], alpha[-1].conj()],
+                          dtype=np.complex_)
+    else:  # odd
+        L = sp.block_diag([*xi[::2, :, :], alpha[-1].conj()],
+                          dtype=np.complex_)
+        M = sp.block_diag([1.0, *xi[1::2, :, :]],
+                          dtype=np.complex_)
 
-        xi_list[ind, :, :] = [[alpha.conj(), rho], [rho, -alpha]]
+    return la.eigvals(L.dot(M).toarray())
 
-    # L = diag(xi_0,xi_2,\dots)
-    L = block_diag(xi_list[::2, :, :])
-    # M = diag(xi_-1,xi_1,\xi_3\dots)
-    M = block_diag(xi_list[1::2, :, :])
-    M = block_diag([xi_1, M])
-
-    if size % 2 == 1:
-        L = block_diag([L, xi_N_1])
-    else:
-        M = block_diag([M, xi_N_1])
-
-    return la.eigvals(L.dot(M))
 
 ###########
 # Ginibre #
