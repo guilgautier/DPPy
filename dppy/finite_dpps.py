@@ -190,7 +190,7 @@ class FiniteDPP:
                 err_print = ['Invalid marginal kernel, choose among:',
                              '- `L`: L >= 0',
                              '- `L_eig_dec`: (eig_vals, eig_vecs)',
-                             '- `L_gram_factor`: Phi is dxN feature matrix corresponding to L = Phi.T Phi',
+                             '- `L_gram_factor`: Phi (dxN) feature matrix corresponding to L = Phi.T Phi',
                              'Given: {}'.format(self.params_keys)]
                 raise ValueError('\n'.join(err_print))
 
@@ -233,7 +233,7 @@ class FiniteDPP:
         if not np.all(eig_vals_0_or_1):
             raise ValueError('Invalid kernel: does not seem to be a projection, check that the eigenvalues provided are equal to 0 or 1')
         else:
-            # Record eigenvectors that have eigenvalues = 1 for later use in sampling phase
+            # Record eigenvectors with eigvals = 1, used in sampling phase 1
             self.__proj_eig_vals_1 = np.where(eig_vals_1)[0]
 
     def __check_eig_vals_in_01(self, eig_vals):

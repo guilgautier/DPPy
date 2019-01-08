@@ -1,7 +1,8 @@
 # coding: utf-8
 
-import numpy as np
+import abc
 
+import numpy as np
 import matplotlib.pyplot as plt
 
 from scipy.stats import norm as sp_gaussian
@@ -13,7 +14,7 @@ from re import findall as re_findall  # to convert class names to string
 import dppy.random_matrices as rm
 
 
-class BetaEnsemble:
+class BetaEnsemble(metaclass=abc.ABCMeta):
     """ :math:`\\beta`-Ensemble object parametrized by
 
     :param beta:
@@ -31,8 +32,9 @@ class BetaEnsemble:
 
     def __init__(self, beta=2):
 
+        if not (beta >= 0):
+            raise ValueError('`beta` must be >=0. Given: {}'.format(self.beta))
         self.beta = beta
-        self.__check_beta_non_negative()
 
         # Split object name at uppercase
         self.name = ' '.join(re_findall('[A-Z][^A-Z]*',
@@ -54,23 +56,34 @@ class BetaEnsemble:
 
         return '\n'.join(str_info)
 
-    def __check_beta_non_negative(self):
-        if not (self.beta >= 0):
-            err_print = ('`beta` must be non negative.',
-                         'Given: {}'.format(self.beta))
-            raise ValueError(' '.join(err_print))
-        else:
-            pass
-
-    # def info(self):
-    #   """ Print infos about the :class:`BetaEnsemble` object
-    #   """
-    #   print(self.__str__())
-
     def flush_samples(self):
         """ Empty the ``list_of_samples`` attribute.
         """
         self.list_of_samples = []
+
+    @abc.abstractmethod
+    def sample_full_model(self):
+        """Sample from underlying :math:`\beta`-Ensemble using the corresponding full matrix model.
+        Arguments are the associated matrix dimensions
+        """
+
+    @abc.abstractmethod
+    def sample_banded_model(self):
+        """Sample from underlying :math:`\beta`-Ensemble using the corresponding banded matrix model.
+        Arguments are the associated reference measure's parameters, or the matrix dimensions used in :func:`sample_full_model <sample_full_model>`
+        """
+
+    @abc.abstractmethod
+    def plot(self):
+        """Display last realization of the underlying :math:`\beta`-Ensemble.
+        For some :math:`\beta`-Ensembles, a normalization argument is available to display the limiting (or equilibrium) distribution and scale the points accordingly.
+        """
+
+    @abc.abstractmethod
+    def hist(self):
+        """Display histogram of the last realization of the underlying :math:`\beta`-Ensemble.
+        For some :math:`\beta`-Ensembles, a normalization argument is available to display the limiting (or equilibrium) distribution and scale the points accordingly.
+        """
 
 
 class HermiteEnsemble(BetaEnsemble):
@@ -820,8 +833,8 @@ class JacobiEnsemble(BetaEnsemble):
         self.params.update(params)
 
         if self.beta == 0:  # Answer issue #28 raised by @rbardenet
-            # Sample i.i.d. Beta(a,b) if size_M1,2 were used
-            # a, b = beta/2 (M_1,2 - N + 1) = 0 => ERROR
+            # Sample i.i.d. Beta(a,b)
+            # If size_M1,2 is used a, b = beta/2 (M1,2 - N + 1) = 0 => ERROR
             sampl = np.random.beta(a=params['a'], b=params['b'],
                                    size=params['size_N'])
         else:
@@ -938,8 +951,9 @@ class CircularEnsemble(BetaEnsemble):
 
     def __init__(self, beta=2):
 
+        if not isinstance(beta, int):
+            raise ValueError('`beta` must be int >0. Given: {}'.format(beta))
         super().__init__(beta=beta)
-        # Check positive integer!
 
         params = {'size_N': 10}
         self.params.update(params)
@@ -1093,8 +1107,11 @@ class GinibreEnsemble(BetaEnsemble):
 
     def __init__(self, beta=2):
 
+        if beta != 2:
+            err_print = ('Ginibre ensemble is only available for `beta`=2.',
+                         'Given {}'.format(beta))
+            raise ValueError(' '.join(err_print))
         super().__init__(beta=beta)
-        # Check beta=2!
 
         params = {'size_N': 10}
         self.params.update(params)
@@ -1117,6 +1134,9 @@ class GinibreEnsemble(BetaEnsemble):
         sampl = rm.ginibre_sampler_full(N=self.params['size_N'])
 
         self.list_of_samples.append(sampl)
+
+    def sample_banded_model(self, *args):
+        raise NotImplementedError('No banded model is known for Ginibre')
 
     def plot(self, normalization=True):
         """ Display the last realization of the :class:`GinibreEnsemble` object

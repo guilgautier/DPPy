@@ -93,7 +93,7 @@ The descent process obtained from a uniformly chosen  permutation of  :math:`\{1
 
 	:cite:`BoDiFu10`
 
-.. _Limitting_descent_process:
+.. _limiting_descent_process:
 
 Limiting Descent process for virtual permutations
 ==================================================

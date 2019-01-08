@@ -368,7 +368,7 @@ def mu_ref_unif_unit_circle_sampler_quindiag(beta=2, size=10):
         :cite:`KiNe04` Theorem 1
     """
 
-    if not ((beta > 0) & isinstance(beta, int)):
+    if not (isinstance(beta, int) and (beta > 0)):
         raise ValueError('`beta` must be positive integer.\
                          Given: {}'.format(beta))
 
