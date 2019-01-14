@@ -1,3 +1,16 @@
+# -*- coding: utf-8 -*-
+""" Implementation of finite DPP MCMC samplers:
+
+- `add_exchange_delete_sampler`
+- `add_delete_sampler`
+- `basis_exchange_sampler`
+- `zonotope_sampler`
+
+.. seealso:
+
+    `Documentation on ReadTheDocs <https://dppy.readthedocs.io/en/latest/finite_dpps/mcmc_sampling.html>`_
+"""
+
 import time
 import numpy as np
 import scipy.linalg as la
@@ -7,23 +20,7 @@ from cvxopt import matrix, spmatrix, solvers
 solvers.options['show_progress'] = False
 # solvers.options['glpk'] = {'msg_lev':'GLP_MSG_OFF'}
 
-
-def det_kernel_ST(kernel, S, T=None):
-
-    if T is None:
-        if S:
-            return la.det(kernel[np.ix_(S, S)])  # det K_SS = det K_S
-        else:
-            return 1  # = det K_emptyset = 1
-
-    elif S and T:
-        return la.det(kernel[np.ix_(S, T)])  # det K_ST
-
-    elif not S and not T:
-        return 1
-
-    else:
-        raise ValueError('Big problem')
+from dppy.utils import det_ST
 
 
 ############################################
@@ -87,7 +84,7 @@ def initialize_AED_sampler(kernel):
         else:
             T = np.random.choice(2 * N, size=N, replace=False)
             S0 = np.intersect1d(T, ground_set).tolist()
-            det_S0 = det_kernel_ST(kernel, S0)
+            det_S0 = det_ST(kernel, S0)
     else:
         raise ValueError('Initialization problem!')
 
@@ -116,7 +113,7 @@ def initialize_AD_and_E_sampler(kernel, size=None):
         else:
             sz = size if size else np.random.randint(1, N + 1)
             S0 = np.random.choice(N, size=sz, replace=False).tolist()
-            det_S0 = det_kernel_ST(kernel, S0)
+            det_S0 = det_ST(kernel, S0)
     else:
         raise ValueError('Initialization problem!')
 
@@ -161,7 +158,7 @@ def add_exchange_delete_sampler(kernel, s_init=None, nb_iter=10, T_max=None):
     ground_set = np.arange(N)
 
     # Initialization
-    S0, det_S0 = s_init, det_kernel_ST(kernel, s_init)
+    S0, det_S0 = s_init, det_ST(kernel, s_init)
     sampl_size = len(S0)  # Size of the current sample
     samples = [S0]  # Initialize the collection (list) of sample
 
@@ -185,8 +182,8 @@ def add_exchange_delete_sampler(kernel, s_init=None, nb_iter=10, T_max=None):
         if unif_01 < 0.5 * (1 - ratio)**2:
             S1.extend([t])  # S1 = S0 + t
             # Accept_reject the move
-            det_S1 = det_kernel_ST(kernel, S1)  # det K_S1
-            if np.random.rand() < (det_S1/det_S0 * (sampl_size+1)/(N-sampl_size)):
+            det_S1 = det_ST(kernel, S1)  # det K_S1
+            if np.random.rand() < det_S1/det_S0*(sampl_size+1)/(N-sampl_size):
                 S0, det_S0 = S1, det_S1
                 samples.append(S1)
                 sampl_size += 1
@@ -198,7 +195,7 @@ def add_exchange_delete_sampler(kernel, s_init=None, nb_iter=10, T_max=None):
             del S1[s_ind]  # S1 = S0 - s
             S1.extend([t])  # S1 = S1 + t = S0 - s + t
             # Accept_reject the move
-            det_S1 = det_kernel_ST(kernel, S1)  # det K_S1
+            det_S1 = det_ST(kernel, S1)  # det K_S1
             if np.random.rand() < (det_S1 / det_S0):
                 S0, det_S0 = S1, det_S1
                 samples.append(S1)
@@ -210,8 +207,8 @@ def add_exchange_delete_sampler(kernel, s_init=None, nb_iter=10, T_max=None):
         elif (0.5*(1-ratio) <= unif_01) & (unif_01 < 0.5*(ratio**2+(1-ratio))):
             del S1[s_ind] # S0 - s
             # Accept_reject the move
-            det_S1 = det_kernel_ST(kernel, S1)  # det K_S1
-            if np.random.rand() < (det_S1/det_S0 * sampl_size/(N-(sampl_size-1))):
+            det_S1 = det_ST(kernel, S1)  # det K_S1
+            if np.random.rand() < det_S1/det_S0*sampl_size/(N-(sampl_size-1)):
                 S0, det_S0 = S1, det_S1
                 samples.append(S1)
                 sampl_size -= 1
@@ -266,7 +263,7 @@ def add_delete_sampler(kernel, s_init, nb_iter=10, T_max=10):
     N = kernel.shape[0]  # Number of elements
 
     # Initialization
-    S0, det_S0 = s_init, det_kernel_ST(kernel, s_init)
+    S0, det_S0 = s_init, det_ST(kernel, s_init)
     samples = [S0]  # Initialize the collection (list) of sample
 
     # Evaluate running time...
@@ -288,7 +285,7 @@ def add_delete_sampler(kernel, s_init, nb_iter=10, T_max=10):
                 S1.extend([s])  # S1 = SO + s
 
             # Accept_reject the move
-            det_S1 = det_kernel_ST(kernel, S1)  # det K_S1
+            det_S1 = det_ST(kernel, S1)  # det K_S1
             if np.random.rand() < det_S1 / det_S0:
                 S0, det_S0 = S1, det_S1
                 samples.append(S1)
@@ -347,7 +344,7 @@ def basis_exchange_sampler(kernel, s_init, nb_iter=10, T_max=10):
 
     size = len(s_init)  # Size of the sample (cardinality is fixed)
     # Initialization
-    S0, det_S0 = s_init, det_kernel_ST(kernel, s_init)
+    S0, det_S0 = s_init, det_ST(kernel, s_init)
     samples = [S0]  # Initialize the collection (list) of sample
 
     # Evaluate running time...
@@ -368,7 +365,7 @@ def basis_exchange_sampler(kernel, s_init, nb_iter=10, T_max=10):
             t = np.random.choice(np.delete(ground_set, S0), size=1)[0]
             S1[s_ind] = t  # S_1 = S0 - S0[s_ind] + t
 
-            det_S1 = det_kernel_ST(kernel, S1)  # det K_S1
+            det_S1 = det_ST(kernel, S1)  # det K_S1
 
             # Accept_reject the move w. proba
             if np.random.rand() < det_S1 / det_S0:

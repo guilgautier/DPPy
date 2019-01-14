@@ -1,12 +1,17 @@
-# coding: utf-8
+# -*- coding: utf-8 -*-
+""" Implementation of finite DPP exact samplers derived from:
+
+- the raw **projection** inclusion :math:`K` kernel (no need for eigendecomposition)
+- the eigendecomposition of the inclusion :math:`K` kernel
+
+.. seealso:
+
+    `Documentation on ReadTheDocs <https://dppy.readthedocs.io/en/latest/finite_dpps/exact_sampling.html>`_
+"""
 
 import numpy as np
-from numpy.core.umath_tests import inner1d as np_inner1d
+from numpy.core.umath_tests import inner1d
 import scipy.linalg as la
-
-########
-# DPPs #
-########
 
 
 #####################
@@ -33,9 +38,9 @@ def proj_dpp_sampler_kernel(kernel, mode='GS'):
         sampl = proj_dpp_sampler_kernel_Schur(kernel)
 
     else:
-        str_list = ['Invalid `mode` parameter, choose among:',
-                    '- `GS` (default)',
-                    # '- 'Schur'',
+        str_list = ['Invalid sampling mode, choose among:',
+                    '- "GS" (default)',
+                    '- "Schur"',
                     'Given {}'.format(mode)]
         raise ValueError('\n'.join(str_list))
 
@@ -70,39 +75,33 @@ def proj_dpp_sampler_kernel_GS(K, size=None):
     """
 
     # Initialization
-    # Size of the ground set
-    N = K.shape[0]
-    # Maximal size of the sample: Tr(K)=rank(K)
-    rank = int(np.round(np.trace(K)))
-    # Size of the sample
-    if size is None:
-        size = rank  # Full projection DPP
-    else:
-        pass  # projection k-DPP
-    # Sample
-    Y = []
+    # ground set size / rank(K) = Tr(K)
+    N, rank = K.shape[0], int(np.round(np.trace(K)))
+    ground_set = np.arange(N)
 
-    ground_set, rem_set = np.arange(N), np.full(N, True)
+    size = rank if size is None else size  # Full projection DPP or k-DPP
+    sampl = np.zeros(size, dtype=int)  # sample list
+
+    avail = np.ones(N, dtype=bool)  # available items
 
     c = np.zeros((N, size))
-    d_2 = K.diagonal().copy()
+    norm_2 = K.diagonal().copy()  # residual norm^2
 
     for it in range(size):
-
-        j = np.random.choice(ground_set[rem_set],
+        j = np.random.choice(ground_set[avail],
                              size=1,
-                             p=np.fabs(d_2[rem_set]) / (rank - it))[0]
-        # Add the item to the sample
-        rem_set[j] = False
-        Y.append(j)
-
+                             p=np.abs(norm_2[avail]) / (rank - it))[0]
+        sampl[it] = j
+        if it == size - 1:
+            break
         # Update the Cholesky factor
-        c[rem_set, it] = K[rem_set, j] - c[rem_set, :it].dot(c[j, :it])
-        c[rem_set, it] /= np.sqrt(d_2[j])
+        avail[j] = False
+        c[avail, it] = (K[avail, j] - c[avail, :it].dot(c[j, :it]))\
+                       / np.sqrt(norm_2[j])
 
-        d_2[rem_set] -= c[rem_set, it]**2
+        norm_2[avail] -= c[avail, it]**2
 
-    return Y
+    return sampl
 
 
 def proj_dpp_sampler_kernel_Schur(K, size=None):
@@ -113,64 +112,67 @@ def proj_dpp_sampler_kernel_Schur(K, size=None):
         Orthogonal projection kernel.
     :type K:
         array_like
-    :param k:
+    :param size:
         Size of the sample.
         Default is :math:`k=\operatorname{Tr}(K)=\operatorname{rank}(K)`.
-    :type k:
+    :type size:
         int
 
     :return:
-        If ``k`` is not provided (None),
+        If ``size`` is not provided (None),
             A sample from :math:`\operatorname{DPP}(K)`.
-        If ``k`` is provided,
+        If ``size`` is provided,
             A sample from :math:`\operatorname{k-DPP}(K)`.
     :rtype:
         list
+
     .. seealso::
         - :func:`projection_dpp_sampler_GS_bis <projection_dpp_sampler_GS_bis>`
     """
 
     # Initialization
-    # Size of the ground set
-    N = K.shape[0]
-    # Maximal size of the sample: Tr(K)=rank(K)
-    rank = int(np.round(np.trace(K)))
-    # Size of the sample
-    if size is None:
-        size = rank  # Full projection DPP
-    else:
-        pass  # projection k-DPP
-    ground_set, rem_set = np.arange(N), np.full(N, True)
-    # Sample
-    Y = []
+    # ground set size / rank(K) = Tr(K)
+    N, rank = K.shape[0], int(np.round(np.trace(K)))
+    ground_set = np.arange(N)
 
-    K_diag = K.diagonal()  # Used to compute the first term of Schur complement
-    schur_comp = K_diag.copy()
+    size = rank if size is None else size  # Full projection DPP or k-DPP
+    sampl = np.zeros(size, dtype=int)  # sample list
+
+    avail = np.ones(N, dtype=bool)  # available items
+
+    K_diag = K.diagonal()
+    schur_comp = K_diag.copy()  # Schur complement list i.e. residual norm^2
 
     for it in range(size):
-        # Pick a new item
-        j = np.random.choice(ground_set[rem_set],
+        # Pick a new item proportionally to residual norm^2
+        j = np.random.choice(ground_set[avail],
                              size=1,
-                             p=np.fabs(schur_comp[rem_set]) / (rank - it))[0]
+                             p=np.abs(schur_comp[avail]) / (rank - it))[0]
+        # store the item and make it unavailable
+        sampl[it], avail[j] = j, False
 
-        # Update Schur complements K_ii - K_iY (K_Y)^-1 K_Yi for Y <- Y+j
+        # sampl = Y + j
+        # Update Schur complements K_ii - K_iY (K_Y)^-1 K_Yi
         #
         # 1) use Woodbury identity to update K[Y,Y]^-1 to K[Y+j,Y+j]^-1
         # K[Y+j,Y+j]^-1 =
         # [ K[Y,Y]^-1 + (K[Y,Y]^-1 K[Y,j] K[j,Y] K[Y,Y]^-1)/schur_j,
-        #       -K[Y,Y]^-1 K[Y,j]/schur_j]
+        #      -K[Y,Y]^-1 K[Y,j]/schur_j]
         # [ -K[j,Y] K[Y,Y]^-1/schur_j,
-        #       1/schur_j]
-
+        #      1/schur_j]
         if it == 0:
             K_inv = 1.0 / K[j, j]
+
         elif it == 1:
+            Y = sampl[0]
             K_inv = np.array([[K[j, j], -K[j, Y]],
-                             [-K[j, Y], K[Y, Y]]])\
-                / (K[Y, Y] * K[j, j] - K[j, Y]**2)
-        else:
-            schur_j = K[j, j] - K[j, Y].dot(K_inv.dot(K[Y, j]))
-            temp = K_inv.dot(K[Y, j])
+                             [-K[j, Y], K[Y, Y]]])
+            K_inv /= K[Y, Y] * K[j, j] - K[j, Y]**2
+
+        elif it < size - 1:
+            Y = sampl[:it]
+            temp = K_inv.dot(K[Y, j])  # K_Y^-1 K_Yj
+            schur_j = K[j, j] - K[j, Y].dot(temp)  # K_jj-K_jY K_Y^-1 K_Yj
 
             K_inv = np.lib.pad(K_inv, (0, 1),
                                'constant',
@@ -179,19 +181,17 @@ def proj_dpp_sampler_kernel_Schur(K, size=None):
             K_inv[:-1, :-1] += np.outer(temp, temp / schur_j)
             K_inv[:-1, -1] *= -temp
             K_inv[-1, :-1] = K_inv[:-1, -1]
-            # K_inv[-1,-1] = 1.0/schur_j
 
-        # Add the item to the sample
-        rem_set[j] = False
-        Y.append(j)
+        else:  # it == size-1
+            break  # no need to update for nothing
 
         # 2) update Schur complements
         # K_ii - K_iY (K_Y)^-1 K_Yi for Y <- Y+j
-        schur_comp[rem_set] =\
-            K_diag[rem_set] - np_inner1d(K[np.ix_(rem_set, Y)],
-                                         K[np.ix_(rem_set, Y)].dot(K_inv))
+        schur_comp[avail] =\
+            K_diag[avail] - inner1d(K[np.ix_(avail, sampl[:it+1])],
+                                    K[np.ix_(avail, sampl[:it+1])].dot(K_inv))
 
-    return Y
+    return sampl
 
 
 ##################
@@ -205,10 +205,8 @@ def dpp_eig_vecs_selector(ber_params, eig_vecs):
     The selection is made based on a realization of Bernoulli variables with parameters related to the eigenvalues of :math:`K`, resp. :math:`L`.
 
     :param ber_params:
-        Parameters of Bernoulli variables:
-        .. math::
-
-            \lambda^K=\lambda^L/(1+\lambda^L)
+        Parameters of Bernoulli variables
+        :math:`\lambda^K=\lambda^L/(1+\lambda^L)
     :type ber_params:
         list, array_like
 
@@ -228,7 +226,7 @@ def dpp_eig_vecs_selector(ber_params, eig_vecs):
     """
 
     # Realisation of Bernoulli random variables with params ber_params
-    ind_sel = np.random.rand(len(ber_params)) < ber_params
+    ind_sel = np.random.rand(ber_params.size) < ber_params
 
     return eig_vecs[:, ind_sel]
 
@@ -270,12 +268,13 @@ def dpp_eig_vecs_selector_L_dual(eig_vals, eig_vecs, gram_factor):
     """
 
     # Realisation of Bernoulli random variables with params eig_vals
-    ind_sel = np.random.rand(len(eig_vals)) < eig_vals / (1.0 + eig_vals)
+    ind_sel = np.random.rand(eig_vals.size) < eig_vals / (1.0 + eig_vals)
 
     return gram_factor.T.dot(eig_vecs[:, ind_sel] / np.sqrt(eig_vals[ind_sel]))
 
 
-# Phase 2: sample projection kernel VV.T where V are the eigenvectors selected in Phase 1.
+# Phase 2:
+# Sample projection kernel VV.T where V are the eigvecs selected in Phase 1.
 def proj_dpp_sampler_eig(eig_vecs, mode='GS'):
     """ Sample from projection :math:`\operatorname{DPP}(K)` using the eigendecomposition of the projection kernel :math:`K=VV^{\top}` where :math:`V^{\top}V = I_r` and :math:`r=\operatorname{rank}(\mathbf{K})`.
 
@@ -306,10 +305,10 @@ def proj_dpp_sampler_eig(eig_vecs, mode='GS'):
             sampl = proj_dpp_sampler_eig_KuTa12(eig_vecs)
 
         else:
-            str_list = ['Invalid `mode` parameter, choose among:',
-                        '- `GS` (default)',
-                        '- `GS_bis`',
-                        '- `KuTa12`',
+            str_list = ['Invalid sampling mode, choose among:',
+                        '- "GS" (default)',
+                        '- "GS_bis"',
+                        '- "KuTa12"',
                         'Given {}'.format(mode)]
             raise ValueError('\n'.join(str_list))
     else:
@@ -340,46 +339,41 @@ def proj_dpp_sampler_eig_GS(eig_vecs, size=None):
     """
 
     # Initialization
-    V = eig_vecs  # Eigenvectors
-    N, rank = V.shape  # N = size of the ground set, r = rank(K)
-    # Size of the sample
-    if size is None:
-        size = rank  # Full projection DPP
-    else:
-        pass  # projection k-DPP
-    ground_set, rem_set = np.arange(N), np.full(N, True)
-    Y = []  # sample
+    V = eig_vecs
+    N, rank = V.shape  # ground set size / rank(K)
+    ground_set = np.arange(N)
 
-    # Phase 1: Select eigenvectors with Bernoulli variables with parameter the eigenvalues. Already performed!
+    size = rank if size is None else size  # Full projection DPP or k-DPP
+    sampl = np.zeros(size, dtype=int)
+
+    avail = np.ones(N, dtype=bool)  # available items
+
+    # Phase 1: Already performed!
+    # Select eigvecs with Bernoulli variables with parameter = eigvals of K.
 
     # Phase 2: Chain rule
-    # To compute the squared volume of the parallelepiped spanned by the feature vectors defining the sample
-    # use Gram-Schmidt recursion aka Base x Height formula.
+    # Use Gram-Schmidt recursion to compute the Vol^2 of the parallelepiped spanned by the feature vectors associated to the sample
 
-    # Initially this corresponds to the squared norm of the feature vectors
     c = np.zeros((N, size))
-    norms_2 = np_inner1d(V, V)
+    norms_2 = inner1d(V, V)  # residual norm^2
 
     for it in range(size):
-
         # Pick an item \propto this squred distance
-        j = np.random.choice(ground_set[rem_set],
+        j = np.random.choice(ground_set[avail],
                              size=1,
-                             p=np.fabs(norms_2[rem_set]) / (rank - it))[0]
-
-        # Add the item just picked
-        rem_set[j] = False
-        Y.append(j)
-
+                             p=np.abs(norms_2[avail]) / (rank - it))[0]
+        sampl[it] = j
+        if it == size - 1:
+            break
         # Cancel the contribution of V_j to the remaining feature vectors
-        c[rem_set, it] = \
-            V[rem_set, :].dot(V[j, :]) - c[rem_set, :it].dot(c[j, :it])
-        c[rem_set, it] /= np.sqrt(norms_2[j])
+        avail[j] = False
+        c[avail, it] =\
+            (V[avail, :].dot(V[j, :]) - c[avail, :it].dot(c[j, :it]))\
+            / np.sqrt(norms_2[j])
 
-        # Compute the square distance of the feature vectors to Span(V_Y:)
-        norms_2[rem_set] -= c[rem_set, it]**2
+        norms_2[avail] -= c[avail, it]**2  # update residual norm^2
 
-    return Y
+    return sampl
 
 
 # Slight modif of Gram-Schmidt above
@@ -404,81 +398,75 @@ def proj_dpp_sampler_eig_GS_bis(eig_vecs, size=None):
     """
 
     # Initialization
-    V = eig_vecs  # Eigenvectors
-    N, rank = V.shape  # N = size of the ground set, r = rank(K)
-    # Size of the sample
-    if size is None:
-        size = rank  # Full projection DPP
-    else:
-        pass  # projection k-DPP
-    ground_set, rem_set = np.arange(N), np.full(N, True)
-    # Sample
-    Y = []
+    V = eig_vecs.copy()
+    N, rank = V.shape  # ground set size / rank(K)
+    ground_set = np.arange(N)
 
-    ##### Phase 1: Select eigenvectors with Bernoulli variables with parameter the eigenvalues. Already performed!
+    # Sample
+    size = rank if size is None else size  # Full projection DPP or k-DPP
+    sampl = np.zeros(size, dtype=int)  # sample list
+
+    avail = np.ones(N, dtype=bool)  # available items
+
+    # Phase 1: Already performed!
+    # Select eigvecs with Bernoulli variables with parameter = eigvals of K.
 
     # Phase 2: Chain rule
-    # To compute the squared volume of the parallelepiped spanned by the feature vectors defining the sample
-    # use Gram-Schmidt recursion aka Base x Height formula.
+    # Use Gram-Schmidt recursion to compute the Vol^2 of the parallelepiped spanned by the feature vectors associated to the sample
 
-    # Matrix of the contribution of remaining vectors V_i onto the orthonormal basis {e_j}_Y of V_Y
-    # <V_i,P_{V_Y}^{orthog} V_j>
+    # Matrix of the contribution of remaining vectors
+    # <V_i, P_{V_Y}^{orthog} V_j>
     contrib = np.zeros((N, size))
 
-    # Residual square norm
-    # ||P_{V_Y}^{orthog} V_j||^2
-    norms_2 = np_inner1d(V, V)
+    # Residual square norm ||P_{V_Y}^{orthog} V_j||^2
+    norms_2 = inner1d(V, V)
 
     for it in range(size):
 
-        # Pick an item proportionally to the residual square norm
+        # Pick an item proportionally to the residual norm^2
         # ||P_{V_Y}^{orthog} V_j||^2
-        j = np.random.choice(ground_set[rem_set],
+        j = np.random.choice(ground_set[avail],
                              size=1,
-                             p=np.fabs(norms_2[rem_set]) / (rank - it))[0]
-
-        # Update the residual square norm
+                             p=np.abs(norms_2[avail]) / (rank - it))[0]
+        sampl[it] = j
+        if it == size - 1:
+            break
+        # Update the residual norm^2
         #
         # |P_{V_Y+j}^{orthog} V_i|^2
         #                                    <V_i,P_{V_Y}^{orthog} V_j>^2
         #     =  |P_{V_Y}^{orthog} V_i|^2 -  ----------------------------
         #                                      |P_{V_Y}^{orthog} V_j|^2
-
+        #
         # 1) Orthogonalize V_j w.r.t. orthonormal basis of Span(V_Y)
         #    V'_j = P_{V_Y}^{orthog} V_j
         #         = V_j - <V_j,sum_Y V'_k>V'_k
+        #         = V_j - sum_Y <V_j, V'_k> V'_k
         # Note V'_j is not normalized
-        V[j, :] -= contrib[j, :it].dot(V[Y, :])
+        avail[j] = False
+        V[j, :] -= contrib[j, :it].dot(V[sampl[:it], :])
 
-        # Make the item selected unavailable
-        rem_set[j] = False
-        # Add the item to the sample
-        Y.append(j)
-
-        # 2) Compute <V_i,V'_j> = <V_i,P_{V_Y}^{orthog} V_j>
-        contrib[rem_set, it] = V[rem_set, :].dot(V[j, :])
+        # 2) Compute <V_i, V'_j> = <V_i, P_{V_Y}^{orthog} V_j>
+        contrib[avail, it] = V[avail, :].dot(V[j, :])
 
         # 3) Normalize V'_j with norm^2 and not norm
         #              V'_j         P_{V_Y}^{orthog} V_j
         #    V'_j  =  -------  =  --------------------------
         #             |V'j|^2      |P_{V_Y}^{orthog} V_j|^2
+        #
+        # in preparation for next orthogonalization in 1)
         V[j, :] /= norms_2[j]
-        # for next orthogonalization in 1)
-        #  <V_i,P_{V_Y}^{orthog} V_j> P_{V_Y}^{orthog} V_j
-        #  V_i - <V_i,V'_j>V'_j = V_i - |P_{V_Y}^{orthog} V_j|^2
-        #
-        #
-        # 4) Update the residual norm^2: cancel contribution of V_i onto V_j
+
+        # 4) Update the residual norm^2: cancel contrib of V_i onto V_j
         #
         # |P_{V_Y+j}^{orthog} V_i|^2
         #   = |P_{V_Y}^{orthog} V_i|^2 - <V_i,V'_j>^2 / |V'j|^2
         #                                  <V_i,P_{V_Y}^{orthog} V_j>^2
         #   =  |P_{V_Y}^{orthog} V_i|^2 -  ----------------------------
         #                                   |P_{V_Y}^{orthog} V_j|^2
+        norms_2[avail] -= (contrib[avail, it]**2) / norms_2[j]
 
-        norms_2[rem_set] -= (contrib[rem_set, it]**2) / norms_2[j]
-
-    return Y
+    return sampl
 
 
 def proj_dpp_sampler_eig_KuTa12(eig_vecs, size=None):
@@ -508,45 +496,37 @@ def proj_dpp_sampler_eig_KuTa12(eig_vecs, size=None):
     """
 
     # Initialization
-    V = eig_vecs  # Eigenvectors
-    N, rank = V.shape  # N = size of the ground set, r = rank(K)
-    # Size of the sample
-    if size is None:
-        size = rank  # Full projection DPP
-    else:
-        pass  # projection k-DPP
-    # Sample
-    Y = []
+    V = eig_vecs.copy()
+    N, rank = V.shape  # ground set size / rank(K)
 
-    # Phase 1: Select eigenvectors with Bernoulli variables with parameter the eigenvalues. Already performed!
+    size = rank if size is None else size  # Full projection DPP or k-DPP
+    sampl = np.zeros(size, dtype=int)  # sample list
+
+    # Phase 1: Already performed!
+    # Select eigvecs with Bernoulli variables with parameter the eigvals
 
     # Phase 2: Chain rule
-    # Initialize the sample
-    norms_2 = np_inner1d(V, V)
-    # Pick an item
-    i = np.random.choice(N, size=1, p=np.fabs(norms_2) / rank)[0]
-    # Add the item just picked
-    Y.append(i)  # sample
+    norms_2 = inner1d(V, V)
 
     # Following [Algo 1, KuTa12], the aim is to compute the orhto complement of the subspace spanned by the selected eigenvectors to the canonical vectors \{e_i ; i \in Y\}. We proceed recursively.
-    for it in range(1, size):
+    for it in range(size):
+
+        j = np.random.choice(N, size=1, p=np.abs(norms_2) / (rank - it))[0]
+        sampl[it] = j
+        if it == size - 1:
+            break
 
         # Cancel the contribution of e_i to the remaining vectors that is, find the subspace of V that is orthogonal to \{e_i ; i \in Y\}
-
-        # Take the index of a vector that has a non null contribution along e_i
-        j = np.where(V[i, :] != 0)[0][0]
-        # Cancel the contribution of the remaining vectors along e_i, but stay in the subspace spanned by V i.e. get the subspace of V orthogonal to \{e_i ; i \in Y\}
-        V -= np.outer(V[:, j] / V[i, j], V[i, :])
+        # Take the index of a vector that has a non null contribution on e_j
+        k = np.where(V[j, :] != 0)[0][0]
+        # Cancel the contribution of the remaining vectors on e_j, but stay in the subspace spanned by V i.e. get the subspace of V orthogonal to \{e_i ; i \in Y\}
+        V -= np.outer(V[:, k] / V[j, k], V[j, :])
         # V_:j is set to 0 so we delete it and we can derive an orthononormal basis of the subspace under consideration
-        V, _ = la.qr(np.delete(V, j, axis=1), mode='economic')
+        V, _ = la.qr(np.delete(V, k, axis=1), mode='economic')
 
-        norms_2 = np_inner1d(V, V)
-        # Pick an item
-        i = np.random.choice(N, size=1, p=np.fabs(norms_2) / (rank - it))[0]
-        # Add the item just picked
-        Y.append(i)
+        norms_2 = inner1d(V, V)
 
-    return Y
+    return sampl
 
 
 ##########
