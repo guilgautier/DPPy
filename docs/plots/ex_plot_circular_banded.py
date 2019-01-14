@@ -9,4 +9,6 @@ for b in [0, 1, 5, 10]:
     circular.sample_banded_model(size_N=30)
     circular.plot()
 
-# circular.hist()
+circular.beta = 2
+circular.sample_banded_model(size_N=1000)
+circular.hist()

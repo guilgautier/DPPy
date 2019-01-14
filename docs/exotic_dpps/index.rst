@@ -14,7 +14,9 @@ In fact, one can discard any row of the vertex-edge incidence matrix say :math:`
 
 .. code-block:: python
 
-	from exotic_dpps import *
+	
+	from exotic_dpps import UST
+	import networkx as nx
 
 	# Build graph
 	g = nx.Graph()

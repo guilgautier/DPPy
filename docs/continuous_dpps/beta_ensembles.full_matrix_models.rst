@@ -313,11 +313,15 @@ Circular Ensemble
 
 	.. code-block:: python
 
-		A = np.random.randn(N, N)
+		import numpy as np
+		from numpy.random import randn
+		import scipy.linalg as la
+
+		A = randn(N, N)
 		Q, R = la.qr(A)
 		d = np.diagonal(R)
 		U = np.multiply(Q, d/np.abs(d), Q)
-		return eigvals(U)
+		la.eigvals(U)
 
 
 	2. The Hermite way
@@ -337,12 +341,15 @@ Circular Ensemble
 
 	.. code-block:: python
 
-		A = np.random.randn(N, N) + 1j*np.random.randn(N, N)
-		A /= np.sqrt(2.0)
+		import numpy as np
+		from numpy.random import randn
+		import scipy.linalg as la
+
+		A = randn(N, N) + 1j*randn(N, N)
 		Q, R = la.qr(A)
 		d = np.diagonal(R)
-		U = np.multiply(Q, d/np.abs(d), Q)
-		return eigvals(U)
+		U = np.multiply(Q, d / np.abs(d), Q)
+		la.eigvals(U)
 
 	.. plot:: plots/ex_plot_circular_full_mat_QR.py
 		:include-source:

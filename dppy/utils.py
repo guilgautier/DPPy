@@ -73,7 +73,7 @@ def is_orthonormal(matrix):
     indx = np.arange(np.min([5, matrix.shape[1]]))
     U = matrix[:, indx]
 
-    if np.allclose(U.T.dot(U), np.eye(nb_items)):
+    if np.allclose(U.T.dot(U), np.eye(indx.size)):
         return matrix
     else:
         raise ValueError('matrix does not seem orthonormal: M.T M != I')

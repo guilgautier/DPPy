@@ -1,4 +1,5 @@
-from dppy.exotic_dpps import *
+from dppy.exotic_dpps import VirtualDescentProcess
+
 
 vdp = VirtualDescentProcess(x_0=0.5)
 

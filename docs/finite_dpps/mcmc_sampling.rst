@@ -59,11 +59,13 @@ Mix of exchange and add-delete moves
 
 .. testcode::
 
-  from finite_dpps import *
-  np.random.seed(413121)
+  from numpy.random import seed, randn
+  from dppy.finite_dpps import FiniteDPP
+  
+  seed(413121)
 
   r, N = 4, 10
-  A = np.random.randn(r, N)
+  A = randn(r, N)
   L = A.T.dot(A)
   DPP = FiniteDPP("marginal", **{"L":L})
 
@@ -77,7 +79,7 @@ Mix of exchange and add-delete moves
 
 .. seealso::
 
-  .. currentmodule:: finite_dpps
+  .. currentmodule:: dppy.finite_dpps
 
   - :func:`FiniteDPP.sample_mcmc <FiniteDPP.sample_mcmc>`
   - :cite:`AnGhRe16`, :cite:`LiJeSr16c` and :cite:`LiJeSr16d`
@@ -117,11 +119,13 @@ To recover the finite DPP samples one needs to identify the tile in which the su
 
 .. testcode::
 
-  from finite_dpps import *
-  np.random.seed(1234)
+  from numpy.random import seed, randn
+  from dppy.finite_dpps import FiniteDPP
+  
+  seed(413121)
 
   r, N = 4, 10
-  A = np.random.randn(r, N)
+  A = randn(r, N)
 
   DPP = FiniteDPP("inclusion", projection=True, **{"A_zono":A})
 
@@ -130,16 +134,16 @@ To recover the finite DPP samples one needs to identify the tile in which the su
 
 .. testoutput::
 
-  [array([[2, 4, 7, 8],
-         [3, 4, 7, 8],
-         [0, 7, 8, 9],
-         [3, 4, 6, 9],
-         [3, 5, 7, 8],
-         [3, 5, 7, 8],
-         [1, 5, 8, 9],
-         [0, 2, 4, 9],
-         [4, 6, 8, 9],
-         [4, 5, 8, 9]])]
+  [array([[2, 4, 5, 7],
+         [2, 4, 5, 7],
+         [2, 4, 5, 7],
+         [1, 4, 5, 7],
+         [1, 4, 5, 7],
+         [1, 4, 5, 7],
+         [0, 4, 7, 8],
+         [0, 2, 7, 9],
+         [0, 2, 7, 9],
+         [2, 4, 5, 7]])]
 
 .. note::
 
@@ -149,7 +153,7 @@ To recover the finite DPP samples one needs to identify the tile in which the su
 
 .. seealso::
 
-  .. currentmodule:: finite_dpps
+  .. currentmodule:: dppy.finite_dpps
 
   - :func:`FiniteDPP.sample_mcmc <FiniteDPP.sample_mcmc>`
   - :cite:`GaBaVa17`

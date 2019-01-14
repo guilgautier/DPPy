@@ -56,7 +56,7 @@ Some common sufficient conditions for existence are:
 		\quad \text{and} \quad
 		0_N \preceq \mathbf{K} \preceq I_N
 
-where the dagger means "conjugate transpose". For the definition via marginal probabilities, sufficient conditions are
+where the dagger means *conjugate transpose*. For the definition via marginal probabilities, sufficient conditions are
 
 	.. math::
 		:label: suff_cond_L
@@ -72,20 +72,6 @@ where the dagger means "conjugate transpose". For the definition via marginal pr
 
 .. plot:: plots/ex_plot_K_kernel.py
   :include-source:
-  
-.. code-block:: python
-
-	r, N = 4, 10
-	Phi = np.random.randn(r, N)
-	L = Phi.T.dot(Phi)
-	DPP = FiniteDPP("marginal", **{"L":L})
-
-	print(DPP)
-
-	# DPP defined through marginal kernel
-	# Parametrized by dict_keys(['L'])
-	# - sampling mode = None
-	# - number of samples = 0
 
 .. important::
 
@@ -94,22 +80,28 @@ where the dagger means "conjugate transpose". For the definition via marginal pr
 
 	.. code-block:: python
 
-		r, N = 4, 10
-		A = np.random.randn(r, N)
-		K = A.T.dot(la.inv(A.dot(A.T)).dot(A))
-		proj_DPP = FiniteDPP("inclusion", projection=True, **{"K":K})
-		
-		print(proj_DPP)
+		from numpy import ones
+		from numpy.random import randn
+		from scipy.linalg import qr
+		from dppy.finite_dpps import FiniteDPP
 
-		# DPP defined through projection inclusion kernel
-		# Parametrized by dict_keys(['K'])
-		# - sampling mode = None
-		# - number of samples = 0
+		r, N = 4, 10
+
+		eig_vals = ones(r)
+		A = randn(r, N)
+		eig_vecs, _ = qr(A.T, mode='economic')
+
+		proj_DPP = FiniteDPP('inclusion', projection=True,
+		                     **{'K_eig_dec': (eig_vals, eig_vecs)})
+		# or
+		# proj_DPP = FiniteDPP('inclusion', projection=True, **{'A_zono': A})
+		# K = eig_vecs.dot(eig_vecs.T)
+		# proj_DPP = FiniteDPP('inclusion', projection=True, **{'K': K})
 
 
 .. seealso::
 
-	.. currentmodule:: finite_dpps
+	.. currentmodule:: dppy.finite_dpps
 
 	- :class:`FiniteDPP <FiniteDPP>`
 	- :cite:`KuTa12`

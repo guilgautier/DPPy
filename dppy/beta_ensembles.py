@@ -1,4 +1,23 @@
-# coding: utf-8
+# -*- coding: utf-8 -*-
+""" Implementation of the meta-class :class:`BetaEnsemble` with children:
+
+- :class:`HermiteEnsemble`
+- :class:`LaguerreEnsemble`
+- :class:`JacobiEnsemble`
+- :class:`CircularEnsemble`
+- :class:`GinibreEnsemble`
+
+Such objects have 4 main methods:
+
+- `sample_full_model`
+- `sample_banded_model`
+- `plot` to display a scatter plot of the last sample and eventually the limiting distribution (after normalization)
+- `hist` to display a histogram of the last sample and eventually the limiting distribution (after normalization)
+
+.. seealso:
+
+    `Documentation on ReadTheDocs <https://dppy.readthedocs.io/en/latest/continuous_dpps/beta_ensembles.html>`_
+"""
 
 import abc
 
@@ -1180,3 +1199,6 @@ class GinibreEnsemble(BetaEnsemble):
         ax.scatter(points.real, points.imag, c='blue', label='sample')
 
         plt.legend(loc='best', frameon=False)
+
+    def hist():
+        raise NotImplementedError('Histogram of points on the complex plane is not implemented')

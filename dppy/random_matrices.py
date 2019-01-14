@@ -1,14 +1,25 @@
-# coding: utf-8
+# -*- coding: utf-8 -*-
+""" Implementation of full and banded matrix models for :math:`\beta`-Ensemble:
+
+- Hermite Ensemble (full + tridiagonal)
+- Laguerre Ensemble (full + tridiagonal)
+- Jacobi Ensemble (full + tridiagonal)
+- Circular Ensemble (full + quindiagonal)
+- Ginibre Ensemble (full)
+
+.. seealso:
+
+    `Documentation on ReadTheDocs <https://dppy.readthedocs.io/en/latest/continuous_dpps/beta_ensembles.sampling.html>`_
+"""
 
 import numpy as np
 import scipy.linalg as la
 import scipy.sparse as sp
 
+
 ###########
 # Hermite #
 ###########
-
-
 # Hermite, full matrix model
 def hermite_sampler_full(N, beta=2):
 
@@ -54,12 +65,17 @@ def hermite_sampler_tridiag(N, beta=2):
 
 # Semi-circle law
 def semi_circle_law(x, R=2.0):
-    # :cite:`DuEd15` Table 1
-    # https://en.wikipedia.org/wiki/Wigner_semicircle_distribution
+    """
+    .. seealso::
+
+        - :cite:`DuEd15` Table 1
+
+        - https://en.wikipedia.org/wiki/Wigner_semicircle_distribution
+    """
     return 2 / (np.pi * R**2) * np.sqrt(R**2 - x**2)
 
 
-# mu_ref == normal
+# mu_ref = normal
 def mu_ref_normal_sampler_tridiag(loc=0.0, scale=1.0, beta=2, size=10):
     """
     .. seealso::
@@ -78,11 +94,10 @@ def mu_ref_normal_sampler_tridiag(loc=0.0, scale=1.0, beta=2, size=10):
 
     return la.eigvalsh_tridiagonal(alpha_coef, np.sqrt(beta_coef))
 
+
 ############
 # Laguerre #
 ############
-
-
 # Laguerre, full matrix model
 def laguerre_sampler_full(M, N, beta=2):
 
@@ -135,15 +150,21 @@ def laguerre_sampler_tridiag(M, N, beta=2):
 
 # Marcenko Pastur law
 def marcenko_pastur_law(x, M, N, sigma=1.0):
-    # https://en.wikipedia.org/wiki/Marchenko-Pastur_distribution
-    # M>=N
+    """ M >= N
+
+    .. seealso::
+
+        - :cite:`DuEd15` Table 1
+        - https://en.wikipedia.org/wiki/Marchenko-Pastur_distribution
+    """
+
     c = N / M
     Lm, Lp = (sigma * (1 - np.sqrt(c)))**2, (sigma * (1 + np.sqrt(c)))**2
 
     return np.sqrt(np.maximum((Lp-x)*(x-Lm),0)) / (c*x) / (2*np.pi*sigma**2) 
 
 
-# mu_ref == Gamma
+# mu_ref = Gamma
 def mu_ref_gamma_sampler_tridiag(shape=1.0, scale=1.0, beta=2, size=10):
     """
     .. seealso::
@@ -164,19 +185,17 @@ def mu_ref_gamma_sampler_tridiag(shape=1.0, scale=1.0, beta=2, size=10):
     xi_even = np.zeros(size)
     xi_even[1:] = np.random.gamma(shape=b_2_Ni[:-1], scale=scale)  # even
 
-    # alpha_i = xi_2i-2 + xi_2i-1
-    # alpha_1 = xi_0 + xi_1 = xi_1
+    # alpha_i = xi_2i-2 + xi_2i-1, xi_0 = 0
     alpha_coef = xi_even + xi_odd
     # beta_i+1 = xi_2i-1 * xi_2i
     beta_coef = xi_odd[:-1] * xi_even[1:]
 
     return la.eigvalsh_tridiagonal(alpha_coef, np.sqrt(beta_coef))
 
+
 ##########
 # Jacobi #
 ##########
-
-
 # Jacobi, full matrix model
 def jacobi_sampler_full(M_1, M_2, N, beta=2):
 
@@ -239,8 +258,7 @@ def jacobi_sampler_tridiag(M_1, M_2, N, beta=2):
     xi_even = np.zeros(N)
     xi_even[1:] = (1 - c_odd[:-1]) * c_even[1:]
 
-    # alpha_i = xi_2i-2 + xi_2i-1
-    # alpha_1 = xi_0 + xi_1 = xi_1
+    # alpha_i = xi_2i-2 + xi_2i-1, xi_0 = 0
     alpha_coef = xi_even + xi_odd
     # beta_i+1 = xi_2i-1 * xi_2i
     beta_coef = xi_odd[:-1] * xi_even[1:]
@@ -250,8 +268,12 @@ def jacobi_sampler_tridiag(M_1, M_2, N, beta=2):
 
 # Wachter law
 def wachter_law(x, M_1, M_2, N):
-    # M_1, M_2>=N
-    # :cite:`DuEd15` Table 1
+    """ M_1, M_2>=N
+
+    .. seealso::
+
+        :cite:`DuEd15` Table 1
+    """
     a, b = M_1 / N, M_2 / N
 
     Lm = ((np.sqrt(a * (a + b - 1)) - np.sqrt(b)) / (a + b))**2
@@ -260,6 +282,7 @@ def wachter_law(x, M_1, M_2, N):
     return (a+b)/(2*np.pi) * 1/(x*(1-x)) * np.sqrt(np.maximum((Lp-x)*(x-Lm),0))
 
 
+# mu-ref = Beta
 def mu_ref_beta_sampler_tridiag(a, b, beta=2, size=10):
 
     """
@@ -297,11 +320,10 @@ def mu_ref_beta_sampler_tridiag(a, b, beta=2, size=10):
 
     return la.eigvalsh_tridiagonal(alpha_coef, np.sqrt(beta_coef))
 
+
 #####################
 # Circular ensemble #
 #####################
-
-
 # Full matrix model
 def circular_sampler_full(N, beta=2, haar_mode='QR'):
     """
@@ -360,7 +382,7 @@ def circular_sampler_full(N, beta=2, haar_mode='QR'):
     return la.eigvals(U)
 
 
-# Circular, quindiagonal model
+# Quindiagonal model
 def mu_ref_unif_unit_circle_sampler_quindiag(beta=2, size=10):
     """
     .. see also::
@@ -385,9 +407,9 @@ def mu_ref_unif_unit_circle_sampler_quindiag(beta=2, size=10):
     xi[:, 0, 0], xi[:, 0, 1] = alpha[:-1].conj(), rho
     xi[:, 1, 0], xi[:, 1, 1] = rho, -alpha[:-1]
 
-    # xi[N-1] = alpha[N-1].conj()
     # L = diag(xi_0, xi_2, ...)
     # M = diag(1, xi_1, x_3, ...)
+    # xi[N-1] = alpha[N-1].conj()
     if size % 2 == 0:  # even
         L = sp.block_diag(xi[::2, :, :],
                           dtype=np.complex_)
@@ -405,12 +427,7 @@ def mu_ref_unif_unit_circle_sampler_quindiag(beta=2, size=10):
 ###########
 # Ginibre #
 ###########
-
-
 def ginibre_sampler_full(N):
-
-    # if beta == 1:
-    #     A = np.random.randn(N, N)
 
     A = np.random.randn(N, N) + 1j * np.random.randn(N, N)
 

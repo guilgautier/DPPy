@@ -133,25 +133,33 @@ Chain rule
 
 		Finally, sampling from a projection :math:`\operatorname{DPP}(\mathbf{K})` can be performed in :math:`\mathcal{O}(N r^2)`.
 
-	.. code-block:: python
+	.. testcode::
+
+		from numpy import ones
+		from numpy.random import seed, randn
+		from scipy.linalg import qr
+		from dppy.finite_dpps import FiniteDPP
+
+		seed(1)
 
 		r, N = 4, 10
+		eig_vals = ones(r)
+		eig_vecs, _ = qr(randn(N, r), mode='economic')
 
-		A = np.random.randn(r, N)
-		eig_vecs, _ = la.qr(A.T, mode="economic")
-		eig_vals = np.ones(r)
-		# K = (eig_vecs*eig_vals).dot(eig_vecs.T)
+		DPP = FiniteDPP('inclusion', **{'K_eig_dec':(eig_vals, eig_vecs)})
 
-		DPP = FiniteDPP("inclusion", projection=True, **{"K_eig_dec":(eig_vals, eig_vecs)})
-		# DPP = FiniteDPP("inclusion", projection=True, **{"K":K})
+		for _ in range(10):
+			DPP.sample_exact()
 
-		DPP.sample_exact()
-		DPP.list_of_samples
-		# [[1, 4, 3, 8]]
+		print(list(map(list, DPP.list_of_samples)))
+	
+	.. testoutput::
+
+		[[0, 4, 8, 2], [1, 8, 2, 0], [8, 3, 6, 1], [6, 7, 1, 9], [9, 3, 0, 4], [9, 4, 0, 8], [9, 6, 1, 8], [0, 1, 2, 7], [1, 2, 8, 9], [8, 2, 9, 4]]
 
 	.. seealso::
 
-		.. currentmodule:: finite_dpps
+		.. currentmodule:: dppy.finite_dpps
 
 		- :func:`FiniteDPP.sample_exact <FiniteDPP.sample_exact>`
 		- :cite:`HKPV06` Algorithm 18 and Proposition 19, for the original idea
@@ -251,7 +259,7 @@ Generic DPPs
 			\quad \text{and} \quad
 			\tilde{\mathbf{L}} = W \Gamma W^{\top}
 
-		we have,
+		where
 
 		.. math::
 
@@ -269,53 +277,52 @@ Generic DPPs
 
 	In the generic setting, the exact sampling scheme works as a two steps algorithm:
 
-	**Phase 1** Draw independent Bernoulli variables :math:`(B_n)` with parameters the eigenvalues:
+	**Phase 1** Draw independent Bernoulli variables :math:`(B_n)` with parameters the eigenvalues of :math:`\mathbf{K}`:
 
-		- :math:`(\lambda_n)_{1:N}` of the inclusion kernel :math:`\mathbf{K}`,
-		- :math:`(\delta_n)_{1:N}` of the marginal kernel :math:`\mathbf{L}`,
-		- :math:`(\gamma_n)_{1:d}` of the (marginal) dual :math:`\tilde{\mathbf{L}}`, respectively.
+		.. math::
 
-	**Phase 2** Conditionally on :math:`(B_n)` set :math:`\mathcal{B} = \{ n ~;~ B_n = 1 \}` and apply :eq:`phase_2_eig_vec` with 
+			\lambda_n
+			= \frac{\delta_n}{1+\delta_n}
+			= \frac{\gamma_n}{1+\gamma_n}
 
-		- :math:`r=|\mathcal{B}|`
+	**Phase 2** Conditionally on :math:`(B_n)` set :math:`\mathcal{B} = \{ n ~;~ B_n = 1 \}` and apply the chain rule :eq:`phase_2_eig_vec` with 
 
-	and 
 
-		- :math:`U=U_{:\mathcal{B}}`,
-		- :math:`U=V_{:\mathcal{B}}`,
-		- :math:`\Phi^{\top} W_{:\mathcal{B}} \Gamma_{:\mathcal{B}}^{-1/2}`, respectively.
-		  
-.. code-block:: python
+		.. math::
 
-	r, N = 4, 10
+			r = |\mathcal{B}|
+			\quad \text{and} \quad
+			U =
+				U_{:\mathcal{B}}, \ 
+				V_{:\mathcal{B}}, \
+				\Phi^{\top} W_{:\mathcal{B}} \Gamma_{:\mathcal{B}}^{-1/2} \ 
+			\text{respectively}
 
-.. code-block:: python
+	.. testcode::
 
-	### Inclusion kernel
-	A = np.random.randn(r, N)
-	eig_vecs, _ = la.qr(A.T, mode="economic")
-	eig_vals = np.random.rand(r) # 0 < < 1
+		from numpy.random import seed, rand, randn
+		from scipy.linalg import qr
+		from dppy.finite_dpps import FiniteDPP
 
-	DPP = FiniteDPP("inclusion", **{"K_eig_dec":(eig_vals, eig_vecs)})
+		seed(1)
 
-	DPP.sample_exact()
-	DPP.list_of_samples
-	# [[6, 0, 8]]
+		r, N = 5, 10
+		eig_vals = rand(r)
+		eig_vecs, _ = qr(randn(N, r), mode='economic')
 
-.. code-block:: python
+		DPP = FiniteDPP('inclusion', **{'K_eig_dec':(eig_vals, eig_vecs)})
 
-	### Marginal kernel
-	Phi = np.random.randn(r, N) # L = Phi.T Phi
+		for _ in range(10):
+			DPP.sample_exact()
 
-	DPP = FiniteDPP("marginal", **{"L_gram_factor":Phi})
+		print(list(map(list, DPP.list_of_samples)))
+	
+	.. testoutput::
 
-	DPP.sample_exact()
-	DPP.list_of_samples
-	# d=4 < N=10: L dual kernel was computed
-	# [[7, 2]]
+		[[7], [4], [3, 4], [4, 2, 3], [9, 3], [0], [1], [4, 7], [0, 6], [4]]
 
 .. seealso::
 
-	.. currentmodule:: finite_dpps
+	.. currentmodule:: dppy.finite_dpps
 
 	:func:`FiniteDPP.sample_exact <FiniteDPP.sample_exact>`

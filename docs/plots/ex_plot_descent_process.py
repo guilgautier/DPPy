@@ -1,5 +1,6 @@
 from dppy.exotic_dpps import DescentProcess
 
+
 dp = DescentProcess()
 
 size = 100

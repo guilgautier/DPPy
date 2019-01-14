@@ -99,7 +99,7 @@ class FiniteDPP:
             self.K_eig_vals = is_in_01(e_vals)
         self.eig_vecs = is_orthonormal(e_vecs)
 
-        self.A_zono = is_full_row_rank(params.get('A_zono'))
+        self.A_zono = is_full_row_rank(params.get('A_zono', None))
 
         # Attributes relative to L marginal kernel:
         # L, L_eig_vals, L_eig_vecs, L_gram_factor, L_dual
@@ -117,19 +117,20 @@ class FiniteDPP:
             self.eig_vecs = is_orthonormal(e_vecs)
 
         # L' "dual" marginal kernel, L' = Phi Phi.T, Phi = L_gram_factor
-        self.L_dual = None
         self.L_gram_factor = params.get('L_gram_factor', None)
+        self.L_dual_eig_vals = None
+        self.L_dual_eig_vecs = None
+
         if self.L_gram_factor is not None:
             Phi = self.L_gram_factor
             d, N = Phi.shape
             if d < N:
-                self.L_dual = Phi.dot(Phi.T)
-                print('L_dual = Phi Phi.T was computed: Phi (dxN) with d<N')
-                self.L_dual_eig_vals = None
-                self.L_dual_eig_vecs = None
+                self.L_dual_eig_vals, self.L_dual_eig_vecs =\
+                    la.eigh(Phi.dot(Phi.T))
+                print('L_dual = Phi Phi.T was computed: Phi (dxN) with d<N and eigendecomposition performed in prep for sampling')
             else:
-                self.L = Phi.T.dot(Phi)
-                print('L = Phi.T Phi was computed: Phi (dxN) with d>=N')
+                self.L_eig_vals, self.eig_vecs = la.eigh(Phi.T.dot(Phi))
+                print('L = Phi.T Phi was computed: Phi (dxN) with d>=N and eigendecomposition performed in prep for sampling')
 
     def __str__(self):
         str_info = ['DPP defined through {} {} kernel'
@@ -154,7 +155,7 @@ class FiniteDPP:
 
         if self.kernel_type == K_type:
             if self.params_keys.intersection(K_params):
-                if hasattr(self, 'A_zono') and not self.projection:
+                if 'A_zono' in self.params_keys and not self.projection:
                     warn('Weird setting: inclusion kernel defined via `A_zono` but `projection`=False. `projection` switched to True')
                     self.projection = True
             else:
@@ -225,7 +226,7 @@ class FiniteDPP:
         :return:
             A sample from the corresponding :class:`FiniteDPP <FiniteDPP>` object.
         :rtype:
-            list
+            array_like
 
         .. note::
 
@@ -251,14 +252,17 @@ class FiniteDPP:
             # Phase 1
             V = dpp_eig_vecs_selector(self.K_eig_vals, self.eig_vecs)
             # Phase 2
-            sampl = proj_dpp_sampler_eig(V, self.sampling_mode)
+            if V.shape[1]:
+                sampl = proj_dpp_sampler_eig(V, self.sampling_mode)
+            else:
+                sampl = np.array([])
             self.list_of_samples.append(sampl)
 
         elif self.L_eig_vals is not None:
             self.K_eig_vals = self.L_eig_vals / (1.0 + self.L_eig_vals)
             self.sample_exact(self.sampling_mode)
 
-        elif hasattr(self, 'L_dual_eig_vals'):
+        elif self.L_dual_eig_vals is not None:
             # Phase 1
             V = dpp_eig_vecs_selector_L_dual(self.L_dual_eig_vals,
                                              self.L_dual_eig_vecs,
@@ -289,7 +293,7 @@ class FiniteDPP:
 
         # If DPP defined through inclusion kernel with parameter 'A_zono'
         # a priori you wish to use the zonotope approximate sampler
-        elif hasattr(self, 'A_zono'):
+        elif self.A_zono:
             warn('DPP defined via `A_zono`, apriori you want to use `sampl_mcmc`, but you have called `sample_exact`')
 
             self.K_eig_vals = np.ones(self.A_zono.shape[0])
@@ -330,7 +334,7 @@ class FiniteDPP:
         :return:
             A sample from the corresponding :class:`FiniteDPP <FiniteDPP>` object.
         :rtype:
-            list
+            list of lists
 
         .. seealso::
 
@@ -397,7 +401,7 @@ class FiniteDPP:
                 print(msg)
                 self.K = (self.eig_vecs * self.K_eig_vals).dot(self.eig_vecs.T)
 
-            elif hasattr(self, 'A_zono'):
+            elif self.A_zono is not None:
                 msg = '\n'.join('- K = A.T (AA.T)^-1 A, using',
                                 '- U = QR(A.T)',
                                 '- K = U U.T')

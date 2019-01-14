@@ -86,23 +86,37 @@ Variance
 
 .. testcode::
 
-	from finite_dpps import *
-	np.random.seed(4321)
+	from numpy import array
+	from numpy.random import seed, randn, rand
+	from scipy.linalg import qr
+	from dppy.finite_dpps import FiniteDPP
 
-	r, N = 4, 10
+	seed(1)
 
-	A = np.random.randn(r, N)
-	eig_vecs, _ = la.qr(A.T, mode="economic")
-	eig_vals = np.random.rand(r) # 0< <1
+	r, N = 5, 10
+	eig_vals = rand(r) # 0< <1
+	eig_vecs, _ = qr(randn(N, r), mode='economic')
 
-	DPP = FiniteDPP("inclusion", **{"K_eig_dec":(eig_vals, eig_vecs)})
+	DPP = FiniteDPP('inclusion', projection=False,
+	                **{'K_eig_dec':(eig_vals, eig_vecs)})
 
-	for _ in range(10): DPP.sample_exact()
-	print(DPP.list_of_samples)
+	nb_samples = 2000
+	for _ in range(nb_samples):
+	    DPP.sample_exact()
+
+	sizes = array([s.size for s in DPP.list_of_samples])
+	print('E[|X|]:\n theo={:.3f}, emp={:.3f}'
+	      .format(sizes.mean(), eig_vals.sum()))
+	print('Var[|X|]:\n theo={:.3f}, emp={:.3f}'
+	      .format(sizes.var(), (eig_vals*(1-eig_vals)).sum()))
 
 .. testoutput::
 
-	[[2, 5, 6], [8], [5, 7], [1, 3], [4, 8], [9], [7, 5], [8, 9], [7, 1, 8], [5, 4, 7]]
+	E[|X|]:
+	 theo=1.581, emp=1.587
+	Var[|X|]:
+	 theo=0.795, emp=0.781
+
 
 .. important::
 
@@ -142,23 +156,27 @@ Variance
 
 	.. testcode::
 
-		from finite_dpps import *
-		np.random.seed(4321)
+		from numpy import ones
+		from numpy.random import seed, randn
+		from scipy.linalg import qr
+		from dppy.finite_dpps import FiniteDPP
+
+		seed(1)
 
 		r, N = 4, 10
+		eig_vals = ones(r)
+		eig_vecs, _ = qr(randn(N, r), mode='economic')
 
-		A = np.random.randn(r, N)
-		eig_vecs, _ = la.qr(A.T, mode="economic")
-		eig_vals = np.ones(r)
+		DPP = FiniteDPP('inclusion', **{'K_eig_dec':(eig_vals, eig_vecs)})
 
-		DPP = FiniteDPP("inclusion", **{"K_eig_dec":(eig_vals, eig_vecs)})
+		for _ in range(10):
+			DPP.sample_exact()
 
-		for _ in range(10): DPP.sample_exact()
-		print(DPP.list_of_samples)
+		print(list(map(list, DPP.list_of_samples)))
 	
 	.. testoutput::
 
-		[[1, 2, 5, 7], [0, 9, 7, 8], [5, 7, 9, 0], [5, 1, 7, 8], [0, 3, 8, 7], [3, 2, 7, 8], [5, 8, 0, 9], [7, 6, 3, 1], [1, 7, 9, 5], [4, 7, 5, 2]]
+		[[0, 4, 8, 2], [1, 8, 2, 0], [8, 3, 6, 1], [6, 7, 1, 9], [9, 3, 0, 4], [9, 4, 0, 8], [9, 6, 1, 8], [0, 1, 2, 7], [1, 2, 8, 9], [8, 2, 9, 4]]
 
 .. _finite_dpps_geometry:
 
@@ -242,27 +260,31 @@ Thus, except for inclusion kernels :math:`\mathbf{K}` with some eigenvalues equa
 
 .. math::
 
-	\mathbf{K} = U \Lambda^{\mathbf{K}} U^{\dagger}
-		\qquad \text{and} \qquad
-	\mathbf{L} = U \Lambda^{\mathbf{L}} U^{\dagger}
+	\mathbf{K} = U \Lambda U^{\dagger}, \quad
+	\mathbf{L} = U \Gamma U^{\dagger}
+	\qquad \text{with} \qquad
+	\lambda_n = \frac{\gamma_n}{1+\gamma_n}
 
 .. code-block:: python
 
-	r, N = 4, 10
-	A = np.random.randn(r, N)
-	U, _ = la.qr(A.T, mode="economic")
-	eig_vals = np.random.rand(r) # 0< <1
+	from numpy.random import randn, rand
+	from scipy.linalg import qr
+	from dppy.finite_dpps import FiniteDPP
 
-	DPP = FiniteDPP("inclusion", **{'K_eig_dec': (eig_vals, U)})
+	r, N = 4, 10
+	eig_vals = rand(r)  # 0< <1
+	eig_vecs, _ = qr(randn(N, r), mode='economic')
+
+	DPP = FiniteDPP('inclusion', **{'K_eig_dec': (eig_vals, eig_vecs)})
 	DPP.compute_L()
 
-	#	L (marginal) kernel computed via:
-	#	- eig_L = eig_K/(1-eig_K)
-	#	- U diag(eig_L) U.T
+	# - L (marginal) kernel computed via:
+	# - eig_L = eig_K/(1-eig_K)
+	# - U diag(eig_L) U.T
 
 .. seealso::
 
-	.. currentmodule:: finite_dpps
+	.. currentmodule:: dppy.finite_dpps
 
 	- :func:`FiniteDPP.compute_K <FiniteDPP.compute_K>`
 	- :func:`FiniteDPP.compute_L <FiniteDPP.compute_L>`

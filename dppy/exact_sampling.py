@@ -17,8 +17,6 @@ import scipy.linalg as la
 #####################
 # Projection kernel #
 #####################
-
-
 # Sample projection DPP from kernel
 def proj_dpp_sampler_kernel(kernel, mode='GS'):
     """
@@ -197,8 +195,6 @@ def proj_dpp_sampler_kernel_Schur(K, size=None):
 ##################
 # Generic kernel #
 ##################
-
-
 # Phase 1: subsample eigenvectors by drawing independent Bernoulli variables with parameter the eigenvalues of the inclusion kernel K.
 def dpp_eig_vecs_selector(ber_params, eig_vecs):
     """ Phase 1 of exact sampling procedure. Subsample eigenvectors :math:`V` of the initial kernel (inclusion :math:`K`, resp. marginal :math:`L`) to build a projection DPP with kernel :math:`V V^{\top}` from which sampling is easy.
@@ -232,10 +228,10 @@ def dpp_eig_vecs_selector(ber_params, eig_vecs):
 
 
 def dpp_eig_vecs_selector_L_dual(eig_vals, eig_vecs, gram_factor):
-    """ Subsample eigenvectors :math:`V` of marginal kernel :math:`L=\Phi \Phi^{\top}` based on the eigendecomposition dual kernel :math:`L'=\Phi \Phi^{\top}`.
+    """ Subsample eigenvectors :math:`V` of marginal kernel :math:`L=\Phi^{\top} \Phi` based on the eigendecomposition dual kernel :math:`L'=\Phi \Phi^{\top}`. Note that :math:`L'` and :math:`L'` share the same nonzero eigenvalues.
 
     :param eig_vals:
-        Collection of eigenvalues of :math:`L` or :math:`L_dual` kernel.
+        Collection of eigenvalues of :math:`L_dual` kernel.
     :type eig_vals:
         list, array_like
 
@@ -245,7 +241,7 @@ def dpp_eig_vecs_selector_L_dual(eig_vals, eig_vecs, gram_factor):
         array_like
 
     :param gram_factor:
-        Feature vectors
+        Feature matrix :math:`\Phi`
     :type gram_factor:
         array_like
 
@@ -291,7 +287,6 @@ def proj_dpp_sampler_eig(eig_vecs, mode='GS'):
         - :func:`proj_dpp_sampler_eig_GS_bis <proj_dpp_sampler_eig_GS_bis>`
         - :func:`proj_dpp_sampler_eig_KuTa12 <proj_dpp_sampler_eig_KuTa12>`
     """
-
     if eig_vecs.shape[1]:
         # Phase 2: Sample from projection kernel VV.T
         # Chain rule, conditionals are updated using:
@@ -340,6 +335,7 @@ def proj_dpp_sampler_eig_GS(eig_vecs, size=None):
 
     # Initialization
     V = eig_vecs
+    
     N, rank = V.shape  # ground set size / rank(K)
     ground_set = np.arange(N)
 
