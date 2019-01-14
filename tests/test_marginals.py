@@ -1,218 +1,145 @@
+# -*- coding: utf-8 -*-
+""" Unit tests:
+
+- :class:`MarginalsProjectionDPP` to check that exact samplers for finite DPPs have the right (at least 1 and 2) inclusion probabilities
+"""
+
 import unittest
-import scipy.stats as sps
+
 import numpy as np
-import numpy.random as npr
-import numpy.linalg as npl
+from numpy.random import randn, choice
+
+from scipy.linalg import qr
+from scipy.stats import chisquare
+
+from itertools import chain  # to flatten list of samples
+
 import sys
-sys.path.append("..")
-from dppy.finite_dpps import *
+sys.path.append('..')
+import matplotlib as mpl
+mpl.use('TkAgg')
 
-class FollowsTheRightMarginalForSingletons(unittest.TestCase):
+from dppy.exact_sampling import proj_dpp_sampler_kernel_GS,\
+                                proj_dpp_sampler_kernel_Schur
+from dppy.exact_sampling import proj_dpp_sampler_eig_GS,\
+                                proj_dpp_sampler_eig_GS_bis,\
+                                proj_dpp_sampler_eig_KuTa12
+from dppy.utils import det_ST
+
+
+class InclusionProbabilitiesProjectionDPP(unittest.TestCase):
+    """Check that exact samplers for finite DPPs have the right (at least 1 and 2) inclusion probabilities
+            
+    .. math::
+
+        \mathbb{P}[S\subset \mathcal{X}] = \det K_S
     """
-    """
 
-    def testGS(self):
+    rank, N = 6, 10
+    # eig_vals = np.ones(rank)
+    eig_vecs, _ = qr(randn(N, rank), mode="economic")
+    K = eig_vecs.dot(eig_vecs.T)
+
+    nb_samples = 100
+    list_of_samples = []
+
+    def singleton_adequation(self, tol=0.05):
+        """Perform chi-square test"""
+
+        singletons = list(chain.from_iterable(self.list_of_samples))
+
+        freq, _ = np.histogram(singletons, bins=np.arange(self.N + 1),
+                               density=True)
+        marg_theo = np.diag(self.K) / self.rank
+
+        _, pval = chisquare(f_obs=freq, f_exp=marg_theo)
+
+        return pval > tol
+
+    def doubleton_adequation(self, tol=0.05):
+        """Perform chi-square test"""
+
+        samples = list(map(set, self.list_of_samples))
+
+        nb_doubletons_to_check = 10
+        doubletons = [set(choice(self.N, size=2, p=np.diag(self.K) / self.rank,
+                                 replace=False))
+                      for _ in range(nb_doubletons_to_check)]
+
+        counts = [sum([doubl.issubset(sampl) for sampl in samples])
+                  for doubl in doubletons]
+        freq = np.array(counts) / self.nb_samples
+        marg_theo = [det_ST(self.K, list(d)) for d in doubletons]
+
+        _, pval = chisquare(f_obs=freq, f_exp=marg_theo)
+
+        return pval > tol
+
+    def test_kernel_GS(self):
+        """ Test whether 'GS' sampling mode generates samples with the right 1 and 2 points inclusion probabilities when DPP defined by projection inclusion kernel K.
         """
-        test whether GS samples the right marginals
+
+        self.list_of_samples = []
+        for _ in range(self.nb_samples):
+            sampl = proj_dpp_sampler_kernel_GS(self.K)
+            self.list_of_samples.append(sampl)
+
+        self.assertTrue(self.singleton_adequation())
+        self.assertTrue(self.doubleton_adequation())
+
+    def test_kernel_Schur(self):
+        """ Test whether 'Schur' sampling mode generates samples with the right 1 and 2 points inclusion probabilities when DPP defined by projection inclusion kernel K.
         """
-        npr.seed(1)
 
-        # build a projection matrix K
-        N = 10
-        A = npr.randn(N**2).reshape((N,N))
-        Q, R = npl.qr(A)
-        L = np.eye(N)
-        r = N//2 # rank of the projection used for testing
-        for i in range(N-r):
-            L[i,i] = 0
-        K = Q.dot(L.dot(Q.T)) # projection matrix by construction
-        dpp = FiniteDPP(kernel_type="inclusion", proj=True, K=K)
+        self.list_of_samples = []
+        for _ in range(self.nb_samples):
+            sampl = proj_dpp_sampler_kernel_Schur(self.K)
+            self.list_of_samples.append(sampl)
 
-        # sample from the dpp
-        numSamples = 100
-        for _ in range(numSamples):
-            dpp.sample_exact(mode="GS")
+        self.assertTrue(self.singleton_adequation())
+        self.assertTrue(self.doubleton_adequation())
 
-        # perform chi-square test
-        h, bins = np.histogram([item for sublist in dpp.list_of_samples for item in sublist], bins = np.arange(N+1))
-        observedFrequencies = h/np.sum(h)
-        expectedFrequencies = np.diag(K)/r
-        chi2, pval = sps.chisquare(observedFrequencies, expectedFrequencies)
-        self.failUnless(pval>0.05)
-
-    def testGS_bis(self):
+    def test_eig_GS(self):
+        """ Test whether 'GS' sampling mode generates samples with the right 1 and 2 points inclusion probabilities when DPP defined by its eigendecomposition
         """
-        test whether GS samples the right marginals
+
+        self.list_of_samples = []
+        for _ in range(self.nb_samples):
+            sampl = proj_dpp_sampler_eig_GS(self.eig_vecs)
+            self.list_of_samples.append(sampl)
+
+        self.assertTrue(self.singleton_adequation())
+        self.assertTrue(self.doubleton_adequation())
+
+    def test_eig_GS_bis(self):
+        """ Test whether 'GS_bis' sampling mode generates samples with the right 1 and 2 points inclusion probabilities when DPP defined by its eigendecomposition
         """
-        npr.seed(1)
 
-        # build a projection matrix K
-        N = 10
-        A = npr.randn(N**2).reshape((N,N))
-        Q, R = npl.qr(A)
-        L = np.eye(N)
-        r = N//2 # rank of the projection used for testing
-        for i in range(N-r):
-            L[i,i] = 0
-        K = Q.dot(L.dot(Q.T)) # projection matrix by construction
-        dpp = FiniteDPP(kernel_type="inclusion", proj=True, K=K)
+        self.list_of_samples = []
+        for _ in range(self.nb_samples):
+            sampl = proj_dpp_sampler_eig_GS_bis(self.eig_vecs)
+            self.list_of_samples.append(sampl)
 
-        # sample from the dpp
-        numSamples = 100
-        for _ in range(numSamples):
-            dpp.sample_exact(mode="GS_bis")
+        self.assertTrue(self.singleton_adequation())
+        self.assertTrue(self.doubleton_adequation())
 
-        # perform chi-square test
-        h, bins = np.histogram([item for sublist in dpp.list_of_samples for item in sublist], bins = np.arange(N+1))
-        observedFrequencies = h/np.sum(h)
-        expectedFrequencies = np.diag(K)/r
-        chi2, pval = sps.chisquare(observedFrequencies, expectedFrequencies)
-        self.failUnless(pval>0.05)
-
-    def testKuTa12(self):
+    def test_eig_KuTa12(self):
+        """ Test whether 'KuTa12' sampling mode generates samples with the right 1 and 2 points inclusion probabilities when DPP defined by its eigendecomposition
         """
-        test whether GS samples the right marginals
-        """
-        npr.seed(1)
 
-        # build a projection matrix K
-        N = 10
-        A = npr.randn(N**2).reshape((N,N))
-        Q, R = npl.qr(A)
-        L = np.eye(N)
-        r = N//2 # rank of the projection used for testing
-        for i in range(N-r):
-            L[i,i] = 0
-        K = Q.dot(L.dot(Q.T)) # projection matrix by construction
-        dpp = FiniteDPP(kernel_type="inclusion", proj=True, K=K)
+        self.list_of_samples = []
+        for _ in range(self.nb_samples):
+            sampl = proj_dpp_sampler_eig_KuTa12(self.eig_vecs)
+            self.list_of_samples.append(sampl)
 
-        # sample from the dpp
-        numSamples = 100
-        for _ in range(numSamples):
-            dpp.sample_exact(mode="KuTa12")
+        self.assertTrue(self.singleton_adequation())
+        self.assertTrue(self.doubleton_adequation())
 
-        # perform chi-square test
-        h, bins = np.histogram([item for sublist in dpp.list_of_samples for item in sublist], bins = np.arange(N+1))
-        observedFrequencies = h/np.sum(h)
-        expectedFrequencies = np.diag(K)/r
-        chi2, pval = sps.chisquare(observedFrequencies, expectedFrequencies)
-        self.failUnless(pval>0.05)
-
-class FollowsTheRightMarginalForDoubletons(unittest.TestCase):
-
-    def testGS(self):
-        """
-        test whether GS samples the right marginals
-        """
-        npr.seed(1)
-
-        # build a projection matrix K
-        N = 10
-        A = npr.randn(N**2).reshape((N,N))
-        Q, R = npl.qr(A)
-        L = np.eye(N)
-        r = N//2 # rank of the projection used for testing
-        for i in range(N-r):
-            L[i,i] = 0
-        K = Q.dot(L.dot(Q.T)) # projection matrix by construction
-        dpp = FiniteDPP(kernel_type="inclusion", proj=True, K=K)
-
-        # sample from the dpp
-        numSamples = 100
-        for _ in range(numSamples):
-            dpp.sample_exact(mode="GS")
-
-        # Sample doubletons with high likelihood and count them
-        doubletons = [npr.choice(N, size=2, p=np.diag(K)/r, replace=False)
-                for _ in range(10)]
-        counts = []
-        for doubleton in doubletons:
-            counts.append(np.sum([set(doubleton).issubset(set(sample))
-                for sample in dpp.list_of_samples]))
-        observedFrequencies = np.array(counts)/len(dpp.list_of_samples)
-
-        # perform chi-square test
-        expectedFrequencies = [npl.det(K[d,:][:,d]) for d in doubletons]
-        chi2, pval = sps.chisquare(observedFrequencies, expectedFrequencies)
-        self.failUnless(pval>0.05)
-
-    def testGS_bis(self):
-        """
-        test whether GS samples the right marginals
-        """
-        npr.seed(1)
-
-        # build a projection matrix K
-        N = 10
-        A = npr.randn(N**2).reshape((N,N))
-        Q, R = npl.qr(A)
-        L = np.eye(N)
-        r = N//2 # rank of the projection used for testing
-        for i in range(N-r):
-            L[i,i] = 0
-        K = Q.dot(L.dot(Q.T)) # projection matrix by construction
-        dpp = FiniteDPP(kernel_type="inclusion", proj=True, K=K)
-
-        # sample from the dpp
-        numSamples = 100
-        for _ in range(numSamples):
-            dpp.sample_exact(mode="GS_bis")
-
-        # Sample doubletons with high likelihood and count them
-        doubletons = [npr.choice(N, size=2, p=np.diag(K)/r, replace=False)
-                for _ in range(10)]
-        counts = []
-        for doubleton in doubletons:
-            counts.append(np.sum([set(doubleton).issubset(set(sample))
-                for sample in dpp.list_of_samples]))
-        observedFrequencies = np.array(counts)/len(dpp.list_of_samples)
-
-        # perform chi-square test
-        expectedFrequencies = [npl.det(K[d,:][:,d]) for d in doubletons]
-        chi2, pval = sps.chisquare(observedFrequencies, expectedFrequencies)
-        self.failUnless(pval>0.05)
-
-    def testKuTa12(self):
-        """
-        test whether GS samples the right marginals
-        """
-        npr.seed(1)
-
-        # build a projection matrix K
-        N = 10
-        A = npr.randn(N**2).reshape((N,N))
-        Q, R = npl.qr(A)
-        L = np.eye(N)
-        r = N//2 # rank of the projection used for testing
-        for i in range(N-r):
-            L[i,i] = 0
-        K = Q.dot(L.dot(Q.T)) # projection matrix by construction
-        dpp = FiniteDPP(kernel_type="inclusion", proj=True, K=K)
-
-        # sample from the dpp
-        numSamples = 100
-        for _ in range(numSamples):
-            dpp.sample_exact(mode="KuTa12")
-
-        # Sample doubletons with high likelihood and count them
-        doubletons = [npr.choice(N, size=2, p=np.diag(K)/r, replace=False)
-                for _ in range(10)]
-        counts = []
-        for doubleton in doubletons:
-            counts.append(np.sum([set(doubleton).issubset(set(sample))
-                for sample in dpp.list_of_samples]))
-        observedFrequencies = np.array(counts)/len(dpp.list_of_samples)
-
-        # perform chi-square test
-        expectedFrequencies = [npl.det(K[d,:][:,d]) for d in doubletons]
-        chi2, pval = sps.chisquare(observedFrequencies, expectedFrequencies)
-        self.failUnless(pval>0.05)
 
 def main():
-    #suite = unittest.TestSuite()
-    #suite.addTest(FollowsTheRightMarginalForSingletonsNew("GS_bis"))# for mode in
-    #unittest.TextTestRunner().run(suite)
+
     unittest.main()
+
 
 if __name__ == '__main__':
     main()
