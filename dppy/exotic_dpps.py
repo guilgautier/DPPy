@@ -21,19 +21,21 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.linalg import qr
 
-import functools  # used for decorators to pass docstring
-
-# For class UST
+# For Uniform Spanning Trees
 import networkx as nx
 from itertools import chain  # create graph edges from tree
+from dppy.exotic_dpps_core import ust_sampler_wilson, ust_sampler_aldous_broder
 from dppy.exact_sampling import proj_dpp_sampler_eig
 
-# For DescentProcess class
+# For DescentProcess
 import re  # to convert class names to string in
+from dppy.exotic_dpps_core import wrapper_plot_descent
 
-# For class PoissonizedPlancherel
-from bisect import bisect_right  # for RSK
-from matplotlib import collections as mc  # see plot_diagram
+# For Poissonized Plancherel measure
+from dppy.exotic_dpps_core import xy_young_ru, limit_shape
+
+# For both Descent Processes and Poissonized Plancherel
+from dppy.exotic_dpps_core import uniform_permutation
 
 
 ##########################
@@ -55,10 +57,13 @@ class UST:
 
     def __init__(self, graph):
 
-        self.graph = graph
+        if nx.is_connected(graph):
+            self.graph = graph
+        else:
+            raise ValueError('graph not connected')
 
         self.nodes = list(self.graph.nodes())
-        self.nb_nodes = len(self.graph)
+        self.nb_nodes = self.graph.number_of_nodes()  #len(self.graph)
 
         self.edges = list(self.graph.edges())
         self.nb_edges = self.graph.number_of_edges()
@@ -92,7 +97,7 @@ class UST:
         """
         self.list_of_samples = []
 
-    def sample(self, mode='Wilson'):
+    def sample(self, mode='Wilson', root=None):
         """ Sample a spanning of the underlying graph uniformly at random.
         It generates a networkx graph object.
 
@@ -111,13 +116,15 @@ class UST:
             - Aldous-Broder :cite:`Ald90`
         """
 
-        if mode == 'Wilson':
-            sampl = self.__wilson()
+        self.sampling_mode = mode
 
-        elif mode == 'Aldous-Broder':
-            sampl = self.__aldous()
+        if self.sampling_mode == 'Wilson':
+            sampl = ust_sampler_wilson(self.neighbors)
 
-        elif mode == 'DPP_exact':
+        elif self.sampling_mode == 'Aldous-Broder':
+            sampl = ust_sampler_aldous_broder(self.neighbors)
+
+        elif self.sampling_mode == 'DPP_exact':
 
             if self.kernel_eig_vecs is None:
                 self.__compute_kernel_eig_vecs()
@@ -129,18 +136,20 @@ class UST:
             sampl.add_edges_from(edges_finite_dpp)
 
         else:
-            err_print = ('Invalid `mode` argument.',
+            err_print = ('Invalid sampling mode',
                          'Choose: `Wilson`, `Aldous-Broder`, `DPP_exact`',
                          'Given {}'.format(mode))
             raise ValueError()
 
-        self.sampling_mode = mode
+
         self.list_of_samples.append(sampl)
 
     def compute_kernel(self):
-        """ Compute the orthogonal projection kernel :math:`\mathbf{K}` onto the row span of the vertex-edge incidence matrix, refering to the transfer current matrix.
-        In fact, one can discard any row of the vertex-edge incidence matrix (:math:`A`) to compute :math:`\mathbf{K}=A^{\top}[AA^{\top}]^{-1}A`.
-        In practice, we orthogonalize the rows of :math:`A` to get the eigenvectors :math:`U` of :math:`\mathbf{K}` and thus compute :math:`\mathbf{K}=UU^{\top}`.
+        """ Compute the orthogonal projection kernel :math:`\mathbf{K} = \text{Inc}^+ \text{Inc}` i.e. onto the span of the rows of the vertex-edge incidence matrix :math:`\text{Inc}` of size :math:`|V| x |E|`. 
+
+        In fact, for a connected graph, :math:`\text{Inc}` has rank :math:`|V|-1` and any row can be discarded to get an basis of row space. If we note :math:`A` the amputated version of :math:`\text{Inc}`, then :math:`\text{Inc}^+ = A^{\top}[AA^{\top}]^{-1}`.
+
+        In practice, we orthogonalize the rows of :math:`A` to get the eigenvectors :math:`U` of :math:`\mathbf{K}=UU^{\top}`.
 
         .. seealso::
 
@@ -149,18 +158,19 @@ class UST:
 
         if self.kernel is None:
             if self.kernel_eig_vecs is None:
-                self.__compute_kernel_eig_vecs()
+                self.__compute_kernel_eig_vecs()  # QR(Inc[:-1,:])
             # K = UU.T
             self.kernel = self.kernel_eig_vecs.dot(self.kernel_eig_vecs.T)
         else:
             pass
 
     def __compute_kernel_eig_vecs(self):
-        """Orthogonalize the rows of vertex-edge incidence matrix (:math:`A`) to get the eigenvectors :math:`U` of the kernel :math:`\mathbf{K}`.
+        """ See explaination in :func:`compute_kernel <compute_kernel>`
         """
 
-        vert_edg_inc = nx.incidence_matrix(self.graph, oriented=True)
-        A = vert_edg_inc[:-1, :].toarray()  # Discard any row e.g. the last one
+        inc_mat = nx.incidence_matrix(self.graph, oriented=True)
+        # Discard any row e.g. the last one
+        A = inc_mat[:-1, :].toarray()  
         # Orthonormalize rows of A
         self.kernel_eig_vecs, _ = qr(A.T, mode='economic')
 
@@ -270,90 +280,6 @@ class UST:
 
         plt.colorbar(heatmap)
 
-    def __wilson(self, root=None):
-
-        # Initialize the root, if root not specified start from any node
-        n0 = root if root else np.random.choice(self.nb_nodes, size=1)[0]
-        # -1 = not visited / 0 = in path / 1 = in tree
-        nodes_state = -np.ones(self.nb_nodes, dtype=int)
-
-        # Initialize the tree
-        nodes_state[n0] = 1  # mark root it as in tree
-        branches, tree_len = [], 1  # 1 for the root
-        path = []  # temporary path
-
-        while tree_len < self.nb_nodes:
-
-            # visit a neighbor of n0 uniformly at random
-            n1 = np.random.choice(self.neighbors[n0], size=1)[0]
-
-            if nodes_state[n1] == -1:  # not visited => continue the walk
-
-                path.extend([n1])  # add it to the path
-                nodes_state[n1] = 0  # mark it as in the path
-                n0 = n1  # continue the walk
-
-            if nodes_state[n1] == 0:  # loop on the path => erase the loop
-
-                knot = path.index(n1)  # find 1st appearence of n1 in the path
-                nodes_loop = path[knot + 1:]  # identify nodes forming the loop
-                del path[knot + 1:]  # erase the loop
-                nodes_state[nodes_loop] = -1  # mark loopy nodes as not visited
-                n0 = n1  # continue the walk
-
-            elif nodes_state[n1] == 1:  # hits the tree => new branch
-
-                if tree_len == 1:
-                    branches.append([n1] + path)  # initial branch of the tree
-                else:
-                    branches.append(path + [n1])  # path as a new branch
-
-                nodes_state[path] = 1  # mark the nodes as in the tree
-                tree_len += len(path)  # update the length of the tree
-
-                # Restart the walk from a random node among those not visited
-                nodes_not_visited = np.where(nodes_state == -1)[0]
-                if nodes_not_visited.size:
-                    n0 = np.random.choice(nodes_not_visited, size=1)[0]
-                    path = [n0]
-
-        wilson_tree_graph = nx.Graph()
-        tree_edges = list(chain.from_iterable(map(lambda x: zip(x[:-1], x[1:]),
-                                                  branches)))
-        wilson_tree_graph.add_edges_from(tree_edges)
-
-        return wilson_tree_graph
-
-    def __aldous(self, root=None):
-
-        # Initialize the root, if root not specified start from any node
-        n0 = root if root else np.random.choice(self.nb_nodes, size=1)[0]
-
-        # Initialize the tree
-        tree_edges, tree_len = [], 1
-        visited = np.zeros(self.nb_nodes, dtype=bool)
-        visited[n0] = True
-
-        while tree_len < self.nb_nodes:
-
-            # visit a neighbor of n0 uniformly at random
-            n1 = np.random.choice(self.neighbors[n0], size=1)[0]
-
-            if visited[n1]:  # visited => continue the walk
-                pass
-
-            else:  # not visited => save the edge (n0, n1) and continue walk
-                tree_edges.append((n0, n1))
-                visited[n1] = True  # mark it as in the tree
-                tree_len += 1
-
-            n0 = n1
-
-        aldous_tree_graph = nx.Graph()
-        aldous_tree_graph.add_edges_from(tree_edges)
-
-        return aldous_tree_graph
-
 
 #####################
 # Descent Processes #
@@ -366,20 +292,11 @@ class Descent(metaclass=abc.ABCMeta):
             ' '.join(re.findall('[A-Z][^A-Z]*', self.__class__.__name__))
         self.list_of_samples = []
         self.size = 100
-
-    @property
+    
+    @abc.abstractmethod
     def _bernoulli_param(self):
-        return 0.5
-
-    @staticmethod
-    def unif_permutation(N):
-
-        tmp = np.arange(N)
-        for i in range(N - 1, 1, -1):
-            j = np.random.randint(0, i + 1)
-            tmp[j], tmp[i] = tmp[i], tmp[j]
-
-        return tmp
+        """Parameter of the corresponding process formed by i.i.d. Bernoulli variables.
+        This parameter corresponds to the probability that a descent occurs any index"""
 
     @abc.abstractmethod
     def sample(self):
@@ -390,44 +307,7 @@ class Descent(metaclass=abc.ABCMeta):
         """
         self.list_of_samples = []
 
-    def __overplot_descent(func):
-        @functools.wraps(func)
-        def wrapper(*args, **kwargs):
-
-            ax, size = func(*args, **kwargs)
-
-            # Spine options
-            ax.spines['bottom'].set_position('center')
-            ax.spines['left'].set_visible(False)
-            ax.spines['top'].set_visible(False)
-            ax.spines['right'].set_visible(False)
-
-            # Ticks options
-            minor_ticks = np.arange(0, size + 1)
-            major_ticks = np.arange(0, size + 1, 10)
-            ax.set_xticks(major_ticks)
-            ax.set_xticks(minor_ticks, minor=True)
-            ax.set_xticklabels(major_ticks, fontsize=15)
-            ax.xaxis.set_ticks_position('bottom')
-
-            ax.tick_params(
-                axis='y',           # changes apply to the y-axis
-                which='both',       # both major and minor ticks are affected
-                left=False,         # ticks along the left edge are off
-                right=False,        # ticks along the right edge are off
-                labelleft=False)    # labels along the left edge are off
-
-            ax.xaxis.grid(True)
-            ax.set_xlim([-1, size + 1])
-            ax.legend(bbox_to_anchor=(0, 0.85),
-                      frameon=False,
-                      prop={'size': 15})
-
-            # plt.show()
-
-        return wrapper
-
-    @__overplot_descent
+    @wrapper_plot_descent
     def plot(self, title=''):
         """Display the process on the real line
 
@@ -456,7 +336,7 @@ class Descent(metaclass=abc.ABCMeta):
 
         return ax, self.size
 
-    @__overplot_descent
+    @wrapper_plot_descent
     def plot_vs_bernoullis(self, title=''):
         """Display the process on the real line and compare it to a sequence of i.i.d. Bernoullis
 
@@ -556,6 +436,9 @@ class DescentProcess(Descent):
 
         return '\n'.join(str_info)
 
+    def _bernoulli_param(self):
+        return 0.5
+
     def sample(self, size=100):
         """ Draw a permutation :math:`\sigma\in\mathfrak{S}_N` uniformly at random and record the descents i.e. :math:`\{ i ~;~ \sigma_i > \sigma_{i+1} \}`.
 
@@ -567,7 +450,7 @@ class DescentProcess(Descent):
         """
 
         self.size = size
-        sigma = self.unif_permutation(self.size)
+        sigma = uniform_permutation(self.size)
 
         descent = 1 + np.where(sigma[:-1] > sigma[1:])[0]
 
@@ -621,7 +504,7 @@ class VirtualDescentProcess(Descent):
         """
 
         self.size = size
-        sigma = self.unif_permutation(self.size + 1)
+        sigma = uniform_permutation(self.size + 1)
 
         X = sigma[:-1] > sigma[1:]  # Record the descents in permutation
 
@@ -671,141 +554,13 @@ class PoissonizedPlancherel:
         """
         print(self.__str__())
 
-    @staticmethod
-    def unif_permutation(N):
-
-        tmp = np.arange(N)
-        for i in range(N - 1, 1, -1):
-            j = np.random.randint(0, i + 1)
-            tmp[j], tmp[i] = tmp[i], tmp[j]
-
-        return tmp
-
-    @staticmethod
-    def RSK(sigma):
-        """Apply Robinson-Schensted-Knuth correspondence on a sequence of reals, e.g. a permutation, and return the corresponding insertion and recording tableaux.
-
-        :param sigma:
-            Sequence of real numbers
-        :type sigma:
-            array_like
-
-        :return:
-            :math:`P, Q` insertion and recording tableaux
-        :rtype:
-            list
-        """
-
-        P, Q = [], []  # Insertion/Recording tableau
-
-        for it, x in enumerate(sigma, start=1):
-
-            # Iterate along the rows of the tableau P to find a place for the bouncing x and record the position where it is inserted
-            for row_P, row_Q in zip(P, Q):
-
-                # If x finds a place at the end of a row of P add it and record its position in the corresponding the row of Q
-                if x >= row_P[-1]:
-                    row_P.extend([x])
-                    row_Q.extend([it])
-                    break
-                else:
-                    # find place for x in the row of P to keep the row ordered
-                    ind_insert = bisect_right(row_P, x)
-                    # Swap x with
-                    x, row_P[ind_insert] = row_P[ind_insert], x
-
-            # If no room for x at the end of any row of P create a new row
-            else:
-                P.append([x])
-                Q.append([it])
-
-        return P, Q
-
-    @staticmethod
-    def xy_young_ru(young_diag):
-        """ Compute the xy coordinates of the boxes defining the young diagram, using the russian convention.
-
-        :param young_diag:
-            points
-        :type  young_diag:
-            array_like
-
-        :return:
-            :math:`\omega(x)`
-        :rtype:
-            array_like
-        """
-
-        def intertwine(arr_1, arr_2):
-            inter = np.empty((arr_1.size + arr_2.size,), dtype=arr_1.dtype)
-            inter[0::2], inter[1::2] = arr_1, arr_2
-            return inter
-
-        # horizontal lines
-        x_hor = intertwine(np.zeros_like(young_diag), young_diag)
-        y_hor = np.repeat(np.arange(1, young_diag.size + 1), repeats=2)
-
-        # vertical lines
-        uniq, ind = np.unique(young_diag[::-1], return_index=True)
-        gaps = np.ediff1d(uniq, to_begin=young_diag[-1])
-
-        x_vert = np.repeat(np.arange(1, 1 + gaps.sum()), repeats=2)
-        y_vert = np.repeat(young_diag.size - ind, repeats=gaps)
-        y_vert = intertwine(np.zeros_like(y_vert), y_vert)
-
-        xy_young_fr = np.column_stack(
-            [np.hstack([x_hor, x_vert]), np.hstack([y_hor, y_vert])])
-
-        rot_45_and_scale = np.array([[1.0, -1.0],
-                                     [1.0, 1.0]])
-
-        return xy_young_fr.dot(rot_45_and_scale.T)
-
-    @staticmethod
-    def limit_shape(x):
-        """ Evaluate :math:`\omega(x)` the limit-shape function :cite:`Ker96`
-
-        .. math::
-
-            \omega(x) =
-            \begin{cases}
-                |x|, &\text{if } |x|\geq 2\\
-                \frac{2}{\pi} \left(x \arcsin\left(\frac{x}{2}\right) + \sqrt{4-x^2} \right) &\text{otherwise } \end{cases}
-
-        :param x:
-            points
-        :type x:
-            array_like
-
-        :return:
-            :math:`\omega(x)`
-        :rtype:
-            array_like
-
-        .. seealso::
-
-            - :func:`plot_diagram <plot_diagram>`
-            - :cite:`Ker96`
-        """
-
-        w_x = np.zeros_like(x)
-
-        abs_x_gt2 = np.abs(x) >= 2.0
-
-        w_x[abs_x_gt2] = np.abs(x[abs_x_gt2])
-        w_x[~abs_x_gt2] = x[~abs_x_gt2] * np.arcsin(0.5 * x[~abs_x_gt2])\
-                          + np.sqrt(4.0 - x[~abs_x_gt2]**2)
-        w_x[~abs_x_gt2] *= 2.0 / np.pi
-
-        return w_x
-
     def sample(self):
         """ Sample from the Poissonized Plancherel measure.
         """
 
         N = np.random.poisson(self.theta)
-        sigma = self.unif_permutation(N)
-        P, _ = self.RSK(sigma)
+        sigma = uniform_permutation(N)
+        P, _ = RSK(sigma)
 
         # young_diag = [len(row) for row in P]
         young_diag = np.fromiter(map(len, P), dtype=int)
@@ -911,6 +666,7 @@ class PoissonizedPlancherel:
             ax.plot(x_lim_sh, self.limit_shape(x_lim_sh),
                     c='r', label='limit shape')
 
+        # Display stems linking sample on real line and descent in young diag
         # xy_y_diag = np.column_stack([y_diag,
         # np.arange(0.5, y_diag.size)]).dot(rot_45_and_scale.T)
         # if normalization:
