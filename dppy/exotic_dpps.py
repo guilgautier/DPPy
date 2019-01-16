@@ -293,10 +293,13 @@ class Descent(metaclass=abc.ABCMeta):
         self.list_of_samples = []
         self.size = 100
 
+    @property
     @abc.abstractmethod
     def _bernoulli_param(self):
         """Parameter of the corresponding process formed by i.i.d. Bernoulli variables.
         This parameter corresponds to the probability that a descent occurs any index"""
+
+        return 0.5
 
     @abc.abstractmethod
     def sample(self):
@@ -436,6 +439,7 @@ class DescentProcess(Descent):
 
         return '\n'.join(str_info)
 
+    @property
     def _bernoulli_param(self):
         return 0.5
 

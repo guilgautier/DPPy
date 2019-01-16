@@ -7,12 +7,6 @@ Just click, wait a little bit, and play with the notebook!
 
 - [Tutorial for DPPy (Tuto_DPPy)](Tuto_DPPy.ipynb): [![Google Colab](https://badgen.net/badge/Launch/on%20Google%20Colab/blue?icon=terminal)](https://colab.research.google.com/github/guilgautier/DPPy/blob/master/notebooks/Tuto_DPPy.ipynb) [![MyBinder](https://mybinder.org/badge.svg)](https://mybinder.org/v2/gh/guilgautier/DPPy/master?filepath=notebooks%2FTuto_DPPy.ipynb)
 
-Other notebooks include:
-
-- [About $\beta$-ensembles (beta_ensembles)](beta_ensembles.ipynb): [![Google Colab](https://badgen.net/badge/Launch/on%20Google%20Colab/blue?icon=terminal)](https://colab.research.google.com/github/guilgautier/DPPy/blob/master/notebooks/beta_ensembles.ipynb) [![MyBinder](https://mybinder.org/badge.svg)](https://mybinder.org/v2/gh/guilgautier/DPPy/master?filepath=notebooks%2Fbeta_ensembles.ipynb)
-- [Exotic DPPs (exotic_dpps)](exotic_dpps.ipynb): [![Google Colab](https://badgen.net/badge/Launch/on%20Google%20Colab/blue?icon=terminal)](https://colab.research.google.com/github/guilgautier/DPPy/blob/master/notebooks/exotic_dpps.ipynb) [![MyBinder](https://mybinder.org/badge.svg)](https://mybinder.org/v2/gh/guilgautier/DPPy/master?filepath=notebooks%2Fexotic_dpps.ipynb)
-- [Finite DPPs (finite_dpps)](finite_dpps.ipynb): [![Google Colab](https://badgen.net/badge/Launch/on%20Google%20Colab/blue?icon=terminal)](https://colab.research.google.com/github/guilgautier/DPPy/blob/master/notebooks/finite_dpps.ipynb) [![MyBinder](https://mybinder.org/badge.svg)](https://mybinder.org/v2/gh/guilgautier/DPPy/master?filepath=notebooks%2Ffinite_dpps.ipynb)
-
 > [The wonderful Jupyter tools](http://jupyter.org/)  is awesome to write interactive and nicely presented :snake: Python simulations!
 >
 > [![made-with-jupyter](https://img.shields.io/badge/Made%20with-Jupyter-1f425f.svg)](http://jupyter.org/) [![made-with-python](https://img.shields.io/badge/Made%20with-Python-1f425f.svg)](https://www.python.org/)
