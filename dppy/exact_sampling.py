@@ -10,8 +10,8 @@
 """
 
 import numpy as np
-from numpy.core.umath_tests import inner1d
 import scipy.linalg as la
+from dppy.utils import inner1d
 
 
 #####################
@@ -185,9 +185,9 @@ def proj_dpp_sampler_kernel_Schur(K, size=None):
 
         # 2) update Schur complements
         # K_ii - K_iY (K_Y)^-1 K_Yi for Y <- Y+j
+        K_iY = K[np.ix_(avail, sampl[:it+1])]
         schur_comp[avail] =\
-            K_diag[avail] - inner1d(K[np.ix_(avail, sampl[:it+1])],
-                                    K[np.ix_(avail, sampl[:it+1])].dot(K_inv))
+            K_diag[avail] - inner1d(K_iY.dot(K_inv), K_iY, axis=1)
 
     return sampl
 
@@ -351,7 +351,7 @@ def proj_dpp_sampler_eig_GS(eig_vecs, size=None):
     # Use Gram-Schmidt recursion to compute the Vol^2 of the parallelepiped spanned by the feature vectors associated to the sample
 
     c = np.zeros((N, size))
-    norms_2 = inner1d(V, V)  # residual norm^2
+    norms_2 = inner1d(V, axis=1)  # ||V_i:||^2
 
     for it in range(size):
         # Pick an item \propto this squred distance
@@ -414,8 +414,7 @@ def proj_dpp_sampler_eig_GS_bis(eig_vecs, size=None):
     # <V_i, P_{V_Y}^{orthog} V_j>
     contrib = np.zeros((N, size))
 
-    # Residual square norm ||P_{V_Y}^{orthog} V_j||^2
-    norms_2 = inner1d(V, V)
+    norms_2 = inner1d(V, axis=1)  # ||V_i:||^2
 
     for it in range(size):
 
@@ -502,7 +501,7 @@ def proj_dpp_sampler_eig_KuTa12(eig_vecs, size=None):
     # Select eigvecs with Bernoulli variables with parameter the eigvals
 
     # Phase 2: Chain rule
-    norms_2 = inner1d(V, V)
+    norms_2 = inner1d(V, axis=1)  # ||V_i:||^2
 
     # Following [Algo 1, KuTa12], the aim is to compute the orhto complement of the subspace spanned by the selected eigenvectors to the canonical vectors \{e_i ; i \in Y\}. We proceed recursively.
     for it in range(size):
@@ -520,7 +519,7 @@ def proj_dpp_sampler_eig_KuTa12(eig_vecs, size=None):
         # V_:j is set to 0 so we delete it and we can derive an orthononormal basis of the subspace under consideration
         V, _ = la.qr(np.delete(V, k, axis=1), mode='economic')
 
-        norms_2 = inner1d(V, V)
+        norms_2 = inner1d(V, axis=1)  # ||V_i:||^2
 
     return sampl
 

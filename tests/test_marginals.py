@@ -6,7 +6,7 @@
 
 import unittest
 
-import numpy as np
+from numpy import array, arange, diag, histogram
 from numpy.random import randn, choice
 
 from scipy.linalg import qr
@@ -16,14 +16,16 @@ from itertools import chain  # to flatten list of samples
 
 import sys
 sys.path.append('..')
+
 import matplotlib as mpl
 mpl.use('TkAgg')
 
-from dppy.exact_sampling import proj_dpp_sampler_kernel_GS,\
-                                proj_dpp_sampler_kernel_Schur
-from dppy.exact_sampling import proj_dpp_sampler_eig_GS,\
-                                proj_dpp_sampler_eig_GS_bis,\
-                                proj_dpp_sampler_eig_KuTa12
+from dppy.exact_sampling import proj_dpp_sampler_kernel_GS as kernel_GS
+from dppy.exact_sampling import proj_dpp_sampler_kernel_Schur as kernel_Schur
+from dppy.exact_sampling import proj_dpp_sampler_eig_GS as eig_GS
+from dppy.exact_sampling import proj_dpp_sampler_eig_GS_bis as eig_GS_bis
+from dppy.exact_sampling import proj_dpp_sampler_eig_KuTa12 as eig_KuTa12
+
 from dppy.utils import det_ST
 
 
@@ -36,7 +38,7 @@ class InclusionProbabilitiesProjectionDPP(unittest.TestCase):
     """
 
     rank, N = 6, 10
-    # eig_vals = np.ones(rank)
+    # eig_vals = ones(rank)
     eig_vecs, _ = qr(randn(N, rank), mode="economic")
     K = eig_vecs.dot(eig_vecs.T)
 
@@ -48,9 +50,9 @@ class InclusionProbabilitiesProjectionDPP(unittest.TestCase):
 
         singletons = list(chain.from_iterable(self.list_of_samples))
 
-        freq, _ = np.histogram(singletons, bins=np.arange(self.N + 1),
+        freq, _ = histogram(singletons, bins=arange(self.N + 1),
                                density=True)
-        marg_theo = np.diag(self.K) / self.rank
+        marg_theo = diag(self.K) / self.rank
 
         _, pval = chisquare(f_obs=freq, f_exp=marg_theo)
 
@@ -62,13 +64,13 @@ class InclusionProbabilitiesProjectionDPP(unittest.TestCase):
         samples = list(map(set, self.list_of_samples))
 
         nb_doubletons_to_check = 10
-        doubletons = [set(choice(self.N, size=2, p=np.diag(self.K) / self.rank,
+        doubletons = [set(choice(self.N, size=2, p=diag(self.K) / self.rank,
                                  replace=False))
                       for _ in range(nb_doubletons_to_check)]
 
         counts = [sum([doubl.issubset(sampl) for sampl in samples])
                   for doubl in doubletons]
-        freq = np.array(counts) / self.nb_samples
+        freq = array(counts) / self.nb_samples
         marg_theo = [det_ST(self.K, list(d)) for d in doubletons]
 
         _, pval = chisquare(f_obs=freq, f_exp=marg_theo)
@@ -78,11 +80,8 @@ class InclusionProbabilitiesProjectionDPP(unittest.TestCase):
     def test_kernel_GS(self):
         """ Test whether 'GS' sampling mode generates samples with the right 1 and 2 points inclusion probabilities when DPP defined by projection inclusion kernel K.
         """
-
-        self.list_of_samples = []
-        for _ in range(self.nb_samples):
-            sampl = proj_dpp_sampler_kernel_GS(self.K)
-            self.list_of_samples.append(sampl)
+        self.list_of_samples = [kernel_GS(self.K)
+                                for _ in range(self.nb_samples)]
 
         self.assertTrue(self.singleton_adequation())
         self.assertTrue(self.doubleton_adequation())
@@ -91,10 +90,8 @@ class InclusionProbabilitiesProjectionDPP(unittest.TestCase):
         """ Test whether 'Schur' sampling mode generates samples with the right 1 and 2 points inclusion probabilities when DPP defined by projection inclusion kernel K.
         """
 
-        self.list_of_samples = []
-        for _ in range(self.nb_samples):
-            sampl = proj_dpp_sampler_kernel_Schur(self.K)
-            self.list_of_samples.append(sampl)
+        self.list_of_samples = [kernel_Schur(self.K)
+                                for _ in range(self.nb_samples)]
 
         self.assertTrue(self.singleton_adequation())
         self.assertTrue(self.doubleton_adequation())
@@ -103,10 +100,8 @@ class InclusionProbabilitiesProjectionDPP(unittest.TestCase):
         """ Test whether 'GS' sampling mode generates samples with the right 1 and 2 points inclusion probabilities when DPP defined by its eigendecomposition
         """
 
-        self.list_of_samples = []
-        for _ in range(self.nb_samples):
-            sampl = proj_dpp_sampler_eig_GS(self.eig_vecs)
-            self.list_of_samples.append(sampl)
+        self.list_of_samples = [eig_GS(self.eig_vecs)
+                                for _ in range(self.nb_samples)]
 
         self.assertTrue(self.singleton_adequation())
         self.assertTrue(self.doubleton_adequation())
@@ -115,10 +110,8 @@ class InclusionProbabilitiesProjectionDPP(unittest.TestCase):
         """ Test whether 'GS_bis' sampling mode generates samples with the right 1 and 2 points inclusion probabilities when DPP defined by its eigendecomposition
         """
 
-        self.list_of_samples = []
-        for _ in range(self.nb_samples):
-            sampl = proj_dpp_sampler_eig_GS_bis(self.eig_vecs)
-            self.list_of_samples.append(sampl)
+        self.list_of_samples = [eig_GS_bis(self.eig_vecs)
+                                for _ in range(self.nb_samples)]
 
         self.assertTrue(self.singleton_adequation())
         self.assertTrue(self.doubleton_adequation())
@@ -127,10 +120,8 @@ class InclusionProbabilitiesProjectionDPP(unittest.TestCase):
         """ Test whether 'KuTa12' sampling mode generates samples with the right 1 and 2 points inclusion probabilities when DPP defined by its eigendecomposition
         """
 
-        self.list_of_samples = []
-        for _ in range(self.nb_samples):
-            sampl = proj_dpp_sampler_eig_KuTa12(self.eig_vecs)
-            self.list_of_samples.append(sampl)
+        self.list_of_samples = [eig_KuTa12(self.eig_vecs)
+                                for _ in range(self.nb_samples)]
 
         self.assertTrue(self.singleton_adequation())
         self.assertTrue(self.doubleton_adequation())

@@ -102,8 +102,7 @@ class FiniteDPP:
         self.A_zono = is_full_row_rank(params.get('A_zono', None))
 
         # Attributes relative to L marginal kernel:
-        # L, L_eig_vals, L_eig_vecs, L_gram_factor, L_dual
-        # if L_dual is to be considered add L_dual_eig_vals, L_dual_eig_vecs
+        # L, L_eig_vals, L_eig_vecs, L_gram_factor, L_dual, L_dual_eig_vals, L_dual_eig_vecs
         self.L = is_symmetric(params.get('L', None))
         if self.projection:
             self.L = is_projection(self.L)
@@ -118,6 +117,7 @@ class FiniteDPP:
 
         # L' "dual" marginal kernel, L' = Phi Phi.T, Phi = L_gram_factor
         self.L_gram_factor = params.get('L_gram_factor', None)
+        self.L_dual = None
         self.L_dual_eig_vals = None
         self.L_dual_eig_vecs = None
 
@@ -125,12 +125,12 @@ class FiniteDPP:
             Phi = self.L_gram_factor
             d, N = Phi.shape
             if d < N:
-                self.L_dual_eig_vals, self.L_dual_eig_vecs =\
-                    la.eigh(Phi.dot(Phi.T))
-                print('L_dual = Phi Phi.T was computed: Phi (dxN) with d<N and eigendecomposition performed in prep for sampling')
+                self.L_dual = Phi.dot(Phi.T)
+                print('L_dual = Phi Phi.T was computed: Phi (dxN) with d<N')
             else:
-                self.L_eig_vals, self.eig_vecs = la.eigh(Phi.T.dot(Phi))
-                print('L = Phi.T Phi was computed: Phi (dxN) with d>=N and eigendecomposition performed in prep for sampling')
+                if self.L is None:
+                    self.L = Phi.T.dot(Phi) 
+                    print('L = Phi.T Phi was computed: Phi (dxN) with d>=N')
 
     def __str__(self):
         str_info = ['DPP defined through {} {} kernel'

@@ -1,12 +1,54 @@
+from string import ascii_lowercase
 import numpy as np
 from numpy.linalg import det, matrix_rank
-from numpy.core.umath_tests import inner1d
 
 
-def det_ST(matrix, S, T=None):
+def inner1d(arr1, arr2=None, axis=0):
+    """ Efficient equivalent to ``(arr1**2).sum(axis)`` or ``(arr1*arr2).sum(axis)`` when ``arr1.shape == arr2.shape``.
+    Expected to be used with arrays of same shape and mostly with 1D or 2D arrays but works for upto 26D arrays...
+
+    If ``arr1.shape == arr2.shape``, then ``inner1d(arr1, arr2, arr1.ndim)`` replaces ``numpy.core.umath_tests.inner1d(arr1, arr2)``
+
+    Examples:
+    - To compute square norm of vector i.e. 1D array
+    inner1d(arr) = np.einsum('i,i->', arr, arr)
+                 = np.dot(arr, arr)
+                 = (arr**2).sum()
+
+    - To compute vector inner product i.e. 2 1D arrays
+    inner1d(arr1, arr2) = np.einsum('i,i->', arr1, arr2)
+                        = np.dot(arr1, arr2)
+                        = (arr1*arr2).sum()
+
+    - To compute square norm of cols/rows of 2D array
+    inner1d(arr)
+        = np.einsum('ij,ij->j', arr, arr)
+        = (arr1**2).sum(axis=0/1)
+
+    - To compute inner product between cols/rows of 2 arrays
+    inner1d(arr1, arr2, axis=1)
+        = np.einsum('ij,ij->i', arr1, arr2)
+        = (arr1*arr2).sum(axis=0/1)
+    """
+
+    # if (arr2 is not None) and (arr1.shape != arr2.shape):
+    #     raise ValueError('...with shapes {} {}'
+    #                      .format(arr1.shape, arr2.shape))
+
+    ndim = arr1.ndim
+    sym = ascii_lowercase[:ndim]
+    subscripts = sym + ',' + sym + '->' + sym.replace(sym[axis], '')
+
+    if arr2 is None:
+        return np.einsum(subscripts, arr1, arr1)
+    else:
+        return np.einsum(subscripts, arr1, arr2)
+
+
+def det_ST(array, S, T=None):
     """ Compute :math:`\det M_{S, T} = \det [M_{ij}]_{i\inS, j\in T}`
 
-    :param matrix:
+    :param array:
         Matrix
     :type M:
         array_like
@@ -29,108 +71,108 @@ def det_ST(matrix, S, T=None):
     """
 
     if T is None:  # det M_SS = det M_S
-        return det(matrix[np.ix_(S, S)])
+        return det(array[np.ix_(S, S)])
 
     else:  # det M_ST, numpy deals with det M_[][] = 1.0
-        return det(matrix[np.ix_(S, T)])
+        return det(array[np.ix_(S, T)])
 
 
-def is_symmetric(matrix):
+def is_symmetric(array):
     # Cheap test to check symmetry M^T = M
 
-    if matrix is None:
+    if array is None:
         return None
 
-    indx = np.arange(min(20, matrix.shape[0]))
-    if np.allclose(matrix[indx, indx].T, matrix[indx, indx]):
-        return matrix
+    indx = np.arange(min(20, array.shape[0]))
+    if np.allclose(array[indx, indx].T, array[indx, indx]):
+        return array
     else:
-        raise ValueError('matrix not symmetric')
+        raise ValueError('array not symmetric')
 
 
-def is_projection(matrix):
+def is_projection(array):
     # Cheap test to check reproducing property: M^2 = M
 
-    if matrix is None:
+    if array is None:
         return None
 
-    indx = np.arange(min(5, matrix.shape[0]))
-    M_i_ = matrix[indx, :]
-    M_ii = matrix[indx, indx]
+    indx = np.arange(min(5, array.shape[0]))
+    M_i_ = array[indx, :]
+    M_ii = array[indx, indx]
 
-    if np.allclose(inner1d(M_i_, M_i_), M_ii):
-        return matrix
+    if np.allclose(square_norm(M_i_), M_ii):
+        return array
     else:
-        raise ValueError('matrix not seem to be a projection: M^2 != M')
+        raise ValueError('array not seem to be a projection: M^2 != M')
 
 
-def is_orthonormal(matrix):
-    # Cheap test for checking orthonormality matrix columns: M.T M = I
+def is_orthonormal(array):
+    # Cheap test for checking orthonormality array columns: M.T M = I
 
-    if matrix is None:
+    if array is None:
         return None
 
-    indx = np.arange(np.min([5, matrix.shape[1]]))
-    U = matrix[:, indx]
+    indx = np.arange(np.min([5, array.shape[1]]))
+    U = array[:, indx]
 
     if np.allclose(U.T.dot(U), np.eye(indx.size)):
-        return matrix
+        return array
     else:
-        raise ValueError('matrix does not seem orthonormal: M.T M != I')
+        raise ValueError('array does not seem orthonormal: M.T M != I')
 
 
-def is_equal_to_O_or_1(matrix, tol=1e-8):
+def is_equal_to_O_or_1(array, tol=1e-8):
     # Check if entries are **all** in {0, 1}, for a given tolerance
 
-    if matrix is None:
+    if array is None:
         return None
 
-    equal_0 = np.abs(matrix) <= tol
-    equal_1 = np.abs(1 - matrix) <= tol
+    equal_0 = np.abs(array) <= tol
+    equal_1 = np.abs(1 - array) <= tol
     equal_0_or_1 = equal_0 ^ equal_1  # ^ = xor
 
     if np.all(equal_0_or_1):
-        return matrix
+        return array
     else:
-        raise ValueError('matrix with entries not all in {0,1}')
+        raise ValueError('array with entries not all in {0,1}')
 
 
-def is_in_01(matrix, tol=1e-8):
+def is_in_01(array, tol=1e-8):
     # Check if entries are **all** in [0, 1], for a given tolerance
 
-    if matrix is None:
+    if array is None:
         return None
-    elif np.all((-tol <= matrix) & (matrix <= 1.0 + tol)):
-        return matrix
+    elif np.all((-tol <= array) & (array <= 1.0 + tol)):
+        return array
     else:
-        raise ValueError('matrix with entries not all in [0,1]')
+        raise ValueError('array with entries not all in [0,1]')
 
 
-def is_geq_0(matrix, tol=1e-8):
+def is_geq_0(array, tol=1e-8):
     # Check if entries are **all** >= 0, for a given tolerance
 
-    if matrix is None:
+    if array is None:
         return None
-    elif np.all(matrix >= -tol):
-        return matrix
+    elif np.all(array >= -tol):
+        return array
     else:
-        raise ValueError('matrix with entries not all >= 0')
+        raise ValueError('array with entries not all >= 0')
 
 
-def is_full_row_rank(matrix):
+def is_full_row_rank(array):
     # Check rank(M) = #rows
 
-    if matrix is None:
+    if array is None:
         return None
 
-    d, N = matrix.shape
-    err_print = 'matrix (size = dxN) is not full row rank'
+    d, N = array.shape
+    err_print = 'array (size = dxN) is not full row rank'
 
     if d > N:
         raise ValueError(err_print + 'd(={}) > N(={})'.format(d, N))
     else:
-        rank = matrix_rank(matrix)
+        rank = array_rank(array)
         if rank == d:
-            return matrix
+            return array
         else:
             raise ValueError(err_print + 'd(={}) != rank(={})'.format(d, rank))
