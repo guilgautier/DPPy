@@ -10,7 +10,7 @@ e_vecs, _ = qr(randn(N, r), mode='economic')
 e_vals_K = rand(r)  # in [0, 1]
 dpp_K = FiniteDPP('inclusion', **{'K_eig_dec': (e_vals_K, e_vecs)})
 # or
-# K = (e_vecs * e_vals_K).dot(eig_vecs.T)
+# K = (e_vecs * e_vals_K).dot(e_vecs.T)
 # dpp_K = FiniteDPP('inclusion', **{'K': K})
 dpp_K.plot_kernel()
 

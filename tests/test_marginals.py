@@ -17,9 +17,6 @@ from itertools import chain  # to flatten list of samples
 import sys
 sys.path.append('..')
 
-import matplotlib as mpl
-mpl.use('TkAgg')
-
 from dppy.exact_sampling import proj_dpp_sampler_kernel_GS as kernel_GS
 from dppy.exact_sampling import proj_dpp_sampler_kernel_Schur as kernel_Schur
 from dppy.exact_sampling import proj_dpp_sampler_eig_GS as eig_GS
@@ -31,7 +28,7 @@ from dppy.utils import det_ST
 
 class InclusionProbabilitiesProjectionDPP(unittest.TestCase):
     """Check that exact samplers for finite DPPs have the right (at least 1 and 2) inclusion probabilities
-            
+
     .. math::
 
         \mathbb{P}[S\subset \mathcal{X}] = \det K_S
@@ -50,8 +47,7 @@ class InclusionProbabilitiesProjectionDPP(unittest.TestCase):
 
         singletons = list(chain.from_iterable(self.list_of_samples))
 
-        freq, _ = histogram(singletons, bins=arange(self.N + 1),
-                               density=True)
+        freq, _ = histogram(singletons, bins=arange(self.N + 1), density=True)
         marg_theo = diag(self.K) / self.rank
 
         _, pval = chisquare(f_obs=freq, f_exp=marg_theo)

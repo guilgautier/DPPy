@@ -97,10 +97,10 @@ def is_projection(array):
         return None
 
     indx = np.arange(min(5, array.shape[0]))
-    M_i_ = array[indx, :]
-    M_ii = array[indx, indx]
+    M_j = array[:, indx]
+    Mjj = array[indx, indx]
 
-    if np.allclose(square_norm(M_i_), M_ii):
+    if np.allclose(inner1d(M_j), Mjj):
         return array
     else:
         raise ValueError('array not seem to be a projection: M^2 != M')
@@ -171,7 +171,7 @@ def is_full_row_rank(array):
     if d > N:
         raise ValueError(err_print + 'd(={}) > N(={})'.format(d, N))
     else:
-        rank = array_rank(array)
+        rank = matrix_rank(array)
         if rank == d:
             return array
         else:

@@ -19,6 +19,7 @@ import abc
 
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib import collections as mc  # see plot_diagram
 from scipy.linalg import qr
 
 # For Uniform Spanning Trees
@@ -32,7 +33,7 @@ import re  # to convert class names to string in
 from dppy.exotic_dpps_core import wrapper_plot_descent
 
 # For Poissonized Plancherel measure
-from dppy.exotic_dpps_core import xy_young_ru, limit_shape
+from dppy.exotic_dpps_core import RSK, xy_young_ru, limit_shape
 
 # For both Descent Processes and Poissonized Plancherel
 from dppy.exotic_dpps_core import uniform_permutation
@@ -63,7 +64,7 @@ class UST:
             raise ValueError('graph not connected')
 
         self.nodes = list(self.graph.nodes())
-        self.nb_nodes = self.graph.number_of_nodes()  #len(self.graph)
+        self.nb_nodes = self.graph.number_of_nodes()  # len(self.graph)
 
         self.edges = list(self.graph.edges())
         self.nb_edges = self.graph.number_of_edges()
@@ -141,7 +142,6 @@ class UST:
                          'Given {}'.format(mode))
             raise ValueError()
 
-
         self.list_of_samples.append(sampl)
 
     def compute_kernel(self):
@@ -170,7 +170,7 @@ class UST:
 
         inc_mat = nx.incidence_matrix(self.graph, oriented=True)
         # Discard any row e.g. the last one
-        A = inc_mat[:-1, :].toarray()  
+        A = inc_mat[:-1, :].toarray()
         # Orthonormalize rows of A
         self.kernel_eig_vecs, _ = qr(A.T, mode='economic')
 
@@ -292,7 +292,7 @@ class Descent(metaclass=abc.ABCMeta):
             ' '.join(re.findall('[A-Z][^A-Z]*', self.__class__.__name__))
         self.list_of_samples = []
         self.size = 100
-    
+
     @abc.abstractmethod
     def _bernoulli_param(self):
         """Parameter of the corresponding process formed by i.i.d. Bernoulli variables.
@@ -641,7 +641,7 @@ class PoissonizedPlancherel:
         sampl = self.list_of_samples[-1].copy()
 
         x_max = 1.1 * max(y_diag.size, y_diag[0])
-        xy_young = self.xy_young_ru(y_diag)
+        xy_young = xy_young_ru(y_diag)
 
         if normalization:
             sampl /= np.sqrt(self.theta)
@@ -663,7 +663,7 @@ class PoissonizedPlancherel:
         # Display limit shape
         if normalization:
             x_lim_sh = np.linspace(-x_max, x_max, 100)
-            ax.plot(x_lim_sh, self.limit_shape(x_lim_sh),
+            ax.plot(x_lim_sh, limit_shape(x_lim_sh),
                     c='r', label='limit shape')
 
         # Display stems linking sample on real line and descent in young diag

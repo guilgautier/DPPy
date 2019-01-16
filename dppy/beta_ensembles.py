@@ -939,7 +939,7 @@ class JacobiEnsemble(BetaEnsemble):
     def hist(self, normalization=True):
         """ Display the histogram of the last realization of the :class:`JacobiEnsemble` object.
 
-        :param normalization: 
+        :param normalization:
             When ``True``, display:
 
             - If ``JacobiEnsemble.beta = 0`` :math:`\\operatorname{Beta}(a, b)`

@@ -161,7 +161,7 @@ def marcenko_pastur_law(x, M, N, sigma=1.0):
     c = N / M
     Lm, Lp = (sigma * (1 - np.sqrt(c)))**2, (sigma * (1 + np.sqrt(c)))**2
 
-    return np.sqrt(np.maximum((Lp-x)*(x-Lm),0)) / (c*x) / (2*np.pi*sigma**2) 
+    return np.sqrt(np.maximum((Lp-x)*(x-Lm),0)) / (c*x) / (2*np.pi*sigma**2)
 
 
 # mu_ref = Gamma

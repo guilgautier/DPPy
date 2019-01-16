@@ -185,7 +185,7 @@ def proj_dpp_sampler_kernel_Schur(K, size=None):
 
         # 2) update Schur complements
         # K_ii - K_iY (K_Y)^-1 K_Yi for Y <- Y+j
-        K_iY = K[np.ix_(avail, sampl[:it+1])]
+        K_iY = K[np.ix_(avail, sampl[:it + 1])]
         schur_comp[avail] =\
             K_diag[avail] - inner1d(K_iY.dot(K_inv), K_iY, axis=1)
 
@@ -335,7 +335,7 @@ def proj_dpp_sampler_eig_GS(eig_vecs, size=None):
 
     # Initialization
     V = eig_vecs
-    
+
     N, rank = V.shape  # ground set size / rank(K)
     ground_set = np.arange(N)
 

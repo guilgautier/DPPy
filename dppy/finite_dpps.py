@@ -402,9 +402,9 @@ class FiniteDPP:
                 self.K = (self.eig_vecs * self.K_eig_vals).dot(self.eig_vecs.T)
 
             elif self.A_zono is not None:
-                msg = '\n'.join('- K = A.T (AA.T)^-1 A, using',
-                                '- U = QR(A.T)',
-                                '- K = U U.T')
+                msg = '\n'.join(['- K = A.T (AA.T)^-1 A, using',
+                                 '- U = QR(A.T)',
+                                 '- K = U U.T'])
                 print(msg)
                 self.K_eig_vals = np.ones(self.A_zono.shape[0])
                 self.eig_vecs, _ = la.qr(self.A_zono.T, mode='economic')

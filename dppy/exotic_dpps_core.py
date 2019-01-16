@@ -2,7 +2,7 @@
 """ Core functions for
 
 - Uniform spanning trees
-    
+
     * :func:`ust_sampler_wilson`
     * :func:`ust_sampler_aldous_broder`:
 
@@ -33,7 +33,6 @@ from itertools import chain  # create graph edges from tree
 
 # For class PoissonizedPlancherel
 from bisect import bisect_right  # for RSK
-from matplotlib import collections as mc  # see plot_diagram
 
 
 def ust_sampler_wilson(list_of_neighbors, root=None):
@@ -44,7 +43,6 @@ def ust_sampler_wilson(list_of_neighbors, root=None):
 
     # Initialize the root, if root not specified start from any node
     n0 = root if root else np.random.choice(nb_nodes, size=1)[0]
-    visited = np.zeros(nb_nodes, dtype=bool)
     # -1 = not visited / 0 = in path / 1 = in tree
     state = -np.ones(nb_nodes, dtype=int)
     state[n0] = 1
@@ -95,7 +93,7 @@ def ust_sampler_wilson(list_of_neighbors, root=None):
 
 
 def ust_sampler_aldous_broder(list_of_neighbors, root=None):
-    
+
     # Initialize the tree
     aldous_tree_graph = nx.Graph()
     nb_nodes = len(list_of_neighbors)
@@ -106,7 +104,7 @@ def ust_sampler_aldous_broder(list_of_neighbors, root=None):
     visited[n0] = True
     nb_nodes_in_tree = 1
 
-    tree_edges = np.zeros((nb_nodes-1, 2), dtype=np.int)
+    tree_edges = np.zeros((nb_nodes - 1, 2), dtype=np.int)
 
     while nb_nodes_in_tree < nb_nodes:
 
@@ -116,7 +114,7 @@ def ust_sampler_aldous_broder(list_of_neighbors, root=None):
         if visited[n1]:
             pass  # continue the walk
         else:  # create edge (n0, n1) and continue the walk
-            tree_edges[nb_nodes_in_tree-1] = [n0, n1]
+            tree_edges[nb_nodes_in_tree - 1] = [n0, n1]
             visited[n1] = True  # mark it as in the tree
             nb_nodes_in_tree += 1
 

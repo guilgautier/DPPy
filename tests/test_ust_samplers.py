@@ -35,7 +35,7 @@ class TestUniformityUniformSpanningTreeSampler(unittest.TestCase):
         n, p = 5, 0.4
         nb_st_min, nb_st_max = 5, 10
 
-        it_max=100
+        it_max = 100
         for _ in range(it_max):
 
             g = erdos_renyi_graph(n, p)
@@ -59,15 +59,15 @@ class TestUniformityUniformSpanningTreeSampler(unittest.TestCase):
 
         g_edges_str = [str(set(edge)) for edge in self.g.edges()]
         self.dict_edge_label = dict(zip(g_edges_str,
-                                   range(self.g.number_of_edges())))
+                                    range(self.g.number_of_edges())))
 
         self.nb_samples = 1000
         self.list_of_samples = []
 
     def edges_to_labels(self, graph):
-        
+
         edges_to_str = [str(set(edge)) for edge in graph.edges()]
-        
+
         return tuple(sorted(self.dict_edge_label[e] for e in edges_to_str))
 
     def uniformity_adequation(self, tol=0.05):
