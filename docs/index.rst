@@ -31,7 +31,7 @@ As :ref:`exotic <exotic_dpps>` as it may sound the uniform measure on spanning t
 Installation instructions
 =========================
 
-See `README <https://github.com/guilgautier/DPPy/blob/master/README.md>`_
+See `README <https://github.com/guilgautier/DPPy/blob/master/README.rst>`_
 
 Documentation contents
 ======================

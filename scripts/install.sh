@@ -11,7 +11,7 @@ if [[ $TRAVIS_OS_NAME == 'osx' ]]; then
     # I didn't do this above because it works and I'm lazy.
     brew outdated pyenv || brew upgrade pyenv
     # virtualenv doesn't work without pyenv knowledge. venv in Python 3.3
-    # doesn't provide Pip by default. So, use `pyenv-virtualenv <https://github.com/yyuu/pyenv-virtualenv/blob/master/README.md>`_.
+    # doesn't provide Pip by default. So, use `pyenv-virtualenv <https://github.com/yyuu/pyenv-virtualenv/blob/master/README.rst>`_.
     brew install pyenv-virtualenv
     PYTHON_CONFIGURE_OPTS="--enable-framework" pyenv install $PYTHON # Try to fix matplotlib backend issue #6, repeated in tests branch
     # I would expect something like ``pyenv init; pyenv local $PYTHON`` or
