@@ -63,7 +63,7 @@ setup(
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
 
-        # Specify supported OS. 
+        # Specify supported OS.
         'Operating System :: Unix',
         'Operating System :: MacOS'
     ],
@@ -85,10 +85,10 @@ setup(
     install_requires=['numpy',
                       'scipy>=1.1.0',
                       'matplotlib',
-                      'cvxopt==1.2.1', # For zonotope MCMC sampler
+                      'cvxopt==1.2.1',  # For zonotope MCMC sampler
                       'networkx',
-                      'sphinxcontrib-bibtex', # Documentation bibliography
-                      'sphinx_rtd_theme'], # Documentation theme
+                      'sphinxcontrib-bibtex',  # Documentation bibliography
+                      'sphinx_rtd_theme'],  # Documentation theme
 
     project_urls={  # Optional
         "Companion paper": "https://github.com/guilgautier/DPPy_paper",

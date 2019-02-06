@@ -105,3 +105,32 @@ where the dagger means *conjugate transpose*. For the definition via marginal pr
 
 	- :class:`FiniteDPP <FiniteDPP>`
 	- :cite:`KuTa12`
+	  
+
+.. _finite_dpps_definition_k_dpps:
+
+k-DPPs
+======
+
+:math:`\operatorname{k-DPP}` can be defined as :math:`\operatorname{DPP}`s conditioned to a fixed sample size :math:`|\mathcal{X}|=k`, in terms of joint probabilities it reads:
+
+.. math::
+
+	\mathbb{P}_{\operatorname{k-DPP}}[\mathcal{X}=S]
+		= \frac{\mathbf{L}_S}{e_k(L)} ~~ 1_{|S|=k}
+
+where :math:`e_k(L)` corresponds to `elementary symmetric polymial <https://en.wikipedia.org/wiki/Elementary_symmetric_polynomial>`_ of order :math:`k` evaluated in the eigenvalues of :math:`\mathbf{L}`,
+
+.. math::
+	
+	e_k(L)
+		\triangleq e_k(\lambda_1, \dots, \lambda_N)
+		= \sum_{S\subset [N]: |S|=k} \prod_{n \in S} \lambda_i
+		= \sum_{S\subset [N]: |S|=k} \det L_S
+
+More formally,
+
+.. caution::
+
+	:math:`\operatorname{k-DPP}`s are  
+

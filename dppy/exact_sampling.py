@@ -18,22 +18,28 @@ from dppy.utils import inner1d
 # Projection kernel #
 #####################
 # Sample projection DPP from kernel
-def proj_dpp_sampler_kernel(kernel, mode='GS'):
+def proj_dpp_sampler_kernel(kernel, mode='GS', size=None):
     """
     .. seealso::
         - :func:`proj_dpp_sampler_kernel_GS <proj_dpp_sampler_kernel_GS>`
+        - :func:`proj_dpp_sampler_kernel_Schur <proj_dpp_sampler_kernel_Schur>`
     """
 
     # Phase 1: Select eigenvectors
     # No need for eigendecomposition
 
+    if size:
+        rank = int(np.round(np.trace(kernel)))
+        if size > rank:
+            raise ValueError('size k={} > rank={}'. format(size, rank))
+
     # Phase 2: Sample from orthogonal projection kernel K = K^2 = K.T K
     # Chain rule, conditionals are updated using:
     if mode == 'GS':  # Gram-Schmidt equiv Cholesky
-        sampl = proj_dpp_sampler_kernel_GS(kernel)
+        sampl = proj_dpp_sampler_kernel_GS(kernel, size)
 
     elif mode == 'Schur':  # Schur complement
-        sampl = proj_dpp_sampler_kernel_Schur(kernel)
+        sampl = proj_dpp_sampler_kernel_Schur(kernel, size)
 
     else:
         str_list = ['Invalid sampling mode, choose among:',
@@ -46,8 +52,12 @@ def proj_dpp_sampler_kernel(kernel, mode='GS'):
 
 
 def proj_dpp_sampler_kernel_GS(K, size=None):
-    """ Sample from :math:`\operatorname{DPP}(K)` with :math:`K` orthogonal projection matrix.
-    It performs sequential Gram-Schmidt orthogonalization or equivalently Cholesky decomposition updates of :math:`K`.
+    """ Sample from:
+
+    - :math:`\operatorname{DPP}(K)` with orthogonal projection **inclusion** kernel :math:`K` if ``size`` is not provided
+    - :math:`\operatorname{k-DPP}` with orthogonal projection **marginal** kernel :math:`K` with :math:`k=` ``size`` is not provided
+    
+    Chain rule is applied by performing sequential Gram-Schmidt orthogonalization or equivalently Cholesky decomposition updates of :math:`K`.
 
     :param K:
         Orthogonal projection kernel.
@@ -61,15 +71,17 @@ def proj_dpp_sampler_kernel_GS(K, size=None):
         int
 
     :return:
-        A sample from :math:`\operatorname{DPP}(K)`.
+        If ``size`` is not provided (None),
+            A sample from :math:`\operatorname{DPP}(K)`.
+        If ``size`` is provided,
+            A sample from :math:`\operatorname{k-DPP}(K)`.
     :rtype:
-        list
+        array_like
 
     .. seealso::
 
         - cite:`TrBaAm18` Algorithm 3, :cite:`Gil14` Algorithm 2
-
-    #   - :func:`proj_dpp_sampler_kernel_Schur <proj_dpp_sampler_kernel_Schur>`
+        - :func:`proj_dpp_sampler_kernel_Schur <proj_dpp_sampler_kernel_Schur>`
     """
 
     # Initialization
@@ -103,9 +115,13 @@ def proj_dpp_sampler_kernel_GS(K, size=None):
 
 
 def proj_dpp_sampler_kernel_Schur(K, size=None):
-    """ Sample from :math:`\operatorname{k-DPP}(K)` where the similarity kernel :math:`K`
-    is an orthogonal projection matrix.
-    It sequentially updates the Schur complement by updating the inverse of the matrix involved.
+    """ Sample from:
+
+    - :math:`\operatorname{DPP}(K)` with orthogonal projection **inclusion** kernel :math:`K` if ``size`` is not provided
+    - :math:`\operatorname{k-DPP}` with orthogonal projection **marginal** kernel :math:`K` with :math:`k=` ``size``
+
+    Chain rule is applied by computing the Schur complements.
+
     :param K:
         Orthogonal projection kernel.
     :type K:
@@ -122,10 +138,10 @@ def proj_dpp_sampler_kernel_Schur(K, size=None):
         If ``size`` is provided,
             A sample from :math:`\operatorname{k-DPP}(K)`.
     :rtype:
-        list
+        array_like
 
     .. seealso::
-        - :func:`projection_dpp_sampler_GS_bis <projection_dpp_sampler_GS_bis>`
+        - :func:`proj_dpp_sampler_kernel_GS <proj_dpp_sampler_kernel_GS>`
     """
 
     # Initialization
@@ -149,7 +165,6 @@ def proj_dpp_sampler_kernel_Schur(K, size=None):
         # store the item and make it unavailable
         sampl[it], avail[j] = j, False
 
-        # sampl = Y + j
         # Update Schur complements K_ii - K_iY (K_Y)^-1 K_Yi
         #
         # 1) use Woodbury identity to update K[Y,Y]^-1 to K[Y+j,Y+j]^-1
@@ -170,7 +185,7 @@ def proj_dpp_sampler_kernel_Schur(K, size=None):
         elif it < size - 1:
             Y = sampl[:it]
             temp = K_inv.dot(K[Y, j])  # K_Y^-1 K_Yj
-            schur_j = K[j, j] - K[j, Y].dot(temp)  # K_jj-K_jY K_Y^-1 K_Yj
+            schur_j = K[j, j] - K[j, Y].dot(temp)  # K_jj - K_jY K_Y^-1 K_Yj
 
             K_inv = np.lib.pad(K_inv, (0, 1),
                                'constant',
@@ -329,6 +344,7 @@ def proj_dpp_sampler_eig_GS(eig_vecs, size=None):
 
     .. seealso::
 
+        - cite:`TrBaAm18` Algorithm 3, :cite:`Gil14` Algorithm 2
         - :func:`proj_dpp_sampler_eig_GS_bis <proj_dpp_sampler_eig_GS_bis>`
         - :func:`proj_dpp_sampler_eig_KuTa12 <proj_dpp_sampler_eig_KuTa12>`
     """
@@ -459,7 +475,7 @@ def proj_dpp_sampler_eig_GS_bis(eig_vecs, size=None):
         #                                  <V_i,P_{V_Y}^{orthog} V_j>^2
         #   =  |P_{V_Y}^{orthog} V_i|^2 -  ----------------------------
         #                                   |P_{V_Y}^{orthog} V_j|^2
-        norms_2[avail] -= (contrib[avail, it]**2) / norms_2[j]
+        norms_2[avail] -= contrib[avail, it]**2 / norms_2[j]
 
     return sampl
 
@@ -485,7 +501,7 @@ def proj_dpp_sampler_eig_KuTa12(eig_vecs, size=None):
 
     .. seealso::
 
-        - Algorithm 1 in :cite:`KuTa12`
+        - :cite:`KuTa12` Algorithm 1
         - :func:`proj_dpp_sampler_eig_GS <proj_dpp_sampler_eig_GS>`
         - :func:`proj_dpp_sampler_eig_GS_bis <proj_dpp_sampler_eig_GS_bis>`
     """
@@ -612,7 +628,7 @@ def proj_dpp_sampler_eig_KuTa12(eig_vecs, size=None):
 # ######################
 
 # def k_dpp_sampler_eig(eig_vals, eig_vecs, size, mode='GS',
-#                                           el_sym_pol_eval=None):
+#                                           E_eval=None):
 #   """
 #   .. seealso::
 
@@ -627,7 +643,7 @@ def proj_dpp_sampler_eig_KuTa12(eig_vecs, size=None):
 #       - :func:`proj_dpp_sampler_eig_KuTa12 <proj_dpp_sampler_eig_KuTa12>`
 #   """
 #   #### Phase 1: Select eigenvectors
-#   eig_vecs_sel = k_dpp_eig_vecs_selector(eig_vals, eig_vecs, size, el_sym_pol_eval)
+#   eig_vecs_sel = k_dpp_eig_vecs_selector(eig_vals, eig_vecs, size, E_eval)
 
 #   #### Phase 2: Sample from projection kernel VV.T
 #   # Chain rule, conditionals are updated using:
@@ -651,82 +667,96 @@ def proj_dpp_sampler_eig_KuTa12(eig_vecs, size=None):
 
 #   return sampl
 
-# def k_dpp_eig_vecs_selector(eig_vals, eig_vecs, size, el_sym_pol_eval=None):
-#   """ Subsample eigenvectors V of the initial kernel ('K' or equivalently 'L') to build a projection DPP with kernel V V.T from which sampling is easy. The selection is made based a realization of Bernoulli variables with parameters the eigenvalues of 'K'.
 
-#   :param eig_vals:
-#       Collection of eigen values of 'K' (inclusion) kernel.
-#   :type eig_vals:
-#       list, array_like
+def k_dpp_eig_vecs_selector(eig_vals, eig_vecs, size, E_poly=None):
+    """ Subsample eigenvectors V of the 'L' kernel to build a projection DPP with kernel V V.T from which sampling is easy. The selection is made based a realization of Bernoulli variables with parameters the eigenvalues of 'L' and evalutations of the elementary symmetric polynomials.
 
-#   :param eig_vecs:
-#       Collection of eigenvectors of 'K' (or equiv 'L') kernel.
-#   :type eig_vals:
-#       array_like
+    :param eig_vals:
+        Collection of eigen values of 'L' (marginal) kernel.
+    :type eig_vals:
+        list, array_like
 
-#   :return:
-#       Selected eigenvectors
-#   :rtype:
-#       array_like
+    :param eig_vecs:
+        Collection of eigenvectors of 'L' kernel.
+    :type eig_vecs:
+        array_like
 
-#   .. seealso::
+    :param size:
+        Size :math:`k` of :math:`k`-DPP
+    :type size:
+        int
 
-#       Algorithm 8 in :cite:`KuTa12`
-#   """
+    :param E_poly:
+        Evaluation of symmetric polynomials in the eigenvalues
+    :type E_poly:
+        array_like
 
-#   # Size of the ground set
-#   nb_items = eig_vecs.shape[0]
+    :return:
+        Selected eigenvectors
+    :rtype:
+        array_like
 
-#   # Evaluate the elem symm polys in the eigenvalues
-#   if el_sym_pol_eval is None:
-#       E = elem_symm_poly(eig_vals, size)
-#   else:
-#       E = el_sym_pol_eval
+    .. seealso::
+        
+        - :cite:`KuTa12` Algorithm 8
+        - :func:`elem_symm_poly <elem_symm_poly>`
+    """
 
-#   ind_selected = []
-#   for n in range(nb_items,0,-1):
-#       if size == 0:
-#           break
+    # Size of: ground set / sample
+    N, k = eig_vecs.shape[0], size
 
-#       if np.random.rand() < eig_vals[n-1]*(E[size-1, n-1]/E[size, n]):
-#           ind_selected.append(n-1)
-#           size -= 1
+    # as in np.linalg.matrix_rank
+    tol = eig_vals.max() * N * np.finfo(eig_vals.dtype).eps
+    rank = np.count_nonzero(eig_vals > tol)
+    if k > rank:
+        raise ValueError('size k={} > rank={}'.format(k, rank))
 
-#   return eig_vecs[:, ind_selected]
+    ind_selected = np.zeros(k, dtype=int)
+    for n in range(N, 0, -1):
 
-# # Evaluate the elementary symmetric polynomials
-# def elem_symm_poly(eig_vals, size):
-#   """ Evaluate the elementary symmetric polynomials in the eigenvalues.
+        if np.random.rand() < eig_vals[n-1] * E_poly[k-1, n-1] / E_poly[k, n]:
+            k -= 1
+            ind_selected[k] = n - 1
+            if k == 0:
+                break
 
-#   :param eig_vals:
-#       Collection of eigen values of the similarity kernel :math:`K`.
-#   :type eig_vals:
-#       list
+    return eig_vecs[:, ind_selected]
 
-#   :param size:
-#       Maximum degree of elementary symmetric polynomial.
-#   :type size:
-#       int
 
-#   :return:
-#       poly(size, N) = :math:`e_size(\lambda_1, \cdots, \lambda_N)`
-#   :rtype:
-#       array_like
+# Evaluate the elementary symmetric polynomials
+def elem_symm_poly(eig_vals, size):
+    """ Evaluate the elementary symmetric polynomials :math:`e_k` in the eigenvalues :math:`(\lambda_1, \cdots, \lambda_N)`.
 
-#   .. seealso::
+    :param eig_vals:
+        Collection of eigenvalues :math:`(\lambda_1, \cdots, \lambda_N)` of the similarity kernel :math:`L`.
+    :type eig_vals:
+        list
 
-#       Algorithm 7 in :cite:`KuTa12`
-#   """
+    :param size:
+        Maximum degree of elementary symmetric polynomial.
+    :type size:
+        int
 
-#  Number of variables for the elementary symmetric polynomials to be evaluated
-#   N = eig_vals.shape[0]
-#   # Initialize output array
-#   poly = np.zeros((size+1, N+1))
-#   poly[0, :] = 1
+    :return:
+        :math:`[E_{kn}]_{k=0, n=0}^{\text{size}, N}`
+        :math:`E_{kn} = e_k(\lambda_1, \cdots, \lambda_n)`
+    :rtype:
+        array_like
 
-#   # Recursive evaluation
-#   for l in range(1, size+1):
-#       for n in range(1, N+1):
-#           poly[l, n] = poly[l, n-1] + eig_vals[n-1] * poly[l-1, n-1]
+    .. seealso::
 
-#   return poly
+        - :cite:`KuTa12` Algorithm 7
+        - `Wikipedia <https://en.wikipedia.org/wiki/Elementary_symmetric_polynomial>`_
+    """
+
+    # Initialize output array
+    N = eig_vals.size
+    E_poly = np.zeros((size + 1, N + 1))
+    E_poly[0, :] = 1.0
+
+    # Recursive evaluation
+    for l in range(1, size + 1):
+        for n in range(1, N + 1):
+            E_poly[l, n] = E_poly[l, n-1] + eig_vals[n-1] * E_poly[l-1, n-1]
+
+    return E_poly

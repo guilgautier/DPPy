@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
-""" Implementation of :class:`FiniteDPP` object which has 4 main methods:
+""" Implementation of :class:`FiniteDPP` object which has 6 main methods:
 
 - `sample_exact`
+- `sample_exact_k_dpp`
 - `sample_mcmc`
+- `sample_mcmc_k_dpp`
 - `compute_K`, to compute the inclusion :math:`K` kernel from initial parametrization 
 - `compute_L`, to compute the marginal :math:`L` kernel from initial parametrization
 
@@ -19,6 +21,7 @@ from warnings import warn
 from dppy.exact_sampling import proj_dpp_sampler_kernel, proj_dpp_sampler_eig
 from dppy.exact_sampling import dpp_eig_vecs_selector
 from dppy.exact_sampling import dpp_eig_vecs_selector_L_dual
+from dppy.exact_sampling import k_dpp_eig_vecs_selector, elem_symm_poly
 
 from dppy.mcmc_sampling import dpp_sampler_mcmc, zonotope_sampler
 
@@ -85,6 +88,10 @@ class FiniteDPP:
         # Sampling
         self.sampling_mode = 'GS'  # Gram-Schmidt
         self.list_of_samples = []
+
+        # when using .sample_k_dpp_* 
+        self.size_k_dpp = 0  
+        self.E_poly = None  # evaluation of the 
 
         # Attributes relative to K inclusion kernel:
         # K, K_eig_vals, K_eig_vecs, A_zono
@@ -301,6 +308,120 @@ class FiniteDPP:
 
             self.sample_exact(self.sampling_mode)
 
+    def sample_exact_k_dpp(self, size, mode='GS'):
+        """ Sample exactly from :math:`\operatorname{k-DPP}`.
+        A priori the :class:`FiniteDPP <FiniteDPP>` object was instanciated by its marginal :math:`\mathbf{L}` kernel so that
+
+        .. math::
+
+            \mathbb{P}_{\operatorname{k-DPP}}(\mathcal{X} = S) 
+                \propto \det \mathbf{L}_S ~ 1_{|S|=k}
+
+        :param size:
+            size :math:`k` of the :math:`\operatorname{k-DPP}`
+        :type size:
+            int
+
+        :param mode:
+            - ``projection=True``:
+                - ``'GS'`` (default): Gram-Schmidt on the rows of :math:`\mathbf{K}`.
+                - ``'Schur'``: Use Schur complement to compute conditionals.
+
+            - ``projection=False``:
+                - ``'GS'`` (default): Gram-Schmidt on the rows of the eigenvectors of :math:`\mathbf{K}` selected in Phase 1.
+                - ``'GS_bis'``: Slight modification of ``'GS'``
+                - ``'KuTa12'``: Algorithm 1 in :cite:`KuTa12`
+        :type mode:
+            string, default ``'GS'``
+
+        :return:
+            A sample from the corresponding :math:`\operatorname{k-DPP}`
+        :rtype:
+            array_like
+
+        .. note::
+
+            Each time you call this function, the sample is added to the ``FiniteDPP.list_of_samples`` attribute.
+
+            The latter can be emptied using :func:`.flush_samples() <flush_samples>`
+
+        .. caution::
+
+            The underlying kernel :math:`\mathbf{K}`, resp. :math:`\mathbf{L}` must be real valued for now.
+
+        .. seealso::
+
+            - :func:`sample_exact <sample_exact>`
+            - :func:`sample_mcmc_k_dpp <sample_mcmc_k_dpp>`
+        """
+
+        self.sampling_mode = mode
+
+        # If eigen decoposition of K, L or L_dual is available USE IT!
+        if self.L_eig_vals is not None:
+
+            # Phase 1
+            # Precompute elementary symmetric polynomials
+            if self.E_poly is None or self.size_k_dpp < size:
+                self.E_poly = elem_symm_poly(self.L_eig_vals, size)
+            # Select eigenvectors
+            V = k_dpp_eig_vecs_selector(self.L_eig_vals, self.eig_vecs,
+                                        size,
+                                        self.E_poly)
+            # Phase 2
+            self.size_k_dpp = size
+            sampl = proj_dpp_sampler_eig(V, self.sampling_mode)
+            self.list_of_samples.append(sampl)
+
+        elif self.L_dual_eig_vals is not None:
+            # There is 
+            self.L_eig_vals = self.L_dual_eig_vals
+            self.eig_vecs =\
+                self.gram_factor.T.dot(self.L_dual_eig_vecs\
+                                        / np.sqrt(self.L_dual_eig_vals))
+            self.sample_exact_k_dpp(size, mode)
+
+        elif self.K_eig_vals is not None:
+            np.seterr(divide='raise')
+            self.L_eig_vals = self.K_eig_vals / (1.0 - self.K_eig_vals)
+            self.sample_exact_k_dpp(size, mode)
+
+        # If DPP defined via projection kernel
+        elif self.projection:
+            if self.kernel_type == 'inclusion':
+                self.compute_K()
+                rank = int(np.round(np.trace(self.K)))
+                if size == rank:
+                    sampl = proj_dpp_sampler_kernel(self.K,
+                                                    mode=self.sampling_mode,
+                                                    size=size)
+                    self.size_k_dpp = size
+                    self.list_of_samples.append(sampl)
+                else:
+                    raise ValueError('size k={} != rank={} for projection inclusion K kernel'.format(k, rank))
+            else:  # self.kernel_type == 'marginal':
+                self.compute_L()
+                # size > rank treated internally in proj_dpp_sampler_kernel
+                sampl = proj_dpp_sampler_kernel(self.L,
+                                                mode=self.sampling_mode,
+                                                size=size)
+                self.size_k_dpp = size
+                self.list_of_samples.append(sampl)
+
+        # Otherwise eigendecomposition is necessary
+        elif self.L_dual is not None:
+            self.L_dual_eig_vals, self.L_dual_eig_vecs =\
+                la.eigh(self.L_dual)
+            self.sample_exact_k_dpp(size, mode)
+
+        elif self.K is not None:
+            self.K_eig_vals, self.eig_vecs = la.eigh(self.K)
+            self.sample_exact_k_dpp(size, mode)
+
+        elif self.L is not None:
+            self.L_eig_vals, self.eig_vecs = la.eigh(self.L)
+            self.sample_exact_k_dpp(size, mode)
+
     # Approximate sampling
     def sample_mcmc(self, mode, **params):
         """ Run a MCMC with stationary distribution the corresponding :class:`FiniteDPP <FiniteDPP>` object.
@@ -326,7 +447,13 @@ class FiniteDPP:
                 + ``'size'`` (default None) Size of the initial sample for ``mode='AD'/'E'``
 
                     * :math:`\operatorname{rank}(\mathbf{K})=\operatorname{Tr}(\mathbf{K})` for projection :math:`\mathbf{K}` (inclusion) kernel and ``mode='E'``
+
             - If ``mode='zonotope'``:
+
+                + ``'lin_obj'`` linear objective in main optimization problem (default np.random.randn(N))
+                + ``'x_0'`` initial point in zonotope (default A*u, u~U[0,1]^n)
+                + ``'nb_iter'`` (default 10) Number of iterations of the chain
+                + ``'T_max'`` (default None) Time horizon
 
         :type params:
             dict
@@ -357,10 +484,15 @@ class FiniteDPP:
         elif self.sampling_mode == 'E':
             if (self.kernel_type == 'inclusion') and self.projection:
                 self.compute_K()
-                # |sample|=Tr(K) a.s. for projection DPP(K)
-                params.update({'size': int(np.round(np.trace(self.K)))})
-
-                chain = dpp_sampler_mcmc(self.K, self.sampling_mode, **params)
+                size = params.get('size', None)
+                rank = int(np.round(np.trace(self.K)))
+                # |sample| = Tr(K) = rank(K) a.s. for projection DPP(K)
+                if size == rank:
+                    chain = dpp_sampler_mcmc(self.K,
+                                             self.sampling_mode,
+                                             **params)
+                else:
+                    raise ValueError('size={} != rank={} for projection inclusion K kernel'.format(k, rank))
             else:
                 self.compute_L()
                 chain = dpp_sampler_mcmc(self.L, self.sampling_mode, **params)
@@ -380,6 +512,24 @@ class FiniteDPP:
 
         self.list_of_samples.append(chain)
 
+    def sample_mcmc_k_dpp(self, size, **params):
+        """ ``sample_mcmc(mode='E', **params)`` with ``params['size'] = size``
+
+        .. seealso::
+
+            - :ref:`finite_dpps_mcmc_sampling`
+            - :func:`sample_mcmc <sample_mcmc>`
+            - :func:`sample_exact_k_dpp <sample_exact_k_dpp>`
+            - :func:`flush_samples <flush_samples>`
+        """
+
+        self.sampling_mode = 'E'
+
+        self.size_k_dpp = size
+        params['size'] = size
+
+        self.sample_mcmc(self.sampling_mode, **params)
+
     def compute_K(self, msg=False):
         """ Compute the inclusion kernel :math:`\mathbf{K}` from the original parametrization of the :class:`FiniteDPP` object.
 
@@ -389,8 +539,9 @@ class FiniteDPP:
         """
 
         if self.K is not None:
-            msg = 'K (inclusion) kernel available'
-            print(msg)
+            # msg = 'K (inclusion) kernel available'
+            # print(msg)
+            pass
 
         else:
             if not msg:
@@ -435,8 +586,9 @@ class FiniteDPP:
         """
 
         if self.L is not None:
-            msg = 'L (marginal) kernel available'
-            print(msg)
+            # msg = 'L (marginal) kernel available'
+            # print(msg)
+            pass
 
         elif (self.kernel_type == 'inclusion') and self.projection:
             err_print = ['L = K(I-K)^-1 = kernel cannot be computed:',

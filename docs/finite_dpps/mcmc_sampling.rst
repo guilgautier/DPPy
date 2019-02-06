@@ -74,7 +74,6 @@ Mix of exchange and add-delete moves
 
 .. testoutput::
 
-  L (marginal) kernel available
   [[[0, 2, 3, 6], [0, 2, 3, 6], [0, 2, 3, 6], [0, 2, 3, 6], [0, 2, 3, 6], [0, 2, 3, 6], [0, 2, 6, 9], [0, 2, 6, 9], [2, 6, 9], [2, 6, 9]]]
 
 .. seealso::
@@ -157,4 +156,22 @@ To recover the finite DPP samples one needs to identify the tile in which the su
 
   - :func:`FiniteDPP.sample_mcmc <FiniteDPP.sample_mcmc>`
   - :cite:`GaBaVa17`
+    
+.. _finite_dpps_mcmc_sampling_k_dpps:
+
+k-DPPs
+======
+
+Since the size of the sample is fixed to :math:`k`, only the :ref:`finite_dpps_mcmc_sampling_E`
+
+.. important::
+
   
+
+.. seealso::
+
+  .. currentmodule:: dppy.finite_dpps
+
+  - :func:`FiniteDPP.sample_mcmc_k_dpp <FiniteDPP.sample_mcmc_k_dpp>`
+  - :cite:`KuTa11`
+  - :cite:`KuTa12` Section 5

@@ -309,6 +309,16 @@ url = {https://doi.org/10.1214/154957805100000177},
 volume = {2},
 year = {2004}
 }
+@inproceedings{KuTa11,
+abstract = {Determinantal point processes (DPPs) have recently been proposed as models for set selection problems where diversity is preferred. For example, they can be used to select diverse sets of sentences to form document summaries, or to find multiple nonoverlapping human poses in an image. However, DPPs conflate the modeling of two distinct characteristics: the size of the set, and its content. For many realistic tasks, the size of the desired set is known up front; e.g., in search we may want to show the user exactly ten results. In these situations the effort spent by DPPs modeling set size is not only wasteful, but actually introduces unwanted bias into the modeling of content. Instead, we propose the k-DPP, a conditional DPP that models only sets of cardinality k. In exchange for this restriction, k-DPPs offer greater expressiveness and control over content, and simplified integration into applications like search. We derive algorithms for efficiently normalizing, sampling, and marginalizing k-DPPs, and propose an experts-style algorithm for learning combinations of k-DPPs. We demonstrate the usefulness of the model on an image search task, where k-DPPs significantly outperform MMR as judged by human annotators.},
+address = {Bellevue, WA, USA},
+author = {Kulesza, Alex and Taskar, Ben},
+booktitle = {International Conference on Machine Learning (ICML)},
+pages = {1193--1200},
+title = {{k-DPPs: Fixed-Size Determinantal Point Processes}},
+url = {https://homes.cs.washington.edu/{~}taskar/pubs/kdpps{\_}icml11.pdf},
+year = {2011}
+}
 @article{KuTa12,
 abstract = {Determinantal point processes (DPPs) are elegant probabilistic models of repulsion that arise in quantum physics and random matrix theory. In contrast to traditional structured models like Markov random fields, which become intractable and hard to approximate in the presence of negative correlations, DPPs offer efficient and exact algorithms for sampling, marginalization, conditioning, and other inference tasks. We provide a gentle introduction to DPPs, focusing on the intuitions, algorithms, and extensions that are most relevant to the machine learning community, and show how DPPs can be applied to real-world applications like finding diverse sets of high-quality search results, building informative summaries by selecting diverse sentences from documents, modeling non-overlapping human poses in images or video, and automatically building timelines of important news stories.},
 archivePrefix = {arXiv},
