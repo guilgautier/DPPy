@@ -18,7 +18,9 @@ It is defined either via its:
 
 		\mathbb{P}[\mathcal{X}=S], \text{ for } S\subset [N]
 
-The *determinantal* feature of DPPs stems from the fact that such inclusion, resp. marginal probabilities are given by the principal minors of the corresponding inclusion kernel :math:`\mathbf{K}` (resp. marginal kernel :math:`\mathbf{L}`).
+.. hint::
+
+	The *determinantal* feature of DPPs stems from the fact that such inclusion, resp. marginal probabilities are given by the principal minors of the corresponding inclusion kernel :math:`\mathbf{K}` (resp. marginal kernel :math:`\mathbf{L}`).
 
 Inclusion probabilities
 =======================
@@ -31,7 +33,7 @@ We say that :math:`\mathcal{X} \sim \operatorname{DPP}(\mathbf{K})` with inclusi
 		\mathbb{P}[S\subset \mathcal{X}] = \det \mathbf{K}_S,
 		\quad \forall S\subset [N]
 
-where :math:`\mathbf{K}_S` denotes the square submatrix of :math:`\mathbf{K}` obtained by keeping only rows and columns indexed by :math:`S`.
+where :math:`\mathbf{K}_S = [\mathbf{K}_{ij}]_{i,j\in S}` i.e. the square submatrix of :math:`\mathbf{K}` obtained by keeping only rows and columns indexed by :math:`S`.
 
 Marginal probabilities
 ======================
@@ -47,7 +49,7 @@ We say that :math:`\mathcal{X} \sim \operatorname{DPP}(\mathbf{L})` with margina
 Existence
 =========
 
-Some common sufficient conditions for existence are:
+Some common sufficient conditions to guarantee existence are:
 
 	.. math::
 		:label: suff_cond_K
@@ -56,14 +58,14 @@ Some common sufficient conditions for existence are:
 		\quad \text{and} \quad
 		0_N \preceq \mathbf{K} \preceq I_N
 
-where the dagger means *conjugate transpose*. For the definition via marginal probabilities, sufficient conditions are
-
 	.. math::
 		:label: suff_cond_L
 
 		\mathbf{L} = \mathbf{L}^{\dagger}
 		\quad \text{and} \quad
 		\mathbf{L} \succeq 0_N
+
+where the dagger :math:`\dagger` symbol means *conjugate transpose*.
 
 .. note::
 
@@ -97,40 +99,43 @@ where the dagger means *conjugate transpose*. For the definition via marginal pr
 		# proj_DPP = FiniteDPP('inclusion', projection=True, **{'A_zono': A})
 		# K = eig_vecs.dot(eig_vecs.T)
 		# proj_DPP = FiniteDPP('inclusion', projection=True, **{'K': K})
+	  
 
+.. _finite_dpps_definition_k_dpps:
+
+:math:`\operatorname{k-DPPs}`
+=============================
+
+:math:`\operatorname{k-DPPs}` can be defined as :math:`\operatorname{DPP(\mathbf{L})s}` conditioned to a fixed sample size :math:`|\mathcal{X}|=k`.
+Thus, they are defined through the joint probabilities
+
+.. math::
+
+	\mathbb{P}_{\operatorname{k-DPP}}[\mathcal{X}=S]
+		= \frac{1}{e_k(L)} \det \mathbf{L}_S ~~ 1_{|S|=k}
+
+where :math:`e_k(L)` corresponds to the `elementary symmetric polymial <https://en.wikipedia.org/wiki/Elementary_symmetric_polynomial>`_ of order :math:`k` evaluated in the eigenvalues of :math:`\mathbf{L}`,
+
+.. math::
+	
+	e_k(\mathbf{L})
+		\triangleq e_k(\lambda_1, \dots, \lambda_N)
+		= \sum_{S\subset [N]: |S|=k} \prod_{n \in S} \lambda_i
+		= \sum_{S\subset [N]: |S|=k} \det L_S
+
+.. caution::
+
+  - :math:`k` must satisfy :math:`k \leq \operatorname{rank}(L)`
+
+.. warning::
+
+	:math:`\operatorname{k-DPPs}` are not :math:`\operatorname{DPPs}` in general.
+	Viewed as :math:`\operatorname{DPPs}` conditioned to a fixed sample size :math:`|\mathcal{X}|=k`, the only case where they coincide is when *projection* :math:`\operatorname{DPP}(\mathbf{K})` is considered and :math:`k=rank(\mathbf{K})`
 
 .. seealso::
 
 	.. currentmodule:: dppy.finite_dpps
 
 	- :class:`FiniteDPP <FiniteDPP>`
-	- :cite:`KuTa12`
-	  
-
-.. _finite_dpps_definition_k_dpps:
-
-k-DPPs
-======
-
-:math:`\operatorname{k-DPP}` can be defined as :math:`\operatorname{DPP}`s conditioned to a fixed sample size :math:`|\mathcal{X}|=k`, in terms of joint probabilities it reads:
-
-.. math::
-
-	\mathbb{P}_{\operatorname{k-DPP}}[\mathcal{X}=S]
-		= \frac{\mathbf{L}_S}{e_k(L)} ~~ 1_{|S|=k}
-
-where :math:`e_k(L)` corresponds to `elementary symmetric polymial <https://en.wikipedia.org/wiki/Elementary_symmetric_polynomial>`_ of order :math:`k` evaluated in the eigenvalues of :math:`\mathbf{L}`,
-
-.. math::
-	
-	e_k(L)
-		\triangleq e_k(\lambda_1, \dots, \lambda_N)
-		= \sum_{S\subset [N]: |S|=k} \prod_{n \in S} \lambda_i
-		= \sum_{S\subset [N]: |S|=k} \det L_S
-
-More formally,
-
-.. caution::
-
-	:math:`\operatorname{k-DPP}`s are  
-
+	- :cite:`KuTa12` Section 2 for :math:`\operatorname{DPPs}`
+	- :cite:`KuTa12` Section 5 for :math:`\operatorname{k-DPPs}`

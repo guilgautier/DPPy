@@ -161,7 +161,7 @@ Chain rule
 
 		.. currentmodule:: dppy.finite_dpps
 
-		- :func:`FiniteDPP.sample_exact <FiniteDPP.sample_exact>`
+		- :py:meth:`~FiniteDPP.sample_exact`
 		- :cite:`HKPV06` Algorithm 18 and Proposition 19, for the original idea
 		- :cite:`KuTa12` Algorithm 1, for a first interpretation of :cite:`HKPV06` algorithm running in :math:`\mathcal{O}(N r^3)`
 		- :cite:`Gil14` Algorithm 2, for the :math:`\mathcal{O}(N r^2)` implementation
@@ -275,7 +275,16 @@ Generic DPPs
 			\quad \text{and} \quad
 			U = V = \Phi^{\top} W \Gamma^{-1/2}
 
-	In the generic setting, the exact sampling scheme works as a two steps algorithm:
+	In the generic setting, the exact sampling scheme works as a two steps algorithm based on the property that :ref:`generic DPPs are mixtures of projection ones <finite_dpps_mixture>`.
+
+	.. hint::
+		
+		- :ref:`Phase 1 <finite_dpps_exact_sampling_generic_dpps_phase_1>` selects a component of the mixture
+		- :ref:`Phase 2 <finite_dpps_exact_sampling_generic_dpps_phase_2>` samples from this *projection* DPP component
+
+	In practice, sampling is performed in the following way:
+
+	.. _finite_dpps_exact_sampling_generic_dpps_phase_1:
 
 	**Phase 1** Draw independent Bernoulli variables :math:`(B_n)` with parameters the eigenvalues of :math:`\mathbf{K}`:
 
@@ -285,8 +294,9 @@ Generic DPPs
 			= \frac{\delta_n}{1+\delta_n}
 			= \frac{\gamma_n}{1+\gamma_n}
 
-	**Phase 2** Conditionally on :math:`(B_n)` set :math:`\mathcal{B} = \{ n ~;~ B_n = 1 \}` and apply the chain rule :eq:`phase_2_eig_vec` with 
+	.. _finite_dpps_exact_sampling_generic_dpps_phase_2:
 
+	**Phase 2** Conditionally on :math:`(B_n)` set :math:`\mathcal{B} = \{ n ~;~ B_n = 1 \}` and apply the chain rule :eq:`phase_2_eig_vec` with 
 
 		.. math::
 
@@ -325,4 +335,69 @@ Generic DPPs
 
 	.. currentmodule:: dppy.finite_dpps
 
-	:func:`FiniteDPP.sample_exact <FiniteDPP.sample_exact>`
+	:py:meth:`~FiniteDPP.sample_exact`
+
+
+.. _finite_dpps_exact_sampling_k_dpps:
+
+k-DPPs
+======
+
+A :math:`\operatorname{k-DPP}` viewed as a :math:`\operatorname{DPP}(\mathbf{L})` constrained to a fixed cardinality :math:`k` (see :ref:`définition <finite_dpps_definition_k_dpps>`),  can be sampled using a rejection mechanism i.e. sample :math:`\mathcal{X} \sim \operatorname{DPP}(\mathbf{L})` and consider only realizations with cardinality :math:`|X| = k`.
+
+.. caution::
+
+	- :math:`k` must satisfy :math:`k \leq \operatorname{rank}(L)`
+
+In practice, the 2 steps algorithm for :ref:`sampling generic DPPs <finite_dpps_exact_sampling_generic_dpps>` can be adapted to generate fixed cardinality samples.
+
+More specifically, 
+
+- :ref:`Phase 1 <finite_dpps_exact_sampling_generic_dpps_phase_1>` is replaced by :cite:`KuTa12` Algorithm 8. It requires the evaluation of the elementary symmetric polynomials in the eigenvalues of :math:`\mathbf{L}` ; :math:`[E[l, n]]_{l=1, n=1}^{k, N}` with :math:`E[l, n]:=e_l(\lambda_1, \dots, \delta_n)`.
+
+.. code-block:: python
+	
+	# This is a pseudo code, in particular Python indexing is not respected everywhere
+	B = set({})
+	l = k
+
+	for n in range(N, 0, -1):
+
+	  if Unif(0,1) < delta[n] * E[l-1, n-1] / E[l, n]:
+	    l -= 1
+	    B.union({n})
+			
+	    if l == 0:
+	      break
+
+- :ref:`Phase 2 <finite_dpps_exact_sampling_generic_dpps_phase_1>` is unchanged
+
+.. testcode::
+
+	from numpy.random import seed, rand, randn
+	from scipy.linalg import qr
+	from dppy.finite_dpps import FiniteDPP
+
+	seed(1)
+
+	r, N = 5, 10
+	# Random feature vectors
+	Phi = randn(r, N)
+	DPP = FiniteDPP('marginal', **{'L': Phi.T.dot(Phi)})
+
+	k = 4
+	for _ in range(10):
+	    DPP.sample_exact_k_dpp(size=k)
+
+	print(list(map(list, DPP.list_of_samples)))
+
+.. testoutput::
+
+	[[1, 8, 5, 7], [3, 8, 5, 9], [5, 3, 1, 8], [5, 8, 2, 9], [1, 2, 9, 6], [1, 0, 2, 3], [7, 0, 3, 5], [8, 3, 7, 6], [0, 2, 3, 7], [1, 3, 7, 5]]
+
+.. seealso::
+
+	.. currentmodule:: dppy.finite_dpps
+
+	- :py:meth:`~FiniteDPP.sample_exact_k_dpps`
+	- :cite:`KuTa12` Algorithm 7 for the recursive evaluation of the elementary symmetric polynomials :math:`[e_l(\lambda_1, \dots, \delta_n)]_{l=1, n=1}^{k, N}` in the eigenvalues of :math:`\mathbf{L}`

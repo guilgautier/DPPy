@@ -286,5 +286,5 @@ Thus, except for inclusion kernels :math:`\mathbf{K}` with some eigenvalues equa
 
 	.. currentmodule:: dppy.finite_dpps
 
-	- :func:`FiniteDPP.compute_K <FiniteDPP.compute_K>`
-	- :func:`FiniteDPP.compute_L <FiniteDPP.compute_L>`
+	- :py:meth:`~FiniteDPP.compute_K`
+	- :py:meth:`~FiniteDPP.compute_L`

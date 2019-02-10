@@ -55,7 +55,7 @@ Mix of exchange and add-delete moves
 
 .. hint::
   
-  Because moves are allowed between subsets having at most 2 different elements, transitions are very local inducing correlation.
+  Because moves are allowed between subsets having at most 2 different elements, transitions are very local inducing correlation, however *fast* mixing was proved.
 
 .. testcode::
 
@@ -65,8 +65,10 @@ Mix of exchange and add-delete moves
   seed(413121)
 
   r, N = 4, 10
-  A = randn(r, N)
-  L = A.T.dot(A)
+
+  # Random feature vectors
+  Phi = randn(r, N)
+  L = Phi.T.dot(Phi)
   DPP = FiniteDPP("marginal", **{"L":L})
 
   DPP.sample_mcmc("AED")
@@ -80,7 +82,7 @@ Mix of exchange and add-delete moves
 
   .. currentmodule:: dppy.finite_dpps
 
-  - :func:`FiniteDPP.sample_mcmc <FiniteDPP.sample_mcmc>`
+  - :py:meth:`~FiniteDPP.sample_mcmc`
   - :cite:`AnGhRe16`, :cite:`LiJeSr16c` and :cite:`LiJeSr16d`
 
 
@@ -108,8 +110,8 @@ In this setting the :ref:`finite_dpps_nb_points` is almost surely equal to :math
     = \frac{\operatorname{Vol}^2 \{\phi_s\}_{s\in S}}
           {\det\Phi \Phi^{\top}} 1_{|S|=r}
 
-The original finite ground set is embedded in a continuous domain called a zonotope.
-Hit-and-run procedure is used to move across this polytope and visit the different tiles.
+The original finite ground set is embedded into a continuous domain called a zonotope.
+The hit-and-run procedure is used to move across this polytope and visit the different tiles.
 To recover the finite DPP samples one needs to identify the tile in which the successive points lie, this is done by solving linear programs (LPs).
 
 .. hint::
@@ -147,14 +149,14 @@ To recover the finite DPP samples one needs to identify the tile in which the su
 .. note::
 
   On the one hand, the :ref:`finite_dpps_mcmc_sampling_zonotope` perspective on sampling *projection* DPPs yields a better exploration of the state space.
-  Using hit-and-run from a given given all other states become accessible but at the cost of solving LPs at each step.
+  Using hit-and-run, moving to any other state is possible but at the cost of solving LPs at each step.
   On the other hand, the :ref:`finite_dpps_mcmc_sampling_add_exchange_delete` view allows to perform cheap but local moves.
 
 .. seealso::
 
   .. currentmodule:: dppy.finite_dpps
 
-  - :func:`FiniteDPP.sample_mcmc <FiniteDPP.sample_mcmc>`
+  - :py:meth:`~FiniteDPP.sample_mcmc`
   - :cite:`GaBaVa17`
     
 .. _finite_dpps_mcmc_sampling_k_dpps:
@@ -162,16 +164,38 @@ To recover the finite DPP samples one needs to identify the tile in which the su
 k-DPPs
 ======
 
-Since the size of the sample is fixed to :math:`k`, only the :ref:`finite_dpps_mcmc_sampling_E`
+To preserve the size :math:`k` of the sample, only :ref:`finite_dpps_mcmc_sampling_E` moves can be performed. 
 
-.. important::
+.. caution::
 
+  :math:`k` must satisfy :math:`k \leq \operatorname{rank}(L)`
+
+.. testcode::
+
+  from numpy.random import seed, randn
+  from dppy.finite_dpps import FiniteDPP
   
+  seed(123)
+
+  r, N = 5, 10
+
+  # Random feature vectors
+  Phi = randn(r, N)
+  L = Phi.T.dot(Phi)
+  DPP = FiniteDPP("marginal", **{"L":L})
+
+  k = 3
+  DPP.sample_mcmc_k_dpp(size=k)
+  print(DPP.list_of_samples)
+
+.. testoutput::
+
+  [[[7, 2, 5], [7, 2, 5], [7, 2, 9], [7, 8, 9], [7, 8, 9], [7, 8, 2], [7, 8, 2], [6, 8, 2], [1, 8, 2], [1, 8, 2]]]
 
 .. seealso::
 
   .. currentmodule:: dppy.finite_dpps
 
-  - :func:`FiniteDPP.sample_mcmc_k_dpp <FiniteDPP.sample_mcmc_k_dpp>`
+  - :py:meth:`~FiniteDPP.sample_mcmc_k_dpp`
   - :cite:`KuTa11`
   - :cite:`KuTa12` Section 5

@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
-""" Implementation of :class:`FiniteDPP` object which has 6 main methods:
+""" Implementation of :py:class:`FiniteDPP` object which has 6 main methods:
 
-- `sample_exact`
-- `sample_exact_k_dpp`
-- `sample_mcmc`
-- `sample_mcmc_k_dpp`
-- `compute_K`, to compute the inclusion :math:`K` kernel from initial parametrization 
-- `compute_L`, to compute the marginal :math:`L` kernel from initial parametrization
+- :py:meth:`~FiniteDPP.sample_exact`
+- :py:meth:`~FiniteDPP.sample_exact_k_dpp`
+- :py:meth:`~FiniteDPP.sample_mcmc`
+- :py:meth:`~FiniteDPP.sample_mcmc_k_dpp`
+- :py:meth:`~FiniteDPP.compute_K`, to compute the inclusion :math:`K` kernel from initial parametrization 
+- :py:meth:`~FiniteDPP.compute_L`, to compute the marginal :math:`L` kernel from initial parametrization
 
 .. seealso:
 
@@ -204,12 +204,12 @@ class FiniteDPP:
         print(self.__str__())
 
     def flush_samples(self):
-        """ Empty the ``FiniteDPP.list_of_samples`` attribute.
+        """ Empty the :py:attr:`~FiniteDPP.list_of_samples`.
 
         .. see also::
 
-            - :func:`sample_exact <sample_exact>`
-            - :func:`sample_mcmc <sample_mcmc>`
+            - :py:meth:`~FiniteDPP.sample_exact`
+            - :py:meth:`~FiniteDPP.sample_mcmc`
         """
         self.list_of_samples = []
 
@@ -237,9 +237,9 @@ class FiniteDPP:
 
         .. note::
 
-            Each time you call this function, the sample is added to the ``FiniteDPP.list_of_samples`` attribute.
+            Each time you call this function, the sample is added to the :py:attr:`~FiniteDPP.list_of_samples`.
 
-            The latter can be emptied using :func:`.flush_samples() <flush_samples>`
+            The latter can be emptied using :py:meth:`~FiniteDPP.flush_samples`
 
         .. caution::
 
@@ -248,8 +248,8 @@ class FiniteDPP:
         .. seealso::
 
             - :ref:`finite_dpps_exact_sampling`
-            - :func:`flush_samples <flush_samples>`
-            - :func:`sample_mcmc <sample_mcmc>`
+            - :py:meth:`~FiniteDPP.flush_samples`
+            - :py:meth:`~FiniteDPP.sample_mcmc`
         """
 
         self.sampling_mode = mode
@@ -341,9 +341,9 @@ class FiniteDPP:
 
         .. note::
 
-            Each time you call this function, the sample is added to the ``FiniteDPP.list_of_samples`` attribute.
+            Each time you call this function, the sample is added to the :py:attr:`~FiniteDPP.list_of_samples`.
 
-            The latter can be emptied using :func:`.flush_samples() <flush_samples>`
+            The latter can be emptied using :py:meth:`~FiniteDPP.flush_samples`
 
         .. caution::
 
@@ -351,8 +351,8 @@ class FiniteDPP:
 
         .. seealso::
 
-            - :func:`sample_exact <sample_exact>`
-            - :func:`sample_mcmc_k_dpp <sample_mcmc_k_dpp>`
+            - :py:meth:`~FiniteDPP.sample_exact`
+            - :py:meth:`~FiniteDPP.sample_mcmc_k_dpp`
         """
 
         self.sampling_mode = mode
@@ -466,8 +466,8 @@ class FiniteDPP:
         .. seealso::
 
             - :ref:`finite_dpps_mcmc_sampling`
-            - :func:`sample_exact <sample_exact>`
-            - :func:`flush_samples <flush_samples>`
+            - :py:meth:`~FiniteDPP.sample_exact`
+            - :py:meth:`~FiniteDPP.flush_samples`
         """
 
         self.sampling_mode = mode
@@ -513,14 +513,14 @@ class FiniteDPP:
         self.list_of_samples.append(chain)
 
     def sample_mcmc_k_dpp(self, size, **params):
-        """ ``sample_mcmc(mode='E', **params)`` with ``params['size'] = size``
+        """ Calls :py:meth:`~sample_mcmc` with ``mode='E'`` and ``params['size'] = size``
 
         .. seealso::
 
             - :ref:`finite_dpps_mcmc_sampling`
-            - :func:`sample_mcmc <sample_mcmc>`
-            - :func:`sample_exact_k_dpp <sample_exact_k_dpp>`
-            - :func:`flush_samples <flush_samples>`
+            - :py:meth:`~FiniteDPP.sample_mcmc`
+            - :py:meth:`~FiniteDPP.sample_exact_k_dpp`
+            - :py:meth:`~FiniteDPP.flush_samples`
         """
 
         self.sampling_mode = 'E'
