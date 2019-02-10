@@ -39,248 +39,6 @@ from dppy.exotic_dpps_core import RSK, xy_young_ru, limit_shape
 from dppy.exotic_dpps_core import uniform_permutation
 
 
-##########################
-# Uniform Spanning Trees #
-##########################
-class UST:
-    """ DPP on edges of a connected graph :math:`G` associated to the uniform measure on spanning trees of :math:`G`.
-
-    :param graph:
-        Connected undirected graph
-    :type graph:
-        networkx graph
-
-    .. seealso::
-
-        - :ref:`finite_dpps_definition`
-        - :ref:`UST`
-    """
-
-    def __init__(self, graph):
-
-        if nx.is_connected(graph):
-            self.graph = graph
-        else:
-            raise ValueError('graph not connected')
-
-        self.nodes = list(self.graph.nodes())
-        self.nb_nodes = self.graph.number_of_nodes()  # len(self.graph)
-
-        self.edges = list(self.graph.edges())
-        self.nb_edges = self.graph.number_of_edges()
-
-        self.neighbors = [list(graph.neighbors(v))
-                          for v in range(self.nb_nodes)]
-
-        self.sampling_mode = 'Wilson'  # 'Aldous-Broder', 'DPP_exact'
-        self.list_of_samples = []
-
-        self.kernel = None
-        self.kernel_eig_vecs = None
-
-    def __str__(self):
-
-        str_info = ['Uniform Spanning Tree measure on a graph with:',
-                    '- {} nodes'.format(self.nb_nodes),
-                    '- {} edges'.format(self.nb_edges),
-                    'Sampling mode = {}'.format(self.sampling_mode),
-                    'Number of samples = {}'.format(len(self.list_of_samples))]
-
-        return '\n'.join(str_info)
-
-    def info(self):
-        """ Print infos about the :class:`UST` object
-        """
-        print(self.__str__())
-
-    def flush_samples(self):
-        """ Empty the ``UST.list_of_samples`` attribute.
-        """
-        self.list_of_samples = []
-
-    def sample(self, mode='Wilson', root=None):
-        """ Sample a spanning of the underlying graph uniformly at random.
-        It generates a networkx graph object.
-
-        :param mode:
-
-            - ``'Wilson'``
-            - ``'Aldous-Broder'``
-            - ``'DPP_exact'``
-
-        :type mode:
-            string, default ``'Wilson'``
-
-        .. seealso::
-
-            - Wilson algorithm :cite:`PrWi98`
-            - Aldous-Broder :cite:`Ald90`
-        """
-
-        self.sampling_mode = mode
-
-        if self.sampling_mode == 'Wilson':
-            sampl = ust_sampler_wilson(self.neighbors)
-
-        elif self.sampling_mode == 'Aldous-Broder':
-            sampl = ust_sampler_aldous_broder(self.neighbors)
-
-        elif self.sampling_mode == 'DPP_exact':
-
-            if self.kernel_eig_vecs is None:
-                self.__compute_kernel_eig_vecs()
-
-            dpp_sample = proj_dpp_sampler_eig(self.kernel_eig_vecs)
-
-            sampl = nx.Graph()
-            edges_finite_dpp = [self.edges[e] for e in dpp_sample]
-            sampl.add_edges_from(edges_finite_dpp)
-
-        else:
-            err_print = ('Invalid sampling mode',
-                         'Choose: `Wilson`, `Aldous-Broder`, `DPP_exact`',
-                         'Given {}'.format(mode))
-            raise ValueError()
-
-        self.list_of_samples.append(sampl)
-
-    def compute_kernel(self):
-        """ Compute the orthogonal projection kernel :math:`\mathbf{K} = \text{Inc}^+ \text{Inc}` i.e. onto the span of the rows of the vertex-edge incidence matrix :math:`\text{Inc}` of size :math:`|V| x |E|`. 
-
-        In fact, for a connected graph, :math:`\text{Inc}` has rank :math:`|V|-1` and any row can be discarded to get an basis of row space. If we note :math:`A` the amputated version of :math:`\text{Inc}`, then :math:`\text{Inc}^+ = A^{\top}[AA^{\top}]^{-1}`.
-
-        In practice, we orthogonalize the rows of :math:`A` to get the eigenvectors :math:`U` of :math:`\mathbf{K}=UU^{\top}`.
-
-        .. seealso::
-
-            - :func:`plot_kernel <plot_kernel>`
-        """
-
-        if self.kernel is None:
-            if self.kernel_eig_vecs is None:
-                self.__compute_kernel_eig_vecs()  # QR(Inc[:-1,:])
-            # K = UU.T
-            self.kernel = self.kernel_eig_vecs.dot(self.kernel_eig_vecs.T)
-        else:
-            pass
-
-    def __compute_kernel_eig_vecs(self):
-        """ See explaination in :func:`compute_kernel <compute_kernel>`
-        """
-
-        inc_mat = nx.incidence_matrix(self.graph, oriented=True)
-        # Discard any row e.g. the last one
-        A = inc_mat[:-1, :].toarray()
-        # Orthonormalize rows of A
-        self.kernel_eig_vecs, _ = qr(A.T, mode='economic')
-
-    def plot(self, title=''):
-        """ Display the last realization (spanning tree) of the corresponding :class:`UST` object.
-
-        :param title:
-            Plot title
-
-        :type title:
-            string
-
-        .. seealso::
-
-            - :func:`sample <sample>`
-        """
-
-        graph_to_plot = self.list_of_samples[-1]
-
-        plt.figure(figsize=(4, 4))
-
-        pos = nx.circular_layout(graph_to_plot)
-        nx.draw_networkx(graph_to_plot,
-                         pos=pos,
-                         node_color='orange',
-                         with_labels=True)
-        plt.axis('off')
-
-        str_title = 'UST with {} algorithm'.format(self.sampling_mode)
-        plt.title(title if title else str_title)
-
-    def plot_graph(self, title=''):
-        """Display the original graph defining the :class:`UST` object
-
-        :param title:
-            Plot title
-
-        :type title:
-            string
-
-        .. seealso::
-
-            - :func:`compute_kernel <compute_kernel>`
-        """
-
-        edge_lab = [r'$e_{}$'.format(i) for i in range(self.nb_edges)]
-        edge_labels = dict(zip(self.edges, edge_lab))
-        node_labels = dict(zip(self.nodes, self.nodes))
-
-        plt.figure(figsize=(4, 4))
-
-        pos = nx.circular_layout(self.graph)
-        nx.draw_networkx(self.graph,
-                         pos=pos,
-                         node_color='orange',
-                         with_labels=True,
-                         width=3)
-        nx.draw_networkx_labels(self.graph,
-                                pos,
-                                node_labels)
-        nx.draw_networkx_edge_labels(self.graph,
-                                     pos,
-                                     edge_labels,
-                                     font_size=20)
-
-        plt.axis('off')
-
-        str_title = 'Original graph'
-        plt.title(title if title else str_title)
-
-    def plot_kernel(self, title=''):
-        """Display a heatmap of the underlying orthogonal projection kernel :math:`\mathbf{K}` associated to the DPP underlying the :class:`UST` object
-
-        :param title:
-            Plot title
-
-        :type title:
-            string
-
-        .. seealso::
-
-            - :func:`compute_kernel <compute_kernel>`
-        """
-
-        self.compute_kernel()
-
-        fig, ax = plt.subplots(1, 1)
-
-        heatmap = ax.pcolor(self.kernel, cmap='jet')
-
-        ax.set_aspect('equal')
-
-        ticks = np.arange(self.nb_edges)
-        ticks_label = [r'${}$'.format(tic) for tic in ticks]
-
-        ax.xaxis.tick_top()
-        ax.set_xticks(ticks + 0.5, minor=False)
-
-        ax.invert_yaxis()
-        ax.set_yticks(ticks + 0.5, minor=False)
-
-        ax.set_xticklabels(ticks_label, minor=False)
-        ax.set_yticklabels(ticks_label, minor=False)
-
-        str_title = 'UST kernel i.e. transfer current matrix'
-        plt.title(title if title else str_title, y=1.08)
-
-        plt.colorbar(heatmap)
-
-
 #####################
 # Descent Processes #
 #####################
@@ -306,7 +64,7 @@ class Descent(metaclass=abc.ABCMeta):
         """Sample from corresponding process"""
 
     def flush_samples(self):
-        """ Empty the ``list_of_samples`` attribute.
+        """ Empty the :py:attr:`list_of_samples` attribute.
         """
         self.list_of_samples = []
 
@@ -322,8 +80,8 @@ class Descent(metaclass=abc.ABCMeta):
 
         .. seealso::
 
-            - :func:`sample <sample>`
-            - :func:`plot_vs_bernoullis <plot_vs_bernoullis>`
+            - :py:meth:`sample`
+            - :py:meth:`plot_vs_bernoullis`
         """
 
         fig, ax = plt.subplots(figsize=(19, 2))
@@ -351,8 +109,8 @@ class Descent(metaclass=abc.ABCMeta):
 
         .. seealso::
 
-            - :func:`sample <sample>`
-            - :func:`plot <plot>`
+            - :py:meth:`sample`
+            - :py:meth:`plot`
         """
 
         fig, ax = plt.subplots(figsize=(19, 2))
@@ -462,7 +220,7 @@ class DescentProcess(Descent):
 
 
 class VirtualDescentProcess(Descent):
-    """ This is a DPP on :math:'\{1,\dots,N-1}' with a non symmetric kernel appearing in (or as a limit of) the descent process on the symmetric group :math:`\mathfrak{S}_N`.
+    """ This is a DPP on :math:'\{1,\dots,N-1\}' with a non symmetric kernel appearing in (or as a limit of) the descent process on the symmetric group :math:`\mathfrak{S}_N`.
 
     .. seealso::
 
@@ -553,10 +311,10 @@ class PoissonizedPlancherel:
 
         return '\n'.join(str_info)
 
-    def info(self):
-        """ Print infos about the :class:`UST` object
-        """
-        print(self.__str__())
+    # def info(self):
+    #     """ Print infos about the :class:`UST` object
+    #     """
+    #     print(self.__str__())
 
     def sample(self):
         """ Sample from the Poissonized Plancherel measure.
@@ -584,7 +342,7 @@ class PoissonizedPlancherel:
 
         .. seealso::
 
-            - :func:`sample <sample>`
+            - :py:meth:`sample`
         """
 
         sampl = self.list_of_samples[-1]
@@ -636,8 +394,8 @@ class PoissonizedPlancherel:
 
         .. seealso::
 
-            - :func:`sample <sample>`
-            - :func:`plot <plot>`
+            - :py:meth:`sample`
+            - :py:meth:`plot`
             - :cite:`Ker96`
         """
 
@@ -683,3 +441,247 @@ class PoissonizedPlancherel:
 
         str_title = r'Young diagram associated to Poissonized Plancherel measure with parameter $\theta=${}'.format(self.theta)
         plt.title(str_title)
+
+
+##########################
+# Uniform Spanning Trees #
+##########################
+class UST:
+    """ DPP on edges of a connected graph :math:`G` with inclusion kernel the projection kernel onto the span of the rows of the incidence matrix :math:`\\text{Inc}` of :math:`G`.
+
+    This DPP corresponds to the uniform measure on spanning trees (UST) of :math:`G`.
+
+    :param graph:
+        Connected undirected graph
+    :type graph:
+        networkx graph
+
+    .. seealso::
+
+        - :ref:`UST`
+        - :ref:`Definition of DPP <finite_dpps_definition>`
+    """
+
+    def __init__(self, graph):
+
+        if nx.is_connected(graph):
+            self.graph = graph
+        else:
+            raise ValueError('graph not connected')
+
+        self.nodes = list(self.graph.nodes())
+        self.nb_nodes = self.graph.number_of_nodes()  # len(self.graph)
+
+        self.edges = list(self.graph.edges())
+        self.nb_edges = self.graph.number_of_edges()
+
+        self.neighbors = [list(graph.neighbors(v))
+                          for v in range(self.nb_nodes)]
+
+        self.sampling_mode = 'Wilson'  # 'Aldous-Broder', 'DPP_exact'
+        self.list_of_samples = []
+
+        self.kernel = None
+        self.kernel_eig_vecs = None
+
+    def __str__(self):
+
+        str_info = ['Uniform Spanning Tree measure on a graph with:',
+                    '- {} nodes'.format(self.nb_nodes),
+                    '- {} edges'.format(self.nb_edges),
+                    'Sampling mode = {}'.format(self.sampling_mode),
+                    'Number of samples = {}'.format(len(self.list_of_samples))]
+
+        return '\n'.join(str_info)
+
+    # def info(self):
+    #     """ Print infos about the :class:`UST` object
+    #     """
+    #     print(self.__str__())
+
+    def flush_samples(self):
+        """ Empty the :py:attr:`list_of_samples` attribute.
+        """
+        self.list_of_samples = []
+
+    def sample(self, mode='Wilson', root=None):
+        """ Sample a spanning of the underlying graph uniformly at random.
+        It generates a networkx graph object.
+
+        :param mode:
+
+            - ``'Wilson'``
+            - ``'Aldous-Broder'``
+            - ``'DPP_exact'``
+
+        :type mode:
+            string, default ``'Wilson'``
+
+        .. seealso::
+
+            - Wilson algorithm :cite:`PrWi98`
+            - Aldous-Broder :cite:`Ald90`
+        """
+
+        self.sampling_mode = mode
+
+        if self.sampling_mode == 'Wilson':
+            sampl = ust_sampler_wilson(self.neighbors)
+
+        elif self.sampling_mode == 'Aldous-Broder':
+            sampl = ust_sampler_aldous_broder(self.neighbors)
+
+        elif self.sampling_mode == 'DPP_exact':
+
+            if self.kernel_eig_vecs is None:
+                self.__compute_kernel_eig_vecs()
+
+            dpp_sample = proj_dpp_sampler_eig(self.kernel_eig_vecs)
+
+            sampl = nx.Graph()
+            edges_finite_dpp = [self.edges[e] for e in dpp_sample]
+            sampl.add_edges_from(edges_finite_dpp)
+
+        else:
+            err_print = ('Invalid sampling mode',
+                         'Choose: `Wilson`, `Aldous-Broder`, `DPP_exact`',
+                         'Given {}'.format(mode))
+            raise ValueError()
+
+        self.list_of_samples.append(sampl)
+
+    def compute_kernel(self):
+        """ Compute the orthogonal projection kernel :math:`\mathbf{K} = \\text{Inc}^+ \\text{Inc}` i.e. onto the span of the rows of the vertex-edge incidence matrix :math:`\\text{Inc}` of size :math:`|V| \\times |E|`. 
+
+        In fact, for a connected graph, :math:`\\text{Inc}` has rank :math:`|V|-1` and any row can be discarded to get an basis of row space. If we note :math:`A` the amputated version of :math:`\\text{Inc}`, then :math:`\\text{Inc}^+ = A^{\\top}[AA^{\\top}]^{-1}`.
+
+        In practice, we orthogonalize the rows of :math:`A` to get the eigenvectors :math:`U` of :math:`\mathbf{K}=UU^{\\top}`.
+
+        .. seealso::
+
+            - :py:meth:`plot_kernel`
+        """
+
+        if self.kernel is None:
+            if self.kernel_eig_vecs is None:
+                self.__compute_kernel_eig_vecs()  # QR(Inc[:-1,:])
+            # K = UU.T
+            self.kernel = self.kernel_eig_vecs.dot(self.kernel_eig_vecs.T)
+        else:
+            pass
+
+    def __compute_kernel_eig_vecs(self):
+        """ See explaination in :func:`compute_kernel <compute_kernel>`
+        """
+
+        inc_mat = nx.incidence_matrix(self.graph, oriented=True)
+        # Discard any row e.g. the last one
+        A = inc_mat[:-1, :].toarray()
+        # Orthonormalize rows of A
+        self.kernel_eig_vecs, _ = qr(A.T, mode='economic')
+
+    def plot(self, title=''):
+        """ Display the last realization (spanning tree) of the corresponding :class:`UST` object.
+
+        :param title:
+            Plot title
+
+        :type title:
+            string
+
+        .. seealso::
+
+            - :py:meth:`sample`
+        """
+
+        graph_to_plot = self.list_of_samples[-1]
+
+        plt.figure(figsize=(4, 4))
+
+        pos = nx.circular_layout(graph_to_plot)
+        nx.draw_networkx(graph_to_plot,
+                         pos=pos,
+                         node_color='orange',
+                         with_labels=True)
+        plt.axis('off')
+
+        str_title = 'UST with {} algorithm'.format(self.sampling_mode)
+        plt.title(title if title else str_title)
+
+    def plot_graph(self, title=''):
+        """Display the original graph defining the :class:`UST` object
+
+        :param title:
+            Plot title
+
+        :type title:
+            string
+
+        .. seealso::
+
+            - :func:`compute_kernel <compute_kernel>`
+        """
+
+        edge_lab = [r'$e_{}$'.format(i) for i in range(self.nb_edges)]
+        edge_labels = dict(zip(self.edges, edge_lab))
+        node_labels = dict(zip(self.nodes, self.nodes))
+
+        plt.figure(figsize=(4, 4))
+
+        pos = nx.circular_layout(self.graph)
+        nx.draw_networkx(self.graph,
+                         pos=pos,
+                         node_color='orange',
+                         with_labels=True,
+                         width=3)
+        nx.draw_networkx_labels(self.graph,
+                                pos,
+                                node_labels)
+        nx.draw_networkx_edge_labels(self.graph,
+                                     pos,
+                                     edge_labels,
+                                     font_size=20)
+
+        plt.axis('off')
+
+        str_title = 'Original graph'
+        plt.title(title if title else str_title)
+
+    def plot_kernel(self, title=''):
+        """Display a heatmap of the underlying orthogonal projection kernel :math:`\mathbf{K}` associated to the DPP underlying the :class:`UST` object
+
+        :param title:
+            Plot title
+
+        :type title:
+            string
+
+        .. seealso::
+
+            - :func:`compute_kernel <compute_kernel>`
+        """
+
+        self.compute_kernel()
+
+        fig, ax = plt.subplots(1, 1)
+
+        heatmap = ax.pcolor(self.kernel, cmap='jet')
+
+        ax.set_aspect('equal')
+
+        ticks = np.arange(self.nb_edges)
+        ticks_label = [r'${}$'.format(tic) for tic in ticks]
+
+        ax.xaxis.tick_top()
+        ax.set_xticks(ticks + 0.5, minor=False)
+
+        ax.invert_yaxis()
+        ax.set_yticks(ticks + 0.5, minor=False)
+
+        ax.set_xticklabels(ticks_label, minor=False)
+        ax.set_yticklabels(ticks_label, minor=False)
+
+        str_title = 'UST kernel i.e. transfer current matrix'
+        plt.title(title if title else str_title, y=1.08)
+
+        plt.colorbar(heatmap)

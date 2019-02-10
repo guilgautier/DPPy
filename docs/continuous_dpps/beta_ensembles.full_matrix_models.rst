@@ -82,7 +82,7 @@ Normalization :math:`\sqrt{\beta N}` to concentrate as the semi-circle law.
 .. seealso::
 
 	- :ref:`Banded matrix model <hermite_ensemble_banded>` for Hermite ensemble
-	- ``class``:class:`HermiteEnsemble <dppy.beta_ensembles.HermiteEnsemble>` in API
+	- :py:class:`~dppy.beta_ensembles.HermiteEnsemble` in API
 
 .. _laguerre_ensemble_full:
 
@@ -173,7 +173,7 @@ where
 .. seealso::
 
 	- :ref:`Banded matrix model <laguerre_ensemble_banded>` for Laguerre ensemble
-	- ``class``:class:`LaguerreEnsemble <dppy.beta_ensembles.LaguerreEnsemble>` in API
+	- :py:class:`~dppy.beta_ensembles.LaguerreEnsemble` in API
 
 .. _jacobi_ensemble_full:
 
@@ -278,7 +278,7 @@ itself tending to the arcsine law in the limit
 .. seealso::
 
 	- :ref:`Banded matrix model <jacobi_ensemble_banded>` for Jacobi ensemble
-	- ``class``:class:`JacobiEnsemble <dppy.beta_ensembles.JacobiEnsemble>` in API
+	- :py:class:`~dppy.beta_ensembles.JacobiEnsemble` in API
 
 .. _circular_ensemble_full:
 
@@ -388,7 +388,7 @@ Circular Ensemble
 .. seealso::
 
 	- :ref:`Banded matrix model <circular_ensemble_banded>` for Circular ensemble
-	- ``class``:class:`CircularEnsemble <dppy.beta_ensembles.CircularEnsemble>` in API
+	- :py:class:`~dppy.beta_ensembles.CircularEnsemble` in API
 
 .. _ginibre_ensemble_full:
 
@@ -423,4 +423,4 @@ Nomalization :math:`\sqrt{N}` to concentrate in the unit circle
 
 .. seealso::
 	
-	- ``class``:class:`GinibreEnsemble <dppy.beta_ensembles.GinibreEnsemble>` in API
+	- :py:class:`~dppy.beta_ensembles.GinibreEnsemble` in API

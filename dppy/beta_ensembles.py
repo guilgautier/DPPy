@@ -9,10 +9,10 @@
 
 Such objects have 4 main methods:
 
-- `sample_full_model`
-- `sample_banded_model`
-- `plot` to display a scatter plot of the last sample and eventually the limiting distribution (after normalization)
-- `hist` to display a histogram of the last sample and eventually the limiting distribution (after normalization)
+- :py:func:`sample_full_model`
+- :py:func:`sample_banded_model`
+- :py:func:`plot` to display a scatter plot of the last sample and eventually the limiting distribution (after normalization)
+- :py:func:`hist` to display a histogram of the last sample and eventually the limiting distribution (after normalization)
 
 .. seealso:
 
@@ -39,7 +39,7 @@ class BetaEnsemble(metaclass=abc.ABCMeta):
     :param beta:
         :math:`\\beta >= 0` inverse temperature parameter.
 
-        The default ``beta=2`` corresponds to the DPP case,
+        The default :py:attr:`beta`:math:`=2` corresponds to the DPP case,
         see :ref:`beta_ensembles_definition_OPE`
     :type beta:
         int, float, default :math:`2`
@@ -76,7 +76,7 @@ class BetaEnsemble(metaclass=abc.ABCMeta):
         return '\n'.join(str_info)
 
     def flush_samples(self):
-        """ Empty the ``list_of_samples`` attribute.
+        """ Empty the :py:attr:`list_of_samples` attribute.
         """
         self.list_of_samples = []
 
@@ -89,7 +89,7 @@ class BetaEnsemble(metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def sample_banded_model(self):
         """Sample from underlying :math:`\beta`-Ensemble using the corresponding banded matrix model.
-        Arguments are the associated reference measure's parameters, or the matrix dimensions used in :func:`sample_full_model <sample_full_model>`
+        Arguments are the associated reference measure's parameters, or the matrix dimensions used in :py:meth:`sample_full_model`
         """
 
     @abc.abstractmethod
@@ -125,12 +125,9 @@ class HermiteEnsemble(BetaEnsemble):
         self.params.update(params)
 
     def sample_full_model(self, size_N=10):
-        """ Sample from :ref:`tridiagonal matrix model <Hermite_ensemble_full>`
-         for Hermite ensemble.
-        Only available for ``HermiteEnsemble.beta`` attribute
-         :math:`\\beta\\in\\{1, 2, 4\\}`
-        and the degenerate case
-         :math:`\\beta=0` corresponding to i.i.d. points from the Gaussian :math:`\\mathcal{N}(\\mu,\\sigma^2)` reference measure
+        """ Sample from :ref:`tridiagonal matrix model <Hermite_ensemble_full>` for Hermite ensemble.
+        Only available for :py:attr:`beta` :math:`\\in\\{1, 2, 4\\}`
+        and the degenerate case :py:attr:`beta` :math:`=0` corresponding to i.i.d. points from the Gaussian :math:`\\mathcal{N}(\\mu,\\sigma^2)` reference measure
 
         :param size_N:
             Number :math:`N` of points = size of the matrix to be diagonalized
@@ -140,14 +137,14 @@ class HermiteEnsemble(BetaEnsemble):
         .. note::
 
             The reference measure associated with the :ref:`full matrix model <hermite_ensemble_full>` is :math:`\\mathcal{N}(0,2)`.
-            For this reason, in the ``sampling_params`` attribute, the values of the parameters are set to ``loc``:math:`=0` and ``scale``:math:`=\\sqrt{2}`.
+            For this reason, in the :py:attr:`sampling_params` attribute, the values of the parameters are set to ``loc``:math:`=0` and ``scale``:math:`=\\sqrt{2}`.
 
-            To compare :func:`sample_banded_model <sample_banded_model>` with :func:`sample_full_model <sample_full_model>` simply use the ``size_N`` parameter.
+            To compare :py:meth:`sample_banded_model` with :py:meth:`sample_full_model` simply use the ``size_N`` parameter.
 
         .. seealso::
 
             - :ref:`Full matrix model <hermite_ensemble_full>` for Hermite ensemble
-            - :func:`sample_banded_model <sample_banded_model>`
+            - :py:meth:`sample_banded_model`
         """
 
         self.sampling_mode = 'full'
@@ -167,7 +164,7 @@ class HermiteEnsemble(BetaEnsemble):
 
     def sample_banded_model(self, loc=0.0, scale=np.sqrt(2.0), size_N=10):
         """ Sample from :ref:`tridiagonal matrix model <Hermite_ensemble_full>` for Hermite Ensemble.
-        Available for ``HermiteEnsemble.beta`` attribute  :math:`\\beta>0` and the degenerate case :math:`\\beta=0` corresponding to i.i.d. points from the Gaussian :math:`\\mathcal{N}(\\mu,\\sigma^2)` reference measure
+        Available for :py:attr:`beta` attribute  :math:`\\beta>0` and the degenerate case :py:attr:`beta` :math:`=0` corresponding to i.i.d. points from the Gaussian :math:`\\mathcal{N}(\\mu,\\sigma^2)` reference measure
 
         :param loc:
             Mean :math:`\\mu` of the Gaussian :math:`\\mathcal{N}(\\mu, \\sigma^2)`
@@ -187,15 +184,15 @@ class HermiteEnsemble(BetaEnsemble):
         .. note::
 
             The reference measure associated with the :ref:`full matrix model <hermite_ensemble_full>` is :math:`\\mathcal{N}(0,2)`.
-            For this reason, in the ``sampling_params`` attribute, the default values are set to ``loc``:math:`=0` and ``scale``:math:`=\\sqrt{2}`.
+            For this reason, in the :py:attr:`sampling_params` attribute, the default values are set to ``loc``:math:`=0` and ``scale``:math:`=\\sqrt{2}`.
 
-            To compare :func:`sample_banded_model <sample_banded_model>` with :func:`sample_full_model <sample_full_model>` simply use the ``size_N`` parameter.
+            To compare :py:meth:`sample_banded_model` with :py:meth:`sample_full_model` simply use the ``size_N`` parameter.
 
         .. seealso::
 
             - :ref:`Tridiagonal matrix model <hermite_ensemble_banded>` for Hermite ensemble
             - :cite:`DuEd02` II-C
-            - :func:`sample_full_model <sample_full_model>`
+            - :py:meth:`sample_full_model`
         """
 
         self.sampling_mode = 'banded'
@@ -223,31 +220,31 @@ class HermiteEnsemble(BetaEnsemble):
             f(x) = \\frac{1}{2\\pi} \\sqrt{4-x^2}
 
         :param points:
-            A sample from Hermite ensemble, accessible through the ``list_of_samples`` attributes
+            A sample from Hermite ensemble, accessible through the :py:attr:`list_of_samples` attribute
         :type points:
             array_like
 
-        - If sampled using :func:`sample_banded_model <sample_banded_model>` with reference measure :math:`\\mathcal{N}(\\mu,\\sigma^2)`
+        - If sampled using :py:meth:`sample_banded_model` with reference measure :math:`\\mathcal{N}(\\mu,\\sigma^2)`
 
-            1. Normalize the points to fit the :math:`\\mathcal{N}(0,2)` reference measure of the :ref:`full matrix model <hermite_ensemble_full>`
+            1. Normalize the points to fit the p.d.f. of :math:`\\mathcal{N}(0,2)` reference measure of the :ref:`full matrix model <hermite_ensemble_full>`
 
                 .. math::
 
                     x \\mapsto \\sqrt{2}\\frac{x-\\mu}{\\sigma}
 
-            2. If ``Hermite.beta``:math:`>0`, normalize the points to fit the semi-circle distribution
+            2. If :py:attr:`beta` :math:`>0`, normalize the points to fit the semi-circle distribution
 
                 .. math::
 
                     x \\mapsto \\frac{x}{\\beta N}
 
-                Otherwise if ``Hermite.beta``:math:`=0` do nothing more
+                Otherwise if :py:attr:`beta` :math:`=0` do nothing more
 
-        - If sampled using :func:`sample_full_model <sample_full_model>`, apply 2. above
+        - If sampled using :py:meth:`sample_full_model`, apply 2. above
 
         .. note::
 
-            This method is called in :func:`plot <plot>` and :func:`hist <hist>` when ``normalization=True``
+            This method is called in :py:meth:`plot` and :py:meth:`hist` when ``normalization=True``
         """
 
         if self.sampling_mode == 'banded':
@@ -319,19 +316,19 @@ class HermiteEnsemble(BetaEnsemble):
         """ Display the last realization of the :class:`HermiteEnsemble` object
 
         :param normalization:
-            When ``True``, using :func:`normalize_points <normalize_points>`, display:
+            When ``True``, using :py:meth:`normalize_points`, display:
 
-            - If ``HermiteEnsemble.beta = 0`` :math:`\\mathcal{N}(0, 2)` reference measure associated to full :ref:`full matrix model <hermite_ensemble_full>`
-            - If ``HermiteEnsemble.beta > 0`` limiting distribution: semi-circle
+            - If :py:attr:`beta` :math:`=0` p.d.f. of the :math:`\\mathcal{N}(0, 2)` reference measure associated to full :ref:`full matrix model <hermite_ensemble_full>`
+            - If :py:attr:`beta` :math:`>0` limiting distribution: semi-circle
 
         :type normalization:
             bool, default ``True``
 
         .. seealso::
 
-            - :func:`sample_full_model <sample_full_model>`, :func:`sample_banded_model <sample_banded_model>`
-            - :func:`normalize_points <normalize_points>`
-            - :func:`hist <hist>`
+            - :py:meth:`sample_full_model`, :py:meth:`sample_banded_model`
+            - :py:meth:`normalize_points`
+            - :py:meth:`hist`
             - :ref:`Full matrix model <hermite_ensemble_full>` for Hermite ensemble
             - :ref:`Tridiagonal matrix model <hermite_ensemble_banded>` for Hermite ensemble
         """
@@ -342,19 +339,19 @@ class HermiteEnsemble(BetaEnsemble):
         """ Display the histogram of the last realization of the :class:`HermiteEnsemble` object.
 
         :param normalization: 
-            When ``True``, using :func:`normalize_points <normalize_points>`, display:
+            When ``True``, using :py:meth:`normalize_points`, display:
 
-            - If ``HermiteEnsemble.beta = 0`` :math:`\\mathcal{N}(0, 2)` reference measure associated to full :ref:`full matrix model <hermite_ensemble_full>`
-            - If ``HermiteEnsemble.beta > 0`` limiting distribution: semi-circle
+            - If :py:attr:`beta` :math:`=0` p.d.f. of the :math:`\\mathcal{N}(0, 2)` reference measure associated to full :ref:`full matrix model <hermite_ensemble_full>`
+            - If :py:attr:`beta` :math:`>0` limiting distribution: semi-circle
 
         :type normalization:
             bool, default ``True``
 
         .. seealso::
 
-            - :func:`sample_full_model <sample_full_model>`, :func:`sample_banded_model <sample_banded_model>`
-            - :func:`normalize_points <normalize_points>`
-            - :func:`plot <plot>`
+            - :py:meth:`sample_full_model`, :py:meth:`sample_banded_model`
+            - :py:meth:`normalize_points`
+            - :py:meth:`plot`
             - :ref:`Full matrix model <hermite_ensemble_full>` for Hermite ensemble
             - :ref:`Tridiagonal matrix model <hermite_ensemble_banded>` for Hermite ensemble
         """
@@ -379,7 +376,7 @@ class LaguerreEnsemble(BetaEnsemble):
         self.params.update(params)
 
     def sample_full_model(self, size_N=10, size_M=100):
-        """ Sample from :ref:`full matrix model <Laguerre_ensemble_full>` for Laguerre ensemble. Only available for ``LaguerreEnsemble.beta`` attribute :math:`\\beta\\in\\{1, 2, 4\\}` and the degenerate case :math:`\\beta=0` corresponding to i.i.d. points from the :math:`\\Gamma(k,\\theta)` reference measure
+        """ Sample from :ref:`full matrix model <Laguerre_ensemble_full>` for Laguerre ensemble. Only available for :py:attr:`beta` :math:`\\in\\{1, 2, 4\\}` and the degenerate case :py:attr:`beta` :math:`=0` corresponding to i.i.d. points from the :math:`\\Gamma(k,\\theta)` reference measure
 
         :param size_N:
             Number :math:`N` of points i.e. size of the matrix to be diagonalized.
@@ -396,14 +393,14 @@ class LaguerreEnsemble(BetaEnsemble):
         .. note::
 
             The reference measure associated with the :ref:`full matrix model <laguerre_ensemble_full>` is :math:`\\Gamma\\left(\\frac{\\beta}{2}(M-N+1), 2\\right)`.
-            For this reason, in the ``LaguerreEnsemble.sampling_params`` attribute, the values of the parameters are set to ``shape``:math:`=\\frac{\\beta}{2}(M-N+1)` and ``scale``:math:`=2`.
+            For this reason, in the :py:attr:`sampling_params`, the values of the parameters are set to ``shape``:math:`=\\frac{\\beta}{2}(M-N+1)` and ``scale``:math:`=2`.
 
-            To compare :func:`sample_banded_model <sample_banded_model>` with :func:`sample_full_model <sample_full_model>` simply use the ``size_N`` and ``size_M`` parameters.
+            To compare :py:meth:`sample_banded_model` with :py:meth:`sample_full_model` simply use the ``size_N`` and ``size_M`` parameters.
 
         .. seealso::
 
             - :ref:`Full matrix model <Laguerre_ensemble_full>` for Laguerre ensemble
-            - :func:`sample_banded_model <sample_banded_model>`
+            - :py:meth:`sample_banded_model`
         """
 
         self.sampling_mode = 'full'
@@ -442,7 +439,7 @@ class LaguerreEnsemble(BetaEnsemble):
     def sample_banded_model(self,
                             shape=1.0, scale=2.0,
                             size_N=10, size_M=None):
-        """ Sample from :ref:`tridiagonal matrix model <Laguerre_ensemble_full>` for Laguerre ensemble. Available for ``LaguerreEnsemble.beta`` attribute :math:`\\beta>0` and the degenerate case :math:`\\beta=0` corresponding to i.i.d. points from the :math:`\\Gamma(k,\\theta)` reference measure
+        """ Sample from :ref:`tridiagonal matrix model <Laguerre_ensemble_full>` for Laguerre ensemble. Available for :py:attr:`beta` :math:`>0` and the degenerate case :py:attr:`beta` :math:`=0` corresponding to i.i.d. points from the :math:`\\Gamma(k,\\theta)` reference measure
 
         :param shape:
             Shape parameter :math:`k` of :math:`\\Gamma(k, \\theta)` reference measure
@@ -468,13 +465,13 @@ class LaguerreEnsemble(BetaEnsemble):
 
         - If ``size_M`` is not provided:
 
-            In the ``LaguerreEnsemble.sampling_params`` attribute, ``size_M`` is set to 
+            In the :py:attr:`sampling_params`, ``size_M`` is set to 
             ``size_M``:math:`= \\frac{2k}{\\beta} + N - 1`, to give an idea of the corresponding second dimension :math:`M`.
 
 
         - If ``size_M`` is provided:
 
-            In the ``LaguerreEnsemble.sampling_params`` attribute, ``shape`` and ``scale`` are set to: 
+            In the :py:attr:`sampling_params`, ``shape`` and ``scale`` are set to: 
             ``shape``:math:`=\\frac{1}{2} \\beta (M-N+1)` and ``scale``:math:`=2`
 
 
@@ -482,13 +479,13 @@ class LaguerreEnsemble(BetaEnsemble):
 
             The reference measure associated with the :ref:`full matrix model <laguerre_ensemble_full>` is :math:`\\Gamma\\left(\\frac{\\beta}{2}(M-N+1), 2\\right)`. This explains the role of the ``size_M`` parameter.
 
-            To compare :func:`sample_banded_model <sample_banded_model>` with :func:`sample_full_model <sample_full_model>` simply use the ``size_N`` and ``size_M`` parameters
+            To compare :py:meth:`sample_banded_model` with :py:meth:`sample_full_model` simply use the ``size_N`` and ``size_M`` parameters
 
         .. seealso::
 
             - :ref:`Tridiagonal matrix model <Laguerre_ensemble_banded>` for Laguerre ensemble
             - :cite:`DuEd02` III-B
-            - :func:`sample_full_model <sample_full_model>`
+            - :py:meth:`sample_full_model`
         """
 
         self.sampling_mode = 'banded'
@@ -545,11 +542,11 @@ class LaguerreEnsemble(BetaEnsemble):
         where   :math:`c = \\frac{M}{N}` and :math:`\\lambda_\\pm = (1\\pm\\sqrt{c})^2`
 
         :param points:
-            A sample from Laguerre ensemble, accessible through the ``list_of_samples`` attributes
+            A sample from Laguerre ensemble, accessible through the :py:attr:`list_of_samples` attribute
         :type points:
             array_like
 
-        - If sampled using :func:`sample_banded_model <sample_banded_model>` with reference measure :math:`\\Gamma(k,\\theta)`
+        - If sampled using :py:meth:`sample_banded_model` with reference measure :math:`\\Gamma(k,\\theta)`
 
             .. math::
 
@@ -557,7 +554,7 @@ class LaguerreEnsemble(BetaEnsemble):
                 \\quad \\text{and} \\quad
                 x \\mapsto \\frac{x}{\\beta M}
 
-        - If sampled using :func:`sample_full_model <sample_full_model>`
+        - If sampled using :py:meth:`sample_full_model`
 
             .. math::
 
@@ -565,7 +562,7 @@ class LaguerreEnsemble(BetaEnsemble):
 
         .. note::
 
-            This method is called in :func:`plot <plot>` and :func:`hist <hist>` when ``normalization=True``.
+            This method is called in :py:meth:`plot` and :py:meth:`hist` when ``normalization=True``.
         """
 
         if self.sampling_mode == 'banded':
@@ -638,19 +635,19 @@ class LaguerreEnsemble(BetaEnsemble):
         """ Display the last realization of the :class:`LaguerreEnsemble` object
 
         :param normalization:
-            When ``True``, using :func:`normalize_points <normalize_points>`, display:
+            When ``True``, using :py:meth:`normalize_points`, display:
 
-            - If ``LaguerreEnsemble.beta = 0`` :math:`\\Gamma(k, 2)` reference measure associated to full :ref:`full matrix model <laguerre_ensemble_full>`
-            - If ``LaguerreEnsemble.beta > 0`` limiting distribution: Marcenko-Pastur
+            - If :py:attr:`beta` :math:`=0` p.d.f. of the :math:`\\Gamma(k, 2)` reference measure associated to full :ref:`full matrix model <laguerre_ensemble_full>`
+            - If :py:attr:`beta` :math:`>0` limiting distribution: Marcenko-Pastur
 
         :type normalization:
             bool, default ``True``
 
         .. seealso::
 
-            - :func:`sample_full_model <sample_full_model>`, :func:`sample_banded_model <sample_banded_model>`
-            - :func:`normalize_points <normalize_points>`
-            - :func:`hist <hist>`
+            - :py:meth:`sample_full_model`, :py:meth:`sample_banded_model`
+            - :py:meth:`normalize_points`
+            - :py:meth:`hist`
             - :ref:`Full matrix model <Laguerre_ensemble_full>` for Laguerre ensemble
             - :ref:`Tridiagonal matrix model <Laguerre_ensemble_banded>` for Laguerre ensemble
         """
@@ -661,19 +658,19 @@ class LaguerreEnsemble(BetaEnsemble):
         """ Display the histogram of the last realization of the :class:`LaguerreEnsemble` object.
 
         :param normalization: 
-            When ``True``, using :func:`normalize_points <normalize_points>`, display:
+            When ``True``, using :py:meth:`normalize_points`, display:
 
-            - If ``LaguerreEnsemble.beta = 0`` :math:`\\Gamma(k, 2)` reference measure associated to full :ref:`full matrix model <laguerre_ensemble_full>`
-            - If ``LaguerreEnsemble.beta > 0`` limiting distribution: Marcenko-Pastur
+            - If :py:attr:`beta` :math:`=0` p.d.f. of the :math:`\\Gamma(k, 2)` reference measure associated to full :ref:`full matrix model <laguerre_ensemble_full>`
+            - If :py:attr:`beta` :math:`>0` limiting distribution: Marcenko-Pastur
 
         :type normalization:
             bool, default ``True``
 
         .. seealso::
 
-            - :func:`sample_full_model <sample_full_model>`, :func:`sample_banded_model <sample_banded_model>`
-            - :func:`normalize_points <normalize_points>`
-            - :func:`plot <plot>`
+            - :py:meth:`sample_full_model`, :py:meth:`sample_banded_model`
+            - :py:meth:`normalize_points`
+            - :py:meth:`plot`
             - :ref:`Full matrix model <Laguerre_ensemble_full>` for Laguerre ensemble
             - :ref:`Tridiagonal matrix model <Laguerre_ensemble_banded>` for Laguerre ensemble
         """
@@ -698,7 +695,7 @@ class JacobiEnsemble(BetaEnsemble):
         self.params.update(params)
 
     def sample_full_model(self, size_N=100, size_M1=150, size_M2=200):
-        """ Sample from :ref:`full matrix model <Jacobi_ensemble_full>` for Jacobi ensemble. Only available for ``JacobiEnsemble.beta`` attribute :math:`\\beta\\in\\{1, 2, 4\\}` and the degenerate case :math:`\\beta=0` corresponding to i.i.d. points from the :math:`\\operatorname{Beta}(a,b)` reference measure
+        """ Sample from :ref:`full matrix model <Jacobi_ensemble_full>` for Jacobi ensemble. Only available for :py:attr:`beta` :math:`\\in\\{1, 2, 4\\}` and the degenerate case :py:attr:`beta` :math:`=0` corresponding to i.i.d. points from the :math:`\\operatorname{Beta}(a,b)` reference measure
 
         :param size_N:
             Number :math:`N` of points i.e. size of the matrix to be diagonalized.
@@ -724,14 +721,14 @@ class JacobiEnsemble(BetaEnsemble):
 
                 \\operatorname{Beta}\\left(\\frac{\\beta}{2}(M_1-N+1), \\frac{\\beta}{2}(M_2-N+1)\\right)
 
-            For this reason, in the ``JacobiEnsemble.sampling_params`` attribute, the values of the parameters are set to ``a``:math:`=\\frac{\\beta}{2}(M_1-N+1)` and ``b``:math:`=\\frac{\\beta}{2}(M_2-N+1)`.
+            For this reason, in the :py:attr:`sampling_params` attribute, the values of the parameters are set to ``a``:math:`=\\frac{\\beta}{2}(M_1-N+1)` and ``b``:math:`=\\frac{\\beta}{2}(M_2-N+1)`.
 
-            To compare :func:`sample_banded_model <sample_banded_model>` with :func:`sample_full_model <sample_full_model>` simply use the ``size_N``, ``size_M2`` and ``size_M2`` parameters.
+            To compare :py:meth:`sample_banded_model` with :py:meth:`sample_full_model` simply use the ``size_N``, ``size_M2`` and ``size_M2`` parameters.
 
         .. seealso::
 
             - :ref:`Full matrix model <Jacobi_ensemble_full>` for Jacobi ensemble
-            - :func:`sample_banded_model <sample_banded_model>`
+            - :py:meth:`sample_banded_model`
         """
 
         self.sampling_mode = 'full'
@@ -766,7 +763,7 @@ class JacobiEnsemble(BetaEnsemble):
 
     def sample_banded_model(self, a=1.0, b=2.0,
                             size_N=10, size_M1=None, size_M2=None):
-        """ Sample from :ref:`tridiagonal matrix model <Jacobi_ensemble_full>` for Jacobi ensemble. Available for ``JacobiEnsemble.beta`` attribute :math:`\\beta>0` and the degenerate case :math:`\\beta=0` corresponding to i.i.d. points from the :math:`\\operatorname{Beta}(a,b)` reference measure
+        """ Sample from :ref:`tridiagonal matrix model <Jacobi_ensemble_full>` for Jacobi ensemble. Available for :py:attr:`beta` :math:`>0` and the degenerate case :py:attr:`beta` :math:`=0` corresponding to i.i.d. points from the :math:`\\operatorname{Beta}(a,b)` reference measure
 
         :param shape:
             Shape parameter :math:`k` of :math:`\\Gamma(k, \\theta)` reference measure
@@ -802,18 +799,18 @@ class JacobiEnsemble(BetaEnsemble):
 
                 \\operatorname{Beta}\\left(\\frac{\\beta}{2}(M_1-N+1), \\frac{\\beta}{2}(M_2-N+1)\\right)
 
-            For this reason, in the ``JacobiEnsemble.sampling_params`` attribute, the values of the parameters are set to ``a``:math:`=\\frac{\\beta}{2}(M_1-N+1)` and ``b``:math:`=\\frac{\\beta}{2}(M_2-N+1)`.
+            For this reason, in the :py:attr:`sampling_params` attribute, the values of the parameters are set to ``a``:math:`=\\frac{\\beta}{2}(M_1-N+1)` and ``b``:math:`=\\frac{\\beta}{2}(M_2-N+1)`.
 
-            To compare :func:`sample_banded_model <sample_banded_model>` with :func:`sample_full_model <sample_full_model>` simply use the ``size_N``, ``size_M2`` and ``size_M2`` parameters.
+            To compare :py:meth:`sample_banded_model` with :py:meth:`sample_full_model` simply use the ``size_N``, ``size_M2`` and ``size_M2`` parameters.
 
         - If ``size_M1`` and ``size_M2`` are not provided:
 
-            In the ``JacobiEnsemble.sampling_params`` attribute, ``size_M1,2`` are set to 
+            In the :py:attr:`sampling_params` attribute, ``size_M1,2`` are set to 
             ``size_M1``:math:`= \\frac{2a}{\\beta} + N - 1` and ``size_M2``:math:`= \\frac{2b}{\\beta} + N - 1`, to give an idea of the corresponding second dimensions :math:`M_{1,2}`.
 
         - If ``size_M1`` and ``size_M2`` are provided:
 
-            In the ``JacobiEnsemble.sampling_params`` attribute, ``a`` and ``b`` are set to: 
+            In the :py:attr:`sampling_params` attribute, ``a`` and ``b`` are set to: 
             ``a``:math:`=\\frac{\\beta}{2}(M_1-N+1)` and 
             ``b``:math:`=\\frac{\\beta}{2}(M_2-N+1)`.
 
@@ -821,7 +818,7 @@ class JacobiEnsemble(BetaEnsemble):
 
             - :ref:`Tridiagonal matrix model <Jacobi_ensemble_banded>` for Jacobi ensemble
             - :cite:`KiNe04` Theorem 2
-            - :func:`sample_full_model <sample_full_model>`
+            - :py:meth:`sample_full_model`
         """
 
         self.sampling_mode = 'banded'
@@ -920,16 +917,16 @@ class JacobiEnsemble(BetaEnsemble):
         :param normalization: 
             When ``True``, display:
 
-            - If ``JacobiEnsemble.beta = 0`` :math:`\\operatorname{Beta}(a, b)`
-            - If ``JacobiEnsemble.beta > 0`` limiting distribution: Wachter
+            - If :py:attr:`beta` :math:`=0` p.d.f. of the :math:`\\operatorname{Beta}(a, b)`
+            - If :py:attr:`beta` :math:`>0` limiting distribution: Wachter
 
         :type normalization:
             bool, default ``True``
 
         .. seealso::
 
-            - :func:`sample_full_model <sample_full_model>`, :func:`sample_banded_model <sample_banded_model>`
-            - :func:`hist <hist>`
+            - :py:meth:`sample_full_model`, :py:meth:`sample_banded_model`
+            - :py:meth:`hist`
             - :ref:`Full matrix model <Jacobi_ensemble_full>` for Jacobi ensemble
             - :ref:`Tridiagonal matrix model <Jacobi_ensemble_banded>` for Jacobi ensemble
         """
@@ -942,17 +939,17 @@ class JacobiEnsemble(BetaEnsemble):
         :param normalization:
             When ``True``, display:
 
-            - If ``JacobiEnsemble.beta = 0`` :math:`\\operatorname{Beta}(a, b)`
-            - If ``JacobiEnsemble.beta > 0`` limiting distribution: Wachter
+            - If :py:attr:`beta` :math:`=0` p.d.f. of the :math:`\\operatorname{Beta}(a, b)`
+            - If :py:attr:`beta` :math:`>0` limiting distribution: Wachter
 
         :type normalization:
             bool, default ``True``
 
         .. seealso::
 
-            - :func:`sample_full_model <sample_full_model>`, :func:`sample_banded_model <sample_banded_model>`
-            - :func:`normalize_points <normalize_points>`
-            - :func:`plot <plot>`
+            - :py:meth:`sample_full_model`, :py:meth:`sample_banded_model`
+            - :py:meth:`normalize_points`
+            - :py:meth:`plot`
             - :ref:`Full matrix model <Jacobi_ensemble_full>` for Jacobi ensemble
             - :ref:`Tridiagonal matrix model <Jacobi_ensemble_banded>` for Jacobi ensemble
         """
@@ -978,7 +975,7 @@ class CircularEnsemble(BetaEnsemble):
         self.params.update(params)
 
     def sample_full_model(self, size_N=10, haar_mode='Hermite'):
-        """ Sample from :ref:`tridiagonal matrix model <Circular_ensemble_full>` for Circular ensemble. Only available for ``CircularEnsemble.beta`` attribute :math:`\\beta\\in\\{1, 2, 4\\}` and the degenerate case :math:`\\beta=0` corresponding to i.i.d. uniform points on the unit circle
+        """ Sample from :ref:`tridiagonal matrix model <Circular_ensemble_full>` for Circular ensemble. Only available for :py:attr:`beta` :math:`\\in\\{1, 2, 4\\}` and the degenerate case :py:attr:`beta` :math:`=0` corresponding to i.i.d. uniform points on the unit circle
 
         :param size_N:
             Number :math:`N` of points i.e. size of the matrix to be diagonalized
@@ -995,7 +992,7 @@ class CircularEnsemble(BetaEnsemble):
         .. seealso::
 
             - :ref:`Full matrix model <circular_ensemble_full>` for Circular ensemble
-            - :func:`sample_banded_model <sample_banded_model>`
+            - :py:meth:`sample_banded_model`
         """
 
         self.sampling_mode = 'full'
@@ -1014,7 +1011,7 @@ class CircularEnsemble(BetaEnsemble):
 
     def sample_banded_model(self, size_N=10):
         """ Sample from :ref:`tridiagonal matrix model <Circular_ensemble_full>` for Circular Ensemble. 
-        Available for ``CircularEnsemble.beta`` attribute :math:`\\beta\\in\\mathbb{N}^*`, and the degenerate case :math:`\\beta=0` corresponding to i.i.d. uniform points on the unit circle
+        Available for :py:attr:`beta` :math:`\\in\\mathbb{N}^*`, and the degenerate case :py:attr:`beta` :math:`=0` corresponding to i.i.d. uniform points on the unit circle
 
         :param size_N:
             Number :math:`N` of points i.e. size of the matrix to be diagonalized
@@ -1023,12 +1020,12 @@ class CircularEnsemble(BetaEnsemble):
 
         .. note::
 
-            To compare :func:`sample_banded_model <sample_banded_model>` with :func:`sample_full_model <sample_full_model>` simply use the ``size_N`` parameter.
+            To compare :py:meth:`sample_banded_model` with :py:meth:`sample_full_model` simply use the ``size_N`` parameter.
 
         .. seealso::
 
             - :ref:`Quindiagonal matrix model <circular_ensemble_banded>` for Circular ensemble
-            - :func:`sample_full_model <sample_full_model>`
+            - :py:meth:`sample_full_model`
         """
 
         self.sampling_mode = 'banded'
@@ -1095,8 +1092,8 @@ class CircularEnsemble(BetaEnsemble):
 
         .. seealso::
 
-            - :func:`sample_full_model <sample_full_model>`, :func:`sample_banded_model <sample_banded_model>`
-            - :func:`hist <hist>`
+            - :py:meth:`sample_full_model`, :py:meth:`sample_banded_model`
+            - :py:meth:`hist`
             - :ref:`Full matrix model <circular_ensemble_full>` for Circular ensemble
             - :ref:`Quindiagonal matrix model <circular_ensemble_banded>` for Circular ensemble
         """
@@ -1108,8 +1105,8 @@ class CircularEnsemble(BetaEnsemble):
 
         .. seealso::
 
-            - :func:`sample_full_model <sample_full_model>`, :func:`sample_banded_model <sample_banded_model>`
-            - :func:`plot <plot>`
+            - :py:meth:`sample_full_model`, :py:meth:`sample_banded_model`
+            - :py:meth:`plot`
             - :ref:`Full matrix model <circular_ensemble_full>` for Circular ensemble
             - :ref:`Quindiagonal matrix model <circular_ensemble_banded>` for Circular ensemble
         """
@@ -1136,7 +1133,7 @@ class GinibreEnsemble(BetaEnsemble):
         self.params.update(params)
 
     def sample_full_model(self, size_N=10):
-        """ Sample from :ref:`full matrix model <Ginibre_ensemble_full>` for Ginibre ensemble. Only available for ``GinibreEnsemble.beta`` attribute :math:`\\beta=2`
+        """ Sample from :ref:`full matrix model <Ginibre_ensemble_full>` for Ginibre ensemble. Only available for :py:attr:`beta` :math:`=2`
 
         :param size_N:
             Number :math:`N` of points i.e. size of the matrix to be diagonalized
@@ -1146,7 +1143,7 @@ class GinibreEnsemble(BetaEnsemble):
         .. seealso::
 
             - :ref:`Full matrix model <ginibre_ensemble_full>` for Ginibre ensemble
-            - :func:`sample_banded_model <sample_banded_model>`
+            - :py:meth:`sample_banded_model`
         """
 
         self.params.update({'size_N': size_N})
@@ -1172,7 +1169,7 @@ class GinibreEnsemble(BetaEnsemble):
 
         .. seealso::
 
-            - :func:`sample_full_model <sample_full_model>`
+            - :py:meth:`sample_full_model`
             - :ref:`Full matrix model <ginibre_ensemble_full>` for Ginibre ensemble ensemble
         """
 

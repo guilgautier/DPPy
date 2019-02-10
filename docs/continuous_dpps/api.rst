@@ -3,11 +3,11 @@
 API
 ###
 
-.. important::
+.. .. important::
 
-	Check out the Notebook :math:`\beta`-`Ensembles <https://github.com/guilgautier/DPPy/blob/master/notebooks/beta_ensembles.ipynb>`_
+.. 	Check out the Notebook :math:`\beta`-`Ensembles <https://github.com/guilgautier/DPPy/blob/master/notebooks/beta_ensembles.ipynb>`_
 
 .. automodule:: dppy.beta_ensembles
-	:members:
-	:inherited-members:
-	:show-inheritance:
+    :members:
+    :inherited-members:
+    :show-inheritance:
