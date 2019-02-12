@@ -399,5 +399,5 @@ More specifically,
 
 	.. currentmodule:: dppy.finite_dpps
 
-	- :py:meth:`~FiniteDPP.sample_exact_k_dpps`
+	- :py:meth:`~FiniteDPP.sample_exact_k_dpp`
 	- :cite:`KuTa12` Algorithm 7 for the recursive evaluation of the elementary symmetric polynomials :math:`[e_l(\lambda_1, \dots, \delta_n)]_{l=1, n=1}^{k, N}` in the eigenvalues of :math:`\mathbf{L}`
