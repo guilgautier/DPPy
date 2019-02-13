@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+# coding: utf8
 """ Implementation of :py:class:`FiniteDPP` object which has 6 main methods:
 
 - :py:meth:`~FiniteDPP.sample_exact`

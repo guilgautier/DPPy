@@ -3,18 +3,35 @@
 	 You can adapt this file completely to your liking, but it should at least
 	 contain the root `toctree` directive.
 
+.. |siren| replace:: 🚨
+.. |fire| replace:: 🔥
+.. |explosion| replace:: 💥
+.. |palm_tree| replace:: 🌴
+.. |tree| replace:: 🌿
+.. |numbers| replace:: 🔢
+.. |histogram| replace:: 📶
+
 Welcome to DPPy's documentation!
 ################################
 
-Determinantal point processes (DPPs) are specific probability distributions over clouds of points that have been popular as models or computational tools across physics, probability, statistics, and more recently of booming interest in machine learning. 
-Sampling from DPPs is a nontrivial matter, and many approaches have been proposed. 
-DPPy is a Python library that gathers all exact and approximate sampling algorithms for DPPs.
+**Determinantal point processes** (DPPs) are specific probability distributions over clouds of points that have been popular as models or computational tools across physics, probability, statistics, random matrices and more recently of booming interest in machine learning.
+**Sampling from DPPs** is a nontrivial matter, and many approaches have been proposed.
 
-The purpose of this documentation is to both provide a quick survey of DPPs and relate each mathematical property with its implementation in DPPy. 
+As a contraction of **DPPs and Python, DPPy** gathers:
+
+- all **exact and approximate samplers** for :ref:`finite DPPs <finite_dpps>` |explosion|
+- :ref:`full <full_matrix_models>` and :ref:`banded <banded_matrix_models>` (tri/quindiagonal) matrix models for :math:`\beta`-:ref:`Ensembles <beta_ensembles>` |fire|
+- exact samplers for more :ref:`exotic_dpps` |palm_tree| 
+
+  * :ref:`uniform spanning trees <UST>` |tree|
+  * :ref:`descent processes <stationary_1-dependent_process>` |numbers|
+  * :ref:`Poissonized Plancherel <poissonized_plancherel_measure>` |histogram|
+
+The purpose of this **documentation** is to both provide a **quick survey of DPPs and relate each mathematical property with its implementation in DPPy**. 
 The documentation can thus be read in different ways:
 
 	- if you read the sections in the order they appear, they will first take you through mathematical definitions and quick illustrations of how these definitions are encoded in DPPy. 
-	- for more a traditional library documentation please refer to the corresponding API sections documenting the methods in each class, along with pointers to the mathematical definitions if needed. 
+	- for more a traditional library documentation please refer to the corresponding API sections documenting the methods of each object, along with pointers to the mathematical definitions if needed. 
 	- you can also directly jump to the Jupyter `notebooks <https://github.com/guilgautier/DPPy/tree/master/notebooks>`_, which showcase the use of some DPPy objects in more detail.
 
 For another entry point to DPPy see the `companion paper <https://arxiv.org/abs/1809.07258>`_ :cite:`GaBaVa18`.

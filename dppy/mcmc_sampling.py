@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+# coding: utf8
 """ Implementation of finite DPP MCMC samplers:
 
 - `add_exchange_delete_sampler`

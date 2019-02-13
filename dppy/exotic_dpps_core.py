@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+# coding: utf8
 """ Core functions for
 
 - Uniform spanning trees

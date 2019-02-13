@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+# coding: utf8
 """ Implementation of exotic DPP objects:
 
 - Uniform spanning trees :class:`UST`
@@ -179,7 +179,7 @@ class CarriesProcess(Descent):
 
 
 class DescentProcess(Descent):
-    """ DPP on :math:'\{1,2,\dots,N-1}' associated to the descent process on the symmetric group :math:`\mathfrak{S}_N`.
+    """ DPP on :math:`\{1, \dots, N-1\}` associated to the descent process on the symmetric group :math:`\mathfrak{S}_N`.
 
         .. seealso::
 
@@ -202,7 +202,7 @@ class DescentProcess(Descent):
         return 0.5
 
     def sample(self, size=100):
-        """ Draw a permutation :math:`\sigma\in\mathfrak{S}_N` uniformly at random and record the descents i.e. :math:`\{ i ~;~ \sigma_i > \sigma_{i+1} \}`.
+        """ Draw a permutation :math:`\sigma \in \mathfrak{S}_N` uniformly at random and record the descents i.e. :math:`\{ i ~;~ \sigma_i > \sigma_{i+1} \}`.
 
         :param size:
             size of the permutation i.e. degree :math:`N` of :math:`\mathfrak{S}_N`.
@@ -220,7 +220,7 @@ class DescentProcess(Descent):
 
 
 class VirtualDescentProcess(Descent):
-    """ This is a DPP on :math:'\{1,\dots,N-1\}' with a non symmetric kernel appearing in (or as a limit of) the descent process on the symmetric group :math:`\mathfrak{S}_N`.
+    """ This is a DPP on :math:`\{1, \dots, N-1\}` with a non symmetric kernel appearing in (or as a limit of) the descent process on the symmetric group :math:`\mathfrak{S}_N`.
 
     .. seealso::
 
@@ -286,7 +286,7 @@ class PoissonizedPlancherel:
     """ DPP on partitions associated to the Poissonized Plancherel measure
 
     :param theta:
-        Base/radix
+        Poisson parameter i.e. expected length of permutation
 
     :type theta:
         int, default 10
@@ -387,7 +387,7 @@ class PoissonizedPlancherel:
         The sample corresponds to the projection onto the real line of the descending surface edges.
 
         :param normalization:
-            If ``normalization=True``, the Young diagram and the corresponding sample are scaled by a factor :math:`\sqrt{\theta}` and the limiting 
+            If ``normalization=True``, the Young diagram and the corresponding sample are scaled by a factor :math:`\sqrt{\\theta}` and the limiting 
 
         :type normalization:
             bool, default False

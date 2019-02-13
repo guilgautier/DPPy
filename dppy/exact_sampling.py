@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+# coding: utf8
 """ Implementation of finite DPP exact samplers derived from:
 
 - the raw **projection** inclusion :math:`K` kernel (no need for eigendecomposition)

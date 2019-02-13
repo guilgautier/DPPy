@@ -55,10 +55,13 @@ Variance
 
 .. math::
 
-	\operatorname{\mathbb{V}ar}\left[ \sum_{X \in \gamma} f(X) \right] 
-		&= \int f(x)^2 K(x,x) \mu(dx) 
-		- \int f(x) K(x,x) \mu(dx) \\
-		+& \iint f(x)f(y) [K(x,x)K(y,y)-K(x,y)K(y,x)] \mu(dx) \mu(dy)\\
+	\operatorname{\mathbb{V}ar}\left[ \sum_{X \in \gamma} f(X) \right]
+		&= \mathbb{E}\left[ \sum_{X \neq Y \in \gamma} f(X) f(Y) 
+							+ \sum_{X \in \gamma} f(X)^2 \right]
+			- \mathbb{E}\left[ \sum_{X \in \gamma} f(X) \right]^2\\
+		&= \iint f(x)f(y) [K(x,x)K(y,y)-K(x,y)K(y,x)] \mu(dx) \mu(dy)\\
+			&\quad + \int f(x)^2 K(x,x) \mu(dx) 
+			- \left[\int f(x) K(x,x) \mu(dx)\right]^2 \\
 		&= \int f(x)^2 K(x,x) \mu(dx) 
 			 - \iint f(x)f(y) K(x,y)K(y,x) \mu(dx) \mu(dy)\\
 		&= \operatorname{Tr}(f^2K) - \operatorname{Tr}(fKfK)
@@ -70,7 +73,7 @@ a. Hermitian kernel i.e. :math:`K(x,y)=\overline{K(y,x)}`
 		\operatorname{\mathbb{V}ar}\left[ \sum_{X \in \gamma} f(X) \right] 
 		= \int f(x)^2 K(x,x) \mu(dx) - \iint f(x)f(y) |K(x,y)|^2 \mu(dx) \mu(dy)
 
-b. Orthogonal projection case
+b. Orthogonal projection case i.e. :math:`K^2 = K = K^*`
 
 	Using 
 	:math:`K(x,x) = \int K(x,y) K(y,x) \mu(dy) = \int |K(x,y)|^2 \mu(dy)`,
@@ -100,7 +103,7 @@ Based on :ref:`continuous_dpps_mixture`, we have
 
 .. seealso::
 
-	Finite case of :ref:`finite_dpps_nb_points`
+	:ref:`finite_dpps_nb_points` in the finite case
 
 .. _continuous_dpps_thinning:
 

@@ -3,7 +3,7 @@
 Properties
 **********
 
-Throughout this section, we assume :math:`\mathbf{K}` and :math:`\mathbf{L}` satisfy the sufficient conditions :eq:`suff_cond_K` and eq:`suff_cond_L` respectively.
+Throughout this section, we assume :math:`\mathbf{K}` and :math:`\mathbf{L}` satisfy the sufficient conditions :eq:`suff_cond_K` and :eq:`suff_cond_L` respectively.
 
 .. _finite_dpps_mixture:
 
@@ -82,7 +82,7 @@ Variance
 
 .. seealso::
 
-	:ref:`continuous_dpps_linear_statistics`
+	Expectation and variance of :ref:`continuous_dpps_linear_statistics`
 
 .. testcode::
 
@@ -120,7 +120,7 @@ Variance
 
 .. important::
 
-	Realizations of *projection* DPPs have fixed cardinality.
+	Realizations of *projection* DPPs i.e. have fixed cardinality.
 
 	.. math::
 		:label: number_points_projection_K
@@ -130,21 +130,17 @@ Variance
 				\operatorname{Tr} \mathbf{K} 
 			= \operatorname{rank} \mathbf{K}
 
-	Indeed, since :math:`\mathbf{K}^2=\mathbf{K}`, :eq:`var_number_points` becomes
-
-	.. math::
-
-		\mathbb{V}ar[|\mathcal{X}|] 
-		= \operatorname{Tr} \mathbf{K} - \operatorname{Tr} \mathbf{K}^2
-		= 0
-
-	and :eq:`expect_number_points` gives
+	Since :math:`\mathbf{K}^2=\mathbf{K}`, :eq:`expect_number_points` and :eq:`var_number_points` yield
 
 	.. math::
 
 		\mathbb{E}[|\mathcal{X}|] 
-		= \operatorname{Tr} \mathbf{K} 
-		= \operatorname{rank} \mathbf{K}
+			= \operatorname{Tr} \mathbf{K} 
+			= \operatorname{rank} \mathbf{K}
+		\quad \text{and} \quad
+		\mathbb{V}ar[|\mathcal{X}|] 
+			= \operatorname{Tr} \mathbf{K} - \operatorname{Tr} \mathbf{K}^2
+			= 0
 
 	Thus,
 
@@ -167,10 +163,11 @@ Variance
 		eig_vals = ones(r)
 		eig_vecs, _ = qr(randn(N, r), mode='economic')
 
-		DPP = FiniteDPP('inclusion', **{'K_eig_dec':(eig_vals, eig_vecs)})
+		DPP = FiniteDPP('inclusion', projection=True,
+		                **{'K_eig_dec':(eig_vals, eig_vecs)})
 
 		for _ in range(10):
-			DPP.sample_exact()
+		    DPP.sample_exact()
 
 		print(list(map(list, DPP.list_of_samples)))
 	
@@ -189,7 +186,7 @@ Kernels satisfying the sufficient conditions :eq:`suff_cond_K` and :eq:`suff_con
 
 	\mathbf{K}_{ij} = \langle \phi_i, \phi_j \rangle
 	\quad \text{and} \quad
-	\mathbf{K}_{ij} = \langle \psi_i, \psi_j \rangle,
+	\mathbf{L}_{ij} = \langle \psi_i, \psi_j \rangle,
 
 where each item is represented by a feature vector :math:`\phi_i` (resp. :math:`\psi_i`).
 
@@ -248,6 +245,7 @@ Relation between inclusion and marginal kernels
 .. warning::
 	
 	For DPPs with *projection* inclusion kernel :math:`K`, the marginal kernel :math:`\mathbf{L}` cannot be computed via  :eq:`relation_K_L` with :math:`\mathbf{L} = \mathbf{K}(I-\mathbf{K})^{—1}`, since :math:`\mathbf{K}` has at least one eigenvalue equal to :math:`1` (:math:`\mathbf{K}^2=\mathbf{K}`).
+
 	However, the marginal kernel :math:`\mathbf{L}` coincides with :math:`\mathbf{K}`.
 
 	.. math::

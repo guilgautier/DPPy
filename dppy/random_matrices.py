@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+# coding: utf8
 """ Implementation of full and banded matrix models for :math:`\beta`-Ensemble:
 
 - Hermite Ensemble (full + tridiagonal)

@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+# coding: utf8
 """ Implementation of the meta-class :class:`BetaEnsemble` with children:
 
 - :class:`HermiteEnsemble`

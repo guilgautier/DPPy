@@ -103,8 +103,8 @@ where the dagger :math:`\dagger` symbol means *conjugate transpose*.
 
 .. _finite_dpps_definition_k_dpps:
 
-:math:`\operatorname{k-DPPs}`
-=============================
+k-DPPs
+======
 
 :math:`\operatorname{k-DPPs}` can be defined as :math:`\operatorname{DPP(\mathbf{L})s}` conditioned to a fixed sample size :math:`|\mathcal{X}|=k`.
 Thus, they are defined through the joint probabilities
@@ -119,8 +119,8 @@ where :math:`e_k(L)` corresponds to the `elementary symmetric polymial <https://
 .. math::
 	
 	e_k(\mathbf{L})
-		\triangleq e_k(\lambda_1, \dots, \lambda_N)
-		= \sum_{S\subset [N]: |S|=k} \prod_{n \in S} \lambda_i
+		\triangleq e_k(\delta_1, \dots, \delta_N)
+		= \sum_{S\subset [N]: |S|=k} \prod_{n \in S} \delta_i
 		= \sum_{S\subset [N]: |S|=k} \det L_S
 
 .. caution::
@@ -129,8 +129,8 @@ where :math:`e_k(L)` corresponds to the `elementary symmetric polymial <https://
 
 .. warning::
 
-	:math:`\operatorname{k-DPPs}` are not :math:`\operatorname{DPPs}` in general.
-	Viewed as :math:`\operatorname{DPPs}` conditioned to a fixed sample size :math:`|\mathcal{X}|=k`, the only case where they coincide is when *projection* :math:`\operatorname{DPP}(\mathbf{K})` is considered and :math:`k=rank(\mathbf{K})`
+	k-DPPs are not DPPs in general.
+	Viewed as :math:`\operatorname{DPPs}` conditioned to a fixed sample size :math:`|\mathcal{X}|=k`, the only case where they coincide is when *projection* :math:`\operatorname{DPP}(\mathbf{K})` is considered and :math:`k=\operatorname{rank}(\mathbf{K})`, see :eq:`marginal_projection_K`.
 
 .. seealso::
 

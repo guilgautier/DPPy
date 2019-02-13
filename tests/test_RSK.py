@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+# coding: utf8
 """ Unit tests:
 
 - :class:`TestRSKCorrespondence` check correct implementation of RSK algorithm
