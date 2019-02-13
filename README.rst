@@ -135,7 +135,7 @@ BibTeX:
 
 .. code:: bibtex
 
-    @article{GaBaVa18,,
+    @article{GaBaVa18,
         archivePrefix = {arXiv},
         arxivId = {1809.07258},
         author = {Gautier, Guillaume and Bardenet, R{\'{e}}mi and Valko, Michal},
