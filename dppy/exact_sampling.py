@@ -1,8 +1,8 @@
 # coding: utf8
 """ Implementation of finite DPP exact samplers derived from:
 
-- the raw **projection** inclusion :math:`K` kernel (no need for eigendecomposition)
-- the eigendecomposition of the inclusion :math:`K` kernel
+- the raw **projection** correlation :math:`K` kernel (no need for eigendecomposition)
+- the eigendecomposition of the correlation :math:`K` kernel
 
 .. seealso:
 
@@ -54,8 +54,8 @@ def proj_dpp_sampler_kernel(kernel, mode='GS', size=None):
 def proj_dpp_sampler_kernel_GS(K, size=None):
     """ Sample from:
 
-    - :math:`\operatorname{DPP}(K)` with orthogonal projection **inclusion** kernel :math:`K` if ``size`` is not provided
-    - :math:`\operatorname{k-DPP}` with orthogonal projection **marginal** kernel :math:`K` with :math:`k=` ``size`` is not provided
+    - :math:`\operatorname{DPP}(K)` with orthogonal projection **correlation** kernel :math:`K` if ``size`` is not provided
+    - :math:`\operatorname{k-DPP}` with orthogonal projection **likelihood** kernel :math:`K` with :math:`k=` ``size`` is not provided
     
     Chain rule is applied by performing sequential Gram-Schmidt orthogonalization or equivalently Cholesky decomposition updates of :math:`K`.
 
@@ -117,8 +117,8 @@ def proj_dpp_sampler_kernel_GS(K, size=None):
 def proj_dpp_sampler_kernel_Schur(K, size=None):
     """ Sample from:
 
-    - :math:`\operatorname{DPP}(K)` with orthogonal projection **inclusion** kernel :math:`K` if ``size`` is not provided
-    - :math:`\operatorname{k-DPP}` with orthogonal projection **marginal** kernel :math:`K` with :math:`k=` ``size``
+    - :math:`\operatorname{DPP}(K)` with orthogonal projection **correlation** kernel :math:`K` if ``size`` is not provided
+    - :math:`\operatorname{k-DPP}` with orthogonal projection **likelihood** kernel :math:`K` with :math:`k=` ``size``
 
     Chain rule is applied by computing the Schur complements.
 
@@ -210,9 +210,9 @@ def proj_dpp_sampler_kernel_Schur(K, size=None):
 ##################
 # Generic kernel #
 ##################
-# Phase 1: subsample eigenvectors by drawing independent Bernoulli variables with parameter the eigenvalues of the inclusion kernel K.
+# Phase 1: subsample eigenvectors by drawing independent Bernoulli variables with parameter the eigenvalues of the correlation kernel K.
 def dpp_eig_vecs_selector(ber_params, eig_vecs):
-    """ Phase 1 of exact sampling procedure. Subsample eigenvectors :math:`V` of the initial kernel (inclusion :math:`K`, resp. marginal :math:`L`) to build a projection DPP with kernel :math:`V V^{\top}` from which sampling is easy.
+    """ Phase 1 of exact sampling procedure. Subsample eigenvectors :math:`V` of the initial kernel (correlation :math:`K`, resp. likelihood :math:`L`) to build a projection DPP with kernel :math:`V V^{\top}` from which sampling is easy.
     The selection is made based on a realization of Bernoulli variables with parameters related to the eigenvalues of :math:`K`, resp. :math:`L`.
 
     :param ber_params:
@@ -243,7 +243,7 @@ def dpp_eig_vecs_selector(ber_params, eig_vecs):
 
 
 def dpp_eig_vecs_selector_L_dual(eig_vals, eig_vecs, gram_factor):
-    """ Subsample eigenvectors :math:`V` of marginal kernel :math:`L=\Phi^{\top} \Phi` based on the eigendecomposition dual kernel :math:`L'=\Phi \Phi^{\top}`. Note that :math:`L'` and :math:`L'` share the same nonzero eigenvalues.
+    """ Subsample eigenvectors :math:`V` of likelihood kernel :math:`L=\Phi^{\top} \Phi` based on the eigendecomposition dual kernel :math:`L'=\Phi \Phi^{\top}`. Note that :math:`L'` and :math:`L'` share the same nonzero eigenvalues.
 
     :param eig_vals:
         Collection of eigenvalues of :math:`L_dual` kernel.
@@ -548,7 +548,7 @@ def k_dpp_eig_vecs_selector(eig_vals, eig_vecs, size, E_poly=None):
     """ Subsample eigenvectors V of the 'L' kernel to build a projection DPP with kernel V V.T from which sampling is easy. The selection is made based a realization of Bernoulli variables with parameters the eigenvalues of 'L' and evalutations of the elementary symmetric polynomials.
 
     :param eig_vals:
-        Collection of eigen values of 'L' (marginal) kernel.
+        Collection of eigen values of 'L' (likelihood) kernel.
     :type eig_vals:
         list, array_like
 

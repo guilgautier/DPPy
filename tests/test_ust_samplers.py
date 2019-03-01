@@ -1,8 +1,9 @@
 # coding: utf8
 """ Unit tests:
 
-- :class:`MarginalsProjectionDPP` to check that exact samplers for finite DPPs have the right (at least 1 and 2) inclusion probabilities
+- :class:`TestUniformityUniformSpanningTreeSampler` to check that exact samplers for uniform spanning trees actually generate spanning trees uniformly at random.
 """
+
 
 import unittest
 

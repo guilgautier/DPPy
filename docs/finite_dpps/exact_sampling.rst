@@ -3,7 +3,7 @@
 Exact sampling
 **************
 
-The procedure stems from the fact that :ref:`generic DPPs are mixtures of projection DPPs <finite_dpps_mixture>`, suggesting the following two steps algorithm given the spectral decomposition of the inclusion kernel :math:`\mathbf{K}`
+The procedure stems from the fact that :ref:`generic DPPs are mixtures of projection DPPs <finite_dpps_mixture>`, suggesting the following two steps algorithm given the spectral decomposition of the correlation kernel :math:`\mathbf{K}`
 
 .. math::
 
@@ -14,7 +14,7 @@ The procedure stems from the fact that :ref:`generic DPPs are mixtures of projec
 
 :cite:`HKPV06` Algorithm 18 gives the procedure for sampling *projection* DPPs. It is based on the chain rule and the geometrical interpretations are reflected through the conditionals.
 
-In the general case, the average cost of the exact sampling scheme is :math:`\mathcal{O}(N\mathbb{E}[|\mathcal{X}|]^2)` with an initial :math:`\mathcal{O}(N^3)` cost to access the spectral decomposition of the underlying inclusion kernel.
+In the general case, the average cost of the exact sampling scheme is :math:`\mathcal{O}(N\mathbb{E}[|\mathcal{X}|]^2)` with an initial :math:`\mathcal{O}(N^3)` cost to access the spectral decomposition of the underlying correlation kernel.
 
 .. important::
 
@@ -32,13 +32,13 @@ Projection DPPs
 
 	.. important::
 
-		*Orthogonal projection* inclusion kernel :math:`\mathbf{K}` admit the following Gram matrix factorizations
+		*Orthogonal projection* correlation kernel :math:`\mathbf{K}` admit the following Gram matrix factorizations
 
 		1. Using :math:`\mathbf{K} = \mathbf{K}^2` 
 		and :math:`\mathbf{K}^{\dagger}=\mathbf{K}`
 
 			.. math::
-				:label: inclusion_kernel_factorization_K.TK
+				:label: correlation_kernel_factorization_K.TK
 
 				\mathbf{K} 
 				= \mathbf{K} \mathbf{K}^{\dagger}
@@ -47,13 +47,13 @@ Projection DPPs
 		2. Using the spectral decomposition
 
 			.. math::
-				:label: inclusion_kernel_factorization_UU.T
+				:label: correlation_kernel_factorization_UU.T
 
 				\mathbf{K} 
 				= \mathbf{U} \mathbf{U}^{\dagger}, 
 				\quad \text{where } \mathbf{U}^{\dagger} \mathbf{U} = I_r
 
-		In this setting, the rows (equiv. columns) of the inclusion kernel :math:`\mathbf{K}` or alternatively the rows of the eigenvectors :math:`\mathbf{U}` play the role of feature vectors.
+		In this setting, the rows (equiv. columns) of the correlation kernel :math:`\mathbf{K}` or alternatively the rows of the eigenvectors :math:`\mathbf{U}` play the role of feature vectors.
 
 		Finally, we will see that the chain rule is akin to Gram-Schmidt orthogonalization of these somewhat artificial feature vectors.
 
@@ -107,7 +107,7 @@ Chain rule
 
 		In fact, the chain rule boils down to applying Gram-Schmidt on the rows of either :math:`\mathbf{K}` or :math:`\mathbf{U}`.
 
-		- Given the *orthogonal projection* kernel :eq:`inclusion_kernel_factorization_K.TK` the sampling scheme writes
+		- Given the *orthogonal projection* kernel :eq:`correlation_kernel_factorization_K.TK` the sampling scheme writes
 
 			.. math::
 
@@ -118,7 +118,7 @@ Chain rule
 				\operatorname{dist}^2 
 				(\mathbf{K}_{s_{j}:} ~;~ \operatorname{Span} \mathbf{K}_{s_{1:j-1}:})
 
-		- Given the eigendecomposition :math:`\mathbf{K}=\mathbf{U}\mathbf{U}^{\dagger}` of the *orthogonal projection* kernel :eq:`inclusion_kernel_factorization_UU.T` the sampling scheme writes
+		- Given the eigendecomposition :math:`\mathbf{K}=\mathbf{U}\mathbf{U}^{\dagger}` of the *orthogonal projection* kernel :eq:`correlation_kernel_factorization_UU.T` the sampling scheme writes
 
 			.. math::
 				:label: phase_2_eig_vec
@@ -146,7 +146,7 @@ Chain rule
 		eig_vals = ones(r)
 		eig_vecs, _ = qr(randn(N, r), mode='economic')
 
-		DPP = FiniteDPP('inclusion', **{'K_eig_dec':(eig_vals, eig_vecs)})
+		DPP = FiniteDPP('correlation', **{'K_eig_dec':(eig_vals, eig_vecs)})
 
 		for _ in range(10):
 			DPP.sample_exact()
@@ -245,7 +245,7 @@ Generic DPPs
 
 	.. tip::
 
-		If the marginal kernel was constructed as :math:`\mathbf{L}=\Phi^{\dagger}\Phi` where :math:`\Phi` is a :math:`d\times N` feature matrix, it may be judicious to exploit the lower dimensional structure of the *dual* kernel :math:`\tilde{\mathbf{L}} = \Phi \Phi^{\dagger}`.
+		If the likelihood kernel was constructed as :math:`\mathbf{L}=\Phi^{\dagger}\Phi` where :math:`\Phi` is a :math:`d\times N` feature matrix, it may be judicious to exploit the lower dimensional structure of the *dual* kernel :math:`\tilde{\mathbf{L}} = \Phi \Phi^{\dagger}`.
 		Indeed, when :math:`d<N` computing the eigendecomposition of :math:`\tilde{\mathbf{L}}` costs :math:`\mathcal{O}(d^3)` compared to :math:`\mathcal{O}(N^3)` for :math:`\mathbf{L}`.
 
 	.. note::
@@ -320,7 +320,7 @@ Generic DPPs
 		eig_vals = rand(r)
 		eig_vecs, _ = qr(randn(N, r), mode='economic')
 
-		DPP = FiniteDPP('inclusion', **{'K_eig_dec':(eig_vals, eig_vecs)})
+		DPP = FiniteDPP('correlation', **{'K_eig_dec':(eig_vals, eig_vecs)})
 
 		for _ in range(10):
 			DPP.sample_exact()
@@ -383,7 +383,7 @@ More specifically,
 	r, N = 5, 10
 	# Random feature vectors
 	Phi = randn(r, N)
-	DPP = FiniteDPP('marginal', **{'L': Phi.T.dot(Phi)})
+	DPP = FiniteDPP('likelihood', **{'L': Phi.T.dot(Phi)})
 
 	k = 4
 	for _ in range(10):

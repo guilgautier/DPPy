@@ -5,8 +5,8 @@
 - :py:meth:`~FiniteDPP.sample_exact_k_dpp`
 - :py:meth:`~FiniteDPP.sample_mcmc`
 - :py:meth:`~FiniteDPP.sample_mcmc_k_dpp`
-- :py:meth:`~FiniteDPP.compute_K`, to compute the inclusion :math:`K` kernel from initial parametrization 
-- :py:meth:`~FiniteDPP.compute_L`, to compute the marginal :math:`L` kernel from initial parametrization
+- :py:meth:`~FiniteDPP.compute_K`, to compute the correlation :math:`K` kernel from initial parametrization 
+- :py:meth:`~FiniteDPP.compute_L`, to compute the likelihood :math:`L` kernel from initial parametrization
 
 .. seealso:
 
@@ -35,14 +35,14 @@ class FiniteDPP:
 
     :param kernel_type:
 
-        - ``'inclusion'`` :math:`\mathbf{K}` kernel
-        - ``'marginal'`` :math:`\mathbf{L}` kernel
+        - ``'correlation'`` :math:`\mathbf{K}` kernel
+        - ``'likelihood'`` :math:`\mathbf{L}` kernel
 
     :type kernel_type:
         string
 
     :param projection:
-        Indicate whether the provided kernel is of projection type. This may be useful when the :class:`FiniteDPP` object is defined through its inclusion kernel :math:`\mathbf{K}`.
+        Indicate whether the provided kernel is of projection type. This may be useful when the :class:`FiniteDPP` object is defined through its correlation kernel :math:`\mathbf{K}`.
 
     :type projection:
         bool, default ``False``
@@ -50,13 +50,13 @@ class FiniteDPP:
     :param params:
         Dictionary containing the parametrization of the underlying
 
-        - inclusion kernel
+        - correlation kernel
 
             - ``{'K': K}``, with :math:`0 \preceq \mathbf{K} \preceq I`
             - ``{'K_eig_dec': (eig_vals, eig_vecs)}``, with :math:`0 \leq eigvals \leq 1`
             - ``{'A_zono': A}``, with :math:`A (d \\times N)` and :math:`\operatorname{rank}(A)=d`
 
-        - marginal kernel
+        - likelihood kernel
 
             - ``{'L': L}``, with :math:`\mathbf{L}\succeq 0`
             - ``{'L_eig_dec': (eig_vals, eig_vecs)}``, with :math:`eigvals \geq 0`
@@ -93,7 +93,7 @@ class FiniteDPP:
         self.size_k_dpp = 0  
         self.E_poly = None  # evaluation of the 
 
-        # Attributes relative to K inclusion kernel:
+        # Attributes relative to K correlation kernel:
         # K, K_eig_vals, K_eig_vecs, A_zono
         self.K = is_symmetric(params.get('K', None))
         if self.projection:
@@ -108,7 +108,7 @@ class FiniteDPP:
 
         self.A_zono = is_full_row_rank(params.get('A_zono', None))
 
-        # Attributes relative to L marginal kernel:
+        # Attributes relative to L likelihood kernel:
         # L, L_eig_vals, L_eig_vecs, L_gram_factor, L_dual, L_dual_eig_vals, L_dual_eig_vecs
         self.L = is_symmetric(params.get('L', None))
         if self.projection:
@@ -122,7 +122,7 @@ class FiniteDPP:
         if self.eig_vecs is None:  # K_eig_vecs = L_eig_vecs
             self.eig_vecs = is_orthonormal(e_vecs)
 
-        # L' "dual" marginal kernel, L' = Phi Phi.T, Phi = L_gram_factor
+        # L' "dual" likelihood kernel, L' = Phi Phi.T, Phi = L_gram_factor
         self.L_gram_factor = params.get('L_gram_factor', None)
         self.L_dual = None
         self.L_dual_eig_vals = None
@@ -157,17 +157,17 @@ class FiniteDPP:
         # Check coherence of initialization parameters of the DPP:
         # kernel_type, projection and params.
 
-        K_type, K_params = 'inclusion', {'K', 'K_eig_dec', 'A_zono'}
-        L_type, L_params = 'marginal', {'L', 'L_eig_dec', 'L_gram_factor'}
+        K_type, K_params = 'correlation', {'K', 'K_eig_dec', 'A_zono'}
+        L_type, L_params = 'likelihood', {'L', 'L_eig_dec', 'L_gram_factor'}
 
         if self.kernel_type == K_type:
             if self.params_keys.intersection(K_params):
                 if 'A_zono' in self.params_keys and not self.projection:
-                    warn('Weird setting: inclusion kernel defined via `A_zono` but `projection`=False. `projection` switched to True')
+                    warn('Weird setting: correlation kernel defined via `A_zono` but `projection`=False. `projection` switched to True')
                     self.projection = True
             else:
                 err_print =\
-                    ['Invalid parametrization of inclusion kernel, choose:',
+                    ['Invalid parametrization of correlation kernel, choose:',
                      '- `K` = 0 <= K <= I',
                      '- `K_eig_dec` = (eig_vals, eig_vecs) 0 <= eig_vals <= 1',
                      '- `A_zono` = A is dxN matrix, K = A.T (AA.T)^-1 A',
@@ -177,10 +177,10 @@ class FiniteDPP:
         elif self.kernel_type == L_type:
             if self.params_keys.intersection(L_params):
                 if self.projection:
-                    warn('weird setting: defining a DPP via a projection marginal L kernel is unusual. Make sure you do not want to use a projection INCLUSION K kernel instead')
+                    warn('weird setting: defining a DPP via a projection likelihood L kernel is unusual. Make sure you do not want to use a projection INCLUSION K kernel instead')
             else:
                 err_print =\
-                    ['Invalid parametrization of marginal kernel, choose:',
+                    ['Invalid parametrization of likelihood kernel, choose:',
                      '- `L` = L >= 0',
                      '- `L_eig_dec` = (eig_vals, eig_vecs) eig_vals >= 0',
                      '- `L_gram_factor` = Phi (dxN) where L = Phi.T Phi',
@@ -190,8 +190,8 @@ class FiniteDPP:
         else:
             err_print =\
                 ['Invalid `kernel_type`, choose among:',
-                 '- `inclusion`: K kernel',
-                 '- `marginal`: L kernel'
+                 '- `correlation`: K kernel',
+                 '- `likelihood`: L kernel'
                  'Given: {}'.format(self.params_keys)]
             raise ValueError('\n'.join(err_print))
 
@@ -278,7 +278,7 @@ class FiniteDPP:
             sampl = proj_dpp_sampler_eig(V, self.sampling_mode)
             self.list_of_samples.append(sampl)
 
-        # If DPP defined via projection inclusion kernel K
+        # If DPP defined via projection correlation kernel K
         # no eigendecomposition required
         elif (self.K is not None) and self.projection:
             sampl = proj_dpp_sampler_kernel(self.K, self.sampling_mode)
@@ -298,7 +298,7 @@ class FiniteDPP:
             self.L_eig_vals, self.eig_vecs = la.eigh(self.L)
             self.sample_exact(self.sampling_mode)
 
-        # If DPP defined through inclusion kernel with parameter 'A_zono'
+        # If DPP defined through correlation kernel with parameter 'A_zono'
         # a priori you wish to use the zonotope approximate sampler
         elif self.A_zono:
             warn('DPP defined via `A_zono`, apriori you want to use `sampl_mcmc`, but you have called `sample_exact`')
@@ -310,7 +310,7 @@ class FiniteDPP:
 
     def sample_exact_k_dpp(self, size, mode='GS'):
         """ Sample exactly from :math:`\operatorname{k-DPP}`.
-        A priori the :class:`FiniteDPP <FiniteDPP>` object was instanciated by its marginal :math:`\mathbf{L}` kernel so that
+        A priori the :class:`FiniteDPP <FiniteDPP>` object was instanciated by its likelihood :math:`\mathbf{L}` kernel so that
 
         .. math::
 
@@ -388,7 +388,7 @@ class FiniteDPP:
 
         # If DPP defined via projection kernel
         elif self.projection:
-            if self.kernel_type == 'inclusion':
+            if self.kernel_type == 'correlation':
                 self.compute_K()
                 rank = int(np.round(np.trace(self.K)))
                 if size == rank:
@@ -398,8 +398,8 @@ class FiniteDPP:
                     self.size_k_dpp = size
                     self.list_of_samples.append(sampl)
                 else:
-                    raise ValueError('size k={} != rank={} for projection inclusion K kernel'.format(k, rank))
-            else:  # self.kernel_type == 'marginal':
+                    raise ValueError('size k={} != rank={} for projection correlation K kernel'.format(k, rank))
+            else:  # self.kernel_type == 'likelihood':
                 self.compute_L()
                 # size > rank treated internally in proj_dpp_sampler_kernel
                 sampl = proj_dpp_sampler_kernel(self.L,
@@ -446,7 +446,7 @@ class FiniteDPP:
                 + ``'T_max'`` (default None) Time horizon
                 + ``'size'`` (default None) Size of the initial sample for ``mode='AD'/'E'``
 
-                    * :math:`\operatorname{rank}(\mathbf{K})=\operatorname{Tr}(\mathbf{K})` for projection :math:`\mathbf{K}` (inclusion) kernel and ``mode='E'``
+                    * :math:`\operatorname{rank}(\mathbf{K})=\operatorname{Tr}(\mathbf{K})` for projection :math:`\mathbf{K}` (correlation) kernel and ``mode='E'``
 
             - If ``mode='zonotope'``:
 
@@ -482,7 +482,7 @@ class FiniteDPP:
                 raise ValueError(' '.join(err_print))
 
         elif self.sampling_mode == 'E':
-            if (self.kernel_type == 'inclusion') and self.projection:
+            if (self.kernel_type == 'correlation') and self.projection:
                 self.compute_K()
                 size = params.get('size', None)
                 rank = int(np.round(np.trace(self.K)))
@@ -492,7 +492,7 @@ class FiniteDPP:
                                              self.sampling_mode,
                                              **params)
                 else:
-                    raise ValueError('size={} != rank={} for projection inclusion K kernel'.format(k, rank))
+                    raise ValueError('size={} != rank={} for projection correlation K kernel'.format(k, rank))
             else:
                 self.compute_L()
                 chain = dpp_sampler_mcmc(self.L, self.sampling_mode, **params)
@@ -506,7 +506,7 @@ class FiniteDPP:
                          '- `AED`: Add-Exchange-Delete',
                          '- `AD`: Add-Delete',
                          '- `E`: Exchange',
-                         '- `zonotope` for projection inclusion kernel only)',
+                         '- `zonotope` for projection correlation kernel only)',
                          'Given: {}'.format(self.sampling_mode)]
             raise ValueError('\n'.join(err_print))
 
@@ -531,7 +531,7 @@ class FiniteDPP:
         self.sample_mcmc(self.sampling_mode, **params)
 
     def compute_K(self, msg=False):
-        """ Compute the inclusion kernel :math:`\mathbf{K}` from the original parametrization of the :class:`FiniteDPP` object.
+        """ Compute the correlation kernel :math:`\mathbf{K}` from the original parametrization of the :class:`FiniteDPP` object.
 
         .. seealso::
 
@@ -539,13 +539,13 @@ class FiniteDPP:
         """
 
         if self.K is not None:
-            # msg = 'K (inclusion) kernel available'
+            # msg = 'K (correlation) kernel available'
             # print(msg)
             pass
 
         else:
             if not msg:
-                print('K (inclusion) kernel computed via:')
+                print('K (correlation) kernel computed via:')
 
             if self.K_eig_vals is not None:
                 msg = '- U diag(eig_K) U.T'
@@ -578,7 +578,7 @@ class FiniteDPP:
                 self.compute_K(msg=True)
 
     def compute_L(self, msg=False):
-        """ Compute the marginal kernel :math:`\mathbf{L}` from the original parametrization of the :class:`FiniteDPP` object.
+        """ Compute the likelihood kernel :math:`\mathbf{L}` from the original parametrization of the :class:`FiniteDPP` object.
 
         .. seealso::
 
@@ -586,18 +586,18 @@ class FiniteDPP:
         """
 
         if self.L is not None:
-            # msg = 'L (marginal) kernel available'
+            # msg = 'L (likelihood) kernel available'
             # print(msg)
             pass
 
-        elif (self.kernel_type == 'inclusion') and self.projection:
+        elif (self.kernel_type == 'correlation') and self.projection:
             err_print = ['L = K(I-K)^-1 = kernel cannot be computed:',
                          'K is projection kernel: some eigenvalues equal 1']
             raise ValueError('\n'.join(err_print))
 
         else:
             if not msg:
-                print('L (marginal) kernel computed via:')
+                print('L (likelihood) kernel computed via:')
 
             if self.L_eig_vals is not None:
                 msg = '- U diag(eig_L) U.T'
@@ -634,7 +634,7 @@ class FiniteDPP:
                 self.compute_L(msg=True)
 
     def plot_kernel(self, title=''):
-        """Display a heatmap of the kernel used to define the :class:`FiniteDPP` object (inclusion kernel :math:`\mathbf{K}` or marginal kernel :math:`\mathbf{L}`)
+        """Display a heatmap of the kernel used to define the :class:`FiniteDPP` object (correlation kernel :math:`\mathbf{K}` or likelihood kernel :math:`\mathbf{L}`)
 
         :param title:
             Plot title
@@ -645,19 +645,19 @@ class FiniteDPP:
 
         fig, ax = plt.subplots(1, 1)
 
-        if self.kernel_type == 'inclusion':
+        if self.kernel_type == 'correlation':
             if self.K is None:
                 self.compute_K()
             self.nb_items = self.K.shape[0]
             kernel_to_plot = self.K
-            str_title = r'$K$ (inclusion) kernel'
+            str_title = r'$K$ (correlation) kernel'
 
-        elif self.kernel_type == 'marginal':
+        elif self.kernel_type == 'likelihood':
             if self.L is None:
                 self.compute_L()
             self.nb_items = self.L.shape[0]
             kernel_to_plot = self.L
-            str_title = r'$L$ (marginal) kernel'
+            str_title = r'$L$ (likelihood) kernel'
 
         heatmap = ax.pcolor(kernel_to_plot, cmap='jet')
 

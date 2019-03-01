@@ -447,7 +447,7 @@ class PoissonizedPlancherel:
 # Uniform Spanning Trees #
 ##########################
 class UST:
-    """ DPP on edges of a connected graph :math:`G` with inclusion kernel the projection kernel onto the span of the rows of the incidence matrix :math:`\\text{Inc}` of :math:`G`.
+    """ DPP on edges of a connected graph :math:`G` with correlation kernel the projection kernel onto the span of the rows of the incidence matrix :math:`\\text{Inc}` of :math:`G`.
 
     This DPP corresponds to the uniform measure on spanning trees (UST) of :math:`G`.
 

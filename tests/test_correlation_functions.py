@@ -1,7 +1,7 @@
 # coding: utf8
 """ Unit tests:
 
-- :class:`MarginalsProjectionDPP` to check that exact samplers for finite DPPs have the right (at least 1 and 2) inclusion probabilities
+- :class:`InclusionProbabilitiesProjectionDPP` to check that exact samplers for finite DPPs have the right (at least 1 and 2) inclusion probabilities
 """
 
 import unittest
@@ -74,7 +74,7 @@ class InclusionProbabilitiesProjectionDPP(unittest.TestCase):
         return pval > tol
 
     def test_kernel_GS(self):
-        """ Test whether 'GS' sampling mode generates samples with the right 1 and 2 points inclusion probabilities when DPP defined by projection inclusion kernel K.
+        """ Test whether 'GS' sampling mode generates samples with the right 1 and 2 points inclusion probabilities when DPP defined by projection correlation kernel K.
         """
         self.list_of_samples = [kernel_GS(self.K)
                                 for _ in range(self.nb_samples)]
@@ -83,7 +83,7 @@ class InclusionProbabilitiesProjectionDPP(unittest.TestCase):
         self.assertTrue(self.doubleton_adequation())
 
     def test_kernel_Schur(self):
-        """ Test whether 'Schur' sampling mode generates samples with the right 1 and 2 points inclusion probabilities when DPP defined by projection inclusion kernel K.
+        """ Test whether 'Schur' sampling mode generates samples with the right 1 and 2 points inclusion probabilities when DPP defined by projection correlation kernel K.
         """
 
         self.list_of_samples = [kernel_Schur(self.K)

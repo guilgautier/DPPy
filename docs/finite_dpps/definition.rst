@@ -20,12 +20,12 @@ It is defined either via its:
 
 .. hint::
 
-	The *determinantal* feature of DPPs stems from the fact that such inclusion, resp. marginal probabilities are given by the principal minors of the corresponding inclusion kernel :math:`\mathbf{K}` (resp. marginal kernel :math:`\mathbf{L}`).
+	The *determinantal* feature of DPPs stems from the fact that such inclusion, resp. marginal probabilities are given by the principal minors of the corresponding correlation kernel :math:`\mathbf{K}` (resp. likelihood kernel :math:`\mathbf{L}`).
 
 Inclusion probabilities
 =======================
 
-We say that :math:`\mathcal{X} \sim \operatorname{DPP}(\mathbf{K})` with inclusion kernel a complex matrix :math:`\mathbf{K}` if
+We say that :math:`\mathcal{X} \sim \operatorname{DPP}(\mathbf{K})` with correlation kernel a complex matrix :math:`\mathbf{K}` if
 
 	.. math::
 		:label: inclusion_proba
@@ -38,7 +38,7 @@ where :math:`\mathbf{K}_S = [\mathbf{K}_{ij}]_{i,j\in S}` i.e. the square submat
 Marginal probabilities
 ======================
 
-We say that :math:`\mathcal{X} \sim \operatorname{DPP}(\mathbf{L})` with marginal kernel a complex matrix :math:`\mathbf{L}` if
+We say that :math:`\mathcal{X} \sim \operatorname{DPP}(\mathbf{L})` with likelihood kernel a complex matrix :math:`\mathbf{L}` if
 
 	.. math::
 		:label: marginal_proba
@@ -77,7 +77,7 @@ where the dagger :math:`\dagger` symbol means *conjugate transpose*.
 
 .. important::
 
-	DPPs defined by an *orthogonal projection* inclusion kernel :math:`\mathbf{K}` are called *projection* DPPs.
+	DPPs defined by an *orthogonal projection* correlation kernel :math:`\mathbf{K}` are called *projection* DPPs.
 	They are indeed valid kernels since they meet the above sufficient conditions: they are Hermitian with eigenvalues :math:`0` or :math:`1`.
 
 	.. code-block:: python
@@ -93,12 +93,12 @@ where the dagger :math:`\dagger` symbol means *conjugate transpose*.
 		A = randn(r, N)
 		eig_vecs, _ = qr(A.T, mode='economic')
 
-		proj_DPP = FiniteDPP('inclusion', projection=True,
+		proj_DPP = FiniteDPP('correlation', projection=True,
 		                     **{'K_eig_dec': (eig_vals, eig_vecs)})
 		# or
-		# proj_DPP = FiniteDPP('inclusion', projection=True, **{'A_zono': A})
+		# proj_DPP = FiniteDPP('correlation', projection=True, **{'A_zono': A})
 		# K = eig_vecs.dot(eig_vecs.T)
-		# proj_DPP = FiniteDPP('inclusion', projection=True, **{'K': K})
+		# proj_DPP = FiniteDPP('correlation', projection=True, **{'K': K})
 	  
 
 .. _finite_dpps_definition_k_dpps:

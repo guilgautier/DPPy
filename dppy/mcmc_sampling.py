@@ -42,7 +42,7 @@ def dpp_sampler_mcmc(kernel, mode='AED', **params):
     s_init = params.get('s_init', None)
     nb_iter = params.get('nb_iter', 10)
     T_max = params.get('T_max', None)
-    size = params.get('size', None)  # For projection inclusion kernel = Tr(K)
+    size = params.get('size', None)  # For projection correlation kernel = Tr(K)
 
     if mode == 'AED':  # Add-Exchange-Delete S'=S+t, S-t+u, S-t
         if s_init is None:

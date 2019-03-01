@@ -69,9 +69,9 @@ Mix of exchange and add-delete moves
   # Random feature vectors
   Phi = randn(r, N)
   L = Phi.T.dot(Phi)
-  DPP = FiniteDPP("marginal", **{"L":L})
+  DPP = FiniteDPP('likelihood', **{'L':L})
 
-  DPP.sample_mcmc("AED")
+  DPP.sample_mcmc('AED')
   print(DPP.list_of_samples)
 
 .. testoutput::
@@ -128,9 +128,9 @@ To recover the finite DPP samples one needs to identify the tile in which the su
   r, N = 4, 10
   A = randn(r, N)
 
-  DPP = FiniteDPP("inclusion", projection=True, **{"A_zono":A})
+  DPP = FiniteDPP('correlation', projection=True, **{'A_zono':A})
 
-  DPP.sample_mcmc("zonotope")
+  DPP.sample_mcmc('zonotope')
   print(DPP.list_of_samples)
 
 .. testoutput::
@@ -182,7 +182,7 @@ To preserve the size :math:`k` of the sample, only :ref:`finite_dpps_mcmc_sampli
   # Random feature vectors
   Phi = randn(r, N)
   L = Phi.T.dot(Phi)
-  DPP = FiniteDPP("marginal", **{"L":L})
+  DPP = FiniteDPP('likelihood', **{'L':L})
 
   k = 3
   DPP.sample_mcmc_k_dpp(size=k)

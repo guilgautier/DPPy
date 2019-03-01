@@ -97,7 +97,7 @@ Variance
 	eig_vals = rand(r) # 0< <1
 	eig_vecs, _ = qr(randn(N, r), mode='economic')
 
-	DPP = FiniteDPP('inclusion', projection=False,
+	DPP = FiniteDPP('correlation', projection=False,
 	                **{'K_eig_dec':(eig_vals, eig_vecs)})
 
 	nb_samples = 2000
@@ -163,7 +163,7 @@ Variance
 		eig_vals = ones(r)
 		eig_vecs, _ = qr(randn(N, r), mode='economic')
 
-		DPP = FiniteDPP('inclusion', projection=True,
+		DPP = FiniteDPP('correlation', projection=True,
 		                **{'K_eig_dec':(eig_vals, eig_vecs)})
 
 		for _ in range(10):
@@ -232,8 +232,8 @@ That is, the greater the similarity :math:`|\mathbf{K}_{i j}|` between items :ma
 
 .. _finite_dpps_relation_kernels:
 
-Relation between inclusion and marginal kernels
-===============================================
+Relation between correlation and likelihood kernels
+===================================================
 
 .. math::
 	:label: relation_K_L
@@ -244,9 +244,9 @@ Relation between inclusion and marginal kernels
 
 .. warning::
 	
-	For DPPs with *projection* inclusion kernel :math:`K`, the marginal kernel :math:`\mathbf{L}` cannot be computed via  :eq:`relation_K_L` with :math:`\mathbf{L} = \mathbf{K}(I-\mathbf{K})^{—1}`, since :math:`\mathbf{K}` has at least one eigenvalue equal to :math:`1` (:math:`\mathbf{K}^2=\mathbf{K}`).
+	For DPPs with *projection* correlation kernel :math:`K`, the likelihood kernel :math:`\mathbf{L}` cannot be computed via  :eq:`relation_K_L` with :math:`\mathbf{L} = \mathbf{K}(I-\mathbf{K})^{—1}`, since :math:`\mathbf{K}` has at least one eigenvalue equal to :math:`1` (:math:`\mathbf{K}^2=\mathbf{K}`).
 
-	However, the marginal kernel :math:`\mathbf{L}` coincides with :math:`\mathbf{K}`.
+	However, the likelihood kernel :math:`\mathbf{L}` coincides with :math:`\mathbf{K}`.
 
 	.. math::
 
@@ -254,7 +254,7 @@ Relation between inclusion and marginal kernels
 			\det \mathbf{K}_S 1_{|S|=\operatorname{rank}\mathbf{K}}
 			\quad \forall S\subset [N]
 
-Thus, except for inclusion kernels :math:`\mathbf{K}` with some eigenvalues equal to :math:`1`, both :math:`\mathbf{K}` and :math:`\mathbf{L}` are diagonalizable in the same basis
+Thus, except for correlation kernels :math:`\mathbf{K}` with some eigenvalues equal to :math:`1`, both :math:`\mathbf{K}` and :math:`\mathbf{L}` are diagonalizable in the same basis
 
 .. math::
 
@@ -273,10 +273,10 @@ Thus, except for inclusion kernels :math:`\mathbf{K}` with some eigenvalues equa
 	eig_vals = rand(r)  # 0< <1
 	eig_vecs, _ = qr(randn(N, r), mode='economic')
 
-	DPP = FiniteDPP('inclusion', **{'K_eig_dec': (eig_vals, eig_vecs)})
+	DPP = FiniteDPP('correlation', **{'K_eig_dec': (eig_vals, eig_vecs)})
 	DPP.compute_L()
 
-	# - L (marginal) kernel computed via:
+	# - L (likelihood) kernel computed via:
 	# - eig_L = eig_K/(1-eig_K)
 	# - U diag(eig_L) U.T
 
