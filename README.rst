@@ -20,7 +20,7 @@ exact and approximate sampling algorithms for DPPs.
 Requirements
 ------------
 
-DPPy works with `Python 3.4+ <http://docs.python.org/3/>`__
+DPPy works with `Python 3.4+ <http://docs.python.org/3/>`__.
 
 Dependencies
 ~~~~~~~~~~~~
@@ -46,6 +46,14 @@ Dependencies
 Installation
 ------------
 
+Long story short, since the name DPPy is being `squatted <https://github.com/pypa/warehouse/issues/5307>`__ we decided to release the project under the name ``DPPyPI`` on `PyPI <https://pypi.org/project/DPPyPI/>`__ and you can install it using
+
+.. code:: bash
+
+  pip install DPPyPI
+
+However you may not work with the latest version, so
+
 1. If you have a GitHub account
 
    -  Please consider forking DPPy
@@ -65,12 +73,12 @@ Installation
 
 3. Otherwise simply dowload the project
 
-Finally, in any case, install the project
+4. In any case, install the project with
 
-.. code:: bash
+   .. code:: bash
 
-    cd DPPy
-    pip install .
+       cd DPPy
+       pip install .
 
 Tutorial in `a Jupyter notebook <https://www.Jupyter.org/>`__
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
