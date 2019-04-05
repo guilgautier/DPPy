@@ -30,15 +30,14 @@ install:
   - python -m easy_install -U setuptools
   - pip install -U pytest
   - pip install pytest-cov
-  - pip install coveralls
+  - pip install coverage
   # - pip install sphinx
   - pip install .
 
 # Command to run tests. These are run for each configuration
 script:
   - python --version
-  - pytest --cov
-  - coverage
+  - python tests.py # from https://github.com/bhargavvader/pycobra/
   # - cd docs && make html && make doctest SPHINXOPTS=-W #Make doctest treat warnings as errors, to detect problems in autodoc
 after_success:
   - coveralls
