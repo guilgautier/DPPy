@@ -8,16 +8,16 @@ Let :math:`\beta>0`, the joint distribution of the :math:`\beta`-Ensemble associ
 .. math::
 	:label: joint_beta_ensemble
 
-	(x_1,\dots,x_N) 
-	\sim 
+	(x_1,\dots,x_N)
+	\sim
 		\frac{1}{Z_{N,\beta}}
 		\left|\Delta(x_1,\dots,x_N)\right|^{\beta}
-		\prod_{i= 1}^N 
+		\prod_{i= 1}^N
 			\mu(d x_i)
 
 .. hint::
-	
-	- :math:`|\Delta(x_1,\dots,x_N)| = \prod_{i<j} |x_i - x_j|` is the absolute value of the determinant of the Vandermonde matrix, 
+
+	- :math:`|\Delta(x_1,\dots,x_N)| = \prod_{i<j} |x_i - x_j|` is the absolute value of the determinant of the Vandermonde matrix,
 
 		.. math::
 			:label: abs_vandermonde_det
@@ -35,7 +35,7 @@ Let :math:`\beta>0`, the joint distribution of the :math:`\beta`-Ensemble associ
 
 	- :math:`\beta` is the inverse temperature parameter quantifying the strength of the repulsion between the points.
 
-.. important:: 
+.. important::
 
 	For Gaussian, Gamma and Beta reference measures, the :math:`\beta=1,2` and :math:`4` cases received a very special attention in the random matrix literature, e.g. :cite:`DuEd02`.
 
@@ -68,7 +68,7 @@ where :math:`(p_n)` are the orthonormal polynomials w.r.t. :math:`\mu` i.e. :mat
 
 .. note::
 
-	OPEs (with :math:`N` points) correspond to *projection* DPPs onto 
+	OPEs (with :math:`N` points) correspond to *projection* DPPs onto
 	:math:`\operatorname{Span}\{p_n\}_{n=0}^{N-1} = \mathbb{R}^{N-1}[X]``
 
 .. hint::
@@ -78,11 +78,11 @@ where :math:`(p_n)` are the orthonormal polynomials w.r.t. :math:`\mu` i.e. :mat
 	.. math::
 
 		|\Delta(x_1,\dots,x_N)|
-			\propto 
+			\propto
 			\begin{vmatrix}
 				p_0(x_1) 			& \dots 	& p_0(x_N) 		\\
 				p_1(x_1) 			& \dots 	& p_1(x_N) 		\\
-				\vdots				& 				& \vdots      \\ 
+				\vdots				& 				& \vdots      \\
 				p_{N-1}(x_1)	&					& p_{N-1}(x_N)
 			\end{vmatrix}
 
@@ -90,20 +90,20 @@ where :math:`(p_n)` are the orthonormal polynomials w.r.t. :math:`\mu` i.e. :mat
 
 	.. math::
 
-		|\Delta|^2 
+		|\Delta|^2
 			= | \Delta^{\top} \Delta |
 			\propto \det \left[ K_N(x_i, x_j)\right]_{i,j=1}^N
 
 	Finally, the joint distribution of :math:`(x_1, \dots, x_N)` reads
- 
+
 	.. math::
 		:label: joint_OPE
 
-		(x_1,\dots,x_N) 
-		\sim 
+		(x_1,\dots,x_N)
+		\sim
 			\frac{1}{N!}
 			\det \left[ K_N(x_i, x_j)\right]_{i,j=1}^N
-			\prod_{i= 1}^N 
+			\prod_{i= 1}^N
 				\mu(d x_i)
 
 .. seealso::

@@ -34,13 +34,13 @@ Projection DPPs
 
 		*Orthogonal projection* correlation kernel :math:`\mathbf{K}` admit the following Gram matrix factorizations
 
-		1. Using :math:`\mathbf{K} = \mathbf{K}^2` 
+		1. Using :math:`\mathbf{K} = \mathbf{K}^2`
 		and :math:`\mathbf{K}^{\dagger}=\mathbf{K}`
 
 			.. math::
 				:label: correlation_kernel_factorization_K.TK
 
-				\mathbf{K} 
+				\mathbf{K}
 				= \mathbf{K} \mathbf{K}^{\dagger}
 				= \mathbf{K}^{\dagger} \mathbf{K},
 
@@ -49,8 +49,8 @@ Projection DPPs
 			.. math::
 				:label: correlation_kernel_factorization_UU.T
 
-				\mathbf{K} 
-				= \mathbf{U} \mathbf{U}^{\dagger}, 
+				\mathbf{K}
+				= \mathbf{U} \mathbf{U}^{\dagger},
 				\quad \text{where } \mathbf{U}^{\dagger} \mathbf{U} = I_r
 
 		In this setting, the rows (equiv. columns) of the correlation kernel :math:`\mathbf{K}` or alternatively the rows of the eigenvectors :math:`\mathbf{U}` play the role of feature vectors.
@@ -62,27 +62,27 @@ Projection DPPs
 Chain rule
 ----------
 
-	Let :math:`S=\{s_1, \dots, s_r\}` with :math:`r=\operatorname{rank}(\mathbf{K})`, equation :eq:`number_points_projection_K` yields 
+	Let :math:`S=\{s_1, \dots, s_r\}` with :math:`r=\operatorname{rank}(\mathbf{K})`, equation :eq:`number_points_projection_K` yields
 
 	.. math::
 
-		\mathbb{P}[\mathcal{X}=S] 
+		\mathbb{P}[\mathcal{X}=S]
 		= \det \mathbf{K}_S
-		
-	The invariance by transposition and permutation of the determinant allows to express the joint probability distribution of :math:`(s_1, \dots, s_r)` as 
 
-	.. math:: 
+	The invariance by transposition and permutation of the determinant allows to express the joint probability distribution of :math:`(s_1, \dots, s_r)` as
 
-		\mathbb{P}[s_1, \dots, s_r] 
-		= \frac{1}{r!} \mathbb{P}[\mathcal{X}=S] 
+	.. math::
+
+		\mathbb{P}[s_1, \dots, s_r]
+		= \frac{1}{r!} \mathbb{P}[\mathcal{X}=S]
 		= \frac{1}{r!} \det \mathbf{K}_S
 
 	As announced, the exact sampling scheme relies on the chain rule
 
-	.. math:: 
+	.. math::
 		:label: chain_rule
-	
-		\mathbb{P}[s_1, \dots, s_r] 
+
+		\mathbb{P}[s_1, \dots, s_r]
 		= \mathbb{P}[s_1] \prod_{j=2}^{r} \mathbb{P}[s_{j} | s_{1:j-1}]
 
 	.. note::
@@ -94,11 +94,11 @@ Chain rule
 	.. math::
 		:label: chain_rule_K
 
-		\mathbb{P}[s_1] 
+		\mathbb{P}[s_1]
 		&= \dfrac{1}{r} \mathbf{K}_{s_1s_1}\\
 		\mathbb{P}[s_{j} | s_{1:j-1}]
-		&= \dfrac{1}{r-(j-1)} 
-		\frac{\det \mathbf{K}_{\{s_{1:j}\}}}{\det \mathbf{K}_{\{s_{1:j-1}\}}}, 
+		&= \dfrac{1}{r-(j-1)}
+		\frac{\det \mathbf{K}_{\{s_{1:j}\}}}{\det \mathbf{K}_{\{s_{1:j-1}\}}},
 		\qquad \forall 2\leq j \leq r
 
 	.. hint::
@@ -111,11 +111,11 @@ Chain rule
 
 			.. math::
 
-				\mathbb{P}[s_1] 
+				\mathbb{P}[s_1]
 				&= \dfrac{1}{r} \mathbf{K}_{s_1s_1}\\
 				\mathbb{P}[s_{j} | s_{1:j-1}]
-				&= \dfrac{1}{r-(j-1)} 
-				\operatorname{dist}^2 
+				&= \dfrac{1}{r-(j-1)}
+				\operatorname{dist}^2
 				(\mathbf{K}_{s_{j}:} ~;~ \operatorname{Span} \mathbf{K}_{s_{1:j-1}:})
 
 		- Given the eigendecomposition :math:`\mathbf{K}=\mathbf{U}\mathbf{U}^{\dagger}` of the *orthogonal projection* kernel :eq:`correlation_kernel_factorization_UU.T` the sampling scheme writes
@@ -123,11 +123,11 @@ Chain rule
 			.. math::
 				:label: phase_2_eig_vec
 
-				\mathbb{P}[s_1] 
+				\mathbb{P}[s_1]
 				&= \dfrac{1}{r} \| \mathbf{U}_{s_1:} \|^2\\
 				\mathbb{P}[s_{j} | s_{1:j-1}]
-				&= \dfrac{1}{r-(j-1)} 
-				\operatorname{dist}^2 
+				&= \dfrac{1}{r-(j-1)}
+				\operatorname{dist}^2
 				(\mathbf{U}_{s_{j}:} ~;~ \operatorname{Span} \mathbf{U}_{s_{1:j-1}:})
 
 
@@ -152,7 +152,7 @@ Chain rule
 			DPP.sample_exact()
 
 		print(list(map(list, DPP.list_of_samples)))
-	
+
 	.. testoutput::
 
 		[[0, 4, 8, 2], [1, 8, 2, 0], [8, 3, 6, 1], [6, 7, 1, 9], [9, 3, 0, 4], [9, 4, 0, 8], [9, 6, 1, 8], [0, 1, 2, 7], [1, 2, 8, 9], [8, 2, 9, 4]]
@@ -185,46 +185,46 @@ Caution
 		.. math::
 
 			\frac{\det \mathbf{K}_{Y+i}}{\det \mathbf{K}_{Y}}
-			&= \mathbf{K}_{ii} 
+			&= \mathbf{K}_{ii}
 			- \mathbf{K}_{iY} \left[\mathbf{\mathbf{K}}_{Y}\right]^{-1} \mathbf{K}_{Yi}\\
-			&= \mathbf{K}_{ii} 
+			&= \mathbf{K}_{ii}
 			- V_{i:}V_{Y:}^{\dagger}
-			\left[V_{Y:} V_{Y:}^{\dagger}\right]^{-1} 
+			\left[V_{Y:} V_{Y:}^{\dagger}\right]^{-1}
 			V_{Y:} V_{i:}^{\dagger} \\
-			&= \mathbf{K}_{ii} 
+			&= \mathbf{K}_{ii}
 			- V_{i:} \Pi_{V_{Y:}} V_{i:}^{\dagger}
 
 		where :math:`\Pi_{V_{Y:}}` is the orthogonal projection onto the span of the (independent) rows of :math:`V_{Y:}`.
 
 		Now, let's compute the normalizing constant.
-		The first term :math:`\operatorname{Tr}(\mathbf{K})` is independent of :math:`Y`, contrary to the second term if no additional assumption is made on the Gram factor :math:`V`. 
+		The first term :math:`\operatorname{Tr}(\mathbf{K})` is independent of :math:`Y`, contrary to the second term if no additional assumption is made on the Gram factor :math:`V`.
 		Indeed,
 
 		.. math::
-			
+
 			\sum_{i=1}^N
 				\frac{\det \mathbf{K}_{Y+i}}{\det \mathbf{K}_{Y}}
-			&= \sum_{i=1}^N \mathbf{K}_{ii} 
+			&= \sum_{i=1}^N \mathbf{K}_{ii}
 			  - V_{i:} \Pi_{V_{Y:}} V_{i:}^{\dagger}\\
-			&= \operatorname{Tr}(\mathbf{K}) 
+			&= \operatorname{Tr}(\mathbf{K})
 			  - \operatorname{Tr}(V \Pi_{V_{Y:}} V^{\dagger})\\
-			&= \operatorname{Tr}(\mathbf{K}) 
+			&= \operatorname{Tr}(\mathbf{K})
 			  - \operatorname{Tr}(\Pi_{V_{Y:}}V^{\dagger}V)\\
 
-		The first term :math:`\operatorname{Tr}(\mathbf{K})` is independent of :math:`Y`, but this is no longer true for the second term without additional assumption on the Gram factor V. 
+		The first term :math:`\operatorname{Tr}(\mathbf{K})` is independent of :math:`Y`, but this is no longer true for the second term without additional assumption on the Gram factor V.
 
 		However, for :math:`V = \mathbf{K}` or :math:`\mathbf{U}`, we have
 
 		.. math::
 
 			&\qquad\operatorname{Tr}(\mathbf{K})
-			&\qquad\operatorname{Tr}(\mathbf{K}) 
+			&\qquad\operatorname{Tr}(\mathbf{K})
 				- \operatorname{Tr}(\Pi_{\mathbf{K}_{Y:}}\mathbf{K}\mathbf{K}^{\dagger})
-			&\qquad 
-			\operatorname{Tr}(\mathbf{K}) 
+			&\qquad
+			\operatorname{Tr}(\mathbf{K})
 				- \operatorname{Tr}(\Pi_{\mathbf{U}_{Y:}}\mathbf{U}^{\dagger}\mathbf{U})
 				\\
-			&\qquad= \operatorname{rank}(\mathbf{K}) 
+			&\qquad= \operatorname{rank}(\mathbf{K})
 			&\qquad= r - \operatorname{Tr}(\Pi_{\mathbf{K}_{Y:}}\mathbf{K})
 			&\qquad= r - \operatorname{Tr}(\Pi_{\mathbf{U}_{Y:}}I_r)
 				\\
@@ -278,7 +278,7 @@ Generic DPPs
 	In the generic setting, the exact sampling scheme works as a two steps algorithm based on the property that :ref:`generic DPPs are mixtures of projection ones <finite_dpps_mixture>`.
 
 	.. hint::
-		
+
 		- :ref:`Phase 1 <finite_dpps_exact_sampling_generic_dpps_phase_1>` selects a component of the mixture
 		- :ref:`Phase 2 <finite_dpps_exact_sampling_generic_dpps_phase_2>` samples from this *projection* DPP component
 
@@ -296,16 +296,16 @@ Generic DPPs
 
 	.. _finite_dpps_exact_sampling_generic_dpps_phase_2:
 
-	**Phase 2** Conditionally on :math:`(B_n)` set :math:`\mathcal{B} = \{ n ~;~ B_n = 1 \}` and apply the chain rule :eq:`phase_2_eig_vec` with 
+	**Phase 2** Conditionally on :math:`(B_n)` set :math:`\mathcal{B} = \{ n ~;~ B_n = 1 \}` and apply the chain rule :eq:`phase_2_eig_vec` with
 
 		.. math::
 
 			r = |\mathcal{B}|
 			\quad \text{and} \quad
 			U =
-				U_{:\mathcal{B}}, \ 
+				U_{:\mathcal{B}}, \
 				V_{:\mathcal{B}}, \
-				\Phi^{\top} W_{:\mathcal{B}} \Gamma_{:\mathcal{B}}^{-1/2} \ 
+				\Phi^{\top} W_{:\mathcal{B}} \Gamma_{:\mathcal{B}}^{-1/2} \
 			\text{respectively}
 
 	.. testcode::
@@ -326,7 +326,7 @@ Generic DPPs
 			DPP.sample_exact()
 
 		print(list(map(list, DPP.list_of_samples)))
-	
+
 	.. testoutput::
 
 		[[7], [4], [3, 4], [4, 2, 3], [9, 3], [0], [1], [4, 7], [0, 6], [4]]
@@ -351,12 +351,12 @@ A :math:`\operatorname{k-DPP}` viewed as a :math:`\operatorname{DPP}(\mathbf{L})
 
 In practice, the 2 steps algorithm for :ref:`sampling generic DPPs <finite_dpps_exact_sampling_generic_dpps>` can be adapted to generate fixed cardinality samples.
 
-More specifically, 
+More specifically,
 
 - :ref:`Phase 1 <finite_dpps_exact_sampling_generic_dpps_phase_1>` is replaced by :cite:`KuTa12` Algorithm 8. It requires the evaluation of the elementary symmetric polynomials in the eigenvalues of :math:`\mathbf{L}` ; :math:`[E[l, n]]_{l=1, n=1}^{k, N}` with :math:`E[l, n]:=e_l(\lambda_1, \dots, \delta_n)`.
 
 .. code-block:: python
-	
+
 	# This is a pseudo code, in particular Python indexing is not respected everywhere
 	B = set({})
 	l = k
@@ -366,7 +366,7 @@ More specifically,
 	  if Unif(0,1) < delta[n] * E[l-1, n-1] / E[l, n]:
 	    l -= 1
 	    B.union({n})
-			
+
 	    if l == 0:
 	      break
 

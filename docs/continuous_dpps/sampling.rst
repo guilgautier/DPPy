@@ -42,9 +42,9 @@ so that the conditional densities appearing in the chain rule are ratios of 2 de
                       \| \Pi_{H_{n-1}^{\perp}} \phi(x) \|^2 \\
                    &= \frac{1}{N-(n-1)}
                       \left[
-	                      K(x,x) 
+	                      K(x,x)
 	                      - \overline{K(x,x_{1:n-1})}
-	                      \left[\left[K(x_k,x_l)\right]_{k,l=1}^{n-1}\right]^{-1} 
+	                      \left[\left[K(x_k,x_l)\right]_{k,l=1}^{n-1}\right]^{-1}
 	                      K(x_{1:n-1},x)
                       \right]
 
@@ -60,7 +60,7 @@ so that the conditional densities appearing in the chain rule are ratios of 2 de
 Perfect sampling
 ----------------
 
-	:cite:`DFL13` uses Coupling From The Past 
+	:cite:`DFL13` uses Coupling From The Past
 	(`CFTP <https://pdfs.semanticscholar.org/622e/a9c9c665002670ff26119d1aad5c3c5e0be8.pdf_>`_).
 
 Approximate sampling

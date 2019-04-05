@@ -338,7 +338,7 @@ class HermiteEnsemble(BetaEnsemble):
     def hist(self, normalization=True):
         """ Display the histogram of the last realization of the :class:`HermiteEnsemble` object.
 
-        :param normalization: 
+        :param normalization:
             When ``True``, using :py:meth:`normalize_points`, display:
 
             - If :py:attr:`beta` :math:`=0` p.d.f. of the :math:`\\mathcal{N}(0, 2)` reference measure associated to full :ref:`full matrix model <hermite_ensemble_full>`
@@ -465,13 +465,13 @@ class LaguerreEnsemble(BetaEnsemble):
 
         - If ``size_M`` is not provided:
 
-            In the :py:attr:`sampling_params`, ``size_M`` is set to 
+            In the :py:attr:`sampling_params`, ``size_M`` is set to
             ``size_M``:math:`= \\frac{2k}{\\beta} + N - 1`, to give an idea of the corresponding second dimension :math:`M`.
 
 
         - If ``size_M`` is provided:
 
-            In the :py:attr:`sampling_params`, ``shape`` and ``scale`` are set to: 
+            In the :py:attr:`sampling_params`, ``shape`` and ``scale`` are set to:
             ``shape``:math:`=\\frac{1}{2} \\beta (M-N+1)` and ``scale``:math:`=2`
 
 
@@ -657,7 +657,7 @@ class LaguerreEnsemble(BetaEnsemble):
     def hist(self, normalization=True):
         """ Display the histogram of the last realization of the :class:`LaguerreEnsemble` object.
 
-        :param normalization: 
+        :param normalization:
             When ``True``, using :py:meth:`normalize_points`, display:
 
             - If :py:attr:`beta` :math:`=0` p.d.f. of the :math:`\\Gamma(k, 2)` reference measure associated to full :ref:`full matrix model <laguerre_ensemble_full>`
@@ -715,7 +715,7 @@ class JacobiEnsemble(BetaEnsemble):
 
         .. note::
 
-            The reference measure associated with the :ref:`full matrix model <jacobi_ensemble_full>` is 
+            The reference measure associated with the :ref:`full matrix model <jacobi_ensemble_full>` is
 
             .. math::
 
@@ -805,13 +805,13 @@ class JacobiEnsemble(BetaEnsemble):
 
         - If ``size_M1`` and ``size_M2`` are not provided:
 
-            In the :py:attr:`sampling_params` attribute, ``size_M1,2`` are set to 
+            In the :py:attr:`sampling_params` attribute, ``size_M1,2`` are set to
             ``size_M1``:math:`= \\frac{2a}{\\beta} + N - 1` and ``size_M2``:math:`= \\frac{2b}{\\beta} + N - 1`, to give an idea of the corresponding second dimensions :math:`M_{1,2}`.
 
         - If ``size_M1`` and ``size_M2`` are provided:
 
-            In the :py:attr:`sampling_params` attribute, ``a`` and ``b`` are set to: 
-            ``a``:math:`=\\frac{\\beta}{2}(M_1-N+1)` and 
+            In the :py:attr:`sampling_params` attribute, ``a`` and ``b`` are set to:
+            ``a``:math:`=\\frac{\\beta}{2}(M_1-N+1)` and
             ``b``:math:`=\\frac{\\beta}{2}(M_2-N+1)`.
 
         .. seealso::
@@ -914,7 +914,7 @@ class JacobiEnsemble(BetaEnsemble):
     def plot(self, normalization=True):
         """ Display the last realization of the :class:`JacobiEnsemble` object
 
-        :param normalization: 
+        :param normalization:
             When ``True``, display:
 
             - If :py:attr:`beta` :math:`=0` p.d.f. of the :math:`\\operatorname{Beta}(a, b)`
@@ -1010,7 +1010,7 @@ class CircularEnsemble(BetaEnsemble):
         self.list_of_samples.append(sampl)
 
     def sample_banded_model(self, size_N=10):
-        """ Sample from :ref:`tridiagonal matrix model <Circular_ensemble_full>` for Circular Ensemble. 
+        """ Sample from :ref:`tridiagonal matrix model <Circular_ensemble_full>` for Circular Ensemble.
         Available for :py:attr:`beta` :math:`\\in\\mathbb{N}^*`, and the degenerate case :py:attr:`beta` :math:`=0` corresponding to i.i.d. uniform points on the unit circle
 
         :param size_N:
@@ -1157,7 +1157,7 @@ class GinibreEnsemble(BetaEnsemble):
     def plot(self, normalization=True):
         """ Display the last realization of the :class:`GinibreEnsemble` object
 
-        :param normalization: 
+        :param normalization:
             When ``True``, the points are normalized so as to concentrate in the unit disk.
 
             .. math::

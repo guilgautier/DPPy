@@ -9,7 +9,7 @@ In fact, one can discard any row of the vertex-edge incidence matrix - note  :ma
 
 .. code-block:: python
 
-    
+
     from exotic_dpps import UST
     import networkx as nx
 

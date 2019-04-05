@@ -99,7 +99,7 @@ where the dagger :math:`\dagger` symbol means *conjugate transpose*.
 		# proj_DPP = FiniteDPP('correlation', projection=True, **{'A_zono': A})
 		# K = eig_vecs.dot(eig_vecs.T)
 		# proj_DPP = FiniteDPP('correlation', projection=True, **{'K': K})
-	  
+
 
 .. _finite_dpps_definition_k_dpps:
 
@@ -117,7 +117,7 @@ Thus, they are defined through the joint probabilities
 where :math:`e_k(L)` corresponds to the `elementary symmetric polymial <https://en.wikipedia.org/wiki/Elementary_symmetric_polynomial>`_ of order :math:`k` evaluated in the eigenvalues of :math:`\mathbf{L}`,
 
 .. math::
-	
+
 	e_k(\mathbf{L})
 		\triangleq e_k(\delta_1, \dots, \delta_N)
 		= \sum_{S\subset [N]: |S|=k} \prod_{n \in S} \delta_i

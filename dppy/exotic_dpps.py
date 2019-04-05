@@ -387,7 +387,7 @@ class PoissonizedPlancherel:
         The sample corresponds to the projection onto the real line of the descending surface edges.
 
         :param normalization:
-            If ``normalization=True``, the Young diagram and the corresponding sample are scaled by a factor :math:`\sqrt{\\theta}` and the limiting 
+            If ``normalization=True``, the Young diagram and the corresponding sample are scaled by a factor :math:`\sqrt{\\theta}` and the limiting
 
         :type normalization:
             bool, default False
@@ -551,7 +551,7 @@ class UST:
         self.list_of_samples.append(sampl)
 
     def compute_kernel(self):
-        """ Compute the orthogonal projection kernel :math:`\mathbf{K} = \\text{Inc}^+ \\text{Inc}` i.e. onto the span of the rows of the vertex-edge incidence matrix :math:`\\text{Inc}` of size :math:`|V| \\times |E|`. 
+        """ Compute the orthogonal projection kernel :math:`\mathbf{K} = \\text{Inc}^+ \\text{Inc}` i.e. onto the span of the rows of the vertex-edge incidence matrix :math:`\\text{Inc}` of size :math:`|V| \\times |E|`.
 
         In fact, for a connected graph, :math:`\\text{Inc}` has rank :math:`|V|-1` and any row can be discarded to get an basis of row space. If we note :math:`A` the amputated version of :math:`\\text{Inc}`, then :math:`\\text{Inc}^+ = A^{\\top}[AA^{\\top}]^{-1}`.
 

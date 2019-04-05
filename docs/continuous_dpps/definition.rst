@@ -11,8 +11,8 @@ Let :math:`\mathbb{X} = \mathbb{R}^d, \mathbb{C}^d \text{ or } \mathbb{S}^{d-1}
 For our purpose, we consider point processes as locally finite random subsets :math:`\gamma \subset \mathbb{X}` i.e.
 
 	.. math::
-		
-		\forall C \subset \mathbb{X} \text{ compact}, 
+
+		\forall C \subset \mathbb{X} \text{ compact},
 			\quad \#(\gamma \cap C) < \infty
 
 .. hint::
@@ -23,9 +23,9 @@ For our purpose, we consider point processes as locally finite random subsets :m
 
 	More formal definitions can be found in :cite:`MoWa04` Section 2 and :cite:`Joh06` Section 2 and bibliography therein.
 
-To understand the interaction between the points of a point process, one focuses on the interaction of each cloud of :math:`k` points (for all :math:`k`). 
+To understand the interaction between the points of a point process, one focuses on the interaction of each cloud of :math:`k` points (for all :math:`k`).
 The corresponding :math:`k`-correlation functions characterize the underlying point process.
- 
+
 
 .. _continuous_dpps_correlation_functions:
 
@@ -39,24 +39,24 @@ For :math:`k\geq 0`, the :math:`k`-correlation function :math:`\rho_k` is define
 .. math::
 
   \mathbb{E}
-  \left[ \sum_{  
+  \left[ \sum_{
     \substack{
-    	(X_1,\dots,X_k) \\ 
-    	X_1 \neq \dots \neq X_k \in \gamma} } 
-    f(X_1,\dots,X_k) 
+    	(X_1,\dots,X_k) \\
+    	X_1 \neq \dots \neq X_k \in \gamma} }
+    f(X_1,\dots,X_k)
   \right]
-	  = \int_{\mathbb{X}^k} 
-	  	f(x_1,\dots,x_k) \rho_k(x_1,\dots,x_k) 
+	  = \int_{\mathbb{X}^k}
+	  	f(x_1,\dots,x_k) \rho_k(x_1,\dots,x_k)
 	  	\prod_{i=1}^k \mu(dx_i)
 
 .. hint::
 
-	The :math:`k`-correlation function does not always exists, but but when they do, they have a meaningful interpretation. 
+	The :math:`k`-correlation function does not always exists, but but when they do, they have a meaningful interpretation.
 	On :math:`\mathbb{X}=\mathbb{R}` with :math:`\mu` absolutely continuous w.r.t. Lebesgue
 
 	.. math::
 
-		\rho_k(x_1,\dots,x_k) 
+		\rho_k(x_1,\dots,x_k)
 		= \lim_{\epsilon \to 0} \frac{1}{\epsilon^k} \mathbb{P}\left[ \gamma \text{ has a point in } [x_i,x_i +\epsilon], \forall 1\leq i \leq k \right]
 
 A Determinant Point Process (DPP) is a point process on :math:`(\mathbb{X}, \mathcal{B}(\mathbb{X}), \mu)` parametrized by a kernel :math:`K` associated to the reference measure :math:`\mu`.
@@ -65,13 +65,13 @@ The :math:`k`-correlation functions read
 .. math::
 
 	\forall k\geq 1, \quad
-	\rho_k(x_1,\dots,x_k) 
+	\rho_k(x_1,\dots,x_k)
 		= \det [K(x_i, x_j)]_{i,j=1}^k
 
 .. seealso::
 
 	:cite:`Mac75`
-	:cite:`Sos00` 
+	:cite:`Sos00`
 	:cite:`Joh06`
 	:cite:`HKPV06`
 
@@ -114,15 +114,15 @@ Under assumptions 1-3, the
 
 	\operatorname{DPP}(K) \text{ exists}
 	\Longleftrightarrow
-		0 \preceq K \preceq I 
-			\quad \text{i.e.} \quad 
+		0 \preceq K \preceq I
+			\quad \text{i.e.} \quad
 		\lambda_n \in [0,1], \quad \forall n
 
 .. hint::
 
 	- 1. implies :math:`K` to be a compact operator.
 
-	- 2. with 1. allows to apply the spectral theorem, providing 
+	- 2. with 1. allows to apply the spectral theorem, providing
 
 		.. math::
 
@@ -132,7 +132,7 @@ Under assumptions 1-3, the
 
 .. warning::
 
-	These are only a sufficient conditions, there indeed exist DPPs with non symmetric kernels such as the :ref:`carries_process`. 
+	These are only a sufficient conditions, there indeed exist DPPs with non symmetric kernels such as the :ref:`carries_process`.
 
 .. seealso::
 
@@ -143,13 +143,13 @@ Under assumptions 1-3, the
 Construction
 ============
 
-A canonical way to construct DPPs generating configurations of at most :math:`N` points is the following. 
+A canonical way to construct DPPs generating configurations of at most :math:`N` points is the following.
 
 Consider :math:`N` orthonormal functions :math:`\phi_{0},...,\phi_{N−1} \in L^2(\mu)`
 
 .. math::
 
-	\int \phi_{k}(x)\phi_{l}(x)\mu(dx) = \delta_{kl}, 
+	\int \phi_{k}(x)\phi_{l}(x)\mu(dx) = \delta_{kl},
 
 and attach :math:`[0,1]`-valued coefficients :math:`\lambda_n` such that
 

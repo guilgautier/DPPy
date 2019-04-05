@@ -5,7 +5,7 @@
 - :py:meth:`~FiniteDPP.sample_exact_k_dpp`
 - :py:meth:`~FiniteDPP.sample_mcmc`
 - :py:meth:`~FiniteDPP.sample_mcmc_k_dpp`
-- :py:meth:`~FiniteDPP.compute_K`, to compute the correlation :math:`K` kernel from initial parametrization 
+- :py:meth:`~FiniteDPP.compute_K`, to compute the correlation :math:`K` kernel from initial parametrization
 - :py:meth:`~FiniteDPP.compute_L`, to compute the likelihood :math:`L` kernel from initial parametrization
 
 .. seealso:
@@ -89,9 +89,9 @@ class FiniteDPP:
         self.sampling_mode = 'GS'  # Gram-Schmidt
         self.list_of_samples = []
 
-        # when using .sample_k_dpp_* 
-        self.size_k_dpp = 0  
-        self.E_poly = None  # evaluation of the 
+        # when using .sample_k_dpp_*
+        self.size_k_dpp = 0
+        self.E_poly = None  # evaluation of the
 
         # Attributes relative to K correlation kernel:
         # K, K_eig_vals, K_eig_vecs, A_zono
@@ -136,7 +136,7 @@ class FiniteDPP:
                 print('L_dual = Phi Phi.T was computed: Phi (dxN) with d<N')
             else:
                 if self.L is None:
-                    self.L = Phi.T.dot(Phi) 
+                    self.L = Phi.T.dot(Phi)
                     print('L = Phi.T Phi was computed: Phi (dxN) with d>=N')
 
     def __str__(self):
@@ -314,7 +314,7 @@ class FiniteDPP:
 
         .. math::
 
-            \mathbb{P}_{\operatorname{k-DPP}}(\mathcal{X} = S) 
+            \mathbb{P}_{\operatorname{k-DPP}}(\mathcal{X} = S)
                 \propto \det \mathbf{L}_S ~ 1_{|S|=k}
 
         :param size:
@@ -374,7 +374,7 @@ class FiniteDPP:
             self.list_of_samples.append(sampl)
 
         elif self.L_dual_eig_vals is not None:
-            # There is 
+            # There is
             self.L_eig_vals = self.L_dual_eig_vals
             self.eig_vecs =\
                 self.gram_factor.T.dot(self.L_dual_eig_vecs\

@@ -47,12 +47,12 @@ Based on :ref:`finite_dpps_mixture`, we have
 	:label: number_points
 
 	|\mathcal{X}|
-		= \sum_{n=1}^N 
+		= \sum_{n=1}^N
 			\operatorname{\mathcal{B}er}
 			\left(
 				\lambda_n^{\mathbf{K}}
 			\right)
-		= \sum_{n=1}^N 
+		= \sum_{n=1}^N
 			\operatorname{\mathcal{B}er}
 			\left(
 				\frac{\lambda_n^{\mathbf{L}}}{1+\lambda_n^{\mathbf{L}}}
@@ -64,7 +64,7 @@ Expectation
 .. math::
 	:label: expect_number_points
 
-	\mathbb{E}[|\mathcal{X}|] 
+	\mathbb{E}[|\mathcal{X}|]
 		= \operatorname{Tr} \mathbf{K}
 		= \sum_{n=1}^N \lambda_n^{\mathbf{K}}
 		= \sum_{n=1}^N \frac{\lambda_n^{\mathbf{L}}}{1+\lambda_n^{\mathbf{L}}}
@@ -75,7 +75,7 @@ Variance
 .. math::
 	:label: var_number_points
 
-	\operatorname{\mathbb{V}ar}[|\mathcal{X}|] 
+	\operatorname{\mathbb{V}ar}[|\mathcal{X}|]
 		= \operatorname{Tr} \mathbf{K} - \operatorname{Tr} \mathbf{K}^2
 		= \sum_{n=1}^N \lambda_n^{\mathbf{K}}(1-\lambda_n^{\mathbf{K}})
 		= \sum_{n=1}^N \frac{\lambda_n^{\mathbf{L}}}{(1+\lambda_n^{\mathbf{L}})^2}
@@ -125,20 +125,20 @@ Variance
 	.. math::
 		:label: number_points_projection_K
 
-		|\mathcal{X}| 
-			\overset{a.s.}{=} 
-				\operatorname{Tr} \mathbf{K} 
+		|\mathcal{X}|
+			\overset{a.s.}{=}
+				\operatorname{Tr} \mathbf{K}
 			= \operatorname{rank} \mathbf{K}
 
 	Since :math:`\mathbf{K}^2=\mathbf{K}`, :eq:`expect_number_points` and :eq:`var_number_points` yield
 
 	.. math::
 
-		\mathbb{E}[|\mathcal{X}|] 
-			= \operatorname{Tr} \mathbf{K} 
+		\mathbb{E}[|\mathcal{X}|]
+			= \operatorname{Tr} \mathbf{K}
 			= \operatorname{rank} \mathbf{K}
 		\quad \text{and} \quad
-		\mathbb{V}ar[|\mathcal{X}|] 
+		\mathbb{V}ar[|\mathcal{X}|]
 			= \operatorname{Tr} \mathbf{K} - \operatorname{Tr} \mathbf{K}^2
 			= 0
 
@@ -147,7 +147,7 @@ Variance
 	.. math::
 		:label: marginal_projection_K
 
-		\mathbb{P}[\mathcal{X}=S] 
+		\mathbb{P}[\mathcal{X}=S]
 			= \det \mathbf{K}_S 1_{|S|=\operatorname{rank} \mathbf{K}}
 
 	.. testcode::
@@ -170,7 +170,7 @@ Variance
 		    DPP.sample_exact()
 
 		print(list(map(list, DPP.list_of_samples)))
-	
+
 	.. testoutput::
 
 		[[0, 4, 8, 2], [1, 8, 2, 0], [8, 3, 6, 1], [6, 7, 1, 9], [9, 3, 0, 4], [9, 4, 0, 8], [9, 6, 1, 8], [0, 1, 2, 7], [1, 2, 8, 9], [8, 2, 9, 4]]
@@ -196,7 +196,7 @@ a. The inclusion probabilities interpret as
 
 	.. math::
 
-		\mathbb{P}[S\subset \mathcal{X}] 
+		\mathbb{P}[S\subset \mathcal{X}]
 		= \det \mathbf{K}_S
 		= \operatorname{Vol}^2 \{\phi_s\}_{s\in S}
 
@@ -204,10 +204,10 @@ b. The inclusion probabilities interpret as
 
 	.. math::
 
-		\mathbb{P}[\mathcal{X} = S] 
+		\mathbb{P}[\mathcal{X} = S]
 		\propto \det \mathbf{L}_S
 		= \operatorname{Vol}^2 \{\psi_s\}_{s\in S}
-	
+
 That is to say, DPPs favor subsets :math:`S` whose corresponding feature vectors span a large volume i.e. *DPPs sample softened orthogonal bases*.
 
 .. _finite_dpps_diversity:
@@ -219,13 +219,13 @@ The *determinantal* structure of DPPs encodes the notion of diversity.
 Deriving the pair inclusion probability, also called the 2-point correlation function using :eq:`inclusion_proba`, we obtain
 
 .. math::
-	
+
 	\mathbb{P}[\{i, j\} \subset \mathcal{X}]
   &= \begin{vmatrix}
     \mathbb{P}[i \in \mathcal{X}]	& \mathbf{K}_{i j}\\
     \overline{\mathbf{K}_{i j}}		& \mathbb{P}[j \in \mathcal{X}]
   \end{vmatrix}\\
-  &= \mathbb{P}[i \in \mathcal{X}] \mathbb{P}[j \in \mathcal{X}] 
+  &= \mathbb{P}[i \in \mathcal{X}] \mathbb{P}[j \in \mathcal{X}]
   	- |\mathbf{K}_{i j}|^2
 
 That is, the greater the similarity :math:`|\mathbf{K}_{i j}|` between items :math:`i` and :math:`j`, the less likely they co-occur.
@@ -238,19 +238,19 @@ Relation between correlation and likelihood kernels
 .. math::
 	:label: relation_K_L
 
-	\mathbf{K} = \mathbf{L}(I+\mathbf{L})^{—1} 
-		\qquad \text{and} \qquad 
+	\mathbf{K} = \mathbf{L}(I+\mathbf{L})^{—1}
+		\qquad \text{and} \qquad
 	\mathbf{L} = \mathbf{K}(I-\mathbf{K})^{—1}
 
 .. warning::
-	
+
 	For DPPs with *projection* correlation kernel :math:`K`, the likelihood kernel :math:`\mathbf{L}` cannot be computed via  :eq:`relation_K_L` with :math:`\mathbf{L} = \mathbf{K}(I-\mathbf{K})^{—1}`, since :math:`\mathbf{K}` has at least one eigenvalue equal to :math:`1` (:math:`\mathbf{K}^2=\mathbf{K}`).
 
 	However, the likelihood kernel :math:`\mathbf{L}` coincides with :math:`\mathbf{K}`.
 
 	.. math::
 
-		\mathbb{P}[\mathcal{X}=S] = 
+		\mathbb{P}[\mathcal{X}=S] =
 			\det \mathbf{K}_S 1_{|S|=\operatorname{rank}\mathbf{K}}
 			\quad \forall S\subset [N]
 

@@ -21,17 +21,17 @@ As a contraction of **DPPs and Python, DPPy** gathers:
 
 - all **exact and approximate samplers** for :ref:`finite DPPs <finite_dpps>` |explosion|
 - :ref:`full <full_matrix_models>` and :ref:`banded <banded_matrix_models>` (tri/quindiagonal) matrix models for :math:`\beta`-:ref:`Ensembles <beta_ensembles>` |fire|
-- exact samplers for more :ref:`exotic_dpps` |palm_tree| 
+- exact samplers for more :ref:`exotic_dpps` |palm_tree|
 
   * :ref:`uniform spanning trees <UST>` |tree|
   * :ref:`descent processes <stationary_1-dependent_process>` |numbers|
   * :ref:`Poissonized Plancherel <poissonized_plancherel_measure>` |histogram|
 
-The purpose of this **documentation** is to both provide a **quick survey of DPPs and relate each mathematical property with its implementation in DPPy**. 
+The purpose of this **documentation** is to both provide a **quick survey of DPPs and relate each mathematical property with its implementation in DPPy**.
 The documentation can thus be read in different ways:
 
-	- if you read the sections in the order they appear, they will first take you through mathematical definitions and quick illustrations of how these definitions are encoded in DPPy. 
-	- for more a traditional library documentation please refer to the corresponding API sections documenting the methods of each object, along with pointers to the mathematical definitions if needed. 
+	- if you read the sections in the order they appear, they will first take you through mathematical definitions and quick illustrations of how these definitions are encoded in DPPy.
+	- for more a traditional library documentation please refer to the corresponding API sections documenting the methods of each object, along with pointers to the mathematical definitions if needed.
 	- you can also directly jump to the Jupyter `notebooks <https://github.com/guilgautier/DPPy/tree/master/notebooks>`_, which showcase the use of some DPPy objects in more detail.
 
 For another entry point to DPPy see the `companion paper <https://arxiv.org/abs/1809.07258>`_ :cite:`GaBaVa18`.

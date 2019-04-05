@@ -16,11 +16,11 @@ Take for reference measure :math:`\mu=\mathcal{N}(0, 2)`, the pdf of the corresp
 
 .. math::
 
-	(x_1,\dots,x_N) 
-	\sim 
+	(x_1,\dots,x_N)
+	\sim
 		\left|\Delta(x_1,\dots,x_N)\right|^{\beta}
-		\prod_{i= 1}^N 
-			e^{- \frac{1}{2}\frac{x_i^2}{2}} 
+		\prod_{i= 1}^N
+			e^{- \frac{1}{2}\frac{x_i^2}{2}}
 			% \indic_{\bbR}(x_i)
 		\ d x_i
 
@@ -72,7 +72,7 @@ Take for reference measure :math:`\mu=\mathcal{N}(0, 2)`, the pdf of the corresp
 Normalization :math:`\sqrt{\beta N}` to concentrate as the semi-circle law.
 
 .. math::
-	
+
 	\frac{\sqrt{4-x^2}}{2\pi} 1_{[-2,2]} dx
 
 .. plot:: plots/ex_plot_hermite_full_mat.py
@@ -89,17 +89,17 @@ Normalization :math:`\sqrt{\beta N}` to concentrate as the semi-circle law.
 Laguerre Ensemble
 ^^^^^^^^^^^^^^^^^
 
-Take for reference measure 
-:math:`\mu=\Gamma\left(\frac{\beta}{2}(M-N+1), 2\right)=\chi_{\beta(M-N+1)}^2`, 
+Take for reference measure
+:math:`\mu=\Gamma\left(\frac{\beta}{2}(M-N+1), 2\right)=\chi_{\beta(M-N+1)}^2`,
 the pdf of the corresponding :math:`\beta`-Ensemble reads
 
 .. math::
 
-	(x_1,\dots,x_N) 
-	\sim 
+	(x_1,\dots,x_N)
+	\sim
 		\left|\Delta(x_1,\dots,x_N)\right|^{\beta}
 	    %
-		\prod_{i= 1}^N 
+		\prod_{i= 1}^N
 	        x_i^{\frac{\beta}{2}(M-N+1)-1}
 			e^{- \frac12 x_i}
 			% \indic_{\bbR}(x_i)
@@ -108,7 +108,7 @@ the pdf of the corresponding :math:`\beta`-Ensemble reads
 .. note::
 
 	Recall that from the definition in :eq:`abs_vandermonde_det`
-	
+
 	.. math::
 
 		\left|\Delta(x_1,\dots,x_N)\right| = \prod_{i<j} |x_i - x_j|
@@ -155,16 +155,16 @@ Normalization :math:`\beta M` to concentrate as Marcenko-Pastur law
 .. math::
 
 	\frac{1}{2\pi}
-	\frac{\sqrt{(\lambda_+-x)(x-\lambda_-)}}{cx} 
+	\frac{\sqrt{(\lambda_+-x)(x-\lambda_-)}}{cx}
 	1_{[\lambda_-,\lambda_+]}
 	dx
 
-where 
+where
 
 .. math::
 
 	c = \frac{M}{N}
-	\quad \text{and} \quad 
+	\quad \text{and} \quad
 	\lambda_\pm = (1\pm\sqrt{c})^2
 
 .. plot:: plots/ex_plot_laguerre_full_mat.py
@@ -180,17 +180,17 @@ where
 Jacobi Ensemble
 ^^^^^^^^^^^^^^^
 
-Take for reference measure 
-:math:`\mu=\operatorname{Beta}\left(\frac{\beta}{2}(M_1-N+1), \frac{\beta}{2}(M_2-N+1)\right)`, 
+Take for reference measure
+:math:`\mu=\operatorname{Beta}\left(\frac{\beta}{2}(M_1-N+1), \frac{\beta}{2}(M_2-N+1)\right)`,
 the pdf of the corresponding :math:`\beta`-Ensemble reads
 
 .. math::
 
-	(x_1,\dots,x_N) 
-	\sim 
+	(x_1,\dots,x_N)
+	\sim
 		\left|\Delta(x_1,\dots,x_N)\right|^{\beta}
 	    %
-		\prod_{i= 1}^N 
+		\prod_{i= 1}^N
 	        x_i^{\frac{\beta}{2}(M_1-N+1)-1}
 	        (1-x_i)^{\frac{\beta}{2}(M_2-N+1)-1}
 			% \indic_{\bbR}(x_i)
@@ -199,7 +199,7 @@ the pdf of the corresponding :math:`\beta`-Ensemble reads
 .. note::
 
 	Recall that from the definition in :eq:`abs_vandermonde_det`
-	
+
 	.. math::
 
 		\left|\Delta(x_1,\dots,x_N)\right| = \prod_{i<j} |x_i - x_j|
@@ -261,11 +261,11 @@ Concentrates as Wachter law
 
 	\frac{(a+b)\sqrt{(\sigma_+-x)(x-\sigma_-)}}{2\pi x(1-x)}dx
 
-where 
+where
 
 .. math::
 
-	a = \frac{M_1}{N}, 
+	a = \frac{M_1}{N},
 	b = \frac{M_2}{N}
 	\quad\text{and}\quad
 	\sigma_{\pm} = \left(\frac{\sqrt{a(a+b-1)} \pm \sqrt{b}}{a+b}\right)^2
@@ -293,7 +293,7 @@ Circular Ensemble
 .. note::
 
 	Recall that from the definition in :eq:`abs_vandermonde_det`
-	
+
 	.. math::
 
 		\left|\Delta(x_1,\dots,x_N)\right| = \prod_{i<j} |x_i - x_j|
@@ -325,11 +325,11 @@ Circular Ensemble
 
 
 	2. The Hermite way
-	
+
 	.. math::
 
 		X \sim \mathcal{N}_{N, N}(0,1)\\
-		A = X+X^{\top} 
+		A = X+X^{\top}
 	      = U^{\top}\Lambda U\\
 	    eigvals(U)
 
@@ -368,7 +368,7 @@ Circular Ensemble
 
 
 - :math:`\beta=4`
-  
+
   Uniform measure i.e. Haar measure on self-dual unitary matrices :math:`\mathbb{U}\operatorname{Sp}_{2N}`:   :math:`U^{\dagger}U = I_{2N}`
 
 	.. math::
@@ -404,16 +404,16 @@ Ginibre Ensemble
 .. note::
 
 	Recall that from the definition in :eq:`abs_vandermonde_det`
-	
+
 	.. math::
 
 		\left|\Delta(x_1,\dots,x_N)\right| = \prod_{i<j} |x_i - x_j|
 
 
 .. math::
-	
-	A \sim 
-	\frac{1}{\sqrt{2}} 
+
+	A \sim
+	\frac{1}{\sqrt{2}}
 	\left( \mathcal{N}_{N,N}(0,1) + i~ \mathcal{N}_{N, N}(0,1) \right)
 
 Nomalization :math:`\sqrt{N}` to concentrate in the unit circle
@@ -422,5 +422,5 @@ Nomalization :math:`\sqrt{N}` to concentrate in the unit circle
   :include-source:
 
 .. seealso::
-	
+
 	- :py:class:`~dppy.beta_ensembles.GinibreEnsemble` in API

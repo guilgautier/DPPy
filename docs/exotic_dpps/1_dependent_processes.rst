@@ -9,7 +9,7 @@ A point process :math:`\mathbb{X}` on :math:`\mathbb{Z}` (resp. :math:`\mathbb{N
 
 If :math:`\mathbb{X}` is stationary and 1-dependent then :math:`\mathbb{X}` forms a DPP.
 
-The following 3 examples are stationary and 1-dependent process. 
+The following 3 examples are stationary and 1-dependent process.
 
 .. _carries_process:
 
@@ -30,7 +30,7 @@ The sequence of carries appearing when computing the cumulative sum (in base :ma
 Descent process
 ===============
 
-The descent process obtained from a uniformly chosen  permutation of  :math:`\{1,2,\dots,n\}` forms a DPP on :math:`\{1,2,\dots,n-1\}` with non symmetric kernel. It can be seen as the limit of the carries process as the base goes to infinity. 
+The descent process obtained from a uniformly chosen  permutation of  :math:`\{1,2,\dots,n\}` forms a DPP on :math:`\{1,2,\dots,n-1\}` with non symmetric kernel. It can be seen as the limit of the carries process as the base goes to infinity.
 
 
 .. plot:: plots/ex_plot_descent_process.py
@@ -45,7 +45,7 @@ The descent process obtained from a uniformly chosen  permutation of  :math:`\{1
 Limiting Descent process for virtual permutations
 ==================================================
 
-For non uniform permutations the descent process is not necessarily determinantal but in the particular case of virtual permutations with law stable under conjugation of the symmetric group the limiting descent process is a mixture of determinantal point processes.  
+For non uniform permutations the descent process is not necessarily determinantal but in the particular case of virtual permutations with law stable under conjugation of the symmetric group the limiting descent process is a mixture of determinantal point processes.
 
 
 .. plot:: plots/ex_plot_virt_descent_process.py

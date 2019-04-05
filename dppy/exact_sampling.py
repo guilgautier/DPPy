@@ -56,7 +56,7 @@ def proj_dpp_sampler_kernel_GS(K, size=None):
 
     - :math:`\operatorname{DPP}(K)` with orthogonal projection **correlation** kernel :math:`K` if ``size`` is not provided
     - :math:`\operatorname{k-DPP}` with orthogonal projection **likelihood** kernel :math:`K` with :math:`k=` ``size`` is not provided
-    
+
     Chain rule is applied by performing sequential Gram-Schmidt orthogonalization or equivalently Cholesky decomposition updates of :math:`K`.
 
     :param K:
@@ -573,7 +573,7 @@ def k_dpp_eig_vecs_selector(eig_vals, eig_vecs, size, E_poly=None):
         array_like
 
     .. seealso::
-        
+
         - :cite:`KuTa12` Algorithm 8
         - :func:`elem_symm_poly <elem_symm_poly>`
     """

@@ -16,7 +16,7 @@ At state :math:`S\subset [N]`, propose :math:`S'` different from :math:`S` by at
 .. math::
 
   s \sim \mathcal{U}_{S}
-    \quad \text{and} \quad 
+    \quad \text{and} \quad
   t \sim \mathcal{U}_{[N]\setminus S}
 
 Then perform
@@ -54,14 +54,14 @@ Mix of exchange and add-delete moves
   - Add :math:`S' \leftrightarrow S \cup t`
 
 .. hint::
-  
+
   Because moves are allowed between subsets having at most 2 different elements, transitions are very local inducing correlation, however *fast* mixing was proved.
 
 .. testcode::
 
   from numpy.random import seed, randn
   from dppy.finite_dpps import FiniteDPP
-  
+
   seed(413121)
 
   r, N = 4, 10
@@ -104,7 +104,7 @@ In this setting the :ref:`finite_dpps_nb_points` is almost surely equal to :math
 .. math::
   :label: zonotope_marginal
 
-  \mathbb{P}[\mathcal{X}=S] 
+  \mathbb{P}[\mathcal{X}=S]
     = \det \mathbf{K}_S 1_{|S|=r}
     = \frac{\det^2\Phi_{:S}}{\det\Phi \Phi^{\top}} 1_{|S|=r}
     = \frac{\operatorname{Vol}^2 \{\phi_s\}_{s\in S}}
@@ -122,7 +122,7 @@ To recover the finite DPP samples one needs to identify the tile in which the su
 
   from numpy.random import seed, randn
   from dppy.finite_dpps import FiniteDPP
-  
+
   seed(413121)
 
   r, N = 4, 10
@@ -158,13 +158,13 @@ To recover the finite DPP samples one needs to identify the tile in which the su
 
   - :py:meth:`~FiniteDPP.sample_mcmc`
   - :cite:`GaBaVa17`
-    
+
 .. _finite_dpps_mcmc_sampling_k_dpps:
 
 k-DPPs
 ======
 
-To preserve the size :math:`k` of the sample, only :ref:`finite_dpps_mcmc_sampling_E` moves can be performed. 
+To preserve the size :math:`k` of the sample, only :ref:`finite_dpps_mcmc_sampling_E` moves can be performed.
 
 .. caution::
 
@@ -174,7 +174,7 @@ To preserve the size :math:`k` of the sample, only :ref:`finite_dpps_mcmc_sampli
 
   from numpy.random import seed, randn
   from dppy.finite_dpps import FiniteDPP
-  
+
   seed(123)
 
   r, N = 5, 10
