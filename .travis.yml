@@ -30,7 +30,7 @@ install:
   - python -m easy_install -U setuptools
   - pip install -U pytest
   - pip install pytest-cov
-  - pip install coverage
+  - pip install coveralls
   # - pip install sphinx
   - pip install .
 
@@ -38,6 +38,7 @@ install:
 script:
   - python --version
   - python tests.py # from https://github.com/bhargavvader/pycobra/
+  - coverage
   # - cd docs && make html && make doctest SPHINXOPTS=-W #Make doctest treat warnings as errors, to detect problems in autodoc
 after_success:
   - coveralls

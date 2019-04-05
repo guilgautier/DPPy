@@ -1,7 +1,7 @@
 DPPy: Sampling Determinantal Point Processes with Python
 ========================================================
 
-|Documentation Status| |Build Status|
+|Documentation Status| |Build Status| |Coverage Status|
 
     *"Anything that can go wrong, will go wrong"*. − `Murphy's
     Law <http://phdcomics.com/comics/archive.php?comicid=1867>`__
@@ -172,5 +172,7 @@ to learn more on how to make your research reproducible!
    :target: https://dppy.readthedocs.io/en/latest/?badge=latest
 .. |Build Status| image:: https://travis-ci.com/guilgautier/DPPy.svg?branch=master
    :target: https://travis-ci.com/guilgautier/DPPy
+.. |Coverage Status| image:: https://coveralls.io/repos/github/guilgautier/DPPy/badge.svg
+  :target: https://coveralls.io/github/guilgautier/DPPy
 .. |Google Colab| image:: https://badgen.net/badge/Launch/on%20Google%20Colab/blue?icon=terminal
    :target: https://colab.research.google.com/github/guilgautier/DPPy/blob/master/notebooks/Tuto_DPPy.ipynb
