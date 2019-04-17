@@ -67,6 +67,10 @@ class MultivariateJacobiOPE:
 
     def K(self, X, Y=None):
         '''
+        K(x) == K(x, x)
+        K(x, y) == K(y, x)
+        K(x, Y) == K(Y, x) = [K(x, y) for y in Y]
+        K(X, Y) == [K(x, y) for x, y in zip(X, Y)]
         .. math::
             K(x, y) = \sum_{\alpha}
                         \frac{P_{\alpha}(x)P_{\alpha}(y)}
@@ -74,41 +78,34 @@ class MultivariateJacobiOPE:
 
         for :math:`P_{\alpha}(x) = \prod_{i=1}^d P_{\alpha_i}^{a_i, b_i}(x_i)`
         '''
+        if Y is None:
 
-        if X.ndim == 1:
-            if Y is None:
-                return np.sum(
-                            np.prod(
+            vector = X.ndim == 1
+
+            return np.sum(
+                        np.prod(
                                 eval_jacobi(self.ordering,
                                             self.jacobi_params[:, 0],
                                             self.jacobi_params[:, 1],
-                                            X),
-                                axis=1)**2\
-                            / self.square_norms)
+                                            X if vector else X[:, None]),
+                                axis=1 if vector else 2)**2\
+                            / self.square_norms,
+                        axis=0 if vector else 1)
+        else:
 
-            elif Y.ndim == 1:
-                return np.sum(
-                            np.prod(
-                                eval_jacobi(self.ordering,
-                                            self.jacobi_params[:, 0],
-                                            self.jacobi_params[:, 1],
-                                            [X[None, :], Y[None, :]]),
-                                axis=(0, 2))\
-                            / self.square_norms)
-
-            else:  # [K(X, Y_1), ..., K(X, Y_n)]
-                pol_evals = np.prod(
+            pol_evals = np.prod(
                                 eval_jacobi(self.ordering,
                                             self.jacobi_params[:, 0],
                                             self.jacobi_params[:, 1],
                                             np.vstack((Y, X))[:, None]),
                                 axis=2)
 
-                return np.sum(pol_evals[-1] * pol_evals[:-1]\
-                                / self.square_norms, axis=1)
+            size = Y.shape[0] if Y.ndim > 1 else 1
 
-        else:
-            print('Weird call of this function X.shape={}, Y.shape={}'.format(X.shape, Y.shape))
+            return np.sum(pol_evals[:size] * pol_evals[size:]\
+                                / self.square_norms,
+                        axis=1)
+
 
     def sample_from_proposal(self, a=0.5, b=0.5):
 
