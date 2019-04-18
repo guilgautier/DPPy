@@ -33,19 +33,15 @@ class MultivariateJacobiOPE:
 
         self.N, self.jacobi_params = self._check_params(N, jacobi_params)
 
-        self.d = jacobi_params.shape[0]  # dimension
+        self.d = jacobi_params.shape[0]  # dimension jacobi_params.size//2
 
-        self.max_layer, self.ordering = compute_ordering(self.N, self.d)
+        self.ordering = compute_ordering(self.N, self.d)
 
-        self.polys = np.arange(self.max_layer)[:, None] * np.ones(self.d)
-        # m_deg = max(max_degrees)+1
-        # ulu = (np.arange(m_deg)[:, None] * np.ones(d, dtype=int))
-        # ulu[ulu > max_degrees] = 0
-
-        self.sq_norms = comp_square_norms(self.jacobi_params, self.max_layer)
+        self.deg_max, self.poly_degrees =\
+            poly_degrees(max_degrees=np.max(self.ordering, axis=0))
 
         self.square_norms =\
-            compute_square_norms(self.jacobi_params, self.ordering)
+            compute_square_norms(self.jacobi_params, self.deg_max)
 
         self.rejection_bound =\
             compute_rejection_bound(self.jacobi_params, self.ordering)
@@ -73,7 +69,7 @@ class MultivariateJacobiOPE:
             raise ValueError('Jacobi parameters not in [-0.5, 0.5]^d, we have no guaranty')
 
 
-    def K_bis(self, X, Y=None):
+    def K(self, X, Y=None):
         '''
         K(x) == K(x, x)
         K(x, y) == K(y, x)
@@ -90,11 +86,11 @@ class MultivariateJacobiOPE:
 
             X_is_vector = X.shape[0] == 1
 
-            polys_X_Y = eval_jacobi(self.polys,
+            polys_X_Y = eval_jacobi(self.poly_degrees,
                                     self.jacobi_params[:, 0],
                                     self.jacobi_params[:, 1],
                                     X if X_is_vector else X[:, None])**2\
-                        / self.sq_norms
+                        / self.square_norms
 
             return np.sum(
                         np.prod(
@@ -104,17 +100,17 @@ class MultivariateJacobiOPE:
 
         else:
 
-            lenX = X.shape[0] if X.ndim > 1 else 1
-            lenY = Y.shape[0] if Y.ndim > 1 else 1
+            lenX = X.size // self.d  # X.shape[0] if X.ndim > 1 else 1
+            lenY = Y.size // self.d  # Y.shape[0] if Y.ndim > 1 else 1
 
-            polys_X_Y = eval_jacobi(self.polys,
+            polys_X_Y = eval_jacobi(self.poly_degrees,
                                     self.jacobi_params[:, 0],
                                     self.jacobi_params[:, 1],
                                     np.vstack((X, Y))[:, None])
 
             if lenX > lenY:
 
-                polys_X_Y[:lenX] *= polys_X_Y[lenX:] / self.sq_norms
+                polys_X_Y[:lenX] *= polys_X_Y[lenX:] / self.square_norms
 
                 return np.sum(
                             np.prod(
@@ -124,55 +120,13 @@ class MultivariateJacobiOPE:
 
             else:  # if lenX < lenY:
 
-                polys_X_Y[lenX:] *= polys_X_Y[:lenX] / self.sq_norms
+                polys_X_Y[lenX:] *= polys_X_Y[:lenX] / self.square_norms
 
                 return np.sum(
                             np.prod(
                                 polys_X_Y[lenX:, self.ordering, range(self.d)],
                             axis=2),
                         axis=1)
-
-    def K(self, X, Y=None):
-        '''
-        K(x) == K(x, x)
-        K(x, y) == K(y, x)
-        K(x, Y) == K(Y, x) = [K(x, y) for y in Y]
-        K(X, Y) == [K(x, y) for x, y in zip(X, Y)]
-        .. math::
-            K(x, y) = \sum_{\alpha}
-                        \frac{P_{\alpha}(x)P_{\alpha}(y)}
-                             {\|P_{\alpha}\|^2}
-
-        for :math:`P_{\alpha}(x) = \prod_{i=1}^d P_{\alpha_i}^{a_i, b_i}(x_i)`
-        '''
-        if Y is None:
-
-            vector = X.ndim == 1
-
-            return np.sum(
-                        np.prod(
-                                eval_jacobi(self.ordering,
-                                            self.jacobi_params[:, 0],
-                                            self.jacobi_params[:, 1],
-                                            X if vector else X[:, None]),
-                                axis=1 if vector else 2)**2\
-                            / self.square_norms,
-                        axis=0 if vector else 1)
-        else:
-
-            polys_X_Y = np.prod(
-                                eval_jacobi(self.ordering,
-                                            self.jacobi_params[:, 0],
-                                            self.jacobi_params[:, 1],
-                                            np.vstack((Y, X))[:, None]),
-                                axis=2)
-
-            size = Y.shape[0] if Y.ndim > 1 else 1
-
-            return np.sum(polys_X_Y[:size] * polys_X_Y[size:]\
-                                / self.square_norms,
-                        axis=1)
-
 
     def sample_from_proposal(self, a=0.5, b=0.5):
 
@@ -182,7 +136,8 @@ class MultivariateJacobiOPE:
 
         a_b = 0.5 + self.jacobi_params
 
-        return np.pi**self.d * np.prod((1 - x)**a_b[:, 0] * (1 + x)**a_b[:, 1])
+        return np.pi**self.d\
+                * np.prod((1 - x)**(a_b[:, 0]) * (1 + x)**(a_b[:, 1]))
 
     def sample(self, nb_trials_max=2000):
         """ Rejection sampling with proposal :math:`\mu_{\text{eq}}^{\otimes d}` where
@@ -192,10 +147,9 @@ class MultivariateJacobiOPE:
                 = \frac{1}{\pi \sqrt{1-x^2}} 1_{(-1, 1)}(x) d x
 
         """
-
         sample = np.zeros((self.N, self.d))
-        K_xY = np.zeros(self.N)
-        K_1 = np.zeros((self.N, self.N))
+        K_xY = np.zeros(self.N)  # [K(x,y) for y in Y]
+        K_1 = np.zeros((self.N, self.N))  # K_YY^-1: inverse of [K(x,y)]_{Y,Y}
 
         nb_reject = 0
 
@@ -208,7 +162,7 @@ class MultivariateJacobiOPE:
                 sample[it] = self.sample_from_proposal()
 
                 # K_xY, K_xx = K_xY[:it], K_xY[it]
-                K_xY[:it_1] = self.K_bis(sample[it], sample[:it_1])
+                K_xY[:it_1] = self.K(sample[it], sample[:it_1])
 
                 # schur = K(x, x) - K(x, Y) K(Y, Y)^-1 K(Y, x)
                 schur = K_xY[it] - K_xY[:it].dot(K_1[:it, :it]).dot(K_xY[:it])
@@ -223,7 +177,7 @@ class MultivariateJacobiOPE:
                 nb_reject += 1
                 sample[it] = 1e-5 * np.random.randn(self.d)
 
-                K_xY[:it_1] = self.K_bis(sample[it], sample[:it_1])
+                K_xY[:it_1] = self.K(sample[it], sample[:it_1])
                 schur = K_xY[it] - K_xY[:it].dot(K_1[:it, :it]).dot(K_xY[:it])
 
             # Updata K_1 using Woodebury formula, from K_Y^-1 to K_{Y+x}^-1
@@ -261,16 +215,16 @@ class MultivariateJacobiOPE:
 def compute_ordering(N, d):
     """ :cite:`BaHa16` Section 2.1.3
     """
-    max_layer = np.ceil(N**(1.0 / d)).astype(np.int16)
+    layer_max = np.floor(N**(1.0 / d)).astype(np.int16)
 
     ordering = itt.chain.from_iterable(
-                filter(lambda x: m - 1 in x, itt.product(range(m), repeat=d))
-                for m in range(1, max_layer + 1))
+                filter(lambda x: m in x, itt.product(range(m+1), repeat=d))
+                for m in range(layer_max + 1))
 
-    return max_layer, list(ordering)[:N]
+    return list(ordering)[:N]
 
 
-def compute_square_norms(jacobi_params, ordering):
+def compute_square_norms(jacobi_params, deg_max):
     """ Compute square norms :math:`\|P_{\alpha}\|^2 for each :math:`\alpha \in` `ordering` of multivariate polynomials orthogonal with respect to the weight function :math:`\prod_{i=1}^d (1-x)^{a_i} (1+x)^{b_i}`
 
     .. math::
@@ -287,20 +241,17 @@ def compute_square_norms(jacobi_params, ordering):
     # - [square_norms]_ij = ||P_i^{a_j, b_j}||^2
     # - [bounds]_ij on
     #       pi (1-x)^(a_j+1/2) (1+x)^(b_j+1/2) P_i^2/||P_i||^2
-    #
-    deg_max, dim = np.max(ordering) + 1, jacobi_params.shape[0]
-    square_norms = np.zeros((deg_max, dim))
+    dim = jacobi_params.shape[0]
+    square_norms = np.zeros((deg_max + 1, dim))
 
-    # range of the degrees of polynomials i = 0 .. max_layer
-    rang = np.arange(deg_max)[:, None]
+    n = np.arange(1, deg_max + 1)[:, None]
 
     arcsine = np.all(jacobi_params == -0.5, axis=1)
     if any(arcsine):
         # |P_0|^2 = pi
         # |P_n|^2 = 1/2 (Gamma(n+1/2)/n!)^2 otherwise
         square_norms[0, arcsine] = np.pi
-        square_norms[1:, arcsine] =\
-            0.5 * (gamma(0.5 + rang[1:]) / factorial(rang[1:]))**2
+        square_norms[1:, arcsine] = 0.5 * (gamma(n + 0.5) / factorial(n))**2
 
     non_arcsine = np.any(jacobi_params != -0.5, axis=1)
     if any(non_arcsine):
@@ -310,17 +261,15 @@ def compute_square_norms(jacobi_params, ordering):
         a = jacobi_params[non_arcsine, 0]
         b = jacobi_params[non_arcsine, 1]
 
-        square_norms[:, non_arcsine] =\
-            gamma(rang + 1 + a)\
-            * gamma(rang + 1 + b)\
-            / gamma(rang + 1 + a + b)\
-            / (2 * rang + 1 + a + b)\
-            / factorial(rang)\
-            * 2**(a + b + 1)
+        square_norms[0, non_arcsine] =\
+            2**(a + b + 1) * beta(a + 1, b + 1)
+
+        square_norms[1:, non_arcsine] =\
+            2**(a + b + 1) * gamma(n + 1 + a) * gamma(n + 1 + b)\
+            /(factorial(n) * (2 * n + 1 + a + b)  * gamma(n + 1 + a + b))
 
     # |P_alpha|^2 = \prod_{i=1}^d |P_{alpha_i}^{a_i,b_i}|^2
-    return np.prod(square_norms[ordering, range(dim)], axis=1)
-
+    return square_norms
 
 def compute_rejection_bound(jacobi_params, ordering):
     """ Compute the rejection constant for the rejection sampling scheme with proposal distribution
@@ -366,11 +315,8 @@ def compute_rejection_bound(jacobi_params, ordering):
 
     # Initialize [bounds]_ij on
     # pi (1-x)^(a_j+1/2) (1+x)^(b_j+1/2) P_i^2/||P_i||^2
-    deg_max, dim = np.max(ordering) + 1, jacobi_params.shape[0]
-    bounds = np.zeros((deg_max, dim))
-
-    # range of the degrees of polynomials i = 0 .. max_layer
-    rang = np.arange(deg_max)[:, None]
+    deg_max, dim = np.max(ordering), jacobi_params.shape[0]
+    bounds = np.zeros((deg_max + 1, dim))
 
     arcsine = np.all(jacobi_params == -0.5, axis=1)
     if any(arcsine):
@@ -400,63 +346,19 @@ def compute_rejection_bound(jacobi_params, ordering):
         min_a_b = np.minimum(a, b)
         max_a_b = np.maximum(a, b)
 
+        n = np.arange(1, deg_max + 1)[:, None]
         bounds[1:, non_arcsine] =\
-            gamma(rang[1:] + 1 + a + b)\
-            * gamma(rang[1:] + 1 + max_a_b)\
-            / gamma(rang[1:] + 1 + min_a_b)\
-            / (rang[1:] + 0.5 * (a + b + 1))**(2 * max_a_b)\
-            / factorial(rang[1:])\
-            * 2
+            2 / factorial(n)\
+            * gamma(n + 1 + a + b) * gamma(n + 1 + max_a_b)\
+            / ((n + 0.5 * (a + b + 1))**(2 * max_a_b) * gamma(n + 1 + min_a_b))
 
     return np.sum(np.prod(bounds[ordering, range(dim)], axis=1))
 
-def comp_square_norms(jacobi_params, deg_max):
-    """ Compute square norms :math:`\|P_{\alpha}\|^2 for each :math:`\alpha \in` `ordering` of multivariate polynomials orthogonal with respect to the weight function :math:`\prod_{i=1}^d (1-x)^{a_i} (1+x)^{b_i}`
 
-    .. math::
+def poly_degrees(max_degrees):
 
-        \|P_{\alpha}\|^2
-            = \prod_{i=1}^d \| P_{\alpha_i}^{(a_i,b_i)}\|^2
+    max_deg, dim = max(max_degrees), len(max_degrees)
+    polys = np.arange(max_deg + 1)[:, None] * np.ones(dim, dtype=int)
+    polys[polys > max_degrees] = 0
 
-    .. seealso::
-
-        - :ref:` Wikipedia Jacobi polynomials <https://en.wikipedia.org/wiki/Jacobi_polynomials#Orthogonality>`__
-    """
-
-    # Initialize
-    # - [square_norms]_ij = ||P_i^{a_j, b_j}||^2
-    # - [bounds]_ij on
-    #       pi (1-x)^(a_j+1/2) (1+x)^(b_j+1/2) P_i^2/||P_i||^2
-    #
-    dim = jacobi_params.shape[0]
-    square_norms = np.zeros((deg_max, dim))
-
-    # range of the degrees of polynomials i = 0 .. max_layer
-    rang = np.arange(deg_max)[:, None]
-
-    arcsine = np.all(jacobi_params == -0.5, axis=1)
-    if any(arcsine):
-        # |P_0|^2 = pi
-        # |P_n|^2 = 1/2 (Gamma(n+1/2)/n!)^2 otherwise
-        square_norms[0, arcsine] = np.pi
-        square_norms[1:, arcsine] =\
-            0.5 * (gamma(0.5 + rang[1:]) / factorial(rang[1:]))**2
-
-    non_arcsine = np.any(jacobi_params != -0.5, axis=1)
-    if any(non_arcsine):
-        # |P_n|^2 =
-        #   2^(a + b + 1)      Gamma(n + 1 + a) Gamma(n + 1 + b)
-        #   n! (2n + a + b + 1)     Gamma(n + 1 + a + b)
-        a = jacobi_params[non_arcsine, 0]
-        b = jacobi_params[non_arcsine, 1]
-
-        square_norms[:, non_arcsine] =\
-            gamma(rang + 1 + a)\
-            * gamma(rang + 1 + b)\
-            / gamma(rang + 1 + a + b)\
-            / (2 * rang + 1 + a + b)\
-            / factorial(rang)\
-            * 2**(a + b + 1)
-
-    # |P_alpha|^2 = \prod_{i=1}^d |P_{alpha_i}^{a_i,b_i}|^2
-    return square_norms
+    return max_deg, polys
