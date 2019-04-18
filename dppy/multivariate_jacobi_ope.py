@@ -84,19 +84,31 @@ class MultivariateJacobiOPE:
         '''
         if Y is None:
 
-            X_is_vector = X.shape[0] == 1
+            if X.size // self.d == 1:  # X is vector in R^d
+                polys_X_2 = eval_jacobi(self.poly_degrees,
+                                        self.jacobi_params[:, 0],
+                                        self.jacobi_params[:, 1],
+                                        X)**2\
+                            / self.square_norms
 
-            polys_X_Y = eval_jacobi(self.poly_degrees,
-                                    self.jacobi_params[:, 0],
-                                    self.jacobi_params[:, 1],
-                                    X if X_is_vector else X[:, None])**2\
-                        / self.square_norms
+                return np.sum(
+                            np.prod(
+                                polys_X_2[self.ordering, range(self.d)],
+                            axis=1),
+                        axis=0)
+
+            else:
+                polys_X_2 = eval_jacobi(self.poly_degrees,
+                                        self.jacobi_params[:, 0],
+                                        self.jacobi_params[:, 1],
+                                        X[:, None])**2\
+                            / self.square_norms
 
             return np.sum(
                         np.prod(
-                            polys_X_Y[:, self.ordering, range(self.d)],
-                        axis=1 if X_is_vector else 2),
-                    axis=0 if X_is_vector else 1)
+                            polys_X_2[:, self.ordering, range(self.d)],
+                        axis=2),
+                    axis=1)
 
         else:
 
