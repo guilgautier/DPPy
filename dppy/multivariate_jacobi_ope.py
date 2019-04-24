@@ -1,7 +1,12 @@
 import numpy as np
 import itertools as itt
 
-from scipy.special import beta, gamma, gammaln, eval_jacobi, factorial
+from scipy.special import beta, betaln, factorial, gamma, gammaln
+from scipy.special import eval_jacobi
+from scipy.special import logsumexp
+
+from dppy.random_matrices import mu_ref_beta_sampler_tridiag\
+                                 as tridiagonal_model
 
 
 class MultivariateJacobiOPE:
@@ -30,21 +35,23 @@ class MultivariateJacobiOPE:
         - :cite:`BaHa16`
     """
 
-    def __init__(self, N, jacobi_params):
+    def __init__(self, N, jacobi_params, log_scale=True):
 
         self.N, self.jacobi_params, self.dim =\
             self._check_params(N, jacobi_params)
 
         self.ordering = compute_ordering(self.N, self.dim)
 
-        self.deq_max, self.poly_degrees =\
-            poly_degrees(max_degrees=np.max(self.ordering, axis=0))
+        self.deg_max, self.poly_degrees =\
+            poly_degrees(np.max(self.ordering, axis=0))
 
         self.square_norms =\
-            compute_square_norms(self.jacobi_params, self.deq_max)
+            compute_square_norms(self.jacobi_params, self.deg_max)
 
         self.rejection_bound =\
-            compute_rejection_bound(self.jacobi_params, self.ordering)
+            compute_rejection_bound(self.jacobi_params,
+                                    self.ordering,
+                                    log_scale)
 
     def _check_params(self, N, jacobi_params):
         """ Check that:
@@ -56,7 +63,7 @@ class MultivariateJacobiOPE:
             return TypeError('Number of points N={} is not an integer or < 2'.format(N))
 
         dim = jacobi_params.size // 2
-        if dim < 2:
+        if dim < 1:
             err = ('`dimension = {}` < 2'.format(dim),
                 'This class implements d-dimensional (d>1) Jacobi ensemble.',
                 'For a 3-dimensional example please provide',
@@ -68,7 +75,6 @@ class MultivariateJacobiOPE:
             return N, jacobi_params, dim
         else:
             raise ValueError('Jacobi parameters not in [-0.5, 0.5]^d, we have no guaranty')
-
 
     def K(self, X, Y=None):
         ''' Compute the orthogonal projection kernel :math:`K` onto the span of the first N polynomials  the
@@ -162,6 +168,14 @@ class MultivariateJacobiOPE:
                 = \frac{1}{\pi \sqrt{1-x^2}} 1_{(-1, 1)}(x) d x
 
         """
+
+        if self.dim == 1:
+            sample = tridiagonal_model(a=self.jacobi_params[0, 0] + 1,
+                                       b=self.jacobi_params[0, 1] + 1,
+                                       beta=2,
+                                       size=self.N)
+            return 1.0 - 2.0 * sample[:, None]
+
         sample = np.zeros((self.N, self.dim))
         K_xY = np.zeros(self.N)  # [K(x,y) for y in Y]
         K_1 = np.zeros((self.N, self.N))  # K_YY^-1: inverse of [K(x,y)]_{Y,Y}
@@ -223,8 +237,8 @@ class MultivariateJacobiOPE:
 
                 K_1[it, it] = 1.0 / schur
 
-            if nb_not_enough_trials:
-                print('not_enough_trials=', nb_not_enough_trials)
+        if nb_not_enough_trials:
+            print('not_enough_trials=', nb_not_enough_trials)
 
         return sample
 
@@ -299,7 +313,7 @@ def compute_square_norms(jacobi_params, deg_max):
     # |P_alpha|^2 = \prod_{i=1}^d |P_{alpha_i}^{a_i,b_i}|^2
     return square_norms
 
-def compute_rejection_bound(jacobi_params, ordering):
+def compute_rejection_bound(jacobi_params, ordering, log_scale=False):
     """ Compute the rejection constant for the rejection sampling scheme with proposal distribution
     :math:`\mu_{eq}^{\otimes d} \prod_{i=1}^{d} w_{eq}(x_i)` where :math:`w_{eq}(x) = \frac{1}{\pi \sqrt{1-x}}`.
 
@@ -343,13 +357,13 @@ def compute_rejection_bound(jacobi_params, ordering):
 
     # Initialize [bounds]_ij on
     # pi (1-x)^(a_j+1/2) (1+x)^(b_j+1/2) P_i^2/||P_i||^2
-    deg_max, dim = np.max(ordering), jacobi_params.shape[0]
+    deg_max, dim = np.max(ordering), jacobi_params.size // 2
     bounds = np.zeros((deg_max + 1, dim))
 
     arcsine = np.all(jacobi_params == -0.5, axis=1)
     if any(arcsine):
-        bounds[0, arcsine] = 1.0
-        bounds[1:, arcsine] = 2.0
+        bounds[0, arcsine] = 0.0 if log_scale else 1.0
+        bounds[1:, arcsine] = np.log(2.0) if log_scale else 2.0
 
     non_arcsine = np.any(jacobi_params != -0.5, axis=1)
     if any(non_arcsine):
@@ -361,12 +375,21 @@ def compute_rejection_bound(jacobi_params, ordering):
 
         mode = (b - a) / (a + b + 1)
 
-        sq_norm_P_0 = 2**(a + b + 1) * beta(a + 1, b + 1)
-        bounds[0, non_arcsine] =\
-            np.pi\
-            * (1 - mode)**(0.5 + a)\
-            * (1 + mode)**(0.5 + b)\
-            / sq_norm_P_0
+        if log_scale:
+            log_square_norm_P_0 =\
+                (a + b + 1) * np.log(2) + betaln(a + 1, b + 1)
+            bounds[0, non_arcsine] =\
+                np.log(np.pi)\
+                + (0.5 + a) * np.log(1 - mode)\
+                + (0.5 + b) * np.log(1 + mode)\
+                - log_square_norm_P_0
+        else:
+            square_norm_P_0 = 2**(a + b + 1) * beta(a + 1, b + 1)
+            bounds[0, non_arcsine] =\
+                np.pi\
+                * (1 - mode)**(0.5 + a)\
+                * (1 + mode)**(0.5 + b)\
+                / square_norm_P_0
 
         # bounds[1:, non_arcsine] =
         #   2 * Gamma(n + 1 + a + b) Gamma(n + 1 + max(a,b))
@@ -376,20 +399,24 @@ def compute_rejection_bound(jacobi_params, ordering):
 
         n = np.arange(1, deg_max + 1)[:, None]
 
-        bounds[1:, non_arcsine] =\
-            np.exp(
-                np.log(2)
-                + gammaln(n + 1 + a + b)
-                + gamma(n + 1 + max_a_b)
-                - gammaln(n + 1)
-                - 2 * max_a_b * np.log(n + 0.5 * (a + b + 1))
+        if log_scale:
+            bounds[1:, non_arcsine] =\
+                np.log(2)\
+                + gammaln(n + 1 + a + b)\
+                + gammaln(n + 1 + max_a_b)\
+                - gammaln(n + 1)\
+                - 2 * max_a_b * np.log(n + 0.5 * (a + b + 1))\
                 - gammaln(n + 1 + min_a_b)
-                )
-            # 2 / factorial(n)\
-            # * gamma(n + 1 + a + b) * gamma(n + 1 + max_a_b)\
-            # / ((n + 0.5 * (a + b + 1))**(2 * max_a_b) * gamma(n + 1 + min_a_b))
+        else:
+            bounds[1:, non_arcsine] =\
+                2 / factorial(n)\
+                * gamma(n + 1 + a + b) * gamma(n + 1 + max_a_b)\
+                / ((n + 0.5 * (a + b + 1))**(2 * max_a_b) * gamma(n + 1 + min_a_b))
 
-    return np.sum(np.prod(bounds[ordering, range(dim)], axis=1))
+    if log_scale:
+        return np.exp(logsumexp(np.sum(bounds[ordering, range(dim)], axis=1)))
+    else:
+        return np.sum(np.prod(bounds[ordering, range(dim)], axis=1))
 
 
 def poly_degrees(max_degrees):
