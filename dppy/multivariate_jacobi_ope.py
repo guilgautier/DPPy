@@ -258,7 +258,7 @@ def compute_square_norms(jacobi_params, deg_max):
     # - [square_norms]_ij = ||P_i^{a_j, b_j}||^2
     # - [bounds]_ij on
     #       pi (1-x)^(a_j+1/2) (1+x)^(b_j+1/2) P_i^2/||P_i||^2
-    dim = jacobi_params.size//2
+    dim = jacobi_params.size // 2
     square_norms = np.zeros((deg_max + 1, dim))
 
     n = np.arange(1, deg_max + 1)[:, None]
@@ -268,7 +268,9 @@ def compute_square_norms(jacobi_params, deg_max):
         # |P_0|^2 = pi
         # |P_n|^2 = 1/2 (Gamma(n+1/2)/n!)^2 otherwise
         square_norms[0, arcsine] = np.pi
-        square_norms[1:, arcsine] = 0.5 * (gamma(n + 0.5) / factorial(n))**2
+        square_norms[1:, arcsine] =\
+            0.5 * np.exp(2 * (gammaln(n + 0.5) - gammaln(n + 1)))
+        # 0.5 * (gamma(n + 0.5) / factorial(n))**2
 
     non_arcsine = np.any(jacobi_params != -0.5, axis=1)
     if any(non_arcsine):
@@ -282,8 +284,17 @@ def compute_square_norms(jacobi_params, deg_max):
             2**(a + b + 1) * beta(a + 1, b + 1)
 
         square_norms[1:, non_arcsine] =\
-            2**(a + b + 1) * gamma(n + 1 + a) * gamma(n + 1 + b)\
-            /(factorial(n) * (2 * n + 1 + a + b)  * gamma(n + 1 + a + b))
+            np.exp(
+                (a + b + 1) * np.log(2)
+                + gammaln(n + 1 + a)
+                + gammaln(n + 1 + b)
+                - gammaln(n + 1)
+                - np.log(2 * n + 1 + a + b)
+                - gammaln(n + 1 + a + b)
+                )
+
+            # 2**(a + b + 1) * gamma(n + 1 + a) * gamma(n + 1 + b)\
+            # /(factorial(n) * (2 * n + 1 + a + b)  * gamma(n + 1 + a + b))
 
     # |P_alpha|^2 = \prod_{i=1}^d |P_{alpha_i}^{a_i,b_i}|^2
     return square_norms
@@ -366,9 +377,17 @@ def compute_rejection_bound(jacobi_params, ordering):
         n = np.arange(1, deg_max + 1)[:, None]
 
         bounds[1:, non_arcsine] =\
-            2 / factorial(n)\
-            * gamma(n + 1 + a + b) * gamma(n + 1 + max_a_b)\
-            / ((n + 0.5 * (a + b + 1))**(2 * max_a_b) * gamma(n + 1 + min_a_b))
+            np.exp(
+                np.log(2)
+                + gammaln(n + 1 + a + b)
+                + gamma(n + 1 + max_a_b)
+                - gammaln(n + 1)
+                - 2 * max_a_b * np.log(n + 0.5 * (a + b + 1))
+                - gammaln(n + 1 + min_a_b)
+                )
+            # 2 / factorial(n)\
+            # * gamma(n + 1 + a + b) * gamma(n + 1 + max_a_b)\
+            # / ((n + 0.5 * (a + b + 1))**(2 * max_a_b) * gamma(n + 1 + min_a_b))
 
     return np.sum(np.prod(bounds[ordering, range(dim)], axis=1))
 
