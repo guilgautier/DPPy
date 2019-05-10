@@ -8,6 +8,8 @@ from scipy.special import logsumexp
 from dppy.random_matrices import mu_ref_beta_sampler_tridiag\
                                  as tridiagonal_model
 
+# import warnings
+
 
 class MultivariateJacobiOPE:
     """
@@ -63,13 +65,9 @@ class MultivariateJacobiOPE:
             return TypeError('Number of points N={} is not an integer or < 2'.format(N))
 
         dim = jacobi_params.size // 2
-        if dim < 1:
-            err = ('`dimension = {}` < 2'.format(dim),
-                'This class implements d-dimensional (d>1) Jacobi ensemble.',
-                'For a 3-dimensional example please provide',
-                '`jacobi_params`=array([[a_1, b_1], [a_2, b_2], [a_3, b_3]])',
-                'For d=1, use the tridiagonal model, cf dppy.beta_ensembles.JacobiEnsemble!')
-            raise ValueError('\n'.join(err))
+        if dim == 1:
+            war = 'In dimension {}, the tridiagonal model is used'.format(dim)
+            # warnings.warn(war)
 
         if (-0.5 <= jacobi_params).all() and (jacobi_params <= 0.5).all():
             return N, jacobi_params, dim
@@ -108,11 +106,11 @@ class MultivariateJacobiOPE:
                                         X[:, None])**2\
                             / self.square_norms
 
-            return np.sum(
-                        np.prod(
-                            polys_X_2[:, self.ordering, range(self.dim)],
-                        axis=2),
-                    axis=1)
+                return np.sum(
+                            np.prod(
+                                polys_X_2[:, self.ordering, range(self.dim)],
+                            axis=2),
+                        axis=1)
 
         else:
 
@@ -242,6 +240,28 @@ class MultivariateJacobiOPE:
 
         return sample
 
+    def eval_polys(self, X):
+
+        if X.size // self.dim == 1:  # X is vector in R^d
+            polys_X = eval_jacobi(self.poly_degrees,
+                                    self.jacobi_params[:, 0],
+                                    self.jacobi_params[:, 1],
+                                    X)\
+                        / np.sqrt(self.square_norms)
+
+            return np.prod(polys_X[self.ordering, range(self.dim)],
+                           axis=1)
+
+        else:
+            polys_X = eval_jacobi(self.poly_degrees,
+                                    self.jacobi_params[:, 0],
+                                    self.jacobi_params[:, 1],
+                                    X[:, None])\
+                        / np.sqrt(self.square_norms)
+
+            return np.prod(polys_X[:, self.ordering, range(self.dim)],
+                           axis=2)
+
 
 def compute_ordering(N, d):
     """ :cite:`BaHa16` Section 2.1.3
@@ -312,6 +332,7 @@ def compute_square_norms(jacobi_params, deg_max):
 
     # |P_alpha|^2 = \prod_{i=1}^d |P_{alpha_i}^{a_i,b_i}|^2
     return square_norms
+
 
 def compute_rejection_bound(jacobi_params, ordering, log_scale=False):
     """ Compute the rejection constant for the rejection sampling scheme with proposal distribution
@@ -409,9 +430,12 @@ def compute_rejection_bound(jacobi_params, ordering, log_scale=False):
                 - gammaln(n + 1 + min_a_b)
         else:
             bounds[1:, non_arcsine] =\
-                2 / factorial(n)\
-                * gamma(n + 1 + a + b) * gamma(n + 1 + max_a_b)\
-                / ((n + 0.5 * (a + b + 1))**(2 * max_a_b) * gamma(n + 1 + min_a_b))
+                2\
+                * gamma(n + 1 + a + b)\
+                * gamma(n + 1 + max_a_b)\
+                / factorial(n)\
+                / (n + 0.5 * (a + b + 1))**(2 * max_a_b)\
+                / gamma(n + 1 + min_a_b)
 
     if log_scale:
         return np.exp(logsumexp(np.sum(bounds[ordering, range(dim)], axis=1)))

@@ -3,9 +3,10 @@
 
 .ipynb_checkpoints/
 *.ipynb
-!beta_ensembles.ipynb
-!finite_dpps.ipynb
-!exotic_dpps.ipynb
+
+notebooks/
+!notebooks/README.md
+!notebooks/Tuto_DPPy.ipynb
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
