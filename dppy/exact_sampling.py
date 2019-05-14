@@ -25,30 +25,117 @@ def proj_dpp_sampler_kernel(kernel, mode='GS', size=None):
         - :func:`proj_dpp_sampler_kernel_Schur <proj_dpp_sampler_kernel_Schur>`
     """
 
-    # Phase 1: Select eigenvectors
-    # No need for eigendecomposition
 
     if size:
         rank = int(np.round(np.trace(kernel)))
         if size > rank:
             raise ValueError('size k={} > rank={}'. format(size, rank))
 
-    # Phase 2: Sample from orthogonal projection kernel K = K^2 = K.T K
-    # Chain rule, conditionals are updated using:
+    # Sample from orthogonal projection kernel K = K^2 = K.H K
     if mode == 'GS':  # Gram-Schmidt equiv Cholesky
         sampl = proj_dpp_sampler_kernel_GS(kernel, size)
+
+    elif mode == 'Chol':  # Cholesky updates of Pou19
+        sampl = proj_dpp_sampler_kernel_Chol(kernel, size)[0]
 
     elif mode == 'Schur':  # Schur complement
         sampl = proj_dpp_sampler_kernel_Schur(kernel, size)
 
     else:
         str_list = ['Invalid sampling mode, choose among:',
-                    '- "GS" (default)',
+                    '- "GS (default)',
+                    '- "Chol"',
                     '- "Schur"',
                     'Given {}'.format(mode)]
         raise ValueError('\n'.join(str_list))
 
     return sampl
+
+
+def proj_dpp_sampler_kernel_Chol(K, size=None):
+    """ Sample from:
+
+    - :math:`\operatorname{DPP}(K)` with orthogonal projection **correlation** kernel :math:`K` if ``size`` is not provided
+    - :math:`\operatorname{k-DPP}` with orthogonal projection **likelihood** kernel :math:`K` with :math:`k=` ``size`` is not provided
+
+    Chain rule is applied by performing Cholesky updates of :math:`K`.
+
+    :param K:
+        Orthogonal projection kernel.
+    :type K:
+        array_like
+
+    :param k:
+        Size of the sample.
+        Default is :math:`k=\operatorname{Tr}(K)=\operatorname{rank}(K)`.
+    :type k:
+        int
+
+    :return:
+        If ``size`` is not provided (None),
+            A sample :math:`\mathcal{X}` from :math:`\operatorname{DPP}(K)`.
+        If ``size`` is provided,
+            A sample :math:`\mathcal{X}` from :math:`\operatorname{k-DPP}(K)`.
+        along with in-place Cholesky factorization of :math:`\mathbf{K}_{\mathcal{X} }`
+    :rtype:
+        list and array_like
+
+    .. seealso::
+
+        - :cite:`Pou19` Algorithm 3
+        - for the Hermitian swap routine see :ref:`catamari code <https://gitlab.com/hodge_star/catamari/blob/38718a1ea34872fb6567e019ece91fbeb5af5be1/include/catamari/dense_dpp/elementary_hermitian_dpp-impl.hpp#L37>`__
+    """
+
+    hermitian = True if K.dtype.kind == 'c' else False
+
+    N, rank = len(K), np.round(np.trace(K)).astype(int)
+    if size is None:  # full projection DPP
+        size = rank
+    # else: k-DPP with k = size
+
+    A = K.copy()
+    d = np.diagonal(A).astype(float)
+
+    orig_indices = np.arange(N)
+
+    for j in range(size):
+
+        # Sample from pivot index and permute
+        t = np.random.choice(range(j, N), p=d[j:] / (rank - j))
+
+        # Hermitian swap of indices j and t of A (may be written in a function)
+        # bottom swap
+        A[t+1:, [j, t]] = A[t+1:, [t, j]]
+        # inner swap
+        tmp = A[j+1:t, j].copy()
+        np.conj(A[t, j+1:t], out=A[j+1:t, j])
+        np.conj(tmp, out=A[t, j+1:t])
+        # corner swap
+        A[t, j] = A[t, j].conj()
+        # diagonal swap
+        A[[j, t], [j, t]] = A[[t, j], [t, j]].real
+        # left swap
+        A[[j, t], :j] = A[[t, j], :j]
+
+        # Swap positions j and t of orig_indices and d
+        orig_indices[[j, t]] = orig_indices[[t, j]]
+        d[[j, t]] = d[[t, j]]
+
+        A[j, j] = np.sqrt(d[j])
+
+        if j == size - 1:
+            break
+
+        # Form new column and update diagonal
+        A[j+1:, j] -= A[j+1:, :j].dot(A[j, :j].conj())
+        A[j+1:, j] /= A[j, j]
+
+        if hermitian:
+            d[j+1:] -= A[j+1:, j].real**2 + A[j+1:, j].imag**2
+        else:
+            d[j+1:] -= A[j+1:, j]**2
+
+    return orig_indices[:size].tolist(), A[:size, :size]
 
 
 def proj_dpp_sampler_kernel_GS(K, size=None):
@@ -86,12 +173,13 @@ def proj_dpp_sampler_kernel_GS(K, size=None):
 
     # Initialization
     # ground set size / rank(K) = Tr(K)
-    N, rank = K.shape[0], int(np.round(np.trace(K)))
+    N, rank = len(K), np.round(np.trace(K)).astype(int)
+    if size is None:  # full projection DPP
+        size = rank
+    # else: k-DPP with k = size
+
     ground_set = np.arange(N)
-
-    size = rank if size is None else size  # Full projection DPP or k-DPP
     sampl = np.zeros(size, dtype=int)  # sample list
-
     avail = np.ones(N, dtype=bool)  # available items
 
     c = np.zeros((N, size))
@@ -99,8 +187,7 @@ def proj_dpp_sampler_kernel_GS(K, size=None):
 
     for it in range(size):
         j = np.random.choice(ground_set[avail],
-                             size=1,
-                             p=np.abs(norm_2[avail]) / (rank - it))[0]
+                             p=np.abs(norm_2[avail]) / (rank - it))
         sampl[it] = j
         if it == size - 1:
             break
@@ -146,22 +233,23 @@ def proj_dpp_sampler_kernel_Schur(K, size=None):
 
     # Initialization
     # ground set size / rank(K) = Tr(K)
-    N, rank = K.shape[0], int(np.round(np.trace(K)))
+    N, rank = len(K), np.round(np.trace(K)).astype(int)
+    if size is None:  # full projection DPP
+        size = rank
+    # else: k-DPP with k = size
+
     ground_set = np.arange(N)
-
-    size = rank if size is None else size  # Full projection DPP or k-DPP
     sampl = np.zeros(size, dtype=int)  # sample list
-
     avail = np.ones(N, dtype=bool)  # available items
 
-    K_diag = K.diagonal()
-    schur_comp = K_diag.copy()  # Schur complement list i.e. residual norm^2
+    # Schur complement list i.e. residual norm^2
+    schur_comp = K.diagonal().copy()
+    K_inv = np.zeros((size, size))
 
     for it in range(size):
         # Pick a new item proportionally to residual norm^2
         j = np.random.choice(ground_set[avail],
-                             size=1,
-                             p=np.abs(schur_comp[avail]) / (rank - it))[0]
+                             p=np.abs(schur_comp[avail]) / (rank - it))
         # store the item and make it unavailable
         sampl[it], avail[j] = j, False
 
@@ -174,26 +262,23 @@ def proj_dpp_sampler_kernel_Schur(K, size=None):
         # [ -K[j,Y] K[Y,Y]^-1/schur_j,
         #      1/schur_j]
         if it == 0:
-            K_inv = 1.0 / K[j, j]
+            K_inv[0, 0] = 1.0 / K[j, j]
 
         elif it == 1:
-            Y = sampl[0]
-            K_inv = np.array([[K[j, j], -K[j, Y]],
-                             [-K[j, Y], K[Y, Y]]])
-            K_inv /= K[Y, Y] * K[j, j] - K[j, Y]**2
+            i = sampl[0]
+            K_inv[:2, :2] = np.array([[K[j, j], -K[j, i]],
+                                      [-K[j, i], K[i, i]]])\
+                            / (K[i, i] * K[j, j] - K[j, i]**2)
 
         elif it < size - 1:
-            Y = sampl[:it]
-            temp = K_inv.dot(K[Y, j])  # K_Y^-1 K_Yj
-            schur_j = K[j, j] - K[j, Y].dot(temp)  # K_jj - K_jY K_Y^-1 K_Yj
+            temp = K_inv[:it, :it].dot(K[sampl[:it], j])  # K_Y^-1 K_Yj
+            # K_jj - K_jY K_Y^-1 K_Yj
+            schur_j = K[j, j] - K[j, sampl[:it]].dot(temp)
 
-            K_inv = np.lib.pad(K_inv, (0, 1),
-                               'constant',
-                               constant_values=1.0 / schur_j)
-
-            K_inv[:-1, :-1] += np.outer(temp, temp / schur_j)
-            K_inv[:-1, -1] *= -temp
-            K_inv[-1, :-1] = K_inv[:-1, -1]
+            K_inv[:it, :it] += np.outer(temp, temp / schur_j)
+            K_inv[:it, it] = - temp / schur_j
+            K_inv[it, :it] = K_inv[:it, it]
+            K_inv[it, it] = 1.0 / schur_j
 
         else:  # it == size-1
             break  # no need to update for nothing
@@ -201,8 +286,8 @@ def proj_dpp_sampler_kernel_Schur(K, size=None):
         # 2) update Schur complements
         # K_ii - K_iY (K_Y)^-1 K_Yi for Y <- Y+j
         K_iY = K[np.ix_(avail, sampl[:it + 1])]
-        schur_comp[avail] =\
-            K_diag[avail] - inner1d(K_iY.dot(K_inv), K_iY, axis=1)
+        schur_comp[avail] = K[avail, avail]\
+                        - inner1d(K_iY.dot(K_inv[:it+1, :it+1]), K_iY, axis=1)
 
     return sampl
 
@@ -210,6 +295,47 @@ def proj_dpp_sampler_kernel_Schur(K, size=None):
 ##################
 # Generic kernel #
 ##################
+
+# Directly from correlation kernel, without spectral decomposition
+##################################################################
+def dpp_sampler_generic_kernel(K):
+    """ Sample from generic :math:`\operatorname{DPP}(\mathbf{K})` with potentially non hermitian correlation kernel :math:`\operatorname{DPP}(\mathbf{K})` based on :math:`LU` factorization procedure.
+
+    :param K:
+        Correlation kernel (potentially non hermitian).
+    :type K:
+        array_like
+
+    :return:
+        A sample :math:`\mathcal{X}` from :math:`\operatorname{DPP}(K)` and
+        the in-place :math:`LU factorization of :math:`K − I_{\mathcal{X}^{c}}` where :math:`I_{\mathcal{X}^{c}}` is the diagonal indicator matrix for the entries not in the sample :math:`\mathcal{X}`.
+    :rtype:
+        list and array_like
+
+    .. seealso::
+
+        - :cite:`Pou19` Algorithm 1
+    """
+
+    A = K.copy()
+    sample = []
+
+    for j in range(len(A)):
+
+        if np.random.rand() < A[j, j]:
+            sample.append(j)
+        else:
+            A[j, j] -= 1
+
+        A[j+1:, j] /= A[j, j]
+        A[j+1:, j+1:] -= np.outer(A[j+1:, j], A[j, j+1:])
+#         A[j+1:, j+1:] -=  np.einsum('i,j', A[j+1:, j], A[j, j+1:])
+
+    return sample, A
+
+# From spectral decomposition
+#############################
+
 # Phase 1: subsample eigenvectors by drawing independent Bernoulli variables with parameter the eigenvalues of the correlation kernel K.
 def dpp_eig_vecs_selector(ber_params, eig_vecs):
     """ Phase 1 of exact sampling procedure. Subsample eigenvectors :math:`V` of the initial kernel (correlation :math:`K`, resp. likelihood :math:`L`) to build a projection DPP with kernel :math:`V V^{\top}` from which sampling is easy.
@@ -353,11 +479,12 @@ def proj_dpp_sampler_eig_GS(eig_vecs, size=None):
     V = eig_vecs
 
     N, rank = V.shape  # ground set size / rank(K)
+    if size is None:  # full projection DPP
+        size = rank
+    # else: k-DPP with k = size
+
     ground_set = np.arange(N)
-
-    size = rank if size is None else size  # Full projection DPP or k-DPP
-    sampl = np.zeros(size, dtype=int)
-
+    sampl = np.zeros(size, dtype=int)  # sample list
     avail = np.ones(N, dtype=bool)  # available items
 
     # Phase 1: Already performed!
@@ -372,8 +499,7 @@ def proj_dpp_sampler_eig_GS(eig_vecs, size=None):
     for it in range(size):
         # Pick an item \propto this squred distance
         j = np.random.choice(ground_set[avail],
-                             size=1,
-                             p=np.abs(norms_2[avail]) / (rank - it))[0]
+                             p=np.abs(norms_2[avail]) / (rank - it))
         sampl[it] = j
         if it == size - 1:
             break
@@ -411,13 +537,14 @@ def proj_dpp_sampler_eig_GS_bis(eig_vecs, size=None):
 
     # Initialization
     V = eig_vecs.copy()
+
     N, rank = V.shape  # ground set size / rank(K)
+    if size is None:  # full projection DPP
+        size = rank
+    # else: k-DPP with k = size
+
     ground_set = np.arange(N)
-
-    # Sample
-    size = rank if size is None else size  # Full projection DPP or k-DPP
     sampl = np.zeros(size, dtype=int)  # sample list
-
     avail = np.ones(N, dtype=bool)  # available items
 
     # Phase 1: Already performed!
@@ -437,8 +564,7 @@ def proj_dpp_sampler_eig_GS_bis(eig_vecs, size=None):
         # Pick an item proportionally to the residual norm^2
         # ||P_{V_Y}^{orthog} V_j||^2
         j = np.random.choice(ground_set[avail],
-                             size=1,
-                             p=np.abs(norms_2[avail]) / (rank - it))[0]
+                             p=np.abs(norms_2[avail]) / (rank - it))
         sampl[it] = j
         if it == size - 1:
             break
@@ -508,9 +634,12 @@ def proj_dpp_sampler_eig_KuTa12(eig_vecs, size=None):
 
     # Initialization
     V = eig_vecs.copy()
-    N, rank = V.shape  # ground set size / rank(K)
 
-    size = rank if size is None else size  # Full projection DPP or k-DPP
+    N, rank = V.shape  # ground set size / rank(K)
+    if size is None:  # full projection DPP
+        size = rank
+    # else: k-DPP with k = size
+
     sampl = np.zeros(size, dtype=int)  # sample list
 
     # Phase 1: Already performed!
@@ -522,7 +651,7 @@ def proj_dpp_sampler_eig_KuTa12(eig_vecs, size=None):
     # Following [Algo 1, KuTa12], the aim is to compute the orhto complement of the subspace spanned by the selected eigenvectors to the canonical vectors \{e_i ; i \in Y\}. We proceed recursively.
     for it in range(size):
 
-        j = np.random.choice(N, size=1, p=np.abs(norms_2) / (rank - it))[0]
+        j = np.random.choice(N, p=np.abs(norms_2) / (rank - it))
         sampl[it] = j
         if it == size - 1:
             break
