@@ -284,7 +284,6 @@ def wachter_law(x, M_1, M_2, N):
 
 # mu-ref = Beta
 def mu_ref_beta_sampler_tridiag(a, b, beta=2, size=10):
-
     """
     .. seealso::
 

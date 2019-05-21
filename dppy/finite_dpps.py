@@ -301,8 +301,8 @@ class FiniteDPP:
             self.sample_exact(self.sampling_mode)
 
         elif self.K is not None:
-                self.K_eig_vals, self.eig_vecs = la.eigh(self.K)
-                self.sample_exact(self.sampling_mode)
+            self.K_eig_vals, self.eig_vecs = la.eigh(self.K)
+            self.sample_exact(self.sampling_mode)
 
         elif self.L is not None:
             self.L_eig_vals, self.eig_vecs = la.eigh(self.L)
