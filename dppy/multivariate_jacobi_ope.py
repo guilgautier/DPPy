@@ -5,10 +5,7 @@ from scipy.special import beta, betaln, factorial, gamma, gammaln
 from scipy.special import eval_jacobi
 from scipy.special import logsumexp
 
-from dppy.random_matrices import mu_ref_beta_sampler_tridiag\
-                                 as tridiagonal_model
-
-# import warnings
+from dppy.random_matrices import mu_ref_beta_sampler_tridiag as tridiagonal_model
 
 
 class MultivariateJacobiOPE:
@@ -35,6 +32,7 @@ class MultivariateJacobiOPE:
 
         - :cite:`Kon05`
         - :cite:`BaHa16`
+        - `ICML workshop paper<https://negative-dependence-in-ml-workshop.lids.mit.edu/wp-content/uploads/sites/29/2019/06/icml_camera_ready.pdf>`_
     """
 
     def __init__(self, N, jacobi_params, log_scale=True):
@@ -142,14 +140,16 @@ class MultivariateJacobiOPE:
                             axis=2),
                         axis=1)
 
-    def sample_from_proposal(self, a=0.5, b=0.5):
+    def sample_from_proposal(self, a=-0.5, b=-0.5):
 
-        return 2.0 * np.random.beta(a, b, size=self.dim) - 1.0
+        # return 1.0 - 2.0 * np.random.beta(a + 1, b + 1, size=self.dim)
+        # return 2 * np.sin(np.random.rand(self.dim)) - 1
+        return 2 * np.random.beta(a + 1, b + 1, size=self.dim) - 1
 
     def eval_w(self, x):
 
-        return np.prod((1 - x)**(self.jacobi_params[:, 0])\
-                        * (1 + x)**(self.jacobi_params[:, 1]), axis=-1)
+        return np.prod((1.0 - x)**(self.jacobi_params[:, 0])\
+                        * (1.0 + x)**(self.jacobi_params[:, 1]), axis=-1)
 
     def eval_w_over_mu_eq(self, x):
 
@@ -170,21 +170,23 @@ class MultivariateJacobiOPE:
         if self.dim == 1:
             sample = tridiagonal_model(a=self.jacobi_params[0, 0] + 1,
                                        b=self.jacobi_params[0, 1] + 1,
-                                       beta=2,
-                                       size=self.N)
-            return 1.0 - 2.0 * sample[:, None]
+                                       size=self.N)[:, None]
+            # return 1 - 2 * sample, 0
+            return 1 - 2 * sample
+
 
         sample = np.zeros((self.N, self.dim))
         K_xY = np.zeros(self.N)  # [K(x,y) for y in Y]
         K_1 = np.zeros((self.N, self.N))  # K_YY^-1: inverse of [K(x,y)]_{Y,Y}
 
         nb_not_enough_trials = 0
+        # tot_nb_rejections = 0
 
         for it in range(self.N):
             it_1 = it + 1
 
             for _ in range(nb_trials_max):
-
+                # tot_nb_rejections += 1
                 # Propose a point from arcsine distriu
                 sample[it] = self.sample_from_proposal()
 
@@ -216,7 +218,7 @@ class MultivariateJacobiOPE:
                 # K_1 = [[K(x, x), -K(x, y)],
                 #          [-K(x, y), -K(y, y)]]
                 #         / K(x, x) K(y, y) - K(x, y)^2
-                K_YY = 1 / K_1[0, 0]  # 1/self.K(sample[0])
+                K_YY = 1.0 / K_1[0, 0]  # 1/self.K(sample[0])
                 K_1[:2, :2] = np.array([[K_xY[it], -K_xY[:it]],
                                         [-K_xY[:it], K_YY]])
                 K_1[:2, :2] /= (K_xY[it] * K_YY - K_xY[:it]**2)
@@ -238,6 +240,7 @@ class MultivariateJacobiOPE:
         if nb_not_enough_trials:
             print('not_enough_trials=', nb_not_enough_trials)
 
+        # return sample, tot_nb_rejections
         return sample
 
     def eval_polys(self, X):

@@ -303,6 +303,8 @@ That is to say,
 	- :cite:`KiNe04` Theorem 2
 	- :ref:`Full matrix model <jacobi_ensemble_full>` for Jacobi ensemble
 	- :py:class:`~dppy.beta_ensembles.JacobiEnsemble` in API
+	- :ref:`multivariate_jacobi_ope`
+	- :py:class:`~dppy.multivariate_jacobi_ope.MultivariateJacobiOPE` in API
 
 .. _circular_ensemble_banded:
 

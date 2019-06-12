@@ -7,6 +7,7 @@
 notebooks/
 !notebooks/README.md
 !notebooks/Tuto_DPPy.ipynb
+!notebooks/multivariate_jacobi_ensemble.ipynb
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
