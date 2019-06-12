@@ -18,10 +18,13 @@ import scipy.linalg as la
 import matplotlib.pyplot as plt
 from warnings import warn
 
-from dppy.exact_sampling import proj_dpp_sampler_kernel, proj_dpp_sampler_eig
-from dppy.exact_sampling import dpp_eig_vecs_selector
-from dppy.exact_sampling import dpp_eig_vecs_selector_L_dual
-from dppy.exact_sampling import k_dpp_eig_vecs_selector, elem_symm_poly
+from dppy.exact_sampling import (dpp_sampler_generic_kernel,
+                                 proj_dpp_sampler_kernel,
+                                 proj_dpp_sampler_eig,
+                                 dpp_eig_vecs_selector,
+                                 dpp_eig_vecs_selector_L_dual,
+                                 k_dpp_eig_vecs_selector,
+                                 elem_symm_poly)
 
 from dppy.mcmc_sampling import dpp_sampler_mcmc, zonotope_sampler
 
@@ -254,8 +257,16 @@ class FiniteDPP:
 
         self.sampling_mode = mode
 
+        if self.sampling_mode == 'Chol':
+            self.compute_K()
+            if self.projection:
+                sampl = proj_dpp_sampler_kernel(self.K, self.sampling_mode)
+            else:
+                sampl = dpp_sampler_generic_kernel(self.K)[0]
+            self.list_of_samples.append(sampl)
+
         # If eigen decoposition of K, L or L_dual is available USE IT!
-        if self.K_eig_vals is not None:
+        elif self.K_eig_vals is not None:
             # Phase 1
             V = dpp_eig_vecs_selector(self.K_eig_vals, self.eig_vecs)
             # Phase 2
@@ -284,15 +295,14 @@ class FiniteDPP:
             sampl = proj_dpp_sampler_kernel(self.K, self.sampling_mode)
             self.list_of_samples.append(sampl)
 
-        # Otherwise eigendecomposition is necessary
         elif self.L_dual is not None:
             self.L_dual_eig_vals, self.L_dual_eig_vecs =\
                 la.eigh(self.L_dual)
             self.sample_exact(self.sampling_mode)
 
         elif self.K is not None:
-            self.K_eig_vals, self.eig_vecs = la.eigh(self.K)
-            self.sample_exact(self.sampling_mode)
+                self.K_eig_vals, self.eig_vecs = la.eigh(self.K)
+                self.sample_exact(self.sampling_mode)
 
         elif self.L is not None:
             self.L_eig_vals, self.eig_vecs = la.eigh(self.L)
@@ -390,7 +400,7 @@ class FiniteDPP:
         elif self.projection:
             if self.kernel_type == 'correlation':
                 self.compute_K()
-                rank = int(np.round(np.trace(self.K)))
+                rank = np.round(np.trace(self.K)).astype(int)
                 if size == rank:
                     sampl = proj_dpp_sampler_kernel(self.K,
                                                     mode=self.sampling_mode,
@@ -485,7 +495,7 @@ class FiniteDPP:
             if (self.kernel_type == 'correlation') and self.projection:
                 self.compute_K()
                 size = params.get('size', None)
-                rank = int(np.round(np.trace(self.K)))
+                rank = np.round(np.trace(self.K)).astype(int)
                 # |sample| = Tr(K) = rank(K) a.s. for projection DPP(K)
                 if size == rank:
                     chain = dpp_sampler_mcmc(self.K,

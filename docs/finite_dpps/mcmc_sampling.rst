@@ -197,5 +197,5 @@ To preserve the size :math:`k` of the sample, only :ref:`finite_dpps_mcmc_sampli
   .. currentmodule:: dppy.finite_dpps
 
   - :py:meth:`~FiniteDPP.sample_mcmc_k_dpp`
-  - :cite:`KuTa11`
   - :cite:`KuTa12` Section 5
+  - :cite:`LiJeSr16a`

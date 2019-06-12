@@ -5,7 +5,7 @@ from numpy.linalg import det, matrix_rank
 
 def inner1d(arr1, arr2=None, axis=0):
     """ Efficient equivalent to ``(arr1**2).sum(axis)`` or ``(arr1*arr2).sum(axis)`` when ``arr1.shape == arr2.shape``.
-    Expected to be used with arrays of same shape and mostly with 1D or 2D arrays but works for upto 26D arrays...
+    Expected to be used with arrays of same shape and mainly with 1D or 2D arrays but works for upto 26D arrays...
 
     If ``arr1.shape == arr2.shape``, then ``inner1d(arr1, arr2, arr1.ndim)`` replaces ``numpy.core.umath_tests.inner1d(arr1, arr2)``
 

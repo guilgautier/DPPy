@@ -7,11 +7,12 @@
 
 import unittest
 
+from numpy import allclose, ix_
+from numpy.linalg import det
+from numpy.random import rand, choice
+
 import sys
 sys.path.append('..')
-
-from numpy import allclose
-from numpy.random import rand
 from dppy.utils import inner1d, det_ST
 
 
@@ -26,21 +27,35 @@ class TestUtils(unittest.TestCase):
 
         for ax in range(X.ndim):
 
+            # inner product
             self.assertTrue(allclose(inner1d(X, Y, axis=ax),
                                      (X * Y).sum(axis=ax)))
+            # square norm
             self.assertTrue(allclose(inner1d(X, axis=ax),
                                      (X**2).sum(axis=ax)))
 
     def test_det_ST(self):
-        """ Compute :math:`\det M_{S, T} = \det [M_{ij}]_{i\inS, j\in T}`
+        """Test determinant
+            - det_ST(arr, S) = det(arr[S, S])
+            - det_ST(arr, S, T) = det(arr[S, T])
         """
 
+        shapes = [10, 50, 100, 300]
+        nb_minors = 10
 
-        if T is None:  # det M_SS = det M_S
-            return det(array[np.ix_(S, S)])
+        for sh in shapes:
 
-        else:  # det M_ST, numpy deals with det M_[][] = 1.0
-            return det(array[np.ix_(S, T)])
+            arr = rand(sh, sh)
+            size_minors = sh // 3
+
+            for _ in range(nb_minors):
+                S, T = choice(sh, size=(2, size_minors))
+
+                self.assertTrue(allclose(det_ST(arr, S),
+                                         det(arr[ix_(S, S)])))
+
+                self.assertTrue(allclose(det_ST(arr, S, T),
+                                         det(arr[ix_(S, T)])))
 
 def main():
 
