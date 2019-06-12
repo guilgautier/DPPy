@@ -279,6 +279,8 @@ itself tending to the arcsine law in the limit
 
 	- :ref:`Banded matrix model <jacobi_ensemble_banded>` for Jacobi ensemble
 	- :py:class:`~dppy.beta_ensembles.JacobiEnsemble` in API
+	- :ref:`multivariate_jacobi_ope`
+	- :py:class:`~dppy.multivariate_jacobi_ope.MultivariateJacobiOPE` in API
 
 .. _circular_ensemble_full:
 
