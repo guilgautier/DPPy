@@ -3,27 +3,20 @@
 Multivariate Jacobi ensemble
 ----------------------------
 
-.. math::
+.. warning::
 
-    zeraze
+    Under construction!
 
-.. note::
+    For more details, have a look at the associated `paper at ICML'19 workshop on Negative Dependence in ML <http://negative-dependence-in-ml-workshop.lids.mit.edu/wp-content/uploads/sites/29/2019/06/icml_camera_ready.pdf>`_
 
-    From
+    .. seealso::
 
-    .. math::
+        - Documentation of :py:class:`~dppy.multivariate_jacobi_ope.MultivariateJacobiOPE` in API
 
-        ezr
+.. image:: ../_images/2D_JacobiOPE_N=1000_raw.png
+   :width: 45%
+.. image:: ../_images/2D_JacobiOPE_N=1000_weighted.png
+   :width: 45%
 
-.. hint::
-
-    ezr
-
-
-.. plot:: plots/ex_plot_ginibre_full_mat.py
-  :include-source:
-
-.. seealso::
-
-    - :cite:`KiNe04` Theorem 2
-    - :py:class:`~dppy.beta_ensembles.GinibreEnsemble` in API
+.. .. plot:: plots/ex_plot_multivariate_jacobi_ope.py
+..   :include-source:

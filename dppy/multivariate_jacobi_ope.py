@@ -1,3 +1,15 @@
+# coding: utf8
+""" Implementation of the class :class:`MultivariateJacobiOPE` which has 2 main methods:
+
+- :py:func:`sample` to get a sample of
+- :py:func:`K` to evaluate the corresponding projection kernel
+
+.. seealso:
+
+    - For more details see `ICML workshop paper <http://negative-dependence-in-ml-workshop.lids.mit.edu/wp-content/uploads/sites/29/2019/06/icml_camera_ready.pdf>`_
+"""
+
+
 import numpy as np
 import itertools as itt
 
@@ -13,26 +25,28 @@ class MultivariateJacobiOPE:
     Multivariate Jacobi Orthogonal Polynomial Ensemble used by :cite:`BaHa16` for Monte Carlo with Determinantal Point Processes.
 
     Reference weight
+
     .. math::
 
-        w(x) = \prod_{i=1}^{d} (1-x)^{a_i} (1+x)^{b_i}
+        w(x) = \\prod_{i=1}^{d} (1-x)^{a_i} (1+x)^{b_i}
 
     :param N:
-        Number of points :math:`N \geq 2`
+        Number of points :math:`N \\geq 2`
     :type N:
         int
 
     :param jacobi_params:
-        Jacobi parameters :math:`\in [-\frac{1}{2}, \frac{1}{2}]^{d \times 2}`.
-        The number of rows :math:`d` prescribes the ambient dimension of the points i.e. :math:`x_{1}, \dots, x_{N} \in [-1, 1]^d`
+        Jacobi parameters :math:`\\in [-\\frac{1}{2}, \\frac{1}{2}]^{d \\times 2}`.
+        The number of rows :math:`d` prescribes the ambient dimension of the points i.e. :math:`x_{1}, \\dots, x_{N} \\in [-1, 1]^d`
     :type N:
         array_like
 
     .. seealso::
 
-        - :cite:`Kon05`
+        - :ref:`multivariate_jacobi_ope`
+        - :ref:`jacobi_ensemble_banded` used to sample the univarite Jacobi orthogonal polynomial ensemble
         - :cite:`BaHa16`
-        - `ICML workshop paper<https://negative-dependence-in-ml-workshop.lids.mit.edu/wp-content/uploads/sites/29/2019/06/icml_camera_ready.pdf>`_
+        - `ICML workshop paper <http://negative-dependence-in-ml-workshop.lids.mit.edu/wp-content/uploads/sites/29/2019/06/icml_camera_ready.pdf>`_
     """
 
     def __init__(self, N, jacobi_params, log_scale=True):
@@ -76,11 +90,11 @@ class MultivariateJacobiOPE:
         ''' Compute the orthogonal projection kernel :math:`K` onto the span of the first N polynomials  the
 
         .. math::
-            K(x, y) = \sum_{\alpha}
-                        \frac{P_{\alpha}(x)P_{\alpha}(y)}
-                             {\|P_{\alpha}\|^2}
+            K(x, y) = \\sum_{\\alpha}
+                        \\frac{P_{\\alpha}(x)P_{\\alpha}(y)}
+                             {\\|P_{\\alpha}\\|^2}
 
-        for :math:`P_{\alpha}(x) = \prod_{i=1}^d P_{\alpha_i}^{a_i, b_i}(x_i)`
+        for :math:`P_{\\alpha}(x) = \\prod_{i=1}^d P_{\\alpha_i}^{a_i, b_i}(x_i)`
         '''
         if Y is None:
 
@@ -159,12 +173,16 @@ class MultivariateJacobiOPE:
                 * np.prod((1 - x)**(a_b[:, 0]) * (1 + x)**(a_b[:, 1]), axis=-1)
 
     def sample(self, nb_trials_max=10000):
-        """ Rejection sampling with proposal :math:`\mu_{\text{eq}}^{\otimes d}` where
+        """ Rejection sampling with proposal :math:`\\mu_{\\text{eq}}^{\\otimes d}` where
+
         .. math::
 
-            \mu_{\text{eq}}
-                = \frac{1}{\pi \sqrt{1-x^2}} 1_{(-1, 1)}(x) d x
+            \\mu_{\\text{eq}}
+                = \\frac{1}{\\pi \\sqrt{1-x^2}} 1_{(-1, 1)}(x) d x
 
+        .. seealso::
+
+            -:func:`~dppy.multivariate_jacobi_ope.compute_rejection_bound`
         """
 
         if self.dim == 1:
@@ -279,16 +297,16 @@ def compute_ordering(N, d):
 
 
 def compute_square_norms(jacobi_params, deg_max):
-    """ Compute square norms :math:`\|P_{\alpha}\|^2 for each :math:`\alpha \in` `ordering` of multivariate polynomials orthogonal with respect to the weight function :math:`\prod_{i=1}^d (1-x)^{a_i} (1+x)^{b_i}`
+    """ Compute square norms :math:`\\|P_{\\alpha}\\|^2` for each :math:`\\alpha \\in` `ordering` of multivariate polynomials orthogonal with respect to the weight function :math:`\\prod_{i=1}^d (1-x)^{a_i} (1+x)^{b_i}`
 
     .. math::
 
-        \|P_{\alpha}\|^2
-            = \prod_{i=1}^d \| P_{\alpha_i}^{(a_i,b_i)}\|^2
+        \\|P_{\\alpha}\\|^2
+            = \\prod_{i=1}^d \\| P_{\\alpha_i}^{(a_i,b_i)}\\|^2
 
     .. seealso::
 
-        - :ref:` Wikipedia Jacobi polynomials <https://en.wikipedia.org/wiki/Jacobi_polynomials#Orthogonality>`__
+        - `Wikipedia Jacobi polynomials <http://en.wikipedia.org/wiki/Jacobi_polynomials#Orthogonality>`_
     """
 
     # Initialize
@@ -339,40 +357,43 @@ def compute_square_norms(jacobi_params, deg_max):
 
 def compute_rejection_bound(jacobi_params, ordering, log_scale=False):
     """ Compute the rejection constant for the rejection sampling scheme with proposal distribution
-    :math:`\mu_{eq}^{\otimes d} \prod_{i=1}^{d} w_{eq}(x_i)` where :math:`w_{eq}(x) = \frac{1}{\pi \sqrt{1-x}}`.
+    :math:`\\mu_{eq}^{\\otimes d} = \\prod_{i=1}^{d} \\frac{1}{\\pi}w_{eq}(x^i) d x^i`
+    where :math:`w_{eq}(x) = \\frac{1}{\\sqrt{1-x}}`.
 
     Applying the chain rule, conditionals have the following form
+
     .. math::
 
-        &\frac{K(x,x) - K(x, Y) K_Y^{-1} K(Y, x)}{N-|Y|} w(x)
-            \frac{1}{\frac{w_{\text{eq}}(x)}{\pi^d}}\\
-        &\leq \frac{\pi^d}{N-|Y|} \frac{K(x,x) w(x)}{w_{\text{eq}}(x)}
-        &= \frac{1}{N-|Y|}
-            \sum_{\alpha}
-                \prod_{i=1}^{d}
-                    \pi
-                    \lrp{1 - x_i}^{a_i + \frac12}
-                    \lrp{1 + x_i}^{b_i + \frac12}
-                    \frac{P_{\alpha_i}^{a_i, b_i}(x_i)^2}
-                         {\|P_{\alpha_i}^{a_i, b_i}\|^2}\\
+        &\\frac{K(x,x) - K(x, Y) K_Y^{-1} K(Y, x)}{N-|Y|} w(x)
+            \\frac{1}{\\frac{w_{\\text{eq}}(x)}{\\pi^d}}\\\\
+        &\\leq \\frac{\\pi^d}{N-|Y|} \\frac{K(x,x) w(x)}{w_{\\text{eq}}(x)}\\\\
+        &= \\frac{1}{N-|Y|}
+            \\sum_{\\alpha}
+                \\prod_{i=1}^{d}
+                    \\pi
+                    (1 - x_i)^{a_i + \\frac12}
+                    (1 + x_i)^{b_i + \\frac12}
+                    \\frac{P_{\\alpha_i}^{a_i, b_i}(x_i)^2}
+                         {\\|P_{\\alpha_i}^{a_i, b_i}\\|^2}\\\\
 
     each term of the product can be bounded using :cite:`Gau09`
+
     .. math::
 
-        \pi \frac{w^{a,b}(x)}{w_{\text{eq}}(x)}
-            \left[\hat{P}_{n}^{(a, b)}(x)\right]^{2}
+        \\pi \\frac{w^{a,b}(x)}{w_{\\text{eq}}(x)}
+            \\left[\\hat{P}_{n}^{(a, b)}(x)\\right]^{2}
         &=
-            \pi
-            (1-x)^{a+\frac{1}{2}}
-            (1+x)^{b+\frac{1}{2}}
-        \left[\hat{P}_{n}^{(a, b)}(x)\right]^{2}\\
-        &\leq
-            \frac{2}
+            \\pi
+            (1-x)^{a+\\frac{1}{2}}
+            (1+x)^{b+\\frac{1}{2}}
+        \\left[\\hat{P}_{n}^{(a, b)}(x)\\right]^{2}\\\\
+        &\\leq
+            \\frac{2}
                   {n!(n+(a+b+1) / 2)^{2 b}}
-            \frac{\Gamma(n+a+b+1)
-                    \Gamma(n+b+1)}
-                  {\Gamma(n+a+1)},
-        \quad|a|,|b| \leq \frac{1}{2}
+            \\frac{\\Gamma(n+a+b+1)
+                    \\Gamma(n+b+1)}
+                  {\\Gamma(n+a+1)},
+        \\quad|a|,|b| \\leq \\frac{1}{2}
 
     .. see also::
 

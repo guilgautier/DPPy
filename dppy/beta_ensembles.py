@@ -82,26 +82,26 @@ class BetaEnsemble(metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
     def sample_full_model(self):
-        """Sample from underlying :math:`\beta`-Ensemble using the corresponding full matrix model.
+        """Sample from underlying :math:`\\beta`-Ensemble using the corresponding full matrix model.
         Arguments are the associated matrix dimensions
         """
 
     @abc.abstractmethod
     def sample_banded_model(self):
-        """Sample from underlying :math:`\beta`-Ensemble using the corresponding banded matrix model.
+        """Sample from underlying :math:`\\beta`-Ensemble using the corresponding banded matrix model.
         Arguments are the associated reference measure's parameters, or the matrix dimensions used in :py:meth:`sample_full_model`
         """
 
     @abc.abstractmethod
     def plot(self):
-        """Display last realization of the underlying :math:`\beta`-Ensemble.
-        For some :math:`\beta`-Ensembles, a normalization argument is available to display the limiting (or equilibrium) distribution and scale the points accordingly.
+        """Display last realization of the underlying :math:`\\beta`-Ensemble.
+        For some :math:`\\beta`-Ensembles, a normalization argument is available to display the limiting (or equilibrium) distribution and scale the points accordingly.
         """
 
     @abc.abstractmethod
     def hist(self):
-        """Display histogram of the last realization of the underlying :math:`\beta`-Ensemble.
-        For some :math:`\beta`-Ensembles, a normalization argument is available to display the limiting (or equilibrium) distribution and scale the points accordingly.
+        """Display histogram of the last realization of the underlying :math:`\\beta`-Ensemble.
+        For some :math:`\\beta`-Ensembles, a normalization argument is available to display the limiting (or equilibrium) distribution and scale the points accordingly.
         """
 
 
