@@ -17,14 +17,19 @@
 
 import abc
 
-import numpy as np
+# https://markhneedham.com/blog/2018/05/04/python-runtime-error-osx-matplotlib-not-installed-as-framework-mac/
+import matplotlib
+matplotlib.use('TkAgg')
+
 import matplotlib.pyplot as plt
 from matplotlib import collections as mc  # see plot_diagram
+
+import numpy as np
+
 from scipy.linalg import qr
 
 # For Uniform Spanning Trees
 import networkx as nx
-from itertools import chain  # create graph edges from tree
 from dppy.exotic_dpps_core import ust_sampler_wilson, ust_sampler_aldous_broder
 from dppy.exact_sampling import proj_dpp_sampler_eig
 
@@ -130,7 +135,7 @@ class Descent(metaclass=abc.ABCMeta):
 
 
 class CarriesProcess(Descent):
-    """ DPP on :math:`\{1, \dots, N-1\}` (with a non symmetric kernel) derived from the cumulative sum of :math:`N` i.i.d. digits in :math:`\{0, \dots, b-1\}`.
+    """ DPP on :math:`\\{1, \\dots, N-1\\}` (with a non symmetric kernel) derived from the cumulative sum of :math:`N` i.i.d. digits in :math:`\\{0, \\dots, b-1\\}`.
 
     :param base:
         Base/radix
@@ -163,7 +168,7 @@ class CarriesProcess(Descent):
         """ Compute the cumulative sum (in base :math:`b`) of a sequence of i.i.d. digits and record the position of carries.
 
         :param size:
-            size of the sequence of i.i.d. digits in :math:`\{0, \dots, b-1\}`
+            size of the sequence of i.i.d. digits in :math:`\\{0, \\dots, b-1\\}`
 
         :type size:
             int
@@ -179,7 +184,7 @@ class CarriesProcess(Descent):
 
 
 class DescentProcess(Descent):
-    """ DPP on :math:`\{1, \dots, N-1\}` associated to the descent process on the symmetric group :math:`\mathfrak{S}_N`.
+    """ DPP on :math:`\\{1, \\dots, N-1\\}` associated to the descent process on the symmetric group :math:`\\mathfrak{S}_N`.
 
         .. seealso::
 
@@ -202,10 +207,10 @@ class DescentProcess(Descent):
         return 0.5
 
     def sample(self, size=100):
-        """ Draw a permutation :math:`\sigma \in \mathfrak{S}_N` uniformly at random and record the descents i.e. :math:`\{ i ~;~ \sigma_i > \sigma_{i+1} \}`.
+        """ Draw a permutation :math:`\\sigma \\in \\mathfrak{S}_N` uniformly at random and record the descents i.e. :math:`\\{ i ~;~ \\sigma_i > \\sigma_{i+1} \\}`.
 
         :param size:
-            size of the permutation i.e. degree :math:`N` of :math:`\mathfrak{S}_N`.
+            size of the permutation i.e. degree :math:`N` of :math:`\\mathfrak{S}_N`.
 
         :type size:
             int
@@ -220,7 +225,7 @@ class DescentProcess(Descent):
 
 
 class VirtualDescentProcess(Descent):
-    """ This is a DPP on :math:`\{1, \dots, N-1\}` with a non symmetric kernel appearing in (or as a limit of) the descent process on the symmetric group :math:`\mathfrak{S}_N`.
+    """ This is a DPP on :math:`\\{1, \\dots, N-1\\}` with a non symmetric kernel appearing in (or as a limit of) the descent process on the symmetric group :math:`\\mathfrak{S}_N`.
 
     .. seealso::
 
@@ -248,10 +253,10 @@ class VirtualDescentProcess(Descent):
         return 0.5 * (1 - self.x_0**2)
 
     def sample(self, size=100):
-        """ Draw a permutation uniformly at random and record the descents i.e. indices where :math:`\sigma(i+1) < \sigma(i)` and something else...
+        """ Draw a permutation uniformly at random and record the descents i.e. indices where :math:`\\sigma(i+1) < \\sigma(i)` and something else...
 
         :param size:
-            size of the permutation i.e. degree :math:`N` of :math:`\mathfrak{S}_N`.
+            size of the permutation i.e. degree :math:`N` of :math:`\\mathfrak{S}_N`.
 
         :type size:
             int
@@ -270,8 +275,8 @@ class VirtualDescentProcess(Descent):
 
         X = sigma[:-1] > sigma[1:]  # Record the descents in permutation
 
-        Y = np.random.binomial(n=2, p=self.x_0, size=self.size + 1)\
-            != np.ones(self.size + 1)
+        Y = np.random.binomial(n=2, p=self.x_0, size=self.size + 1) != 1
+
         descent = [i for i in range(self.size)
                    if (~Y[i] and Y[i + 1])
                    or (~Y[i] and ~Y[i + 1] and X[i])]
@@ -387,7 +392,7 @@ class PoissonizedPlancherel:
         The sample corresponds to the projection onto the real line of the descending surface edges.
 
         :param normalization:
-            If ``normalization=True``, the Young diagram and the corresponding sample are scaled by a factor :math:`\sqrt{\\theta}` and the limiting
+            If ``normalization=True``, the Young diagram and the corresponding sample are scaled by a factor :math:`\\sqrt{\\theta}` and the limiting
 
         :type normalization:
             bool, default False
@@ -551,11 +556,11 @@ class UST:
         self.list_of_samples.append(sampl)
 
     def compute_kernel(self):
-        """ Compute the orthogonal projection kernel :math:`\mathbf{K} = \\text{Inc}^+ \\text{Inc}` i.e. onto the span of the rows of the vertex-edge incidence matrix :math:`\\text{Inc}` of size :math:`|V| \\times |E|`.
+        """ Compute the orthogonal projection kernel :math:`\\mathbf{K} = \\text{Inc}^+ \\text{Inc}` i.e. onto the span of the rows of the vertex-edge incidence matrix :math:`\\text{Inc}` of size :math:`|V| \\times |E|`.
 
         In fact, for a connected graph, :math:`\\text{Inc}` has rank :math:`|V|-1` and any row can be discarded to get an basis of row space. If we note :math:`A` the amputated version of :math:`\\text{Inc}`, then :math:`\\text{Inc}^+ = A^{\\top}[AA^{\\top}]^{-1}`.
 
-        In practice, we orthogonalize the rows of :math:`A` to get the eigenvectors :math:`U` of :math:`\mathbf{K}=UU^{\\top}`.
+        In practice, we orthogonalize the rows of :math:`A` to get the eigenvectors :math:`U` of :math:`\\mathbf{K}=UU^{\\top}`.
 
         .. seealso::
 
@@ -648,7 +653,7 @@ class UST:
         plt.title(title if title else str_title)
 
     def plot_kernel(self, title=''):
-        """Display a heatmap of the underlying orthogonal projection kernel :math:`\mathbf{K}` associated to the DPP underlying the :class:`UST` object
+        """Display a heatmap of the underlying orthogonal projection kernel :math:`\\mathbf{K}` associated to the DPP underlying the :class:`UST` object
 
         :param title:
             Plot title
