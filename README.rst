@@ -170,9 +170,12 @@ to learn more on how to make your research reproducible!
 
 .. |Documentation Status| image:: https://readthedocs.org/projects/dppy/badge/?version=latest
    :target: https://dppy.readthedocs.io/en/latest/?badge=latest
+
 .. |Build Status| image:: https://travis-ci.com/guilgautier/DPPy.svg?branch=master
    :target: https://travis-ci.com/guilgautier/DPPy
-.. |Coverage Status| image:: https://coveralls.io/repos/github/guilgautier/DPPy/badge.svg
-  :target: https://coveralls.io/github/guilgautier/DPPy
+
+.. |Coverage Status| image:: https://coveralls.io/repos/github/guilgautier/DPPy/badge.svg?branch=master
+  :target: https://coveralls.io/github/guilgautier/DPPy?branch=master
+
 .. |Google Colab| image:: https://badgen.net/badge/Launch/on%20Google%20Colab/blue?icon=terminal
    :target: https://colab.research.google.com/github/guilgautier/DPPy/blob/master/notebooks/Tuto_DPPy.ipynb
