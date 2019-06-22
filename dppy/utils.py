@@ -64,8 +64,8 @@ def det_ST(array, S, T=None):
         1D list, array_like, default None
 
     :return:
-        - if `T is None` return :math:`\det M_{S, S}`
-        - else return :math:`\det M_{S, T}`. If S=T=[], numpy convention = 1.0
+        - if `T is None` return :math:`\\det M_{S, S}`
+        - else return :math:`\\det M_{S, T}`. If S=T=[], numpy convention = 1.0
     :rtype:
         float
     """
@@ -84,10 +84,11 @@ def is_symmetric(array):
         return None
 
     indx = np.arange(min(20, array.shape[0]))
-    if np.allclose(array[indx, indx].T, array[indx, indx]):
+    M = array[np.ix_(indx, indx)]
+    if np.allclose(M.T, M):
         return array
     else:
-        raise ValueError('array not symmetric')
+        raise ValueError('array not symmetric: M.T != M')
 
 
 def is_projection(array):
@@ -122,7 +123,7 @@ def is_orthonormal(array):
 
 
 def is_equal_to_O_or_1(array, tol=1e-8):
-    # Check if entries are **all** in {0, 1}, for a given tolerance
+    """Check if entries are **all** in :math:`\\{0, 1\\}`, for a given tolerance"""
 
     if array is None:
         return None
@@ -138,7 +139,7 @@ def is_equal_to_O_or_1(array, tol=1e-8):
 
 
 def is_in_01(array, tol=1e-8):
-    # Check if entries are **all** in [0, 1], for a given tolerance
+    """Check if entries are **all** in :math:`[0, 1]`, for a given tolerance"""
 
     if array is None:
         return None
@@ -149,7 +150,7 @@ def is_in_01(array, tol=1e-8):
 
 
 def is_geq_0(array, tol=1e-8):
-    # Check if entries are **all** >= 0, for a given tolerance
+    """Check if entries are **all** :math:`\\geq0`, for a given tolerance"""
 
     if array is None:
         return None
