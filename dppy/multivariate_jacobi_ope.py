@@ -27,7 +27,7 @@ class MultivariateJacobiOPE:
 
     The multivariate Jacobi orthogonal polynomial ensemble corresponds to a continuous multivariate projection DPP with state space :math:`[-1, 1]^d` and
 
-    - reference measure :math:`\\mu(dx) = w(x) dx`, where
+    - reference measure :math:`\\mu(dx) = w(x) dx` (see also :py:meth:`~dppy.multivariate_jacobi_ope.MultivariateJacobiOPE.eval_w`), where
 
         .. math::
 
@@ -67,7 +67,7 @@ class MultivariateJacobiOPE:
     .. seealso::
 
         - :ref:`multivariate_jacobi_ope`
-        - :ref:`jacobi_ensemble_banded` used to sample the **univarite** Jacobi orthogonal polynomial ensemble
+        - Univariate :ref:`jacobi_ensemble_banded` sampled with the tridiagonal model of :cite:`KiNe04`
         - :cite:`BaHa16` initiated the use of the multivariate Jacobi ensemble for Monte Carlo integration. In particular, they proved a fast CLT with variance decay of order :math:`N^{1+1/d}`
     """
 
@@ -117,6 +117,38 @@ class MultivariateJacobiOPE:
         else:
             raise ValueError('Jacobi parameters not in [-0.5, 0.5]^d, we have no guaranty')
 
+    def eval_w(self, X, jac_params=None):
+        """Evaluate :math:`w(x) = \\prod_{i=1}^{d} (1-x^i)^{a_i} (1+x^i)^{b_i}` which corresponds to the density of the base measure :math:`\\mu` if ``jac_params`` is ``None``.
+
+        :param X:
+            Array of points :math:`\\in [-1, 1]^d`, with size :math:`n\\times d` where :math:`n` is the number of points
+        :type X:
+            array_like
+
+        :param jac_params:
+            - if ``None``, use attribute ``MultivariateJacobiOPE.jacobi_params`` i.e. :math:`[(a_i, b_i)]_{i=1}^d \\in [-0.5, 0.5]^{d \\times 2}`.
+            - else Jacobi parameters :math:`[(a_i, b_i)]_{i=1}^d \\in [-1, \\infty)^{d \\times 2}`.
+        :type jac_params:
+            array_like (default None)
+
+        :return:
+            - if ``jac_params`` is ``None``, evaluation of :math:`w(x)` the density of the base measure
+            - else ``jac_params`` :math:`= [(a_i, b_i)]_{i=1}^d` evaluation of :math:`w(x) = \\prod_{i=1}^{d} (1-x^i)^{a_i} (1+x^i)^{b_i}`
+        :rtype:
+            array_like
+        """
+        if jac_params is None:
+            return np.prod((1.0 - X)**(self.jacobi_params[:, 0])
+                         * (1.0 + X)**(self.jacobi_params[:, 1]),
+                            axis=-1)
+        else:
+            if np.all(jac_params > -1):
+                return np.prod((1.0 - X)**(jac_params[:, 0])
+                             * (1.0 + X)**(jac_params[:, 1]),
+                                axis=-1)
+            else:
+                raise ValueError('Invalid Jacobi parameters, must be all > -1')
+
     def K(self, X, Y=None):
         '''Evaluate the orthogonal projection kernel :math:`K`.
         It is based on the `3-terms recurrence relations <https://en.wikipedia.org/wiki/Jacobi_polynomials#Recurrence_relations>`_ satisfied by each univariate orthogonal Jacobi polynomial, `see also SciPy <https://docs.scipy.org/doc/scipy/reference/generated/scipy.special.eval_jacobi.html>`_ :func:`eval_jacobi`
@@ -130,7 +162,7 @@ class MultivariateJacobiOPE:
 
         - :math:`k \\in \\mathbb{N}^d` is a multi-index ordered according to the ordering :math:`\\mathfrak{b}`, :py:meth:`compute_ordering_BaHa16`
 
-        - :math:`P_{k}(x) = \\prod_{i=1}^d P_{k_i}^{a_i, b_i}(x_i)` is the product of orthogonal Jacobi polynomials w.r.t. :math:`\\mu(dx) = \\prod_{i=1}^{d} (1-x)^{a_i} (1+x)^{b_i} d x dx^i`
+        - :math:`P_{k}(x) = \\prod_{i=1}^d P_{k_i}^{a_i, b_i}(x^i)` is the product of orthogonal Jacobi polynomials w.r.t. :math:`\\mu(dx) = \\prod_{i=1}^{d} (1-x^i)^{a_i} (1+x^i)^{b_i} d x^i`
 
             .. math::
 
@@ -250,10 +282,7 @@ class MultivariateJacobiOPE:
             x = 1.0 - 2.0 * np.random.beta(0.5, 0.5, size=self.dim)
 
             K_xx = self.K(x, None)
-            ratio_w_w_eq = np.prod(
-                                (1 - x)**(self._jacobi_params_plus_05[:, 0])\
-                              * (1 + x)**(self._jacobi_params_plus_05[:, 1]),
-                               axis=-1)
+            ratio_w_w_eq = self.eval_w(x, self._jacobi_params_plus_05)
 
             if np.random.rand() * self.Gautschi_bound\
                 < self._pi_power_dim * K_xx * ratio_w_w_eq:
@@ -263,33 +292,66 @@ class MultivariateJacobiOPE:
 
         return x, K_xx
 
-    def eval_feature_vector(self, X, normed=True):
-        """
-
+    def eval_poly_multiD(self, X, normalize='norm'):
+        """Evaluate (and potentially normalize) multivariate Jacobi polynomials :math:`P_{k}(x) = \\prod_{i=1}^d P_{k_i}^{a_i, b_i}(x_i)`
 
         :param X:
-            Number of points :math:`N \\geq 2`
+            Array of points :math:`\\in [-1, 1]^d`, with size :math:`n\\times d` where :math:`n` is the number of points
         :type X:
-            int
+            array_like
 
-        :param normed:
-            Number of points :math:`N \\geq 2`
-        :type normed:
-            int
+        :param normalize:
+            - 'norm'
+            - 'square_norm'
+        :type normalize:
+            str (default 'norm')
+
+        :return:
+            - ``normalize='norm'`` :math:`P_k(X) / \\left\\| P_k \\right\\|`
+            - ``normalize='square_norm'`` :math:`P_k(X) / \\left\\| P_k \\right\\|^2`
+        :rtype:
+            array_like
 
         .. seealso::
 
             - evaluation of the kernel :py:meth:`~dppy.multivariate_jacobi_ope.MultivariateJacobiOPE.K`
         """
 
-        poly_1D_jacobi = eval_jacobi(self.poly_1D_degrees,
-                                    self.jacobi_params[:, 0],
-                                    self.jacobi_params[:, 1],
-                                    X)
-        if normed:
-            poly_1D_jacobi /= self.poly_1D_square_norms
+        if X.size == self.dim:
+            poly_1D_jacobi = eval_jacobi(self.poly_1D_degrees,
+                                        self.jacobi_params[:, 0],
+                                        self.jacobi_params[:, 1],
+                                        X)
 
-        return np.prod(poly_1D_jacobi[self.ordering, range(self.dim)], axis=1)
+            if normalize == 'square_norm':
+                poly_1D_jacobi /= self.poly_1D_square_norms
+
+            elif normalize == 'norm':
+                poly_1D_jacobi /= np.sqrt(self.poly_1D_square_norms)
+
+            else:
+                pass
+
+            return np.prod(poly_1D_jacobi[self.ordering, range(self.dim)],
+                           axis=1)
+
+        else:
+            poly_1D_jacobi = eval_jacobi(self.poly_1D_degrees,
+                                         self.jacobi_params[:, 0],
+                                         self.jacobi_params[:, 1],
+                                         X[:, None])
+
+            if normalize == 'square_norm':
+                poly_1D_jacobi /= self.poly_1D_square_norms
+
+            elif normalize == 'norm':
+                poly_1D_jacobi /= np.sqrt(self.poly_1D_square_norms)
+
+            else:
+                pass
+
+            return np.prod(poly_1D_jacobi[:, self.ordering, range(self.dim)],
+                           axis=2)
 
     def sample(self, nb_trials_max=10000):
         """Use the chain rule :cite:`HKPV06` (Algorithm 18) to sample :math:`\\left(x_{1}, \\dots, x_{N} \\right)` with density
@@ -347,7 +409,7 @@ class MultivariateJacobiOPE:
         # K_Yx = Phi_Y.dot(Phi_x) = Phi_Yx[:it].dot(Phi_Yx[it])
         K_Yx = np.zeros(self.N - 1)
         Phi_Yx = np.zeros((self.N, self.N))
-        Phi_Yx[0] = self.eval_feature_vector(sample[0], normed=True)
+        Phi_Yx[0] = self.eval_poly_multiD(sample[0], normalize='square_norm')
         temp = np.zeros(self.N - 1)
 
         for it in range(1, self.N):
@@ -360,7 +422,7 @@ class MultivariateJacobiOPE:
                 # Compute Schur cmplmt = K(x, x) - K(x, Y) K(Y, Y)^-1 K(Y, x)
                 #
                 # K_Yx = Phi_Y.dot(Phi_x)
-                Phi_Yx[it] = self.eval_feature_vector(sample[it], normed=False)
+                Phi_Yx[it] = self.eval_poly_multiD(sample[it], normalize='')
                 K_Yx[:it] = Phi_Yx[:it].dot(Phi_Yx[it])
                 # Schur complement
                 schur = K_xx - K_Yx[:it].dot(K_Y_inv[:it, :it]).dot(K_Yx[:it])
@@ -408,7 +470,7 @@ def compute_ordering_BaHa16(N, d):
     :rtype:
         array_like
 
-    For instance, for :math:`N=12, d=2`, see also :py:meth:`compute_ordering_BaHa16`
+    For instance, for :math:`N=12, d=2`
 
     .. code:: python
 
@@ -439,18 +501,18 @@ def compute_poly1D_square_norms(jacobi_params, deg_max):
                 (1-x)^{a_i} (1+x)^{b_i} d x
 
     :param jacobi_params:
-        Jacobi parameters :math:`[(a_i, b_i)]_{i=1}^d \\in [-\\frac{1}{2}, \\frac{1}{2}]^{d \\times 2}`.
+        Jacobi parameters :math:`[(a_i, b_i)]_{i=1}^d \\in [-\\frac{1}{2}, \\frac{1}{2}]^{d \\times 2}`
         The number of rows :math:`d` prescribes the ambient dimension of the points i.e. :math:`x_{1}, \\dots, x_{N} \\in [-1, 1]^d`
     :type jacobi_params:
         array_like
 
     :param deg_max:
-        Maximal de
+        Maximal degree of 1D Jacobi polynomials
     :type deg_max:
         int
 
     :return:
-        Array of size :math:` ``deg_max``+1 \\times d` with entry :math:`k,i` given by :math:`\\|P_{k}^{(a_i,b_i)}\\|^2`
+        Array of size ``deg_max + 1`` :math:`\\times d` with entry :math:`k,i` given by :math:`\\|P_{k}^{(a_i,b_i)}\\|^2`
     :rtype:
         array_like
 
@@ -507,7 +569,7 @@ def compute_poly1D_square_norms(jacobi_params, deg_max):
 
 def compute_Gautschi_bound(jacobi_params, ordering, log_scale=True):
     """ Compute the rejection constant to sample from
-    :math:`\\frac{1}{N} K(x, x) w(x) dx` using the rejection sampling with proposal distribution :math:`\\frac{1}{\\pi^d}w_{eq}(x) d x` where
+    :math:`\\frac{1}{N} K(x, x) w(x) dx` using rejection sampling with proposal distribution :math:`\\frac{1}{\\pi^d}w_{eq}(x) d x` where
 
     .. math::
 
