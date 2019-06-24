@@ -21,8 +21,13 @@ Such objects have 4 main methods:
 
 import abc
 
-import numpy as np
+# https://markhneedham.com/blog/2018/05/04/python-runtime-error-osx-matplotlib-not-installed-as-framework-mac/
+import matplotlib
+matplotlib.use('TkAgg')
+
 import matplotlib.pyplot as plt
+
+import numpy as np
 
 from scipy.stats import norm as sp_gaussian
 from scipy.stats import gamma as sp_gamma

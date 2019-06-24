@@ -12,7 +12,7 @@ API
     :inherited-members:
     :show-inheritance:
 
-.. automodule:: dppy.multivariate_jacobi_ope
-    :members:
-    :inherited-members:
-    :show-inheritance:
+.. .. automodule:: dppy.multivariate_jacobi_ope
+..     :members:
+..     :inherited-members:
+..     :show-inheritance:

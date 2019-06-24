@@ -5,18 +5,26 @@ Multivariate Jacobi ensemble
 
 .. warning::
 
-    Under construction!
+    For the details please refer to the documentation of :py:class:`~dppy.multivariate_jacobi_ope.MultivariateJacobiOPE` below and our `ICML'19 workshop paper <http://negative-dependence-in-ml-workshop.lids.mit.edu/wp-content/uploads/sites/29/2019/06/icml_camera_ready.pdf>`_
 
-    For more details, have a look at the associated `paper at ICML'19 workshop on Negative Dependence in ML <http://negative-dependence-in-ml-workshop.lids.mit.edu/wp-content/uploads/sites/29/2019/06/icml_camera_ready.pdf>`_
+    .. important::
 
-    .. seealso::
+        In the current implementation of the chain rule, the proposal density is :math:`\frac{1}{N} K(x,x) w(x)` and not :math:`\prod_{i=1}^d \frac{1}{\pi\sqrt{1-(x^i)^2}}` as previously used by :cite:`BaHa16` (see also `their implementation  <https://github.com/rbardenet/dppmc>`_) and recycled in our `ICML'19 workshop paper <http://negative-dependence-in-ml-workshop.lids.mit.edu/wp-content/uploads/sites/29/2019/06/icml_camera_ready.pdf>`_!
 
-        - Documentation of :py:class:`~dppy.multivariate_jacobi_ope.MultivariateJacobiOPE` in API
+        This yields faster sampling since less evaluations of the conditionnals involving Schur complements are required, see also :py:meth:`~dppy.multivariate_jacobi_ope.MultivariateJacobiOPE.sample`
+
 
 .. image:: ../_images/2D_JacobiOPE_N=1000_raw.png
    :width: 45%
 .. image:: ../_images/2D_JacobiOPE_N=1000_weighted.png
    :width: 45%
+
+
+.. automodule:: dppy.multivariate_jacobi_ope
+    :members:
+    :inherited-members:
+    :show-inheritance:
+
 
 .. .. plot:: plots/ex_plot_multivariate_jacobi_ope.py
 ..   :include-source:
