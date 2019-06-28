@@ -66,7 +66,7 @@ Chain rule
 
 	.. math::
 
-		\mathbb{P}[\mathcal{X}=S]
+		\mathbb{P}[\mathcal{X} \supset S]
 		= \det \mathbf{K}_S
 
 	The invariance by transposition and permutation of the determinant allows to express the joint probability distribution of :math:`(s_1, \dots, s_r)` as
@@ -74,7 +74,7 @@ Chain rule
 	.. math::
 
 		\mathbb{P}[s_1, \dots, s_r]
-		= \frac{1}{r!} \mathbb{P}[\mathcal{X}=S]
+		= \frac{1}{r!} \mathbb{P}[\mathcal{X} \supset S]
 		= \frac{1}{r!} \det \mathbf{K}_S
 
 	As announced, the exact sampling scheme relies on the chain rule
