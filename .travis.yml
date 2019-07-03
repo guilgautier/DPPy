@@ -21,9 +21,9 @@ matrix:
         #   env: PYTHON=3.4.6
 
 # Command to install dependencies for each configuration.
-# before_install:
+before_install:
 # # For OSX, you may want to call a script installing virtual env and so on.
-#   - . ./scripts/install.sh
+  - . ./scripts/install.sh
 
 install:
   - python -m pip install -U pip

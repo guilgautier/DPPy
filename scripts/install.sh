@@ -26,5 +26,6 @@ if [[ $TRAVIS_OS_NAME == 'osx' ]]; then
 else
     # Additional installation instructions for UNIX
     sudo apt-get install -qq gcc g++
+    sudo apt install tk-dev
     echo "Not on osx"
 fi
