@@ -385,7 +385,7 @@ class PoissonizedPlancherel:
 
         str_title = r'Realization of the DPP associated to the Poissonized Plancherel measure with parameter $\theta=${}'.format(self.theta)
         plt.title(title if title else str_title)
-        plt.show()
+        # plt.show()
 
     def plot_diagram(self, normalization=False):
         """ Display the Young diagram (russian convention), the associated sample and potentially rescale the two to visualize the limit-shape theorem :cite:`Ker96`.

@@ -29,7 +29,7 @@ import numpy as np
 
 # For Uniform Spanning Trees
 import networkx as nx
-from itertools import chain  # create graph edges from tree
+from itertools import chain  # create graph edges from path
 
 # For class PoissonizedPlancherel
 from bisect import bisect_right  # for RSK
@@ -42,7 +42,7 @@ def ust_sampler_wilson(list_of_neighbors, root=None):
     nb_nodes = len(list_of_neighbors)
 
     # Initialize the root, if root not specified start from any node
-    n0 = root if root else np.random.choice(nb_nodes, size=1)[0]
+    n0 = root if root else np.random.choice(nb_nodes)  # size=1)[0]
     # -1 = not visited / 0 = in path / 1 = in tree
     state = -np.ones(nb_nodes, dtype=int)
     state[n0] = 1
@@ -53,11 +53,11 @@ def ust_sampler_wilson(list_of_neighbors, root=None):
     while nb_nodes_in_tree < nb_nodes:  # |Tree| = |V| - 1
 
         # visit a neighbor of n0 uniformly at random
-        n1 = np.random.choice(list_of_neighbors[n0], size=1)[0]
+        n1 = np.random.choice(list_of_neighbors[n0])  # size=1)[0]
 
         if state[n1] == -1:  # not visited => continue the walk
 
-            path.extend([n1])  # add it to the path
+            path.append(n1)  # add it to the path
             state[n1] = 0  # mark it as in the path
             n0 = n1  # continue the walk
 
@@ -82,7 +82,7 @@ def ust_sampler_wilson(list_of_neighbors, root=None):
             # Restart the walk from a random node among those not visited
             nodes_not_visited = np.where(state == -1)[0]
             if nodes_not_visited.size:
-                n0 = np.random.choice(nodes_not_visited, size=1)[0]
+                n0 = np.random.choice(nodes_not_visited)  # size=1)[0]
                 path = [n0]
 
     tree_edges = list(chain.from_iterable(map(lambda x: zip(x[:-1], x[1:]),
@@ -99,7 +99,7 @@ def ust_sampler_aldous_broder(list_of_neighbors, root=None):
     nb_nodes = len(list_of_neighbors)
 
     # Initialize the root, if root not specified start from any node
-    n0 = root if root else np.random.choice(nb_nodes, size=1)[0]
+    n0 = root if root else np.random.choice(nb_nodes)  # size=1)[0]
     visited = np.zeros(nb_nodes, dtype=bool)
     visited[n0] = True
     nb_nodes_in_tree = 1
@@ -109,7 +109,7 @@ def ust_sampler_aldous_broder(list_of_neighbors, root=None):
     while nb_nodes_in_tree < nb_nodes:
 
         # visit a neighbor of n0 uniformly at random
-        n1 = np.random.choice(list_of_neighbors[n0], size=1)[0]
+        n1 = np.random.choice(list_of_neighbors[n0])  # size=1)[0]
 
         if visited[n1]:
             pass  # continue the walk
@@ -126,16 +126,20 @@ def ust_sampler_aldous_broder(list_of_neighbors, root=None):
 
 
 def uniform_permutation(N):
-    """ Draw a perputation :math:`\sigma \in \mathfrak{S}_N` uniformly at random using Fisher-Yates' algorithm
+    """ Draw a perputation :math:`\\sigma \\in \\mathfrak{S}_N` uniformly at random using Fisher-Yates' algorithm
 
     .. seealso::
 
-       `Fisher–Yates_shuffle <https://en.wikipedia.org/wiki/Fisher%E2%80%93Yates_shuffle>_
+        - `Fisher–Yates_shuffle <https://en.wikipedia.org/wiki/Fisher%E2%80%93Yates_shuffle>_
+
+        - `Numpy shuffle <https://github.com/numpy/numpy/blob/d429f0fe16c0407509b1f20d997bf94f1027f61b/numpy/random/mtrand.pyx#L4027>_`
     """
 
     sigma = np.arange(N)
-    for i in range(N - 1, 0, -1):
+    for i in range(N - 1, 0, -1):  # reversed(range(1, N))
         j = np.random.randint(0, i + 1)
+        if j == i:
+            continue
         sigma[j], sigma[i] = sigma[i], sigma[j]
 
     # for i in range(N - 1):
@@ -208,15 +212,15 @@ def RSK(sequence):
         # Iterate along the rows of the tableau P to find a place for the bouncing x and record the position where it is inserted
         for row_P, row_Q in zip(P, Q):
 
-            # If x finds a place at the end of a row of P add it and record its position in the corresponding the row of Q
+            # If x finds a place at the end of a row of P
             if x >= row_P[-1]:
-                row_P.extend([x])
-                row_Q.extend([it])
+                row_P.append(x)  # add the element at the end of the row of P
+                row_Q.append(it)  # record its position in the row of Q
                 break
             else:
                 # find place for x in the row of P to keep the row ordered
                 ind_insert = bisect_right(row_P, x)
-                # Swap x with
+                # Swap x with the value in place
                 x, row_P[ind_insert] = row_P[ind_insert], x
 
         # If no room for x at the end of any row of P create a new row
@@ -236,7 +240,7 @@ def xy_young_ru(young_diag):
         array_like
 
     :return:
-        :math:`\omega(x)`
+        :math:`\\omega(x)`
     :rtype:
         array_like
     """
@@ -268,14 +272,14 @@ def xy_young_ru(young_diag):
 
 
 def limit_shape(x):
-    """ Evaluate :math:`\omega(x)` the limit-shape function :cite:`Ker96`
+    """ Evaluate :math:`\\omega(x)` the limit-shape function :cite:`Ker96`
 
     .. math::
 
-        \omega(x) =
-        \begin{cases}
-            |x|, &\text{if } |x|\geq 2\\
-            \frac{2}{\pi} \left(x \arcsin\left(\frac{x}{2}\right) + \sqrt{4-x^2} \right) &\text{otherwise } \end{cases}
+        \\omega(x) =
+        \\begin{cases}
+            |x|, &\\text{if } |x|\\geq 2\\
+            \\frac{2}{\\pi} \\left(x \\arcsin\\left(\\frac{x}{2}\\right) + \\sqrt{4-x^2} \\right) &\\text{otherwise } \\end{cases}
 
     :param x:
         points
@@ -283,7 +287,7 @@ def limit_shape(x):
         array_like
 
     :return:
-        :math:`\omega(x)`
+        :math:`\\omega(x)`
     :rtype:
         array_like
 

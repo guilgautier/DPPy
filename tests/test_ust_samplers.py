@@ -58,9 +58,9 @@ class TestUniformityUniformSpanningTreeSampler(unittest.TestCase):
 
     @staticmethod
     def sample_to_label(graph):
-        """Join egdes of a sample to from the ID or a spanning tree
+        """Join egdes of a sample to from the ID of the corresponding spanning tree
         Ex:
-        [(3, 2), (2, 0), (2, 1), (0, 4)] -> '[0, 2][0, 4][1, 2][2, 3]''
+        [(3, 2), (2, 0), (2, 1), (0, 4)] -> '[0, 2][0, 4][1, 2][2, 3]'
         """
         return ''.join(map(str, sorted(map(sorted, graph.edges()))))
 
