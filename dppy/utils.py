@@ -46,7 +46,7 @@ def inner1d(arr1, arr2=None, axis=0):
 
 
 def det_ST(array, S, T=None):
-    """ Compute :math:`\det M_{S, T} = \det [M_{ij}]_{i\inS, j\in T}`
+    """ Compute :math:`\\det M_{S, T} = \\det [M_{ij}]_{i\\inS, j\\in T}`
 
     :param array:
         Matrix

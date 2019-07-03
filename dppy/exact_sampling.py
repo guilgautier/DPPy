@@ -55,8 +55,8 @@ def proj_dpp_sampler_kernel(kernel, mode='GS', size=None):
 def proj_dpp_sampler_kernel_Chol(K, size=None):
     """ Sample from:
 
-    - :math:`\operatorname{DPP}(K)` with orthogonal projection **correlation** kernel :math:`K` if ``size`` is not provided
-    - :math:`\operatorname{k-DPP}` with orthogonal projection **likelihood** kernel :math:`K` with :math:`k=` ``size`` is not provided
+    - :math:`\\operatorname{DPP}(K)` with orthogonal projection **correlation** kernel :math:`K` if ``size`` is not provided
+    - :math:`\\operatorname{k-DPP}` with orthogonal projection **likelihood** kernel :math:`K` with :math:`k=` ``size`` is not provided
 
     Chain rule is applied by performing Cholesky updates of :math:`K`.
 
@@ -67,23 +67,23 @@ def proj_dpp_sampler_kernel_Chol(K, size=None):
 
     :param k:
         Size of the sample.
-        Default is :math:`k=\operatorname{Tr}(K)=\operatorname{rank}(K)`.
+        Default is :math:`k=\\operatorname{Tr}(K)=\\operatorname{rank}(K)`.
     :type k:
         int
 
     :return:
         If ``size`` is not provided (None),
-            A sample :math:`\mathcal{X}` from :math:`\operatorname{DPP}(K)`.
+            A sample :math:`\\mathcal{X}` from :math:`\\operatorname{DPP}(K)`.
         If ``size`` is provided,
-            A sample :math:`\mathcal{X}` from :math:`\operatorname{k-DPP}(K)`.
-        along with in-place Cholesky factorization of :math:`\mathbf{K}_{\mathcal{X} }`
+            A sample :math:`\\mathcal{X}` from :math:`\\operatorname{k-DPP}(K)`.
+        along with in-place Cholesky factorization of :math:`\\mathbf{K}_{\\mathcal{X} }`
     :rtype:
         list and array_like
 
     .. seealso::
 
         - :cite:`Pou19` Algorithm 3
-        - for the Hermitian swap routine see :ref:`catamari code <https://gitlab.com/hodge_star/catamari/blob/38718a1ea34872fb6567e019ece91fbeb5af5be1/include/catamari/dense_dpp/elementary_hermitian_dpp-impl.hpp#L37>`__
+        - for the Hermitian swap routine see :ref:`catamari code <https://gitlab.com/hodge_star/catamari/blob/38718a1ea34872fb6567e019ece91fbeb5af5be1/include/catamari/dense_dpp/elementary_hermitian_dpp-impl.hpp#L37>`_
     """
 
     hermitian = True if K.dtype.kind == 'c' else False
@@ -141,8 +141,8 @@ def proj_dpp_sampler_kernel_Chol(K, size=None):
 def proj_dpp_sampler_kernel_GS(K, size=None):
     """ Sample from:
 
-    - :math:`\operatorname{DPP}(K)` with orthogonal projection **correlation** kernel :math:`K` if ``size`` is not provided
-    - :math:`\operatorname{k-DPP}` with orthogonal projection **likelihood** kernel :math:`K` with :math:`k=` ``size`` is not provided
+    - :math:`\\operatorname{DPP}(K)` with orthogonal projection **correlation** kernel :math:`K` if ``size`` is not provided
+    - :math:`\\operatorname{k-DPP}` with orthogonal projection **likelihood** kernel :math:`K` with :math:`k=` ``size`` is not provided
 
     Chain rule is applied by performing sequential Gram-Schmidt orthogonalization or equivalently Cholesky decomposition updates of :math:`K`.
 
@@ -153,15 +153,15 @@ def proj_dpp_sampler_kernel_GS(K, size=None):
 
     :param k:
         Size of the sample.
-        Default is :math:`k=\operatorname{Tr}(K)=\operatorname{rank}(K)`.
+        Default is :math:`k=\\operatorname{Tr}(K)=\\operatorname{rank}(K)`.
     :type k:
         int
 
     :return:
         If ``size`` is not provided (None),
-            A sample from :math:`\operatorname{DPP}(K)`.
+            A sample from :math:`\\operatorname{DPP}(K)`.
         If ``size`` is provided,
-            A sample from :math:`\operatorname{k-DPP}(K)`.
+            A sample from :math:`\\operatorname{k-DPP}(K)`.
     :rtype:
         array_like
 
@@ -204,8 +204,8 @@ def proj_dpp_sampler_kernel_GS(K, size=None):
 def proj_dpp_sampler_kernel_Schur(K, size=None):
     """ Sample from:
 
-    - :math:`\operatorname{DPP}(K)` with orthogonal projection **correlation** kernel :math:`K` if ``size`` is not provided
-    - :math:`\operatorname{k-DPP}` with orthogonal projection **likelihood** kernel :math:`K` with :math:`k=` ``size``
+    - :math:`\\operatorname{DPP}(K)` with orthogonal projection **correlation** kernel :math:`K` if ``size`` is not provided
+    - :math:`\\operatorname{k-DPP}` with orthogonal projection **likelihood** kernel :math:`K` with :math:`k=` ``size``
 
     Chain rule is applied by computing the Schur complements.
 
@@ -215,15 +215,15 @@ def proj_dpp_sampler_kernel_Schur(K, size=None):
         array_like
     :param size:
         Size of the sample.
-        Default is :math:`k=\operatorname{Tr}(K)=\operatorname{rank}(K)`.
+        Default is :math:`k=\\operatorname{Tr}(K)=\\operatorname{rank}(K)`.
     :type size:
         int
 
     :return:
         If ``size`` is not provided (None),
-            A sample from :math:`\operatorname{DPP}(K)`.
+            A sample from :math:`\\operatorname{DPP}(K)`.
         If ``size`` is provided,
-            A sample from :math:`\operatorname{k-DPP}(K)`.
+            A sample from :math:`\\operatorname{k-DPP}(K)`.
     :rtype:
         array_like
 
@@ -299,7 +299,7 @@ def proj_dpp_sampler_kernel_Schur(K, size=None):
 # Directly from correlation kernel, without spectral decomposition
 ##################################################################
 def dpp_sampler_generic_kernel(K):
-    """ Sample from generic :math:`\operatorname{DPP}(\mathbf{K})` with potentially non hermitian correlation kernel :math:`\operatorname{DPP}(\mathbf{K})` based on :math:`LU` factorization procedure.
+    """ Sample from generic :math:`\\operatorname{DPP}(\\mathbf{K})` with potentially non hermitian correlation kernel :math:`\\operatorname{DPP}(\\mathbf{K})` based on :math:`LU` factorization procedure.
 
     :param K:
         Correlation kernel (potentially non hermitian).
@@ -307,8 +307,8 @@ def dpp_sampler_generic_kernel(K):
         array_like
 
     :return:
-        A sample :math:`\mathcal{X}` from :math:`\operatorname{DPP}(K)` and
-        the in-place :math:`LU factorization of :math:`K − I_{\mathcal{X}^{c}}` where :math:`I_{\mathcal{X}^{c}}` is the diagonal indicator matrix for the entries not in the sample :math:`\mathcal{X}`.
+        A sample :math:`\\mathcal{X}` from :math:`\\operatorname{DPP}(K)` and
+        the in-place :math:`LU factorization of :math:`K − I_{\\mathcal{X}^{c}}` where :math:`I_{\\mathcal{X}^{c}}` is the diagonal indicator matrix for the entries not in the sample :math:`\\mathcal{X}`.
     :rtype:
         list and array_like
 
@@ -343,7 +343,7 @@ def dpp_eig_vecs_selector(ber_params, eig_vecs):
 
     :param ber_params:
         Parameters of Bernoulli variables
-        :math:`\lambda^K=\lambda^L/(1+\lambda^L)
+        :math:`\\lambda^K=\\lambda^L/(1+\\lambda^L)
     :type ber_params:
         list, array_like
 
@@ -413,7 +413,7 @@ def dpp_eig_vecs_selector_L_dual(eig_vals, eig_vecs, gram_factor):
 # Phase 2:
 # Sample projection kernel VV.T where V are the eigvecs selected in Phase 1.
 def proj_dpp_sampler_eig(eig_vecs, mode='GS'):
-    """ Sample from projection :math:`\operatorname{DPP}(K)` using the eigendecomposition of the projection kernel :math:`K=VV^{\top}` where :math:`V^{\top}V = I_r` and :math:`r=\operatorname{rank}(\mathbf{K})`.
+    """ Sample from projection :math:`\\operatorname{DPP}(K)` using the eigendecomposition of the projection kernel :math:`K=VV^{\top}` where :math:`V^{\top}V = I_r` and :math:`r=\\operatorname{rank}(\\mathbf{K})`.
 
     .. seealso::
 
@@ -455,7 +455,7 @@ def proj_dpp_sampler_eig(eig_vecs, mode='GS'):
 
 # Using Gram-Schmidt orthogonalization
 def proj_dpp_sampler_eig_GS(eig_vecs, size=None):
-    """ Sample from projection :math:`\operatorname{DPP}(K)` using the eigendecomposition of the projection kernel :math:`K=VV^{\top}` where :math:`V^{\top}V = I_r` and :math:`r=\operatorname{rank}(\mathbf{K})`.
+    """ Sample from projection :math:`\\operatorname{DPP}(K)` using the eigendecomposition of the projection kernel :math:`K=VV^{\top}` where :math:`V^{\top}V = I_r` and :math:`r=\\operatorname{rank}(\\mathbf{K})`.
     It performs sequential update of Cholesky decomposition, which is equivalent to Gram-Schmidt orthogonalization of the rows of the eigenvectors.
 
     :param eig_vecs:
@@ -464,7 +464,7 @@ def proj_dpp_sampler_eig_GS(eig_vecs, size=None):
         array_like
 
     :return:
-        A sample from projection :math:`\operatorname{DPP}(K)`.
+        A sample from projection :math:`\\operatorname{DPP}(K)`.
     :rtype:
         list, array_like
 
@@ -516,7 +516,7 @@ def proj_dpp_sampler_eig_GS(eig_vecs, size=None):
 
 # Slight modif of Gram-Schmidt above
 def proj_dpp_sampler_eig_GS_bis(eig_vecs, size=None):
-    """ Sample from projection :math:`\operatorname{DPP}(K)` using the eigendecomposition of the projection kernel :math:`K=VV^{\top}` where :math:`V^{\top}V = I_r` and :math:`r=\operatorname{rank}(\mathbf{K})`.
+    """ Sample from projection :math:`\\operatorname{DPP}(K)` using the eigendecomposition of the projection kernel :math:`K=VV^{\top}` where :math:`V^{\top}V = I_r` and :math:`r=\\operatorname{rank}(\\mathbf{K})`.
     It performs sequential Gram-Schmidt orthogonalization of the rows of the eigenvectors.
 
     :param eig_vecs:
@@ -525,7 +525,7 @@ def proj_dpp_sampler_eig_GS_bis(eig_vecs, size=None):
         array_like
 
     :return:
-        A sample from projection :math:`\operatorname{DPP}(K)`.
+        A sample from projection :math:`\\operatorname{DPP}(K)`.
     :rtype:
         list, array_like
 
@@ -607,7 +607,7 @@ def proj_dpp_sampler_eig_GS_bis(eig_vecs, size=None):
 
 
 def proj_dpp_sampler_eig_KuTa12(eig_vecs, size=None):
-    """ Sample from :math:`\operatorname{DPP}(K)` using the eigendecomposition of the similarity kernel :math:`K`.
+    """ Sample from :math:`\\operatorname{DPP}(K)` using the eigendecomposition of the similarity kernel :math:`K`.
     It is based on the orthogonalization of the selected eigenvectors.
 
     :param eig_vals:
@@ -621,7 +621,7 @@ def proj_dpp_sampler_eig_KuTa12(eig_vecs, size=None):
         array_like
 
     :return:
-        A sample from :math:`\operatorname{DPP}(K)`.
+        A sample from :math:`\\operatorname{DPP}(K)`.
     :rtype:
         list
 
@@ -730,10 +730,10 @@ def k_dpp_eig_vecs_selector(eig_vals, eig_vecs, size, E_poly=None):
 
 # Evaluate the elementary symmetric polynomials
 def elem_symm_poly(eig_vals, size):
-    """ Evaluate the elementary symmetric polynomials :math:`e_k` in the eigenvalues :math:`(\lambda_1, \cdots, \lambda_N)`.
+    """ Evaluate the elementary symmetric polynomials :math:`e_k` in the eigenvalues :math:`(\\lambda_1, \\cdots, \\lambda_N)`.
 
     :param eig_vals:
-        Collection of eigenvalues :math:`(\lambda_1, \cdots, \lambda_N)` of the similarity kernel :math:`L`.
+        Collection of eigenvalues :math:`(\\lambda_1, \\cdots, \\lambda_N)` of the similarity kernel :math:`L`.
     :type eig_vals:
         list
 
@@ -744,7 +744,7 @@ def elem_symm_poly(eig_vals, size):
 
     :return:
         :math:`[E_{kn}]_{k=0, n=0}^{\text{size}, N}`
-        :math:`E_{kn} = e_k(\lambda_1, \cdots, \lambda_n)`
+        :math:`E_{kn} = e_k(\\lambda_1, \\cdots, \\lambda_n)`
     :rtype:
         array_like
 

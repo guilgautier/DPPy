@@ -398,13 +398,13 @@ def extract_basis(y_sol, eps=1e-5):
         list
 
     :param eps:
-        Tolerance :math:`y_i^* \in (\epsilon, 1-\epsilon), \quad \epsilon \geq 0`
+        Tolerance :math:`y_i^* \\in (\\epsilon, 1-\\epsilon), \\quad \\epsilon \\geq 0`
     :eps type:
         float
 
     :return:
         Indices of the feature vectors spanning the tile in which the point is lies.
-        :math:`B_{x} = \left\{ i \, ; \, y_i^* \in (0,1) \\right\}`
+        :math:`B_{x} = \\left\\{ i \\, ; \\, y_i^* \\in (0,1) \\right\\}`
     :rtype:
         list
 
