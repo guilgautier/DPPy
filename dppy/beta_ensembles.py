@@ -21,10 +21,16 @@ Such objects have 4 main methods:
 
 import abc
 
-# https://markhneedham.com/blog/2018/05/04/python-runtime-error-osx-matplotlib-not-installed-as-framework-mac/
-import tkinter
-import matplotlib
-matplotlib.use('TkAgg')
+from sys import platform as _platform
+# https://stackoverflow.com/questions/1854/python-what-os-am-i-running-on
+if _platform.startswith('linux'):
+    # linux
+    pass
+elif _platform == "darwin":
+    # MAC OS X
+    # https://markhneedham.com/blog/2018/05/04/python-runtime-error-osx-matplotlib-not-installed-as-framework-mac/
+    import matplotlib
+    matplotlib.use('TkAgg')
 
 import matplotlib.pyplot as plt
 
