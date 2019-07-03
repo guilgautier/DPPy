@@ -26,6 +26,7 @@ if [[ $TRAVIS_OS_NAME == 'osx' ]]; then
 else
     # Additional installation instructions for UNIX
     sudo apt-get install -qq gcc g++
-    sudo apt install tk-dev
+    # https://askubuntu.com/questions/785505/how-to-ensure-matplotlib-in-a-python-3-virtualenv-uses-the-tkagg-backend
+    # sudo apt install tk-dev
     echo "Not on osx"
 fi

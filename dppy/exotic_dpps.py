@@ -18,6 +18,7 @@
 import abc
 
 # https://markhneedham.com/blog/2018/05/04/python-runtime-error-osx-matplotlib-not-installed-as-framework-mac/
+import tkinker
 import matplotlib
 matplotlib.use('TkAgg')
 

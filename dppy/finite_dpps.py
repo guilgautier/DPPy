@@ -17,6 +17,7 @@ import numpy as np
 import scipy.linalg as la
 
 # https://markhneedham.com/blog/2018/05/04/python-runtime-error-osx-matplotlib-not-installed-as-framework-mac/
+import tkinker
 import matplotlib
 matplotlib.use('TkAgg')
 
