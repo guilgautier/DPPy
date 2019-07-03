@@ -44,14 +44,14 @@ class FiniteDPP:
 
     :param kernel_type:
 
-        - ``'correlation'`` :math:`\mathbf{K}` kernel
-        - ``'likelihood'`` :math:`\mathbf{L}` kernel
+        - ``'correlation'`` :math:`\\mathbf{K}` kernel
+        - ``'likelihood'`` :math:`\\mathbf{L}` kernel
 
     :type kernel_type:
         string
 
     :param projection:
-        Indicate whether the provided kernel is of projection type. This may be useful when the :class:`FiniteDPP` object is defined through its correlation kernel :math:`\mathbf{K}`.
+        Indicate whether the provided kernel is of projection type. This may be useful when the :class:`FiniteDPP` object is defined through its correlation kernel :math:`\\mathbf{K}`.
 
     :type projection:
         bool, default ``False``
@@ -61,22 +61,22 @@ class FiniteDPP:
 
         - correlation kernel
 
-            - ``{'K': K}``, with :math:`0 \preceq \mathbf{K} \preceq I`
-            - ``{'K_eig_dec': (eig_vals, eig_vecs)}``, with :math:`0 \leq eigvals \leq 1`
-            - ``{'A_zono': A}``, with :math:`A (d \\times N)` and :math:`\operatorname{rank}(A)=d`
+            - ``{'K': K}``, with :math:`0 \\preceq \\mathbf{K} \\preceq I`
+            - ``{'K_eig_dec': (eig_vals, eig_vecs)}``, with :math:`0 \\leq eigvals \\leq 1`
+            - ``{'A_zono': A}``, with :math:`A (d \\times N)` and :math:`\\operatorname{rank}(A)=d`
 
         - likelihood kernel
 
-            - ``{'L': L}``, with :math:`\mathbf{L}\succeq 0`
-            - ``{'L_eig_dec': (eig_vals, eig_vecs)}``, with :math:`eigvals \geq 0`
-            - ``{'L_gram_factor': Phi}``, with :math:`\mathbf{L} = \Phi^{ \\top} \Phi`
+            - ``{'L': L}``, with :math:`\\mathbf{L}\\succeq 0`
+            - ``{'L_eig_dec': (eig_vals, eig_vecs)}``, with :math:`eigvals \\geq 0`
+            - ``{'L_gram_factor': Phi}``, with :math:`\\mathbf{L} = \\Phi^{ \\top} \\Phi`
 
     :type params:
         dict
 
     .. caution::
 
-        For now we only consider real valued matrices :math:`\mathbf{K}, \mathbf{L}, A, \Phi`.
+        For now we only consider real valued matrices :math:`\\mathbf{K}, \\mathbf{L}, A, \\Phi`.
 
     .. seealso::
 
@@ -229,11 +229,11 @@ class FiniteDPP:
         :param mode:
 
             - ``projection=True``:
-                - ``'GS'`` (default): Gram-Schmidt on the rows of :math:`\mathbf{K}`.
+                - ``'GS'`` (default): Gram-Schmidt on the rows of :math:`\\mathbf{K}`.
                 - ``'Schur'``: Use Schur complement to compute conditionals.
 
             - ``projection=False``:
-                - ``'GS'`` (default): Gram-Schmidt on the rows of the eigenvectors of :math:`\mathbf{K}` selected in Phase 1.
+                - ``'GS'`` (default): Gram-Schmidt on the rows of the eigenvectors of :math:`\\mathbf{K}` selected in Phase 1.
                 - ``'GS_bis'``: Slight modification of ``'GS'``
                 - ``'KuTa12'``: Algorithm 1 in :cite:`KuTa12`
         :type mode:
@@ -252,7 +252,7 @@ class FiniteDPP:
 
         .. caution::
 
-            The underlying kernel :math:`\mathbf{K}`, resp. :math:`\mathbf{L}` must be real valued for now.
+            The underlying kernel :math:`\\mathbf{K}`, resp. :math:`\\mathbf{L}` must be real valued for now.
 
         .. seealso::
 
@@ -325,33 +325,33 @@ class FiniteDPP:
             self.sample_exact(self.sampling_mode)
 
     def sample_exact_k_dpp(self, size, mode='GS'):
-        """ Sample exactly from :math:`\operatorname{k-DPP}`.
-        A priori the :class:`FiniteDPP <FiniteDPP>` object was instanciated by its likelihood :math:`\mathbf{L}` kernel so that
+        """ Sample exactly from :math:`\\operatorname{k-DPP}`.
+        A priori the :class:`FiniteDPP <FiniteDPP>` object was instanciated by its likelihood :math:`\\mathbf{L}` kernel so that
 
         .. math::
 
-            \mathbb{P}_{\operatorname{k-DPP}}(\mathcal{X} = S)
-                \propto \det \mathbf{L}_S ~ 1_{|S|=k}
+            \\mathbb{P}_{\\operatorname{k-DPP}}(\\mathcal{X} = S)
+                \\propto \\det \\mathbf{L}_S ~ 1_{|S|=k}
 
         :param size:
-            size :math:`k` of the :math:`\operatorname{k-DPP}`
+            size :math:`k` of the :math:`\\operatorname{k-DPP}`
         :type size:
             int
 
         :param mode:
             - ``projection=True``:
-                - ``'GS'`` (default): Gram-Schmidt on the rows of :math:`\mathbf{K}`.
+                - ``'GS'`` (default): Gram-Schmidt on the rows of :math:`\\mathbf{K}`.
                 - ``'Schur'``: Use Schur complement to compute conditionals.
 
             - ``projection=False``:
-                - ``'GS'`` (default): Gram-Schmidt on the rows of the eigenvectors of :math:`\mathbf{K}` selected in Phase 1.
+                - ``'GS'`` (default): Gram-Schmidt on the rows of the eigenvectors of :math:`\\mathbf{K}` selected in Phase 1.
                 - ``'GS_bis'``: Slight modification of ``'GS'``
                 - ``'KuTa12'``: Algorithm 1 in :cite:`KuTa12`
         :type mode:
             string, default ``'GS'``
 
         :return:
-            A sample from the corresponding :math:`\operatorname{k-DPP}`
+            A sample from the corresponding :math:`\\operatorname{k-DPP}`
         :rtype:
             array_like
 
@@ -363,7 +363,7 @@ class FiniteDPP:
 
         .. caution::
 
-            The underlying kernel :math:`\mathbf{K}`, resp. :math:`\mathbf{L}` must be real valued for now.
+            The underlying kernel :math:`\\mathbf{K}`, resp. :math:`\\mathbf{L}` must be real valued for now.
 
         .. seealso::
 
@@ -462,7 +462,7 @@ class FiniteDPP:
                 + ``'T_max'`` (default None) Time horizon
                 + ``'size'`` (default None) Size of the initial sample for ``mode='AD'/'E'``
 
-                    * :math:`\operatorname{rank}(\mathbf{K})=\operatorname{Tr}(\mathbf{K})` for projection :math:`\mathbf{K}` (correlation) kernel and ``mode='E'``
+                    * :math:`\\operatorname{rank}(\\mathbf{K})=\\operatorname{Tr}(\\mathbf{K})` for projection :math:`\\mathbf{K}` (correlation) kernel and ``mode='E'``
 
             - If ``mode='zonotope'``:
 
@@ -547,7 +547,7 @@ class FiniteDPP:
         self.sample_mcmc(self.sampling_mode, **params)
 
     def compute_K(self, msg=False):
-        """ Compute the correlation kernel :math:`\mathbf{K}` from the original parametrization of the :class:`FiniteDPP` object.
+        """ Compute the correlation kernel :math:`\\mathbf{K}` from the original parametrization of the :class:`FiniteDPP` object.
 
         .. seealso::
 
@@ -594,7 +594,7 @@ class FiniteDPP:
                 self.compute_K(msg=True)
 
     def compute_L(self, msg=False):
-        """ Compute the likelihood kernel :math:`\mathbf{L}` from the original parametrization of the :class:`FiniteDPP` object.
+        """ Compute the likelihood kernel :math:`\\mathbf{L}` from the original parametrization of the :class:`FiniteDPP` object.
 
         .. seealso::
 
@@ -650,7 +650,7 @@ class FiniteDPP:
                 self.compute_L(msg=True)
 
     def plot_kernel(self, title=''):
-        """Display a heatmap of the kernel used to define the :class:`FiniteDPP` object (correlation kernel :math:`\mathbf{K}` or likelihood kernel :math:`\mathbf{L}`)
+        """Display a heatmap of the kernel used to define the :class:`FiniteDPP` object (correlation kernel :math:`\\mathbf{K}` or likelihood kernel :math:`\\mathbf{L}`)
 
         :param title:
             Plot title
@@ -694,4 +694,4 @@ class FiniteDPP:
         plt.title(title if title else str_title, y=1.1)
 
         plt.colorbar(heatmap)
-        plt.show()
+        # plt.show()

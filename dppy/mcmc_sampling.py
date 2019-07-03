@@ -180,7 +180,7 @@ def add_exchange_delete_sampler(kernel, s_init=None, nb_iter=10, T_max=None):
 
         # Add: S1 = S0 + t
         if unif_01 < 0.5 * (1 - ratio)**2:
-            S1.extend([t])  # S1 = S0 + t
+            S1.append(t)  # S1 = S0 + t
             # Accept_reject the move
             det_S1 = det_ST(kernel, S1)  # det K_S1
             if np.random.rand() < det_S1/det_S0*(sampl_size+1)/(N-sampl_size):
@@ -193,7 +193,7 @@ def add_exchange_delete_sampler(kernel, s_init=None, nb_iter=10, T_max=None):
         # Exchange: S1 = S0 - s + t
         elif (0.5 * (1 - ratio)**2 <= unif_01) & (unif_01 < 0.5 * (1 - ratio)):
             del S1[s_ind]  # S1 = S0 - s
-            S1.extend([t])  # S1 = S1 + t = S0 - s + t
+            S1.append(t)  # S1 = S1 + t = S0 - s + t
             # Accept_reject the move
             det_S1 = det_ST(kernel, S1)  # det K_S1
             if np.random.rand() < (det_S1 / det_S0):
@@ -282,7 +282,7 @@ def add_delete_sampler(kernel, s_init, nb_iter=10, T_max=10):
             if s in S1:
                 S1.remove(s)  # S1 = S0 - s
             else:
-                S1.extend([s])  # S1 = SO + s
+                S1.append(s)  # S1 = SO + s
 
             # Accept_reject the move
             det_S1 = det_ST(kernel, S1)  # det K_S1
