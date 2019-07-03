@@ -21,6 +21,22 @@ from dppy import utils
 class TestUtils(unittest.TestCase):
     """ Test
     """
+    def test_inner_products_and_square_norms(self):
+
+        X = rndm.rand(10, 20, 30, 40)
+        Y = rndm.rand(*X.shape)
+
+        for ax in range(X.ndim):
+
+            # inner product
+            self.assertTrue(
+                np.allclose(utils.inner1d(X, Y, axis=ax),
+                            (X * Y).sum(axis=ax)))
+            # square norm
+            self.assertTrue(
+                np.allclose(utils.inner1d(X, axis=ax),
+                            (X**2).sum(axis=ax)))
+
     def test_det_ST(self):
         """Test determinant
             - det_ST(arr, S) = det(arr[S, S])
@@ -46,23 +62,9 @@ class TestUtils(unittest.TestCase):
                     np.allclose(utils.det_ST(arr, S, T),
                                 la.det(arr[np.ix_(S, T)])))
 
-    def test_inner_products_and_square_norms(self):
+    def test_symmetric(self):
 
-        X = rndm.rand(10, 20, 30, 40)
-        Y = rndm.rand(*X.shape)
-
-        for ax in range(X.ndim):
-
-            # inner product
-            self.assertTrue(
-                np.allclose(utils.inner1d(X, Y, axis=ax),
-                            (X * Y).sum(axis=ax)))
-            # square norm
-            self.assertTrue(
-                np.allclose(utils.inner1d(X, axis=ax),
-                            (X**2).sum(axis=ax)))
-
-    def test_symmetry(self):
+        self.assertIsNone(utils.is_symmetric(None))
 
         X = rndm.randn(20, 20)
         sym_part = 0.5 * (X + X.T)
@@ -86,11 +88,12 @@ class TestUtils(unittest.TestCase):
 
         self.assertTrue('M.T != M' in str(context.exception))
 
-    def test_projection(self):
+    def test_is_projection(self):
+
+        self.assertIsNone(utils.is_projection(None))
 
         N, rank = 30, 10
 
-        # First test
         X = rndm.randn(N, rank)
         K_proj_1 = X.dot(la.inv(X.T.dot(X)).dot(X.T))
 
@@ -103,7 +106,6 @@ class TestUtils(unittest.TestCase):
 
         self.assertTrue('M^2 != M' in str(context.exception))
 
-        # Second test
         Y = rndm.randn(N, rank)
         eig_vecs, _ = qr(Y, mode="economic")
         K_proj_2 = eig_vecs.dot(eig_vecs.T)
@@ -117,7 +119,9 @@ class TestUtils(unittest.TestCase):
 
         self.assertTrue('M^2 != M' in str(context.exception))
 
-    def test_orthonormal(self):
+    def test_is_orthonormal(self):
+
+        self.assertIsNone(utils.is_orthonormal(None))
 
         N, rank = 30, 10
         X = rndm.randn(N, rank)
@@ -133,6 +137,8 @@ class TestUtils(unittest.TestCase):
         self.assertTrue('M.T M != I' in str(context.exception))
 
     def test_is_equal_to_O_or_1(self):
+
+        self.assertIsNone(utils.is_equal_to_O_or_1(None))
 
         N, p = 100, 0.5
 
@@ -150,6 +156,8 @@ class TestUtils(unittest.TestCase):
 
     def test_is_in_01(self):
 
+        self.assertIsNone(utils.is_in_01(None))
+
         N = 100
 
         unif = rndm.rand(N)
@@ -165,6 +173,8 @@ class TestUtils(unittest.TestCase):
         self.assertTrue('not all in [0,1]' in str(context.exception))
 
     def test_is_geq_0(self):
+
+        self.assertIsNone(utils.is_geq_0(None))
 
         N, lam = 100, 4
 
@@ -182,12 +192,21 @@ class TestUtils(unittest.TestCase):
 
     def test_is_full_row_rank(self):
 
+        self.assertIsNone(utils.is_full_row_rank(None))
+
         N, rank = 30, 10
         X = rndm.randn(rank, N)
 
         self.assertTrue(
             np.allclose(utils.is_full_row_rank(X),
                         X))
+
+        Y = rndm.randn(N+1, N)
+        with self.assertRaises(ValueError) as context:
+            utils.is_full_row_rank(Y)
+
+        self.assertTrue('not full row rank' in str(context.exception))
+
 
         Y = np.vstack([X, rndm.randn(rank).dot(X)])
         with self.assertRaises(ValueError) as context:
