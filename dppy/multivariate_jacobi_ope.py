@@ -226,6 +226,7 @@ class MultivariateJacobiOPE:
                             axis=2),
                         axis=1)
 
+
         else:
 
             lenX = X.size // self.dim  # X.shape[0] if X.ndim > 1 else 1
@@ -491,7 +492,7 @@ def compute_ordering_BaHa16(N, d):
 
 def compute_poly1D_square_norms(jacobi_params, deg_max):
     """ Compute the square norms :math:`\\|P_{k}^{(a_i,b_i)}\\|^2` of each (univariate) Jacobi polynomial for :math:`k=0` to ``deg_max`` and :math:`a_i, b_i =` ``jacobi_params[i, :]``
-    Recall that the `Jacobi polynomials <http://en.wikipedia.org/wiki/Jacobi_polynomials#Orthogonality>`_ :math:`\\left( P_{k}^{(a_i,b_i)} \\right)` are orthogonal w.r.t. :math:`(1-x)^{a_i} (1+x)^{b_i}`.
+    Recall that the Jacobi polynomials :math:`\\left( P_{k}^{(a_i,b_i)} \\right)` are `orthogonal <http://en.wikipedia.org/wiki/Jacobi_polynomials#Orthogonality>`_ w.r.t. :math:`(1-x)^{a_i} (1+x)^{b_i}`.
 
     .. math::
 
@@ -594,7 +595,9 @@ def compute_Gautschi_bound(jacobi_params, ordering, log_scale=True):
                          {\\|P_{k_i}^{(a_i, b_i)}\\|^2}\\\\
         &\\leq \\frac{\\text{Gautschi bound}}{N}
 
-    each term of the product can be bounded using :cite:`Gau09`
+    each term of the product can be bounded using the following receipe
+
+    - For :math:`k_i>0` we use a result on Jacobi polynomials given by, e.g., :cite:`Gau09`
 
     .. math::
 
@@ -602,7 +605,7 @@ def compute_Gautschi_bound(jacobi_params, ordering, log_scale=True):
             \\pi
             (1-x)^{a+\\frac{1}{2}}
             (1+x)^{b+\\frac{1}{2}}
-        \\left[\\hat{P}_{n}^{(a, b)}(x)\\right]^{2}\\\\
+            \\frac{P_{n}^{(a, b)}(x)^2}{\\|P_{n}^{(a, b)}\\|^2}\\\\
         &\\leq
             \\frac{2}
                   {n!(n+(a+b+1) / 2)^{2 \\max(a,b)}}
@@ -611,7 +614,33 @@ def compute_Gautschi_bound(jacobi_params, ordering, log_scale=True):
                   {\\Gamma(n+\\min(a,b)+1)},
         \\quad|a|,|b| \\leq \\frac{1}{2}
 
-    where :math:`\\hat{P}=\\frac{P}{\\left\\| P \\right\\|}` denotes the orthonormal polynomial
+    - For :math:`k_i=0`, we use less involved properties of `Jacobi polynomials <https://en.wikipedia.org/wiki/Jacobi_polynomials>`_:
+
+        - :math:`P_{0}^{(a, b)} = 1`
+        - :math:`\\|P_{0}^{(a, b)}\\|^2 = 2^{a+b+1} \\operatorname{B}(a+1,b+1)`
+        - :math:`m = \\frac{b-a}{a+b+1}` is the mode of :math:`(1-x)^{a+\\frac{1}{2}} (1+x)^{b+\\frac{1}{2}}` (valid since :math:`a+\\frac{1}{2}, b+\\frac{1}{2} > 0`)
+
+    So that,
+
+    .. math::
+
+            \\pi
+            (1-x)^{a+\\frac{1}{2}}
+            (1+x)^{b+\\frac{1}{2}}
+            \\left[\\frac{P_{0}^{(a, b)}(x)}
+                   {\\|P_{0}^{(a, b)}\\|}\\right]^{2}
+        =
+            \\frac
+            {\\pi
+             (1-x)^{a+\\frac{1}{2}}
+             (1+x)^{b+\\frac{1}{2}}}
+            {\\|P_{0}^{(a, b)}\\|^2}
+        \\leq
+            \\frac
+            {\\pi
+             (1-m)^{a+\\frac{1}{2}}
+             (1+m)^{b+\\frac{1}{2}}}
+            {2^{a+b+1} \\operatorname{B}(a+1,b+1)}
 
     :param jacobi_params:
         Jacobi parameters :math:`[(a_i, b_i)]_{i=1}^d \\in [-\\frac{1}{2}, \\frac{1}{2}]^{d \\times 2}`.
@@ -641,7 +670,8 @@ def compute_Gautschi_bound(jacobi_params, ordering, log_scale=True):
 
     .. see also::
 
-        - :cite:`Gau09` for the domination
+        - :cite:`Gau09` for the domination when :math:`k_i > 0`
+        -
     """
 
     # Initialize [bounds]_ij on

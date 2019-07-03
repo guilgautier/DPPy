@@ -5,7 +5,8 @@ Multivariate Jacobi ensemble
 
 .. warning::
 
-    For the details please refer to the documentation of :py:class:`~dppy.multivariate_jacobi_ope.MultivariateJacobiOPE` below and our `ICML'19 workshop paper <http://negative-dependence-in-ml-workshop.lids.mit.edu/wp-content/uploads/sites/29/2019/06/icml_camera_ready.pdf>`_
+    For the details please refer to the documentation of :py:class:`~dppy.multivariate_jacobi_ope.MultivariateJacobiOPE` below, the associated
+    `Notebook <hhttps://github.com/guilgautier/DPPy/blob/master/notebooks/>`_ and our `ICML'19 workshop paper <http://negative-dependence-in-ml-workshop.lids.mit.edu/wp-content/uploads/sites/29/2019/06/icml_camera_ready.pdf>`_
 
     .. important::
 
