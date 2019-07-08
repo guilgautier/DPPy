@@ -3,16 +3,31 @@
 
 - :py:meth:`~dppy.multivariate_jacobi_ope.MultivariateJacobiOPE.sample` to get a sample of
 - :py:meth:`~dppy.multivariate_jacobi_ope.MultivariateJacobiOPE.K` to evaluate the corresponding projection kernel
+- :py:meth:`~dppy.multivariate_jacobi_ope.MultivariateJacobiOPE.plot` to display 1D or 2D samples
 """
 
 import numpy as np
 import itertools as itt
 
+from scipy import stats
 from scipy.special import beta, betaln, factorial, gamma, gammaln
 from scipy.special import eval_jacobi
 from scipy.special import logsumexp
 
-from dppy.random_matrices import mu_ref_beta_sampler_tridiag as tridiagonal_model
+from  dppy.random_matrices import mu_ref_beta_sampler_tridiag as tridiagonal_model
+
+from sys import platform as _platform
+# https://stackoverflow.com/questions/1854/python-what-os-am-i-running-on
+if _platform.startswith('linux'):
+    # linux
+    pass
+elif _platform == "darwin":
+    # MAC OS X
+    # https://markhneedham.com/blog/2018/05/04/python-runtime-error-osx-matplotlib-not-installed-as-framework-mac/
+    import matplotlib
+    matplotlib.use('TkAgg')
+
+import matplotlib.pyplot as plt
 
 
 class MultivariateJacobiOPE:
@@ -320,9 +335,9 @@ class MultivariateJacobiOPE:
 
         if X.size == self.dim:
             poly_1D_jacobi = eval_jacobi(self.poly_1D_degrees,
-                                        self.jacobi_params[:, 0],
-                                        self.jacobi_params[:, 1],
-                                        X)
+                                         self.jacobi_params[:, 0],
+                                         self.jacobi_params[:, 1],
+                                         X)
 
             if normalize == 'square_norm':
                 poly_1D_jacobi /= self.poly_1D_square_norms
@@ -451,6 +466,159 @@ class MultivariateJacobiOPE:
                 K_Y_inv[it, it] = 1.0 / schur
 
         return sample
+
+    def plot(self, sample=None, weighted=False):
+
+        if self.dim >= 3:
+            raise NotImplementedError(
+                'Visualizations in dimension >= 3 are not implemented')
+
+        tols = self.jacobi_params.copy()
+        tols[tols >= 0] = 0.0
+        tols[tols < 0] = 5e-2
+
+        if sample is None:
+            sample = self.sample()
+
+        weights = 1. / self.K(sample) if weighted else None
+
+        ticks_pos = [-1, 0, 1]
+        ticks_labs = list(map(str, ticks_pos))
+
+        if self.dim == 1:
+
+            fig, ax_main = plt.subplots(figsize=(10, 8))
+
+            ax_main.tick_params(axis='both', which='major', labelsize=18)
+            ax_main.set_xticks(ticks_pos)
+            ax_main.set_xticklabels(ticks_labs)
+
+            ax_main.spines['right'].set_visible(False)
+            ax_main.spines['top'].set_visible(False)
+
+            ax_main.scatter(sample[:, 0],
+                            np.zeros_like(sample[:, 0]),
+                            s=2000 * weights if weighted else 1)
+
+            ax_main.hist(sample[:, 0],
+                         bins=10,
+                         weights=weights,
+                         density=True,
+                         orientation='vertical',
+                         alpha=0.5)
+
+            # Top densities
+            X_ = np.linspace(-1 + tols[0, 1], 1 - tols[0, 0], 200)[:, None]
+            ax_main.plot(X_,
+                         0.5 * stats.beta(*(1 + self.jacobi_params[0])).pdf(0.5 * (1 - X_)),
+                         ls='--', c='red', lw=3, alpha=0.7,
+                         label=r'$a_1 = {:.2f}, b_1 = {:.2f}$'.format(*self.jacobi_params[0]))
+
+            x_lim = ax_main.get_xlim()
+            y_lim = ax_main.get_ylim()
+
+            if not weighted:
+
+                tol = 5e-2
+                X_ = np.linspace(-1 + tol, 1 - tol, 200)[:, None]
+                ax_main.plot(X_,
+                             0.5 * stats.beta(0.5, 0.5).pdf(0.5 * (1 - X_)),
+                             c='orange', ls='-', lw=3,
+                             label=r'$a = b = -0.5$')
+
+            ax_main.legend(fontsize=20,
+                           loc='center',
+                           bbox_to_anchor=(0.5, -0.1 if weighted else -0.12),
+                           labelspacing=0.1,
+                           frameon=False)
+
+        elif self.dim == 2:
+
+            # Create Fig and gridspec
+            fig = plt.figure(figsize=(8, 8))
+            grid = plt.GridSpec(6, 6, hspace=0., wspace=0.)
+
+            ax_main = fig.add_subplot(grid[1:, :-1],
+                                      xticks=ticks_pos, xticklabels=ticks_labs,
+                                      yticks=ticks_pos, yticklabels=ticks_labs)
+
+            ax_main.tick_params(axis='both', which='major', labelsize=18)
+
+            ax_main.scatter(sample[:, 0],
+                            sample[:, 1],
+                            s=2000 * weights if weighted else 10)
+
+            x_lim = ax_main.get_xlim()
+            y_lim = ax_main.get_ylim()
+
+            # Top plot
+            ax_top = fig.add_subplot(grid[0, :-1],
+                                     xticks=ticks_pos, xticklabels=[],
+                                     yticks=[], yticklabels=[],
+                                     frameon=False)
+            ax_top.set_xlim(x_lim)
+
+            # Top histogram
+            ax_top.hist(sample[:, 0],
+                        bins=10,
+                        weights=weights,
+                        density=True,
+                        orientation='vertical',
+                        alpha=0.5)
+
+            # Top densities
+            X_ = np.linspace(-1 + tols[0, 1], 1 - tols[0, 0], 200)[:, None]
+            l_top, = ax_top.plot(X_,
+                                 0.5 * stats.beta(*(1 + self.jacobi_params[0])).pdf(0.5 * (1 - X_)),
+                                 ls='--', c='red', lw=3, alpha=0.7)
+
+            # Right plot
+            ax_right = fig.add_subplot(grid[1:, -1],
+                                       xticks=[], xticklabels=[],
+                                       yticks=ticks_pos, yticklabels=[],
+                                       frameon=False)
+            ax_right.set_ylim(y_lim)
+
+            # Right histogram
+            ax_right.hist(sample[:, 1],
+                          bins=10,
+                          weights=weights,
+                          density=True,
+                          orientation='horizontal',
+                          alpha=0.5)
+
+            # Right densities
+            X_ = np.linspace(-1 + tols[1, 1], 1 - tols[1, 0], 200)[:, None]
+            l_right, = ax_right.plot(0.5 * stats.beta(*(1 + self.jacobi_params[1])).pdf(0.5 * (1 - X_)),
+                                     X_,
+                                     ls='--', c='green', lw=3, alpha=0.7)
+
+            leg_axes = [l_top, l_right]
+            leg_text = [', '.join([r'$a_{} = {:.2f}$'.format(i+1, jac_par[0]),
+                                   r'$b_{} = {:.2f}$'.format(i+1, jac_par[1])])
+                        for i, jac_par in enumerate(self.jacobi_params)]
+
+            if not weighted:
+
+                tol = 5e-2
+                X_ = np.linspace(-1 + tol, 1 - tol, 200)[:, None]
+                l_arcsine, = ax_top.plot(X_,
+                                         0.5 * stats.beta(0.5, 0.5).pdf(0.5 * (1 - X_)),
+                                         c='orange', ls='-', lw=3)
+                ax_right.plot(0.5 * stats.beta(0.5, 0.5).pdf(0.5 * (1 - X_)),
+                              X_,
+                              c='orange', ls='-', lw=3)
+
+                leg_axes.append(l_arcsine)
+                leg_text.append(r'$a = b = -0.5$')
+
+            ax_main.legend(leg_axes,
+                           leg_text,
+                           fontsize=20,
+                           loc='center',
+                           bbox_to_anchor=(0.5, -0.14 if weighted else -0.18),
+                           labelspacing=0.1,
+                           frameon=False)
 
 
 def compute_ordering_BaHa16(N, d):

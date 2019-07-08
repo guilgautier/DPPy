@@ -3,7 +3,7 @@
 
 import matplotlib
 import pytest
-import sys
+# import sys
 import warnings
 
 matplotlib.use('agg')

@@ -14,11 +14,22 @@ Multivariate Jacobi ensemble
 
         This yields faster sampling since less evaluations of the conditionnals involving Schur complements are required, see also :py:meth:`~dppy.multivariate_jacobi_ope.MultivariateJacobiOPE.sample`
 
+The figures below display one sample of the :py:class:`~dppy.multivariate_jacobi_ope.MultivariateJacobiOPE`
+Note that, in the second plot, each point :math:`x` is attached to a weight :math:`\frac{1}{K(x,x)}`
 
-.. image:: ../_images/2D_JacobiOPE_N=1000_raw.png
-   :width: 45%
-.. image:: ../_images/2D_JacobiOPE_N=1000_weighted.png
-   :width: 45%
+Red and green dashed curves refer to the marginal densities
+The orange curve corresponds to the marginal limiting (also called equilibrium) distribution, known to be the arcsine distribution :math:`\frac{1}{\pi\sqrt{1-x^2}}`
+
+.. plot:: plots/ex_plot_multivariate_jacobi_ensemble.py
+    :include-source:
+    :width: 50%
+
+
+
+.. .. image:: ../_images/2D_JacobiOPE_N=1000_raw.png
+..    :width: 20%
+.. .. image:: ../_images/2D_JacobiOPE_N=1000_weighted.png
+..    :width: 20%
 
 
 .. automodule:: dppy.multivariate_jacobi_ope

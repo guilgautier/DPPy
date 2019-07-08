@@ -90,7 +90,7 @@ class TestUniformityUniformSpanningTreeSampler(unittest.TestCase):
         """
         self.dpp.flush_samples()
         for _ in range(self.nb_samples):
-            self.dpp.sample(mode='Wilson')
+            self.dpp.sample(mode='Aldous-Broder')
 
         self.assertTrue(self.uniformity_adequation())
 

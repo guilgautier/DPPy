@@ -23,8 +23,8 @@ def proj_dpp_sampler_kernel(kernel, mode='GS', size=None):
     .. seealso::
         - :func:`proj_dpp_sampler_kernel_GS <proj_dpp_sampler_kernel_GS>`
         - :func:`proj_dpp_sampler_kernel_Schur <proj_dpp_sampler_kernel_Schur>`
+        - :func:`proj_dpp_sampler_kernel_Chol <proj_dpp_sampler_kernel_Chol>`
     """
-
 
     if size:
         rank = int(np.round(np.trace(kernel)))
@@ -105,11 +105,11 @@ def proj_dpp_sampler_kernel_Chol(K, size=None):
 
         # Hermitian swap of indices j and t of A (may be written in a function)
         # bottom swap
-        A[t+1:, [j, t]] = A[t+1:, [t, j]]
+        A[t + 1:, [j, t]] = A[t + 1:, [t, j]]
         # inner swap
-        tmp = A[j+1:t, j].copy()
-        np.conj(A[t, j+1:t], out=A[j+1:t, j])
-        np.conj(tmp, out=A[t, j+1:t])
+        tmp = A[j + 1:t, j].copy()
+        np.conj(A[t, j + 1:t], out=A[j + 1:t, j])
+        np.conj(tmp, out=A[t, j + 1:t])
         # corner swap
         A[t, j] = A[t, j].conj()
         # diagonal swap
@@ -127,13 +127,13 @@ def proj_dpp_sampler_kernel_Chol(K, size=None):
             break
 
         # Form new column and update diagonal
-        A[j+1:, j] -= A[j+1:, :j].dot(A[j, :j].conj())
-        A[j+1:, j] /= A[j, j]
+        A[j + 1:, j] -= A[j + 1:, :j].dot(A[j, :j].conj())
+        A[j + 1:, j] /= A[j, j]
 
         if hermitian:
-            d[j+1:] -= A[j+1:, j].real**2 + A[j+1:, j].imag**2
+            d[j + 1:] -= A[j + 1:, j].real**2 + A[j + 1:, j].imag**2
         else:
-            d[j+1:] -= A[j+1:, j]**2
+            d[j + 1:] -= A[j + 1:, j]**2
 
     return orig_indices[:size].tolist(), A[:size, :size]
 
