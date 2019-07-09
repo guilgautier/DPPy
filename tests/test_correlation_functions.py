@@ -18,6 +18,7 @@ import sys
 sys.path.append('..')
 
 from dppy.finite_dpps import FiniteDPP
+from dppy.exact_sampling import dpp_sampler_generic_kernel
 from dppy.utils import det_ST
 
 
@@ -66,31 +67,6 @@ class InclusionProbabilitiesProjectionDPP(unittest.TestCase):
         return pval > tol
 
     # From eigendecomposition
-    def test_proj_dpp_sampler_from_eigdec_mode_Chol(self):
-        """ Test whether 'Chol' sampling mode generates samples with the right 1 and 2 points inclusion probabilities when DPP defined by orthogonal projection correlation kernel K from its eigendecomposition.
-
-        Complexity :math:`\\mathcal{O}(N rank^2)`
-
-        .. seealso::
-
-            - :cite:`Pou19` Algorithm 1
-        """
-        eig_vals = np.ones(self.rank)
-        eig_vecs, _ = qr(rndm.randn(self.N, self.rank), mode="economic")
-        dpp = FiniteDPP(kernel_type='correlation',
-                        projection=True,
-                        **{'K_eig_dec': (eig_vals, eig_vecs)})
-
-        dpp.flush_samples()
-        for _ in range(self.nb_samples):
-            dpp.sample_exact(mode='Chol')
-
-        dpp.compute_K()
-
-        self.assertTrue(self.singleton_adequation(dpp))
-        self.assertTrue(self.doubleton_adequation(dpp))
-
-
     def test_proj_dpp_sampler_from_eigdec_mode_GS(self):
         """ Test whether 'GS' sampling mode generates samples with the right 1 and 2 points inclusion probabilities when DPP defined by orthogonal projection correlation kernel K from its eigendecomposition
 
@@ -155,6 +131,7 @@ class InclusionProbabilitiesProjectionDPP(unittest.TestCase):
         self.assertTrue(self.singleton_adequation(dpp))
         self.assertTrue(self.doubleton_adequation(dpp))
 
+    # From kernel
     def test_proj_dpp_sampler_from_eigdec_mode_Chol(self):
         """ Test whether 'Chol' sampling mode generates samples with the right 1 and 2 points inclusion probabilities when DPP defined by orthogonal projection correlation kernel K from its eigendecomposition.
 
@@ -168,18 +145,34 @@ class InclusionProbabilitiesProjectionDPP(unittest.TestCase):
         eig_vecs, _ = qr(rndm.randn(self.N, self.rank), mode="economic")
         dpp = FiniteDPP(kernel_type='correlation',
                         projection=True,
-                        **{'K_eig_dec': (eig_vals, eig_vecs)})
+                        **{'K': (eig_vecs * eig_vals).dot(eig_vecs.T)})
 
         dpp.flush_samples()
         for _ in range(self.nb_samples):
             dpp.sample_exact(mode='Chol')
 
-        dpp.compute_K()
+        self.assertTrue(self.singleton_adequation(dpp))
+        self.assertTrue(self.doubleton_adequation(dpp))
+
+    def test_proj_dpp_sampler_generic_kernel(self):
+        """ Test whether 'Chol' sampling mode generates samples with the right 1 and 2 points inclusion probabilities when DPP defined by orthogonal projection correlation kernel K from its eigendecomposition.
+        The ``projection`` argument is set to ``False`` to make sure the :py:func:`~dppy.exact_sampling.dpp_sampler_generic_kernel` is used
+
+        This is the default sampler when calling `.sample_exact()`
+        """
+        eig_vals = np.ones(self.rank)
+        eig_vecs, _ = qr(rndm.randn(self.N, self.rank), mode="economic")
+        dpp = FiniteDPP(kernel_type='correlation',
+                        projection=False,
+                        **{'K': (eig_vecs * eig_vals).dot(eig_vecs.T)})
+
+        dpp.flush_samples()
+        for _ in range(self.nb_samples):
+            dpp.sample_exact(mode='Chol')
 
         self.assertTrue(self.singleton_adequation(dpp))
         self.assertTrue(self.doubleton_adequation(dpp))
 
-    # From kernel
     def test_proj_dpp_sampler_from_kernel_mode_GS(self):
         """ Test whether 'GS' sampling mode generates samples with the right 1 and 2 points inclusion probabilities when DPP defined by orthogonal projection correlation kernel K from its eigendecomposition
 
