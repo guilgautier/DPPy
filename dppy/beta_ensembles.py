@@ -1164,7 +1164,55 @@ class GinibreEnsemble(BetaEnsemble):
         self.list_of_samples.append(sampl)
 
     def sample_banded_model(self, *args):
-        raise NotImplementedError('No banded model is known for Ginibre')
+        raise NotImplementedError('No banded model is known for Ginibre, use `sample_full_model`')
+
+    def normalize_points(self, points):
+
+        return points / np.sqrt(self.params['size_N'])
+
+    def __display_and_normalization(self, display_type, normalization):
+
+        if not self.list_of_samples:
+            raise ValueError('Empty `list_of_samples`, sample first!')
+        else:
+            points = self.list_of_samples[-1].copy()  # Pick last sample
+            if normalization:
+                points = self.normalize_points(points)
+
+        fig, ax = plt.subplots(1, 1)
+
+        title = self._str_title
+
+        if display_type == 'scatter':
+
+            if normalization:
+                # Draw unit circle
+                unit_circle = plt.Circle((0, 0), 1, color='r', fill=False)
+                ax.add_artist(unit_circle)
+
+                ax.set_xlim([-1.3, 1.3])
+                ax.set_ylim([-1.3, 1.3])
+                ax.set_aspect('equal')
+
+            ax.scatter(points.real, points.imag, c='blue', label='sample')
+
+        elif display_type == 'hist':
+            title = '\n'.join([title,
+                               'Histogram of the modulus of each points'])
+
+            if normalization:
+                ax.plot([0, 1, 1], [0, 2, 0], color='r')
+
+            bins = np.linspace(0, 1, 20)
+            ax.hist(np.abs(points), bins=bins, density=1,
+                    facecolor='blue', alpha=0.5,
+                    label='hist')
+        else:
+            pass
+
+        plt.title(title)
+
+        # plt.legend(loc='best', frameon=False)
 
     def plot(self, normalization=True):
         """ Display the last realization of the :class:`GinibreEnsemble` object
@@ -1185,29 +1233,25 @@ class GinibreEnsemble(BetaEnsemble):
             - :ref:`Full matrix model <ginibre_ensemble_full>` for Ginibre ensemble ensemble
         """
 
-        if not self.list_of_samples:
-            raise ValueError('Empty `list_of_samples`, sample first!')
-        else:
-            points = self.list_of_samples[-1].copy()  # Pick last sample
+        self.__display_and_normalization('scatter', normalization)
 
-        # Plot
-        fig, ax = plt.subplots(1, 1)
+    def hist(self, normalization=True):
+        """ Display the histogram of the radius of the points the last realization of the :class:`GinibreEnsemble` object
 
-        plt.title(self._str_title)
+        :param normalization:
+            When ``True``, the points are normalized so as to concentrate in the unit disk.
 
-        if normalization:
-            points /= np.sqrt(self.params['size_N'])
-            # Draw unit circle
-            unit_circle = plt.Circle((0, 0), 1, color='r', fill=False)
-            ax.add_artist(unit_circle)
+            .. math::
 
-            ax.set_xlim([-1.3, 1.3])
-            ax.set_ylim([-1.3, 1.3])
-            ax.set_aspect('equal')
+                x \\mapsto \\frac{x}{\\sqrt{N}}
 
-        ax.scatter(points.real, points.imag, c='blue', label='sample')
+        :type normalization:
+            bool, default ``True``
 
-        plt.legend(loc='best', frameon=False)
+        .. seealso::
 
-    def hist():
-        raise NotImplementedError('Histogram of points on the complex plane is not implemented')
+            - :py:meth:`sample_full_model`
+            - :ref:`Full matrix model <ginibre_ensemble_full>` for Ginibre ensemble ensemble
+        """
+
+        self.__display_and_normalization('hist', normalization)
