@@ -33,22 +33,26 @@ class InclusionProbabilitiesProjectionDPP(unittest.TestCase):
     rank, N = 6, 10
     nb_samples = 100
 
-    def singleton_adequation(self, dpp, tol=0.05):
+    def singleton_adequation(self, dpp, samples, tol=0.05):
         """Perform chi-square test"""
+        dpp.compute_K()
 
-        singletons = list(chain.from_iterable(dpp.list_of_samples))
+        singletons = list(chain.from_iterable(samples))
 
         freq, _ = np.histogram(singletons, bins=range(self.N + 1), density=True)
         marg_theo = np.diag(dpp.K) / self.rank
 
         _, pval = chisquare(f_obs=freq, f_exp=marg_theo)
 
+        print(freq)
+        print(marg_theo)
         return pval > tol
 
-    def doubleton_adequation(self, dpp, tol=0.05):
+    def doubleton_adequation(self, dpp, samples, tol=0.05):
         """Perform chi-square test"""
 
-        samples = list(map(set, dpp.list_of_samples))
+        samples = list(map(set, samples))
+        dpp.compute_K()
 
         nb_doubletons_to_check = 10
         doubletons = [set(rndm.choice(self.N,
@@ -59,8 +63,11 @@ class InclusionProbabilitiesProjectionDPP(unittest.TestCase):
 
         counts = [sum([doubl.issubset(sampl) for sampl in samples])
                   for doubl in doubletons]
-        freq = np.array(counts) / self.nb_samples
+        freq = np.array(counts) / len(samples)
         marg_theo = [det_ST(dpp.K, list(d)) for d in doubletons]
+
+        print(freq)
+        print(marg_theo)
 
         _, pval = chisquare(f_obs=freq, f_exp=marg_theo)
 
@@ -84,10 +91,9 @@ class InclusionProbabilitiesProjectionDPP(unittest.TestCase):
         for _ in range(self.nb_samples):
             dpp.sample_exact(mode='GS')
 
-        dpp.compute_K()
 
-        self.assertTrue(self.singleton_adequation(dpp))
-        self.assertTrue(self.doubleton_adequation(dpp))
+        self.assertTrue(self.singleton_adequation(dpp, dpp.list_of_samples))
+        self.assertTrue(self.doubleton_adequation(dpp, dpp.list_of_samples))
 
     def test_proj_dpp_sampler_from_eigdec_mode_GS_bis(self):
         """ Test whether 'GS_bis' sampling mode generates samples with the right 1 and 2 points inclusion probabilities when DPP defined by orthogonal projection correlation kernel K from its eigendecomposition
@@ -106,10 +112,9 @@ class InclusionProbabilitiesProjectionDPP(unittest.TestCase):
         for _ in range(self.nb_samples):
             dpp.sample_exact(mode='GS_bis')
 
-        dpp.compute_K()
 
-        self.assertTrue(self.singleton_adequation(dpp))
-        self.assertTrue(self.doubleton_adequation(dpp))
+        self.assertTrue(self.singleton_adequation(dpp, dpp.list_of_samples))
+        self.assertTrue(self.doubleton_adequation(dpp, dpp.list_of_samples))
 
     def test_proj_dpp_sampler_from_eigdec_mode_KuTa12(self):
         """ Test whether 'KuTa12' sampling mode generates samples with the right 1 and 2 points inclusion probabilities when DPP defined by orthogonal projection correlation kernel K from its eigendecomposition
@@ -126,10 +131,9 @@ class InclusionProbabilitiesProjectionDPP(unittest.TestCase):
         for _ in range(self.nb_samples):
             dpp.sample_exact(mode='KuTa12')
 
-        dpp.compute_K()
 
-        self.assertTrue(self.singleton_adequation(dpp))
-        self.assertTrue(self.doubleton_adequation(dpp))
+        self.assertTrue(self.singleton_adequation(dpp, dpp.list_of_samples))
+        self.assertTrue(self.doubleton_adequation(dpp, dpp.list_of_samples))
 
     # From kernel
     def test_proj_dpp_sampler_from_eigdec_mode_Chol(self):
@@ -151,8 +155,8 @@ class InclusionProbabilitiesProjectionDPP(unittest.TestCase):
         for _ in range(self.nb_samples):
             dpp.sample_exact(mode='Chol')
 
-        self.assertTrue(self.singleton_adequation(dpp))
-        self.assertTrue(self.doubleton_adequation(dpp))
+        self.assertTrue(self.singleton_adequation(dpp, dpp.list_of_samples))
+        self.assertTrue(self.doubleton_adequation(dpp, dpp.list_of_samples))
 
     def test_proj_dpp_sampler_generic_kernel(self):
         """ Test whether 'Chol' sampling mode generates samples with the right 1 and 2 points inclusion probabilities when DPP defined by orthogonal projection correlation kernel K from its eigendecomposition.
@@ -170,8 +174,8 @@ class InclusionProbabilitiesProjectionDPP(unittest.TestCase):
         for _ in range(self.nb_samples):
             dpp.sample_exact(mode='Chol')
 
-        self.assertTrue(self.singleton_adequation(dpp))
-        self.assertTrue(self.doubleton_adequation(dpp))
+        self.assertTrue(self.singleton_adequation(dpp, dpp.list_of_samples))
+        self.assertTrue(self.doubleton_adequation(dpp, dpp.list_of_samples))
 
     def test_proj_dpp_sampler_from_kernel_mode_GS(self):
         """ Test whether 'GS' sampling mode generates samples with the right 1 and 2 points inclusion probabilities when DPP defined by orthogonal projection correlation kernel K from its eigendecomposition
@@ -192,8 +196,8 @@ class InclusionProbabilitiesProjectionDPP(unittest.TestCase):
 
         # dpp.compute_K()
 
-        self.assertTrue(self.singleton_adequation(dpp))
-        self.assertTrue(self.doubleton_adequation(dpp))
+        self.assertTrue(self.singleton_adequation(dpp, dpp.list_of_samples))
+        self.assertTrue(self.doubleton_adequation(dpp, dpp.list_of_samples))
 
     def test_proj_dpp_sampler_from_kernel_mode_Schur(self):
         """ Test whether 'Schur' sampling mode generates samples with the right 1 and 2 points inclusion probabilities when DPP defined by orthogonal projection correlation kernel K from its eigendecomposition
@@ -210,8 +214,39 @@ class InclusionProbabilitiesProjectionDPP(unittest.TestCase):
         for _ in range(self.nb_samples):
             dpp.sample_exact(mode='Schur')
 
-        self.assertTrue(self.singleton_adequation(dpp))
-        self.assertTrue(self.doubleton_adequation(dpp))
+        self.assertTrue(self.singleton_adequation(dpp, dpp.list_of_samples))
+        self.assertTrue(self.doubleton_adequation(dpp, dpp.list_of_samples))
+
+    def test_mcmc_sampler_zonotope(self):
+        """ Test whether 'zonotope' MCMC sampling mode generates samples with the right 1 and 2 points inclusion probabilities when DPP defined by orthogonal projection correlation kernel K from its eigendecomposition
+
+        """
+        A = rndm.randn(self.rank, self.N)
+
+        dpp = FiniteDPP(kernel_type='correlation',
+                        projection=True,
+                        **{'A_zono': A})
+
+        dpp.sample_mcmc(mode='zonotope', **{'nb_iter': 1000})
+
+        self.assertTrue(self.singleton_adequation(dpp, dpp.list_of_samples[0]))
+        self.assertTrue(self.doubleton_adequation(dpp, dpp.list_of_samples[0]))
+
+    def test_mcmc_sampler_basis_exchange(self):
+        """ Test whether 'E' (basis_exchange) MCMC sampling mode generates samples with the right 1 and 2 points inclusion probabilities when DPP defined by orthogonal projection correlation kernel K from its eigendecomposition
+        """
+
+        eig_vals = np.ones(self.rank)
+        eig_vecs, _ = qr(rndm.randn(self.N, self.rank), mode="economic")
+
+        dpp = FiniteDPP(kernel_type='correlation',
+                        projection=True,
+                        **{'K_eig_dec': (eig_vals, eig_vecs)})
+
+        dpp.sample_mcmc(mode='E', **{'size': self.rank, 'nb_iter': 1000})
+
+        self.assertTrue(self.singleton_adequation(dpp, dpp.list_of_samples[0]))
+        self.assertTrue(self.doubleton_adequation(dpp, dpp.list_of_samples[0]))
 
 
 def main():

@@ -117,7 +117,7 @@ class CardinalityOfFiniteDPPs(unittest.TestCase):
 
             self.check_right_cardinality(dpp, dpp.list_of_samples)
 
-        for mode in ('E'):
+        for mode in ('zonotope', 'E'):
 
             dpp.flush_samples()
             dpp.sample_mcmc(mode, **{'size': rank, 'nb_iter': self.nb_samples})
