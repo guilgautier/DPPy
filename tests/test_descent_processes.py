@@ -33,7 +33,7 @@ class MarginalProbaDescentProcesses(unittest.TestCase):
 
         self.assertTrue(np.abs(estim - cp._bernoulli_param) < self.tol)
 
-    def test_carries_process(self):
+    def test_descent_process(self):
 
         dp = DescentProcess()
         dp.sample(size=self.size)
@@ -42,7 +42,7 @@ class MarginalProbaDescentProcesses(unittest.TestCase):
 
         self.assertTrue(np.abs(estim - dp._bernoulli_param) < self.tol)
 
-    def test_carries_process(self):
+    def test_virtual_descent_process(self):
 
         vdp = VirtualDescentProcess(x_0=0.5)
         vdp.sample(size=self.size)
