@@ -171,7 +171,7 @@ def add_exchange_delete_sampler(kernel, s_init=None, nb_iter=10, T_max=None):
 
         S1 = S0.copy()  # S1 = S0
         # Pick one element s in S_0 by index uniformly at random
-        s_ind = np.random.choice(sampl_size, size=1)[0]
+        s_ind = np.random.choice(sampl_size if sampl_size else N) #, size=1)[0]
         # Unif t in [N]-S0
         t = np.random.choice(np.delete(ground_set, S0), size=1)[0]
 

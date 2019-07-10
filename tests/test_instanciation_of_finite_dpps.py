@@ -1,7 +1,10 @@
 # coding: utf8
 """ Unit tests:
 
-- :class:`InclusionProbabilitiesProjectionDPP` to check that exact samplers for finite DPPs have the right (at least 1 and 2) inclusion probabilities
+- :class:`InstanciationOfFiniteDppWithCorrelationKernel`
+- :class:`InstanciationOfFiniteDppWithLikelihoodKernel`
+
+to check that instanciation of FiniteDPP in the various settings works well
 """
 
 import unittest
@@ -9,17 +12,12 @@ import unittest
 import numpy as np
 import numpy.random as rndm
 
-from scipy.linalg import qr
-from scipy.stats import chisquare
-
-from itertools import chain  # to flatten list of samples
+from scipy.linalg import qr, eigh
 
 import sys
 sys.path.append('..')
 
-
 from dppy.finite_dpps import FiniteDPP
-from dppy.utils import det_ST
 
 
 class InstanciationOfFiniteDppWithCorrelationKernel(unittest.TestCase):
@@ -47,26 +45,6 @@ class InstanciationOfFiniteDppWithCorrelationKernel(unittest.TestCase):
 
         self.assertTrue('cannot be computed' in str(context.exception))
 
-    def test_instanciation_from_eig_vals_in_01(self):
-        rank, N = 6, 10
-
-        eig_vals = rndm.rand(rank)
-        eig_vecs, _ = qr(rndm.randn(N, rank), mode="economic")
-
-        dpp = FiniteDPP(kernel_type='correlation',
-                        projection=False,
-                        **{'K_eig_dec': (eig_vals, eig_vecs)})
-
-        dpp.compute_K()
-        K = (eig_vecs * eig_vals).dot(eig_vecs.T)
-
-        self.assertTrue(np.allclose(dpp.K, K))
-
-        dpp.compute_L()
-        L = (eig_vecs * (eig_vals / (1.0 - eig_vals))).dot(eig_vecs.T)
-
-        self.assertTrue(np.allclose(dpp.L, L))
-
     def test_instanciation_from_A_zono(self):
         rank, N = 6, 10
 
@@ -89,6 +67,45 @@ class InstanciationOfFiniteDppWithCorrelationKernel(unittest.TestCase):
 
         self.assertTrue('not full row rank' in str(context.exception))
 
+    def test_instanciation_from_eig_vals_in_01(self):
+        rank, N = 6, 10
+
+        eig_vals = rndm.rand(rank)
+        eig_vecs, _ = qr(rndm.randn(N, rank), mode="economic")
+
+        dpp = FiniteDPP(kernel_type='correlation',
+                        projection=False,
+                        **{'K_eig_dec': (eig_vals, eig_vecs)})
+
+        dpp.compute_K()
+        K = (eig_vecs * eig_vals).dot(eig_vecs.T)
+
+        self.assertTrue(np.allclose(dpp.K, K))
+
+        dpp = FiniteDPP(kernel_type='correlation',
+                        projection=False,
+                        **{'K_eig_dec': (eig_vals, eig_vecs)})
+
+        dpp.compute_L()
+        L = (eig_vecs * (eig_vals / (1.0 - eig_vals))).dot(eig_vecs.T)
+
+        self.assertTrue(np.allclose(dpp.L, L))
+
+    def test_instanciation_from_kernel(self):
+        rank, N = 6, 10
+
+        eig_vals = rndm.rand(rank)
+        eig_vecs, _ = qr(rndm.randn(N, rank), mode="economic")
+
+        dpp = FiniteDPP(kernel_type='correlation',
+                        projection=False,
+                        **{'K': (eig_vecs * eig_vals).dot(eig_vecs.T)})
+
+        dpp.compute_L()
+        L = (eig_vecs * (eig_vals / (1.0 - eig_vals))).dot(eig_vecs.T)
+
+        self.assertTrue(np.allclose(dpp.L, L))
+
 
 class InstanciationOfFiniteDppWithLikelihoodKernel(unittest.TestCase):
     """ Test the instanciation of :py:class:`~dppy.finite_dpps.FiniteDPP` defined through its likelyhood kernel :math:`L`, which must satisfy :math:`L \\succeq 0`
@@ -108,6 +125,25 @@ class InstanciationOfFiniteDppWithLikelihoodKernel(unittest.TestCase):
         L = (eig_vecs * eig_vals).dot(eig_vecs.T)
 
         self.assertTrue(np.allclose(dpp.L, L))
+
+        dpp = FiniteDPP(kernel_type='likelihood',
+                        projection=False,
+                        **{'L_eig_dec': (eig_vals, eig_vecs)})
+
+        dpp.compute_K()
+        K = (eig_vecs * (eig_vals / (1.0 + eig_vals))).dot(eig_vecs.T)
+
+        self.assertTrue(np.allclose(dpp.K, K))
+
+    def test_instanciation_from_kernel(self):
+        rank, N = 6, 10
+
+        eig_vals = 1 + rndm.geometric(p=0.5, size=rank)
+        eig_vecs, _ = qr(rndm.randn(N, rank), mode="economic")
+
+        dpp = FiniteDPP(kernel_type='likelihood',
+                        projection=False,
+                        **{'L': (eig_vecs * eig_vals).dot(eig_vecs.T)})
 
         dpp.compute_K()
         K = (eig_vecs * (eig_vals / (1.0 + eig_vals))).dot(eig_vecs.T)
@@ -129,19 +165,53 @@ class InstanciationOfFiniteDppWithLikelihoodKernel(unittest.TestCase):
 
         self.assertTrue(np.allclose(dpp.L, L))
 
-    def test_instanciation_from_L_gram_factor(self):
+    def test_instanciation_from_L_gram_factor_wide(self):
         rank, N = 6, 10
 
         phi = rndm.randn(rank, N)
 
         dpp = FiniteDPP(kernel_type='likelihood',
-                        projection=True,
+                        projection=False,
                         **{'L_gram_factor': phi})
 
         dpp.compute_L()
         L = phi.T.dot(phi)
 
         self.assertTrue(np.allclose(dpp.L, L))
+
+        dpp = FiniteDPP(kernel_type='likelihood',
+                projection=False,
+                **{'L_gram_factor': phi})
+
+        dpp.compute_K()
+        eig_vals, eig_vecs = eigh(L)
+        K = (eig_vecs * (eig_vals / (1.0 + eig_vals))).dot(eig_vecs.T)
+
+        self.assertTrue(np.allclose(dpp.K, K))
+
+    def test_instanciation_from_L_gram_factor_tall(self):
+        rank, N = 6, 10
+
+        phi = rndm.randn(rank, N).T
+
+        dpp = FiniteDPP(kernel_type='likelihood',
+                        projection=False,
+                        **{'L_gram_factor': phi})
+
+        dpp.compute_L()
+        L = phi.T.dot(phi)
+
+        self.assertTrue(np.allclose(dpp.L, L))
+
+        dpp = FiniteDPP(kernel_type='likelihood',
+                projection=False,
+                **{'L_gram_factor': phi})
+
+        dpp.compute_K()
+        eig_vals, eig_vecs = eigh(L)
+        K = (eig_vecs * (eig_vals / (1.0 + eig_vals))).dot(eig_vecs.T)
+
+        self.assertTrue(np.allclose(dpp.K, K))
 
 
 def main():

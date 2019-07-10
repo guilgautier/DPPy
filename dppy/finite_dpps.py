@@ -193,7 +193,7 @@ class FiniteDPP:
         elif self.kernel_type == L_type:
             if self.params_keys.intersection(L_params):
                 if self.projection:
-                    warn('weird setting: defining a DPP via a projection likelihood L kernel is unusual. Make sure you do not want to use a projection INCLUSION K kernel instead')
+                    warn('weird setting: defining a DPP via a projection likelihood L kernel is unusual. Make sure you do not want to use a projection CORRELATION K kernel instead')
             else:
                 err_print =\
                     ['Invalid parametrization of likelihood kernel, choose:',
@@ -237,11 +237,13 @@ class FiniteDPP:
 
             - ``projection=True``:
                 - ``'GS'`` (default): Gram-Schmidt on the rows of :math:`\\mathbf{K}`.
-                - ``'Schur'``: Use Schur complement to compute conditionals.
+                - ``'Chol'`` :cite:`Pou19` Algorithm 3
+                - ``'Schur'``: when DPP defined from correlation kernel ``K``, use Schur complement to compute conditionals
 
             - ``projection=False``:
                 - ``'GS'`` (default): Gram-Schmidt on the rows of the eigenvectors of :math:`\\mathbf{K}` selected in Phase 1.
                 - ``'GS_bis'``: Slight modification of ``'GS'``
+                - ``'Chol'`` :cite:`Pou19` Algorithm 1
                 - ``'KuTa12'``: Algorithm 1 in :cite:`KuTa12`
         :type mode:
             string, default ``'GS'``
@@ -323,7 +325,7 @@ class FiniteDPP:
 
         # If DPP defined through correlation kernel with parameter 'A_zono'
         # a priori you wish to use the zonotope approximate sampler
-        elif self.A_zono:
+        elif self.A_zono is not None:
             warn('DPP defined via `A_zono`, apriori you want to use `sampl_mcmc`, but you have called `sample_exact`')
 
             self.K_eig_vals = np.ones(self.A_zono.shape[0])
@@ -515,7 +517,7 @@ class FiniteDPP:
                                              self.sampling_mode,
                                              **params)
                 else:
-                    raise ValueError('size={} != rank={} for projection correlation K kernel'.format(k, rank))
+                    raise ValueError('size={} != rank={} for projection correlation K kernel'.format(size, rank))
             else:
                 self.compute_L()
                 chain = dpp_sampler_mcmc(self.L, self.sampling_mode, **params)
@@ -701,4 +703,3 @@ class FiniteDPP:
         plt.title(title if title else str_title, y=1.1)
 
         plt.colorbar(heatmap)
-        # plt.show()
