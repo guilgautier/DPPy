@@ -382,8 +382,50 @@ class FiniteDPP:
 
         self.sampling_mode = mode
 
+        # If DPP defined via projection kernel
+        if self.projection:
+            if self.kernel_type == 'correlation':
+
+                if self.K_eig_vals is not None:
+                    rank = np.round(np.sum(self.K_eig_vals)).astype(int)
+                else:
+                    self.compute_K()
+                    rank = np.round(np.trace(self.K)).astype(int)
+
+                if size != rank:
+                    raise ValueError('size k={} != rank={} for projection correlation K kernel'.format(k, rank))
+                else:
+                    self.size_k_dpp = size
+
+                if self.K_eig_vals is not None:
+                    sampl = proj_dpp_sampler_eig(
+                            eig_vecs=self.eig_vecs[:, self.K_eig_vals > 0.5],
+                            mode=self.sampling_mode,
+                            size=size)
+                else:
+                    sampl = proj_dpp_sampler_kernel(kernel=self.K,
+                                                    mode=self.sampling_mode,
+                                                    size=size)
+
+                self.list_of_samples.append(sampl)
+
+            else:  # self.kernel_type == 'likelihood':
+                if self.L_eig_vals is not None:
+                    sampl = proj_dpp_sampler_eig(
+                            eig_vecs=self.eig_vecs[:, self.L_eig_vals > 0.5],
+                            mode=self.sampling_mode,
+                            size=size)
+                else:
+                    self.compute_L()
+                    # size > rank treated internally in proj_dpp_sampler_kernel
+                    sampl = proj_dpp_sampler_kernel(self.L,
+                                                    mode=self.sampling_mode,
+                                                    size=size)
+                self.size_k_dpp = size
+                self.list_of_samples.append(sampl)
+
         # If eigen decoposition of K, L or L_dual is available USE IT!
-        if self.L_eig_vals is not None:
+        elif self.L_eig_vals is not None:
 
             # Phase 1
             # Precompute elementary symmetric polynomials
@@ -410,28 +452,6 @@ class FiniteDPP:
             np.seterr(divide='raise')
             self.L_eig_vals = self.K_eig_vals / (1.0 - self.K_eig_vals)
             self.sample_exact_k_dpp(size, mode)
-
-        # If DPP defined via projection kernel
-        elif self.projection:
-            if self.kernel_type == 'correlation':
-                self.compute_K()
-                rank = np.round(np.trace(self.K)).astype(int)
-                if size == rank:
-                    sampl = proj_dpp_sampler_kernel(self.K,
-                                                    mode=self.sampling_mode,
-                                                    size=size)
-                    self.size_k_dpp = size
-                    self.list_of_samples.append(sampl)
-                else:
-                    raise ValueError('size k={} != rank={} for projection correlation K kernel'.format(k, rank))
-            else:  # self.kernel_type == 'likelihood':
-                self.compute_L()
-                # size > rank treated internally in proj_dpp_sampler_kernel
-                sampl = proj_dpp_sampler_kernel(self.L,
-                                                mode=self.sampling_mode,
-                                                size=size)
-                self.size_k_dpp = size
-                self.list_of_samples.append(sampl)
 
         # Otherwise eigendecomposition is necessary
         elif self.L_dual is not None:

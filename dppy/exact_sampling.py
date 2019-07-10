@@ -412,7 +412,7 @@ def dpp_eig_vecs_selector_L_dual(eig_vals, eig_vecs, gram_factor):
 
 # Phase 2:
 # Sample projection kernel VV.T where V are the eigvecs selected in Phase 1.
-def proj_dpp_sampler_eig(eig_vecs, mode='GS'):
+def proj_dpp_sampler_eig(eig_vecs, mode='GS', size=None):
     """ Sample from projection :math:`\\operatorname{DPP}(K)` using the eigendecomposition of the projection kernel :math:`K=VV^{\top}` where :math:`V^{\top}V = I_r` and :math:`r=\\operatorname{rank}(\\mathbf{K})`.
 
     .. seealso::
@@ -432,13 +432,13 @@ def proj_dpp_sampler_eig(eig_vecs, mode='GS'):
         # Phase 2: Sample from projection kernel VV.T
         # Chain rule, conditionals are updated using:
         if mode == 'GS':  # Gram-Schmidt
-            sampl = proj_dpp_sampler_eig_GS(eig_vecs)
+            sampl = proj_dpp_sampler_eig_GS(eig_vecs, size)
 
         elif mode == 'GS_bis':  # Slight modif of 'GS'
-            sampl = proj_dpp_sampler_eig_GS_bis(eig_vecs)
+            sampl = proj_dpp_sampler_eig_GS_bis(eig_vecs, size)
 
         elif mode == 'KuTa12':  # cf Kulesza-Taskar
-            sampl = proj_dpp_sampler_eig_KuTa12(eig_vecs)
+            sampl = proj_dpp_sampler_eig_KuTa12(eig_vecs, size)
 
         else:
             str_list = ['Invalid sampling mode, choose among:',
@@ -715,6 +715,9 @@ def k_dpp_eig_vecs_selector(eig_vals, eig_vecs, size, E_poly=None):
     rank = np.count_nonzero(eig_vals > tol)
     if k > rank:
         raise ValueError('size k={} > rank={}'.format(k, rank))
+
+    if E_poly is None:
+        E_poly = elem_symm_poly(eig_vals, k)
 
     ind_selected = np.zeros(k, dtype=int)
     for n in range(N, 0, -1):

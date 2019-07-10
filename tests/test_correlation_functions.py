@@ -217,9 +217,67 @@ class InclusionProbabilitiesProjectionDPP(unittest.TestCase):
         self.assertTrue(self.singleton_adequation(dpp, dpp.list_of_samples))
         self.assertTrue(self.doubleton_adequation(dpp, dpp.list_of_samples))
 
-    def test_mcmc_sampler_zonotope(self):
-        """ Test whether 'zonotope' MCMC sampling mode generates samples with the right 1 and 2 points inclusion probabilities when DPP defined by orthogonal projection correlation kernel K from its eigendecomposition
+    def test_proj_dpp_sampler_as_kDPP_with_correlation(self):
+        """ Test whether projection DPP sampled as a k-DPP with k=rank(K) generates samples with the right 1 and 2 points inclusion probabilities when DPP defined by orthogonal projection correlation kernel K from its eigendecomposition
+        """
 
+        eig_vals = np.ones(self.rank)
+        eig_vecs, _ = qr(rndm.randn(self.N, self.rank), mode="economic")
+        dpp = FiniteDPP(kernel_type='correlation',
+                        projection=True,
+                        **{'K_eig_dec': (eig_vals, eig_vecs)})
+
+        dpp.flush_samples()
+        for _ in range(self.nb_samples):
+            dpp.sample_exact_k_dpp(self.rank)
+
+        self.assertTrue(self.singleton_adequation(dpp, dpp.list_of_samples))
+        self.assertTrue(self.doubleton_adequation(dpp, dpp.list_of_samples))
+
+    def test_proj_dpp_sampler_as_kDPP_with_likelihood(self):
+        """ Test whether projection DPP sampled as a k-DPP with k=rank(K)  generates samples with the right 1 and 2 points inclusion probabilities when DPP defined by orthogonal projection likelihood kernel L from its eigendecomposition
+        """
+
+        eig_vals = np.ones(self.rank)
+        eig_vecs, _ = qr(rndm.randn(self.N, self.rank), mode="economic")
+        dpp = FiniteDPP(kernel_type='likelihood',
+                        projection=True,
+                        **{'L_eig_dec': (eig_vals, eig_vecs)})
+
+        dpp.flush_samples()
+        for _ in range(self.nb_samples):
+            dpp.sample_exact_k_dpp(self.rank)
+
+        dpp.compute_L()
+        dpp.K = dpp.L
+
+        self.assertTrue(self.singleton_adequation(dpp, dpp.list_of_samples))
+        self.assertTrue(self.doubleton_adequation(dpp, dpp.list_of_samples))
+
+    def test_proj_dpp_sampler_as_kDPP_with_likelihood(self):
+        """ Test whether projection DPP sampled as a k-DPP with k=rank(K)  generates samples with the right 1 and 2 points inclusion probabilities when DPP defined by orthogonal projection likelihood kernel L from its eigendecomposition and projection is set to False in order to go through the computation of elementary symmetric polynomials etc
+        """
+        eig_vals = np.zeros(self.N)
+        eig_vals[:self.rank] = 1.0
+
+        eig_vecs, _ = qr(rndm.randn(self.N, self.N), mode="economic")
+        dpp = FiniteDPP(kernel_type='likelihood',
+                        projection=False,
+                        **{'L_eig_dec': (eig_vals, eig_vecs)})
+
+        dpp.flush_samples()
+        for _ in range(self.nb_samples):
+            dpp.sample_exact_k_dpp(self.rank)
+
+        dpp.compute_L()
+        dpp.K = dpp.L
+
+        self.assertTrue(self.singleton_adequation(dpp, dpp.list_of_samples))
+        self.assertTrue(self.doubleton_adequation(dpp, dpp.list_of_samples))
+
+
+    def test_mcmc_sampler_zonotope(self):
+        """ Test whether 'zonotope' MCMC sampling mode generates samples with the right 1 and 2 points inclusion probabilities when DPP defined by orthogonal projection correlation kernel K = A.T (A A.T)^-1 A
         """
         A = rndm.randn(self.rank, self.N)
 

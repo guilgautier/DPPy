@@ -304,7 +304,6 @@ class EquilibriumDistributionOfBetaEnsembles(unittest.TestCase):
             self.assertTrue(self.adequation(f_emp, f_theo))
 
 
-
 def main():
 
     unittest.main()
