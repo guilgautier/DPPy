@@ -1,7 +1,7 @@
 # coding: utf8
-""" Unit tests:
+""" Tests:
 
-- :class:`InclusionProbabilitiesProjectionDPP` to check that exact samplers for finite DPPs have the right (at least 1 and 2) inclusion probabilities
+- :class:`EquilibriumDistributionOfBetaEnsembles` to check that for a large enough number of points, the empirical distribution of the rescaled points is close to the expected limiting (equilibrium) distribution
 """
 
 import unittest
@@ -21,7 +21,7 @@ import dppy.random_matrices as rm
 import dppy.beta_ensembles as be
 
 
-class EquilibriumDistribution(unittest.TestCase):
+class EquilibriumDistributionOfBetaEnsembles(unittest.TestCase):
     """
     """
 

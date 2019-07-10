@@ -24,7 +24,7 @@ class UniformityOfPermutation(unittest.TestCase):
 
     N = 5
     nb_perms = factorial(N)
-    nb_samples = 1000
+    nb_samples = 5000
 
     @staticmethod
     def sample_to_label(samples):
