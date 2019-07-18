@@ -135,21 +135,20 @@ Chain rule
 
 	.. testcode::
 
-		from numpy import ones
-		from numpy.random import seed, randn
+		import numpy as np
 		from scipy.linalg import qr
 		from dppy.finite_dpps import FiniteDPP
 
-		seed(1)
+		rng = np.random.RandomState(1)
 
 		r, N = 4, 10
-		eig_vals = ones(r)
-		eig_vecs, _ = qr(randn(N, r), mode='economic')
+		eig_vals = np.ones(r)
+		eig_vecs, _ = qr(rng.randn(N, r), mode='economic')
 
-		DPP = FiniteDPP('correlation', **{'K_eig_dec':(eig_vals, eig_vecs)})
+		DPP = FiniteDPP('correlation', **{'K_eig_dec': (eig_vals, eig_vecs)})
 
 		for _ in range(10):
-			DPP.sample_exact()
+			DPP.sample_exact(random_state=rng)
 
 		print(list(map(list, DPP.list_of_samples)))
 
@@ -310,20 +309,20 @@ Generic DPPs
 
 	.. testcode::
 
-		from numpy.random import seed, rand, randn
+		from numpy.random import RandomState
 		from scipy.linalg import qr
 		from dppy.finite_dpps import FiniteDPP
 
-		seed(1)
+		rng = RandomState(1)
 
 		r, N = 5, 10
-		eig_vals = rand(r)
-		eig_vecs, _ = qr(randn(N, r), mode='economic')
+		eig_vals = rng.rand(r)
+		eig_vecs, _ = qr(rng.randn(N, r), mode='economic')
 
-		DPP = FiniteDPP('correlation', **{'K_eig_dec':(eig_vals, eig_vecs)})
+		DPP = FiniteDPP('correlation', **{'K_eig_dec': (eig_vals, eig_vecs)})
 
 		for _ in range(10):
-			DPP.sample_exact()
+			DPP.sample_exact(random_state=rng)
 
 		print(list(map(list, DPP.list_of_samples)))
 
@@ -374,20 +373,19 @@ More specifically,
 
 .. testcode::
 
-	from numpy.random import seed, rand, randn
-	from scipy.linalg import qr
+	import numpy as np
 	from dppy.finite_dpps import FiniteDPP
 
-	seed(1)
+	rng = np.random.RandomState(1)
 
 	r, N = 5, 10
 	# Random feature vectors
-	Phi = randn(r, N)
+	Phi = rng.randn(r, N)
 	DPP = FiniteDPP('likelihood', **{'L': Phi.T.dot(Phi)})
 
 	k = 4
 	for _ in range(10):
-	    DPP.sample_exact_k_dpp(size=k)
+	    DPP.sample_exact_k_dpp(size=k, random_state=rng)
 
 	print(list(map(list, DPP.list_of_samples)))
 

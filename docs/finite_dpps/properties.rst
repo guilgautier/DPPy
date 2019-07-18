@@ -86,29 +86,28 @@ Variance
 
 .. testcode::
 
-	from numpy import array
-	from numpy.random import seed, randn, rand
+	import numpy as np
 	from scipy.linalg import qr
 	from dppy.finite_dpps import FiniteDPP
 
-	seed(1)
+	rng = np.random.RandomState(1)
 
 	r, N = 5, 10
-	eig_vals = rand(r) # 0< <1
-	eig_vecs, _ = qr(randn(N, r), mode='economic')
+	eig_vals = rng.rand(r) # 0< <1
+	eig_vecs, _ = qr(rng.randn(N, r), mode='economic')
 
 	DPP = FiniteDPP('correlation', projection=False,
-	                **{'K_eig_dec':(eig_vals, eig_vecs)})
+	                **{'K_eig_dec': (eig_vals, eig_vecs)})
 
 	nb_samples = 2000
 	for _ in range(nb_samples):
-	    DPP.sample_exact()
+	    DPP.sample_exact(random_state=rng)
 
-	sizes = array([s.size for s in DPP.list_of_samples])
+	sizes = list(map(len, DPP.list_of_samples))
 	print('E[|X|]:\n theo={:.3f}, emp={:.3f}'
-	      .format(sizes.mean(), eig_vals.sum()))
+	      .format(np.mean(sizes), np.sum(eig_vals)))
 	print('Var[|X|]:\n theo={:.3f}, emp={:.3f}'
-	      .format(sizes.var(), (eig_vals*(1-eig_vals)).sum()))
+	      .format(np.var(sizes), np.sum(eig_vals*(1-eig_vals))))
 
 .. testoutput::
 
@@ -152,22 +151,21 @@ Variance
 
 	.. testcode::
 
-		from numpy import ones
-		from numpy.random import seed, randn
+		import numpy as np
 		from scipy.linalg import qr
 		from dppy.finite_dpps import FiniteDPP
 
-		seed(1)
+		rng = np.random.RandomState(1)
 
 		r, N = 4, 10
-		eig_vals = ones(r)
-		eig_vecs, _ = qr(randn(N, r), mode='economic')
+		eig_vals = np.ones(r)
+		eig_vecs, _ = qr(rng.randn(N, r), mode='economic')
 
 		DPP = FiniteDPP('correlation', projection=True,
-		                **{'K_eig_dec':(eig_vals, eig_vecs)})
+		                **{'K_eig_dec': (eig_vals, eig_vecs)})
 
 		for _ in range(10):
-		    DPP.sample_exact()
+		    DPP.sample_exact(random_state=rng)
 
 		print(list(map(list, DPP.list_of_samples)))
 

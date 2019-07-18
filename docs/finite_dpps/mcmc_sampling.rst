@@ -16,7 +16,7 @@ At state :math:`S\subset [N]`, propose :math:`S'` different from :math:`S` by at
 .. math::
 
   s \sim \mathcal{U}_{S}
-    \quad \text{and} \quad
+  \quad \text{and} \quad
   t \sim \mathcal{U}_{[N]\setminus S}
 
 Then perform
@@ -59,19 +59,19 @@ Mix of exchange and add-delete moves
 
 .. testcode::
 
-  from numpy.random import seed, randn
+  import numpy as np
   from dppy.finite_dpps import FiniteDPP
 
-  seed(413121)
+  rng = np.random.RandomState(413121)
 
   r, N = 4, 10
 
   # Random feature vectors
-  Phi = randn(r, N)
+  Phi = rng.randn(r, N)
   L = Phi.T.dot(Phi)
-  DPP = FiniteDPP('likelihood', **{'L':L})
+  DPP = FiniteDPP('likelihood', **{'L': L})
 
-  DPP.sample_mcmc('AED')
+  DPP.sample_mcmc('AED', random_state=rng)
   print(DPP.list_of_samples)
 
 .. testoutput::
@@ -105,10 +105,10 @@ In this setting the :ref:`finite_dpps_nb_points` is almost surely equal to :math
   :label: zonotope_marginal
 
   \mathbb{P}[\mathcal{X}=S]
-    = \det \mathbf{K}_S 1_{|S|=r}
-    = \frac{\det^2\Phi_{:S}}{\det\Phi \Phi^{\top}} 1_{|S|=r}
-    = \frac{\operatorname{Vol}^2 \{\phi_s\}_{s\in S}}
-          {\det\Phi \Phi^{\top}} 1_{|S|=r}
+  = \det \mathbf{K}_S 1_{|S|=r}
+  = \frac{\det^2\Phi_{:S}}{\det\Phi \Phi^{\top}} 1_{|S|=r}
+  = \frac{\operatorname{Vol}^2 \{\phi_s\}_{s\in S}}
+      {\det\Phi \Phi^{\top}} 1_{|S|=r}
 
 The original finite ground set is embedded into a continuous domain called a zonotope.
 The hit-and-run procedure is used to move across this polytope and visit the different tiles.
@@ -120,17 +120,17 @@ To recover the finite DPP samples one needs to identify the tile in which the su
 
 .. testcode::
 
-  from numpy.random import seed, randn
+  from numpy.random import RandomState
   from dppy.finite_dpps import FiniteDPP
 
-  seed(413121)
+  rng = RandomState(413121)
 
   r, N = 4, 10
-  A = randn(r, N)
+  A = rng.randn(r, N)
 
-  DPP = FiniteDPP('correlation', projection=True, **{'A_zono':A})
+  DPP = FiniteDPP('correlation', projection=True, **{'A_zono': A})
 
-  DPP.sample_mcmc('zonotope')
+  DPP.sample_mcmc('zonotope', random_state=rng)
   print(DPP.list_of_samples)
 
 .. testoutput::
@@ -172,20 +172,20 @@ To preserve the size :math:`k` of the sample, only :ref:`finite_dpps_mcmc_sampli
 
 .. testcode::
 
-  from numpy.random import seed, randn
+  from numpy.random import RandomState
   from dppy.finite_dpps import FiniteDPP
 
-  seed(123)
+  rng = RandomState(123)
 
   r, N = 5, 10
 
   # Random feature vectors
-  Phi = randn(r, N)
+  Phi = rng.randn(r, N)
   L = Phi.T.dot(Phi)
-  DPP = FiniteDPP('likelihood', **{'L':L})
+  DPP = FiniteDPP('likelihood', **{'L': L})
 
   k = 3
-  DPP.sample_mcmc_k_dpp(size=k)
+  DPP.sample_mcmc_k_dpp(size=k, random_state=rng)
   print(DPP.list_of_samples)
 
 .. testoutput::

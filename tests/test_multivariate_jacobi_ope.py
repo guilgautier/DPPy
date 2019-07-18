@@ -15,12 +15,14 @@ sys.path.append('..')
 
 from dppy.multivariate_jacobi_ope import MultivariateJacobiOPE, compute_ordering_BaHa16, compute_Gautschi_bound
 
-from dppy.utils import inner1d
+from dppy.utils import inner1d, check_random_state
 
 
 class TestMultivariateJacobiOPE(unittest.TestCase):
     """
     """
+
+    seed = 0
 
     def test_ordering(self):
         """Make sure the ordering of multi-indices respects the one prescirbed by :cite:`BaHa16` Section 2.1.3
@@ -180,6 +182,69 @@ class TestMultivariateJacobiOPE(unittest.TestCase):
 
             self.assertTrue(np.allclose(dpp.K(X, Y),
                                         inner1d(phi_X, phi_Y)))
+
+    def test_sample_1D(self):
+
+        N, d = 20, 1
+        jacobi_params = - 0.5 * np.ones((d, 2))
+
+        dpp = MultivariateJacobiOPE(N, jacobi_params)
+        sampl = dpp.sample(random_state=self.seed)
+        # seed = 0
+        expected_sample = np.array([[ 0.9995946 ],
+                                    [ 0.98944808],
+                                    [ 0.97485733],
+                                    [ 0.86576265],
+                                    [ 0.7958162 ],
+                                    [ 0.64406931],
+                                    [ 0.53459294],
+                                    [ 0.4259159 ],
+                                    [ 0.1784497 ],
+                                    [ 0.12319757],
+                                    [-0.13340743],
+                                    [-0.28758726],
+                                    [-0.40275405],
+                                    [-0.68282936],
+                                    [-0.76523971],
+                                    [-0.82355336],
+                                    [-0.88258742],
+                                    [-0.94587727],
+                                    [-0.96426474],
+                                    [-0.99658163]])
+
+        self.assertTrue(np.allclose(sampl, expected_sample))
+
+    def test_sample_2D(self):
+
+        N, d = 20, 2
+        jacobi_params = - 0.5 * np.ones((d, 2))
+
+        dpp = MultivariateJacobiOPE(N, jacobi_params)
+
+        sampl = dpp.sample(random_state=self.seed)
+        # seed = 0
+        expected_sample = np.array([[ 0.95498072, -0.22594616],
+                                    [ 0.98381496, -0.82081218],
+                                    [ 0.42158869,  0.61463234],
+                                    [ 0.54434591, -0.40548681],
+                                    [ 0.98081473,  0.19803013],
+                                    [ 0.99882389,  0.99990403],
+                                    [-0.35335212,  0.3435721 ],
+                                    [-0.67634921, -0.35013342],
+                                    [ 0.66598575, -0.631246  ],
+                                    [-0.50124937,  0.94603753],
+                                    [-0.6803047 , -0.68742367],
+                                    [ 0.83011209,  0.99759068],
+                                    [-0.31799037,  0.74906081],
+                                    [-0.95083201, -0.12957181],
+                                    [-0.85140857,  0.8893118 ],
+                                    [-0.99364381,  0.51145399],
+                                    [-0.97738132, -0.99975365],
+                                    [-0.2932641 , -0.96289101],
+                                    [ 0.3737085 , -0.97049334],
+                                    [ 0.99727958, -0.67208988]])
+
+        self.assertTrue(np.allclose(sampl, expected_sample))
 
 
 def main():
