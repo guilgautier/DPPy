@@ -8,7 +8,7 @@ import unittest
 import itertools as itt
 from collections import Counter
 
-from numpy import array, ones
+import numpy as np
 from scipy.stats import chisquare
 
 from networkx import erdos_renyi_graph, is_connected, incidence_matrix
@@ -69,8 +69,8 @@ class TestUniformityUniformSpanningTreeSampler(unittest.TestCase):
 
         counter = Counter(map(self.sample_to_label, self.dpp.list_of_samples))
 
-        freq = array(list(counter.values())) / self.nb_samples
-        theo = ones(self.nb_spanning_trees) / self.nb_spanning_trees
+        freq = np.array(list(counter.values())) / self.nb_samples
+        theo = np.ones(self.nb_spanning_trees) / self.nb_spanning_trees
 
         _, pval = chisquare(f_obs=freq, f_exp=theo)
 
@@ -102,6 +102,16 @@ class TestUniformityUniformSpanningTreeSampler(unittest.TestCase):
             self.dpp.sample(mode='DPP_exact')
 
         self.assertTrue(self.uniformity_adequation())
+
+    def test_projection_kernel_computation(self):
+        """UST is a DPP associated to the projection kernel onto the row span of the vertex-edge-incidence matrix
+        """
+        inc = incidence_matrix(self.dpp.graph, oriented=True).todense()
+        expected_kernel = np.linalg.pinv(inc).dot(inc)
+
+        self.dpp.compute_kernel()
+
+        self.assertTrue(np.allclose(self.dpp.kernel, expected_kernel))
 
 
 def main():

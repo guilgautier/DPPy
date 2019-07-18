@@ -739,7 +739,7 @@ def k_dpp_eig_vecs_selector(eig_vals, eig_vecs, size,
     N, k = eig_vecs.shape[0], size
 
     # as in np.linalg.matrix_rank
-    tol = eig_vals.max() * N * np.finfo(eig_vals.dtype).eps
+    tol = np.max(eig_vals) * N * np.finfo(np.float).eps
     rank = np.count_nonzero(eig_vals > tol)
     if k > rank:
         raise ValueError('size k={} > rank={}'.format(k, rank))
@@ -748,7 +748,7 @@ def k_dpp_eig_vecs_selector(eig_vals, eig_vecs, size,
         E_poly = elem_symm_poly(eig_vals, k)
 
     ind_selected = np.zeros(k, dtype=int)
-    for n in range(N, 0, -1):
+    for n in range(eig_vals.size, 0, -1):
 
         if rng.rand() < eig_vals[n-1] * E_poly[k-1, n-1] / E_poly[k, n]:
             k -= 1

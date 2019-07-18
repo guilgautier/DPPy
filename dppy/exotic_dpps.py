@@ -607,8 +607,6 @@ class UST:
                 self.__compute_kernel_eig_vecs()  # QR(Inc[:-1,:])
             # K = UU.T
             self.kernel = self.kernel_eig_vecs.dot(self.kernel_eig_vecs.T)
-        else:
-            pass
 
     def __compute_kernel_eig_vecs(self):
         """ See explaination in :func:`compute_kernel <compute_kernel>`

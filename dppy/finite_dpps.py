@@ -339,7 +339,7 @@ class FiniteDPP:
         # If DPP defined through correlation kernel with parameter 'A_zono'
         # a priori you wish to use the zonotope approximate sampler
         elif self.A_zono is not None:
-            warn('DPP defined via `A_zono`, apriori you want to use `sampl_mcmc`, but you have called `sample_exact`')
+            warn('DPP defined via `A_zono`, apriori you want to use `sample_mcmc`, but you have called `sample_exact`')
 
             self.K_eig_vals = np.ones(self.A_zono.shape[0])
             self.eig_vecs, _ = la.qr(self.A_zono.T, mode='economic')
@@ -412,11 +412,24 @@ class FiniteDPP:
                     raise ValueError('size k={} != rank={} for projection correlation K kernel'.format(k, rank))
 
                 if self.K_eig_vals is not None:
+                    # K_eig_vals > 0.5 below to get indices where e_vals = 1
                     sampl = proj_dpp_sampler_eig(
                             eig_vecs=self.eig_vecs[:, self.K_eig_vals > 0.5],
                             mode=self.sampling_mode,
                             size=size,
                             random_state=rng)
+
+                elif self.A_zono is not None:
+                    warn('DPP defined via `A_zono`, apriori you want to use `sampl_mcmc`, but you have called `sample_exact`')
+
+                    self.K_eig_vals = np.ones(rank)
+                    self.eig_vecs, _ = la.qr(self.A_zono.T, mode='economic')
+
+                    sampl = proj_dpp_sampler_eig(eig_vecs=self.eig_vecs,
+                                                 mode=self.sampling_mode,
+                                                 size=size,
+                                                 random_state=rng)
+
                 else:
                     sampl = proj_dpp_sampler_kernel(kernel=self.K,
                                                     mode=self.sampling_mode,
@@ -464,7 +477,7 @@ class FiniteDPP:
             # There is
             self.L_eig_vals = self.L_dual_eig_vals
             self.eig_vecs =\
-                self.gram_factor.T.dot(self.L_dual_eig_vecs\
+                self.L_gram_factor.T.dot(self.L_dual_eig_vecs\
                                         / np.sqrt(self.L_dual_eig_vals))
             self.sample_exact_k_dpp(size, self.sampling_mode,
                                     random_state=rng)
@@ -718,24 +731,20 @@ class FiniteDPP:
         fig, ax = plt.subplots(1, 1)
 
         if self.kernel_type == 'correlation':
-            if self.K is None:
-                self.compute_K()
-            self.nb_items = self.K.shape[0]
-            kernel_to_plot = self.K
+            self.compute_K()
+            nb_items, kernel_to_plot = self.K.shape[0], self.K
             str_title = r'$K$ (correlation) kernel'
 
         elif self.kernel_type == 'likelihood':
-            if self.L is None:
-                self.compute_L()
-            self.nb_items = self.L.shape[0]
-            kernel_to_plot = self.L
+            self.compute_L()
+            nb_items, kernel_to_plot = self.L.shape[0], self.L
             str_title = r'$L$ (likelihood) kernel'
 
         heatmap = ax.pcolor(kernel_to_plot, cmap='jet')
 
         ax.set_aspect('equal')
 
-        ticks = np.arange(self.nb_items)
+        ticks = np.arange(nb_items)
         ticks_label = [r'${}$'.format(tic) for tic in ticks]
 
         ax.xaxis.tick_top()

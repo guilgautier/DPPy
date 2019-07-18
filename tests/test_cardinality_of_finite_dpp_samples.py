@@ -18,10 +18,12 @@ from dppy.finite_dpps import FiniteDPP
 
 
 class CardinalityOfFiniteDPPs(unittest.TestCase):
-    """ Projection DPP(K) generate fixed size cardinality samples, equal to the rank of the kernel K
+    """ E[|X|] = \\sum_{n=1}^{N} \\lambda_n(K)
+        Var[|X|] = \\sum_{n=1}^{N} \\lambda_n(K)(1-\\lambda_n(K))
     """
 
     nb_samples = 1000
+    rank, N = 6, 10
 
     def check_right_cardinality(self, dpp, samples):
 
@@ -48,38 +50,10 @@ class CardinalityOfFiniteDPPs(unittest.TestCase):
             return self.assertTrue(tol[0] <= mean_card_emp <= tol[1])
 
     # Correlation kernel
-    def test_correlation_projection_kernel_eig(self):
+    def test_correlation_kernel_projection_kernel(self):
 
-        rank, N = 6, 10
-
-        eig_vals = np.ones(rank)
-        eig_vecs, _ = qr(rndm.randn(N, rank), mode="economic")
-
-        dpp = FiniteDPP(kernel_type='correlation',
-                        projection=True,
-                        **{'K_eig_dec': (eig_vals, eig_vecs)})
-
-        for mode in ('GS', 'GS_bis', 'KuTa12'):
-
-            dpp.flush_samples()
-            for _ in range(self.nb_samples):
-                dpp.sample_exact(mode)
-
-            self.check_right_cardinality(dpp, dpp.list_of_samples)
-
-        for mode in ('E'):
-
-            dpp.flush_samples()
-            dpp.sample_mcmc(mode, **{'size': rank, 'nb_iter': self.nb_samples})
-
-            self.check_right_cardinality(dpp, dpp.list_of_samples[0])
-
-    def test_correlation_projection_kernel(self):
-
-        rank, N = 6, 10
-
-        eig_vals = np.ones(rank)
-        eig_vecs, _ = qr(rndm.randn(N, rank), mode="economic")
+        eig_vals = np.ones(self.rank)
+        eig_vecs, _ = qr(rndm.randn(self.N, self.rank), mode='economic')
 
         dpp = FiniteDPP(kernel_type='correlation',
                         projection=True,
@@ -96,14 +70,36 @@ class CardinalityOfFiniteDPPs(unittest.TestCase):
         for mode in ('E'):
 
             dpp.flush_samples()
-            dpp.sample_mcmc(mode, **{'size': rank, 'nb_iter': self.nb_samples})
+            dpp.sample_mcmc(mode, **{'size': self.rank, 'nb_iter': self.nb_samples})
 
             self.check_right_cardinality(dpp, dpp.list_of_samples[0])
 
-    def test_correlation_projection_A_zono(self):
+    def test_correlation_kernel_projection_kernel_eig(self):
 
-        rank, N = 6, 10
-        A = rndm.randn(rank, N)
+        eig_vals = np.ones(self.rank)
+        eig_vecs, _ = qr(rndm.randn(self.N, self.rank), mode='economic')
+
+        dpp = FiniteDPP(kernel_type='correlation',
+                        projection=True,
+                        **{'K_eig_dec': (eig_vals, eig_vecs)})
+
+        for mode in ('GS', 'GS_bis', 'KuTa12'):
+
+            dpp.flush_samples()
+            for _ in range(self.nb_samples):
+                dpp.sample_exact(mode)
+
+            self.check_right_cardinality(dpp, dpp.list_of_samples)
+
+        for mode in ('E'):
+
+            dpp.flush_samples()
+            dpp.sample_mcmc(mode, **{'size': self.rank, 'nb_iter': self.nb_samples})
+
+            self.check_right_cardinality(dpp, dpp.list_of_samples[0])
+
+    def test_correlation_kernel_projection_A_zono(self):
+        A = rndm.randn(self.rank, self.N)
 
         dpp = FiniteDPP(kernel_type='correlation',
                         projection=True,
@@ -120,16 +116,14 @@ class CardinalityOfFiniteDPPs(unittest.TestCase):
         for mode in ('zonotope', 'E'):
 
             dpp.flush_samples()
-            dpp.sample_mcmc(mode, **{'size': rank, 'nb_iter': self.nb_samples})
+            dpp.sample_mcmc(mode, **{'size': self.rank, 'nb_iter': self.nb_samples})
 
             self.check_right_cardinality(dpp, dpp.list_of_samples[0])
 
-    def test_correlation_kernel_eig(self):
+    def test_kernel_eig(self):
 
-        rank, N = 6, 10
-
-        eig_vals = rndm.rand(rank)
-        eig_vecs, _ = qr(rndm.randn(N, rank), mode="economic")
+        eig_vals = rndm.rand(self.rank)
+        eig_vecs, _ = qr(rndm.randn(self.N, self.rank), mode='economic')
 
         dpp = FiniteDPP(kernel_type='correlation',
                         projection=False,
@@ -150,12 +144,10 @@ class CardinalityOfFiniteDPPs(unittest.TestCase):
 
             self.check_right_cardinality(dpp, dpp.list_of_samples[0])
 
-    def test_correlation_kernel(self):
+    def test_kernel(self):
 
-        rank, N = 6, 10
-
-        eig_vals = rndm.rand(rank)
-        eig_vecs, _ = qr(rndm.randn(N, rank), mode="economic")
+        eig_vals = rndm.rand(self.rank)
+        eig_vecs, _ = qr(rndm.randn(self.N, self.rank), mode='economic')
 
         dpp = FiniteDPP(kernel_type='correlation',
                         projection=False,
@@ -179,10 +171,8 @@ class CardinalityOfFiniteDPPs(unittest.TestCase):
     # Likelihood kernel
     def test_likelihood_kernel_eig(self):
 
-        rank, N = 6, 10
-
-        eig_vals = 1 + rndm.geometric(p=0.5, size=rank)
-        eig_vecs, _ = qr(rndm.randn(N, rank), mode="economic")
+        eig_vals = 1 + rndm.geometric(p=0.5, size=self.rank)
+        eig_vecs, _ = qr(rndm.randn(self.N, self.rank), mode='economic')
 
         dpp = FiniteDPP(kernel_type='likelihood',
                         projection=False,
@@ -205,10 +195,8 @@ class CardinalityOfFiniteDPPs(unittest.TestCase):
 
     def test_likelihood_kernel(self):
 
-        rank, N = 6, 10
-
-        eig_vals = 1 + rndm.geometric(p=0.5, size=rank)
-        eig_vecs, _ = qr(rndm.randn(N, rank), mode="economic")
+        eig_vals = 1 + rndm.geometric(p=0.5, size=self.rank)
+        eig_vecs, _ = qr(rndm.randn(self.N, self.rank), mode='economic')
 
         dpp = FiniteDPP(kernel_type='likelihood',
                         projection=False,
@@ -231,9 +219,7 @@ class CardinalityOfFiniteDPPs(unittest.TestCase):
 
     def test_likelihood_kernel_L_gram_factor(self):
 
-        rank, N = 6, 10
-
-        phi = rndm.randn(rank, N)
+        phi = rndm.randn(self.rank, self.N)
 
         dpp = FiniteDPP(kernel_type='likelihood',
                         projection=False,
@@ -253,6 +239,151 @@ class CardinalityOfFiniteDPPs(unittest.TestCase):
             dpp.sample_mcmc(mode, **{'nb_iter': self.nb_samples})
 
             self.check_right_cardinality(dpp, dpp.list_of_samples[0])
+
+class CardinalityOfFinitekDPPs(unittest.TestCase):
+    """
+    """
+
+    nb_samples = 1000
+    rank, N = 6, 10
+    sizes = (1, 3, 5)
+
+    def check_right_cardinality(self, dpp, samples):
+
+        card_emp = np.array(list(map(len, samples)))
+
+        return self.assertTrue(np.all(card_emp == dpp.size_k_dpp))
+
+    # Correlation kernel
+    def test_kernel_eig(self):
+
+        eig_vals = rndm.rand(self.rank)
+        eig_vecs, _ = qr(rndm.randn(self.N, self.rank), mode='economic')
+
+        dpp = FiniteDPP(kernel_type='correlation',
+                        projection=False,
+                        **{'K_eig_dec': (eig_vals, eig_vecs)})
+
+        for size in self.sizes:
+
+            for mode in ('GS', 'GS_bis', 'KuTa12'):
+
+                dpp.flush_samples()
+                for _ in range(self.nb_samples):
+                    dpp.sample_exact_k_dpp(size, mode)
+
+                self.check_right_cardinality(dpp, dpp.list_of_samples)
+
+            for mode in ('AED', 'AD'):
+
+                dpp.flush_samples()
+                dpp.sample_mcmc_k_dpp(size, **{'nb_iter': self.nb_samples})
+
+                self.check_right_cardinality(dpp, dpp.list_of_samples[0])
+
+    def test_kernel(self):
+
+        eig_vals = rndm.rand(self.rank)
+        eig_vecs, _ = qr(rndm.randn(self.N, self.rank), mode='economic')
+
+        dpp = FiniteDPP(kernel_type='correlation',
+                        projection=False,
+                        **{'K': (eig_vecs * eig_vals).dot(eig_vecs.T)})
+
+        for size in self.sizes:
+
+            for mode in ('GS', 'GS_bis', 'KuTa12'):
+
+                dpp.flush_samples()
+                for _ in range(self.nb_samples):
+                    dpp.sample_exact_k_dpp(size, mode)
+
+                self.check_right_cardinality(dpp, dpp.list_of_samples)
+
+            for mode in ('AED', 'AD'):
+
+                dpp.flush_samples()
+                dpp.sample_mcmc_k_dpp(size, **{'nb_iter': self.nb_samples})
+
+                self.check_right_cardinality(dpp, dpp.list_of_samples[0])
+
+    # Likelihood kernel
+    def test_likelihood_kernel_eig(self):
+
+        eig_vals = 1 + rndm.geometric(p=0.5, size=self.rank)
+        eig_vecs, _ = qr(rndm.randn(self.N, self.rank), mode='economic')
+
+        dpp = FiniteDPP(kernel_type='likelihood',
+                        projection=False,
+                        **{'L_eig_dec': (eig_vals, eig_vecs)})
+
+        for size in self.sizes:
+
+            for mode in ('GS', 'GS_bis', 'KuTa12'):
+
+                dpp.flush_samples()
+                for _ in range(self.nb_samples):
+                    dpp.sample_exact_k_dpp(size, mode)
+
+                self.check_right_cardinality(dpp, dpp.list_of_samples)
+
+            for mode in ('AED', 'AD'):
+
+                dpp.flush_samples()
+                dpp.sample_mcmc_k_dpp(size, **{'nb_iter': self.nb_samples})
+
+                self.check_right_cardinality(dpp, dpp.list_of_samples[0])
+
+    def test_likelihood_kernel(self):
+
+        eig_vals = 1 + rndm.geometric(p=0.5, size=self.rank)
+        eig_vecs, _ = qr(rndm.randn(self.N, self.rank), mode='economic')
+
+        dpp = FiniteDPP(kernel_type='likelihood',
+                        projection=False,
+                        **{'L': (eig_vecs * eig_vals).dot(eig_vecs.T)})
+
+        for size in self.sizes:
+
+            for mode in ('GS', 'GS_bis', 'KuTa12'):
+
+                dpp.flush_samples()
+                for _ in range(self.nb_samples):
+                    dpp.sample_exact_k_dpp(size, mode)
+
+                self.check_right_cardinality(dpp, dpp.list_of_samples)
+
+            for mode in ('AED', 'AD'):
+
+                dpp.flush_samples()
+                dpp.sample_mcmc_k_dpp(size, **{'nb_iter': self.nb_samples})
+
+                self.check_right_cardinality(dpp, dpp.list_of_samples[0])
+
+    def test_likelihood_kernel_L_gram_factor(self):
+
+        phi = rndm.randn(self.rank, self.N)
+
+        dpp = FiniteDPP(kernel_type='likelihood',
+                        projection=False,
+                        **{'L_gram_factor': phi})
+
+        for size in self.sizes:
+
+            for mode in ('GS', 'GS_bis', 'KuTa12'):
+
+                dpp.flush_samples()
+                for _ in range(self.nb_samples):
+                    dpp.sample_exact_k_dpp(size, mode)
+
+                self.check_right_cardinality(dpp, dpp.list_of_samples)
+
+            for mode in ('AED', 'AD'):
+
+                dpp.flush_samples()
+                dpp.sample_mcmc_k_dpp(size, **{'nb_iter': self.nb_samples})
+
+                self.check_right_cardinality(dpp, dpp.list_of_samples[0])
 
 def main():
 

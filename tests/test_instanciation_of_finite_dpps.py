@@ -8,6 +8,7 @@ to check that instanciation of FiniteDPP in the various settings works well
 """
 
 import unittest
+import warnings
 
 import numpy as np
 import numpy.random as rndm
@@ -24,12 +25,21 @@ class InstanciationOfFiniteDppWithCorrelationKernel(unittest.TestCase):
     """ Test the instanciation of :py:class:`~dppy.finite_dpps.FiniteDPP` defined through its correlation kernel :math:`K`, which must satisfy :math:`0 \\preceq K \\preceq I`
     """
 
+    def test_instanciation_from_invalid_key(self):
+
+        with self.assertRaises(ValueError) as context:
+            dpp = FiniteDPP(kernel_type='correlation',
+                            projection=False,
+                            **{'random_key': 0})
+
+        self.assertTrue('Invalid parametrization of correlation kernel' in str(context.exception))
+
     def test_instanciation_from_eig_vals_equal_01(self):
 
         rank, N = 6, 10
 
         eig_vals = np.ones(rank)
-        eig_vecs, _ = qr(rndm.randn(N, rank), mode="economic")
+        eig_vecs, _ = qr(rndm.randn(N, rank), mode='economic')
 
         dpp = FiniteDPP(kernel_type='correlation',
                         projection=True,
@@ -40,7 +50,18 @@ class InstanciationOfFiniteDppWithCorrelationKernel(unittest.TestCase):
 
         self.assertTrue(np.allclose(dpp.K, K))
 
+        # If projection=True
         with self.assertRaises(ValueError) as context:
+            dpp.compute_L()
+
+        self.assertTrue('cannot be computed' in str(context.exception))
+
+        # If projection=False
+        dpp = FiniteDPP(kernel_type='correlation',
+                        projection=False,
+                        **{'K_eig_dec': (eig_vals, eig_vecs)})
+
+        with self.assertRaises(FloatingPointError) as context:
             dpp.compute_L()
 
         self.assertTrue('cannot be computed' in str(context.exception))
@@ -59,6 +80,16 @@ class InstanciationOfFiniteDppWithCorrelationKernel(unittest.TestCase):
 
         self.assertTrue(np.allclose(dpp.K, K))
 
+        # raise warning when projection not set to True
+        # https://docs.python.org/3/library/warnings.html
+        with warnings.catch_warnings(record=True) as w:
+            FiniteDPP(kernel_type='correlation',
+                      projection=False,
+                      **{'A_zono': rndm.randn(rank, N)})
+
+        self.assertTrue('Weird setting' in str(w[-1].message))
+
+        # Raise error when not full row rank
         with self.assertRaises(ValueError) as context:
 
             FiniteDPP(kernel_type='correlation',
@@ -71,7 +102,7 @@ class InstanciationOfFiniteDppWithCorrelationKernel(unittest.TestCase):
         rank, N = 6, 10
 
         eig_vals = rndm.rand(rank)
-        eig_vecs, _ = qr(rndm.randn(N, rank), mode="economic")
+        eig_vecs, _ = qr(rndm.randn(N, rank), mode='economic')
 
         dpp = FiniteDPP(kernel_type='correlation',
                         projection=False,
@@ -95,7 +126,7 @@ class InstanciationOfFiniteDppWithCorrelationKernel(unittest.TestCase):
         rank, N = 6, 10
 
         eig_vals = rndm.rand(rank)
-        eig_vecs, _ = qr(rndm.randn(N, rank), mode="economic")
+        eig_vecs, _ = qr(rndm.randn(N, rank), mode='economic')
 
         dpp = FiniteDPP(kernel_type='correlation',
                         projection=False,
@@ -108,14 +139,23 @@ class InstanciationOfFiniteDppWithCorrelationKernel(unittest.TestCase):
 
 
 class InstanciationOfFiniteDppWithLikelihoodKernel(unittest.TestCase):
-    """ Test the instanciation of :py:class:`~dppy.finite_dpps.FiniteDPP` defined through its likelyhood kernel :math:`L`, which must satisfy :math:`L \\succeq 0`
+    """ Test the instanciation of :py:class:`~dppy.finite_dpps.FiniteDPP` defined through its likelihood kernel :math:`L`, which must satisfy :math:`L \\succeq 0`
     """
+
+    def test_instanciation_from_invalid_key(self):
+
+        with self.assertRaises(ValueError) as context:
+            dpp = FiniteDPP(kernel_type='likelihood',
+                            projection=False,
+                            **{'random_key': 0})
+
+        self.assertTrue('Invalid parametrization of likelihood kernel' in str(context.exception))
 
     def test_instanciation_from_eig_vals_geq_0(self):
         rank, N = 6, 10
 
         eig_vals = 1 + rndm.geometric(p=0.5, size=rank)
-        eig_vecs, _ = qr(rndm.randn(N, rank), mode="economic")
+        eig_vecs, _ = qr(rndm.randn(N, rank), mode='economic')
 
         dpp = FiniteDPP(kernel_type='likelihood',
                         projection=False,
@@ -139,7 +179,7 @@ class InstanciationOfFiniteDppWithLikelihoodKernel(unittest.TestCase):
         rank, N = 6, 10
 
         eig_vals = 1 + rndm.geometric(p=0.5, size=rank)
-        eig_vecs, _ = qr(rndm.randn(N, rank), mode="economic")
+        eig_vecs, _ = qr(rndm.randn(N, rank), mode='economic')
 
         dpp = FiniteDPP(kernel_type='likelihood',
                         projection=False,
@@ -154,7 +194,7 @@ class InstanciationOfFiniteDppWithLikelihoodKernel(unittest.TestCase):
         rank, N = 6, 10
 
         eig_vals = np.ones(rank)
-        eig_vecs, _ = qr(rndm.randn(N, rank), mode="economic")
+        eig_vecs, _ = qr(rndm.randn(N, rank), mode='economic')
 
         dpp = FiniteDPP(kernel_type='likelihood',
                         projection=True,

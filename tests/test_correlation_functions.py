@@ -82,7 +82,7 @@ class InclusionProbabilitiesProjectionDPP(unittest.TestCase):
         This is the default sampler when calling `.sample_exact()`
         """
         eig_vals = np.ones(self.rank)
-        eig_vecs, _ = qr(rndm.randn(self.N, self.rank), mode="economic")
+        eig_vecs, _ = qr(rndm.randn(self.N, self.rank), mode='economic')
         dpp = FiniteDPP(kernel_type='correlation',
                         projection=True,
                         **{'K_eig_dec': (eig_vals, eig_vecs)})
@@ -103,7 +103,7 @@ class InclusionProbabilitiesProjectionDPP(unittest.TestCase):
         Evaluate the conditionals using an alternative GS
         """
         eig_vals = np.ones(self.rank)
-        eig_vecs, _ = qr(rndm.randn(self.N, self.rank), mode="economic")
+        eig_vecs, _ = qr(rndm.randn(self.N, self.rank), mode='economic')
         dpp = FiniteDPP(kernel_type='correlation',
                         projection=True,
                         **{'K_eig_dec': (eig_vals, eig_vecs)})
@@ -122,7 +122,7 @@ class InclusionProbabilitiesProjectionDPP(unittest.TestCase):
         Complexity :math:`\\mathcal{O}(N rank^3)`
         """
         eig_vals = np.ones(self.rank)
-        eig_vecs, _ = qr(rndm.randn(self.N, self.rank), mode="economic")
+        eig_vecs, _ = qr(rndm.randn(self.N, self.rank), mode='economic')
         dpp = FiniteDPP(kernel_type='correlation',
                         projection=True,
                         **{'K_eig_dec': (eig_vals, eig_vecs)})
@@ -146,7 +146,7 @@ class InclusionProbabilitiesProjectionDPP(unittest.TestCase):
             - :cite:`Pou19` Algorithm 1
         """
         eig_vals = np.ones(self.rank)
-        eig_vecs, _ = qr(rndm.randn(self.N, self.rank), mode="economic")
+        eig_vecs, _ = qr(rndm.randn(self.N, self.rank), mode='economic')
         dpp = FiniteDPP(kernel_type='correlation',
                         projection=True,
                         **{'K': (eig_vecs * eig_vals).dot(eig_vecs.T)})
@@ -165,7 +165,7 @@ class InclusionProbabilitiesProjectionDPP(unittest.TestCase):
         This is the default sampler when calling `.sample_exact()`
         """
         eig_vals = np.ones(self.rank)
-        eig_vecs, _ = qr(rndm.randn(self.N, self.rank), mode="economic")
+        eig_vecs, _ = qr(rndm.randn(self.N, self.rank), mode='economic')
         dpp = FiniteDPP(kernel_type='correlation',
                         projection=False,
                         **{'K': (eig_vecs * eig_vals).dot(eig_vecs.T)})
@@ -185,7 +185,7 @@ class InclusionProbabilitiesProjectionDPP(unittest.TestCase):
         This is the default sampler when calling `.sample_exact()`
         """
         eig_vals = np.ones(self.rank)
-        eig_vecs, _ = qr(rndm.randn(self.N, self.rank), mode="economic")
+        eig_vecs, _ = qr(rndm.randn(self.N, self.rank), mode='economic')
         dpp = FiniteDPP(kernel_type='correlation',
                         projection=True,
                         **{'K': (eig_vecs * eig_vals).dot(eig_vecs.T)})
@@ -205,7 +205,7 @@ class InclusionProbabilitiesProjectionDPP(unittest.TestCase):
         Evaluate the conditionals using the Schur complement updates
         """
         eig_vals = np.ones(self.rank)
-        eig_vecs, _ = qr(rndm.randn(self.N, self.rank), mode="economic")
+        eig_vecs, _ = qr(rndm.randn(self.N, self.rank), mode='economic')
         dpp = FiniteDPP(kernel_type='correlation',
                         projection=True,
                         **{'K': (eig_vecs * eig_vals).dot(eig_vecs.T)})
@@ -217,12 +217,12 @@ class InclusionProbabilitiesProjectionDPP(unittest.TestCase):
         self.assertTrue(self.singleton_adequation(dpp, dpp.list_of_samples))
         self.assertTrue(self.doubleton_adequation(dpp, dpp.list_of_samples))
 
-    def test_proj_dpp_sampler_as_kDPP_with_correlation(self):
+    def test_proj_dpp_sampler_as_kDPP_with_correlation_kernel_eig(self):
         """ Test whether projection DPP sampled as a k-DPP with k=rank(K) generates samples with the right 1 and 2 points inclusion probabilities when DPP defined by orthogonal projection correlation kernel K from its eigendecomposition
         """
 
         eig_vals = np.ones(self.rank)
-        eig_vecs, _ = qr(rndm.randn(self.N, self.rank), mode="economic")
+        eig_vecs, _ = qr(rndm.randn(self.N, self.rank), mode='economic')
         dpp = FiniteDPP(kernel_type='correlation',
                         projection=True,
                         **{'K_eig_dec': (eig_vals, eig_vecs)})
@@ -234,12 +234,45 @@ class InclusionProbabilitiesProjectionDPP(unittest.TestCase):
         self.assertTrue(self.singleton_adequation(dpp, dpp.list_of_samples))
         self.assertTrue(self.doubleton_adequation(dpp, dpp.list_of_samples))
 
-    def test_proj_dpp_sampler_as_kDPP_with_likelihood(self):
-        """ Test whether projection DPP sampled as a k-DPP with k=rank(K)  generates samples with the right 1 and 2 points inclusion probabilities when DPP defined by orthogonal projection likelihood kernel L from its eigendecomposition
+    def test_proj_dpp_sampler_as_kDPP_with_correlation_kernel(self):
+        """ Test whether projection DPP sampled as a k-DPP with k=rank(K) generates samples with the right 1 and 2 points inclusion probabilities when DPP defined by orthogonal projection correlation kernel K
         """
 
         eig_vals = np.ones(self.rank)
-        eig_vecs, _ = qr(rndm.randn(self.N, self.rank), mode="economic")
+        eig_vecs, _ = qr(rndm.randn(self.N, self.rank), mode='economic')
+        dpp = FiniteDPP(kernel_type='correlation',
+                        projection=True,
+                        **{'K': (eig_vecs * eig_vals).dot(eig_vecs.T)})
+
+        dpp.flush_samples()
+        for _ in range(self.nb_samples):
+            dpp.sample_exact_k_dpp(self.rank)
+
+        self.assertTrue(self.singleton_adequation(dpp, dpp.list_of_samples))
+        self.assertTrue(self.doubleton_adequation(dpp, dpp.list_of_samples))
+
+    def test_proj_dpp_sampler_as_kDPP_with_correlation_kernel_A_zono(self):
+        """ Test whether projection DPP sampled as a k-DPP with k=rank(K) generates samples with the right 1 and 2 points inclusion probabilities when DPP defined by orthogonal projection correlation kernel K from A_zono: K = A.T (A A.T)^-1 A
+        """
+
+        A = rndm.randn(self.rank, self.N)
+        dpp = FiniteDPP(kernel_type='correlation',
+                        projection=True,
+                        **{'A_zono': A})
+
+        dpp.flush_samples()
+        for _ in range(self.nb_samples):
+            dpp.sample_exact_k_dpp(self.rank)
+
+        self.assertTrue(self.singleton_adequation(dpp, dpp.list_of_samples))
+        self.assertTrue(self.doubleton_adequation(dpp, dpp.list_of_samples))
+
+    def test_proj_dpp_sampler_as_kDPP_with_likelihood_kernel_eig_proj_true(self):
+        """ Test whether projection DPP sampled as a k-DPP with k=rank(K)  generates samples with the right 1 and 2 points inclusion probabilities when DPP defined by orthogonal projection likelihood kernel L
+        """
+
+        eig_vals = np.ones(self.rank)
+        eig_vecs, _ = qr(rndm.randn(self.N, self.rank), mode='economic')
         dpp = FiniteDPP(kernel_type='likelihood',
                         projection=True,
                         **{'L_eig_dec': (eig_vals, eig_vecs)})
@@ -254,13 +287,13 @@ class InclusionProbabilitiesProjectionDPP(unittest.TestCase):
         self.assertTrue(self.singleton_adequation(dpp, dpp.list_of_samples))
         self.assertTrue(self.doubleton_adequation(dpp, dpp.list_of_samples))
 
-    def test_proj_dpp_sampler_as_kDPP_with_likelihood(self):
+    def test_proj_dpp_sampler_as_kDPP_with_likelihood_kernel_eig_proj_false(self):
         """ Test whether projection DPP sampled as a k-DPP with k=rank(K)  generates samples with the right 1 and 2 points inclusion probabilities when DPP defined by orthogonal projection likelihood kernel L from its eigendecomposition and projection is set to False in order to go through the computation of elementary symmetric polynomials etc
         """
         eig_vals = np.zeros(self.N)
         eig_vals[:self.rank] = 1.0
 
-        eig_vecs, _ = qr(rndm.randn(self.N, self.N), mode="economic")
+        eig_vecs, _ = qr(rndm.randn(self.N, self.N), mode='economic')
         dpp = FiniteDPP(kernel_type='likelihood',
                         projection=False,
                         **{'L_eig_dec': (eig_vals, eig_vecs)})
@@ -275,6 +308,25 @@ class InclusionProbabilitiesProjectionDPP(unittest.TestCase):
         self.assertTrue(self.singleton_adequation(dpp, dpp.list_of_samples))
         self.assertTrue(self.doubleton_adequation(dpp, dpp.list_of_samples))
 
+    def test_proj_dpp_sampler_as_kDPP_with_likelihood_kernel(self):
+        """ Test whether projection DPP sampled as a k-DPP with k=rank(K)  generates samples with the right 1 and 2 points inclusion probabilities when DPP defined by orthogonal projection likelihood kernel L from its eigendecomposition
+        """
+
+        eig_vals = np.ones(self.rank)
+        eig_vecs, _ = qr(rndm.randn(self.N, self.rank), mode='economic')
+        dpp = FiniteDPP(kernel_type='likelihood',
+                        projection=True,
+                        **{'L': (eig_vecs*eig_vals).dot(eig_vecs.T)})
+
+        dpp.flush_samples()
+        for _ in range(self.nb_samples):
+            dpp.sample_exact_k_dpp(self.rank)
+
+        dpp.compute_L()
+        dpp.K = dpp.L
+
+        self.assertTrue(self.singleton_adequation(dpp, dpp.list_of_samples))
+        self.assertTrue(self.doubleton_adequation(dpp, dpp.list_of_samples))
 
     def test_mcmc_sampler_zonotope(self):
         """ Test whether 'zonotope' MCMC sampling mode generates samples with the right 1 and 2 points inclusion probabilities when DPP defined by orthogonal projection correlation kernel K = A.T (A A.T)^-1 A
@@ -295,7 +347,7 @@ class InclusionProbabilitiesProjectionDPP(unittest.TestCase):
         """
 
         eig_vals = np.ones(self.rank)
-        eig_vecs, _ = qr(rndm.randn(self.N, self.rank), mode="economic")
+        eig_vecs, _ = qr(rndm.randn(self.N, self.rank), mode='economic')
 
         dpp = FiniteDPP(kernel_type='correlation',
                         projection=True,
@@ -305,6 +357,23 @@ class InclusionProbabilitiesProjectionDPP(unittest.TestCase):
 
         self.assertTrue(self.singleton_adequation(dpp, dpp.list_of_samples[0]))
         self.assertTrue(self.doubleton_adequation(dpp, dpp.list_of_samples[0]))
+
+    def test_mcmc_sampler_basis_exchange(self):
+        """ Test whether 'E' (basis_exchange) MCMC sampling mode generates samples with the right 1 and 2 points inclusion probabilities when DPP defined by orthogonal projection correlation kernel K from its eigendecomposition
+        """
+
+        eig_vals = np.ones(self.rank)
+        eig_vecs, _ = qr(rndm.randn(self.N, self.rank), mode='economic')
+
+        dpp = FiniteDPP(kernel_type='correlation',
+                        projection=True,
+                        **{'K_eig_dec': (eig_vals, eig_vecs)})
+
+        dpp.sample_mcmc_k_dpp(size=self.rank, **{'nb_iter': 1000})
+
+        self.assertTrue(self.singleton_adequation(dpp, dpp.list_of_samples[0]))
+        self.assertTrue(self.doubleton_adequation(dpp, dpp.list_of_samples[0]))
+
 
 
 def main():

@@ -107,7 +107,7 @@ class TestUtils(unittest.TestCase):
         self.assertTrue('M^2 != M' in str(context.exception))
 
         Y = rndm.randn(N, rank)
-        eig_vecs, _ = qr(Y, mode="economic")
+        eig_vecs, _ = qr(Y, mode='economic')
         K_proj_2 = eig_vecs.dot(eig_vecs.T)
 
         self.assertTrue(
@@ -125,7 +125,7 @@ class TestUtils(unittest.TestCase):
 
         N, rank = 30, 10
         X = rndm.randn(N, rank)
-        eig_vecs, _ = qr(X, mode="economic")
+        eig_vecs, _ = qr(X, mode='economic')
 
         self.assertTrue(
             np.allclose(utils.is_orthonormal(eig_vecs),
