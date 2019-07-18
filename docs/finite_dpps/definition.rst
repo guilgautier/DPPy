@@ -130,7 +130,7 @@ where :math:`e_k(L)` corresponds to the `elementary symmetric polymial <https://
 .. warning::
 
 	k-DPPs are not DPPs in general.
-	Viewed as :math:`\operatorname{DPPs}` conditioned to a fixed sample size :math:`|\mathcal{X}|=k`, the only case where they coincide is when *projection* :math:`\operatorname{DPP}(\mathbf{K})` is considered and :math:`k=\operatorname{rank}(\mathbf{K})`, see :eq:`marginal_projection_K`.
+	Viewed as :math:`\operatorname{DPPs}` conditioned to a fixed sample size :math:`|\mathcal{X}|=k`, the only case where they coincide is when the original DPP is a *projection* :math:`\operatorname{DPP}(\mathbf{K})`, and :math:`k=\operatorname{rank}(\mathbf{K})`, see :eq:`marginal_projection_K`.
 
 .. seealso::
 
