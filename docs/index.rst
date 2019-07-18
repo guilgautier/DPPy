@@ -26,7 +26,7 @@ As a contraction of **DPPs and Python, DPPy** is an effort to gather:
 
   * :ref:`uniform spanning trees <UST>` |tree|
   * :ref:`descent processes <stationary_1-dependent_process>` |numbers|
-  * :ref:`Poissonized Plancherel <poissonized_plancherel_measure>` |histogram|
+  * the :ref:`Poissonized Plancherel <poissonized_plancherel_measure>` |histogram|
 
 The purpose of this **documentation** is to both provide a **quick survey of DPPs and relate each mathematical property with its implementation in DPPy**.
 The documentation can thus be read in different ways:
