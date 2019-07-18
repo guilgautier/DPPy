@@ -34,15 +34,20 @@ from itertools import chain  # create graph edges from path
 # For class PoissonizedPlancherel
 from bisect import bisect_right  # for RSK
 
+from dppy.utils import check_random_state
 
-def ust_sampler_wilson(list_of_neighbors, root=None):
+
+def ust_sampler_wilson(list_of_neighbors, root=None,
+                       random_state=None):
+
+    rng = check_random_state(random_state)
 
     # Initialize the tree
     wilson_tree_graph = nx.Graph()
     nb_nodes = len(list_of_neighbors)
 
     # Initialize the root, if root not specified start from any node
-    n0 = root if root else np.random.choice(nb_nodes)  # size=1)[0]
+    n0 = root if root else rng.choice(nb_nodes)  # size=1)[0]
     # -1 = not visited / 0 = in path / 1 = in tree
     state = -np.ones(nb_nodes, dtype=int)
     state[n0] = 1
@@ -53,7 +58,7 @@ def ust_sampler_wilson(list_of_neighbors, root=None):
     while nb_nodes_in_tree < nb_nodes:  # |Tree| = |V| - 1
 
         # visit a neighbor of n0 uniformly at random
-        n1 = np.random.choice(list_of_neighbors[n0])  # size=1)[0]
+        n1 = rng.choice(list_of_neighbors[n0])  # size=1)[0]
 
         if state[n1] == -1:  # not visited => continue the walk
 
@@ -82,7 +87,7 @@ def ust_sampler_wilson(list_of_neighbors, root=None):
             # Restart the walk from a random node among those not visited
             nodes_not_visited = np.where(state == -1)[0]
             if nodes_not_visited.size:
-                n0 = np.random.choice(nodes_not_visited)  # size=1)[0]
+                n0 = rng.choice(nodes_not_visited)  # size=1)[0]
                 path = [n0]
 
     tree_edges = list(chain.from_iterable(map(lambda x: zip(x[:-1], x[1:]),
@@ -92,14 +97,17 @@ def ust_sampler_wilson(list_of_neighbors, root=None):
     return wilson_tree_graph
 
 
-def ust_sampler_aldous_broder(list_of_neighbors, root=None):
+def ust_sampler_aldous_broder(list_of_neighbors, root=None,
+                              random_state=None):
+
+    rng = check_random_state(random_state)
 
     # Initialize the tree
     aldous_tree_graph = nx.Graph()
     nb_nodes = len(list_of_neighbors)
 
     # Initialize the root, if root not specified start from any node
-    n0 = root if root else np.random.choice(nb_nodes)  # size=1)[0]
+    n0 = root if root else rng.choice(nb_nodes)  # size=1)[0]
     visited = np.zeros(nb_nodes, dtype=bool)
     visited[n0] = True
     nb_nodes_in_tree = 1
@@ -109,7 +117,7 @@ def ust_sampler_aldous_broder(list_of_neighbors, root=None):
     while nb_nodes_in_tree < nb_nodes:
 
         # visit a neighbor of n0 uniformly at random
-        n1 = np.random.choice(list_of_neighbors[n0])  # size=1)[0]
+        n1 = rng.choice(list_of_neighbors[n0])  # size=1)[0]
 
         if visited[n1]:
             pass  # continue the walk
@@ -125,7 +133,7 @@ def ust_sampler_aldous_broder(list_of_neighbors, root=None):
     return aldous_tree_graph
 
 
-def uniform_permutation(N):
+def uniform_permutation(N, random_state=None):
     """ Draw a perputation :math:`\\sigma \\in \\mathfrak{S}_N` uniformly at random using Fisher-Yates' algorithm
 
     .. seealso::
@@ -134,16 +142,17 @@ def uniform_permutation(N):
 
         - `Numpy shuffle <https://github.com/numpy/numpy/blob/d429f0fe16c0407509b1f20d997bf94f1027f61b/numpy/random/mtrand.pyx#L4027>_`
     """
+    rng = check_random_state(random_state)
 
     sigma = np.arange(N)
     for i in range(N - 1, 0, -1):  # reversed(range(1, N))
-        j = np.random.randint(0, i + 1)
+        j = rng.randint(0, i + 1)
         if j == i:
             continue
         sigma[j], sigma[i] = sigma[i], sigma[j]
 
     # for i in range(N - 1):
-    #     j = np.random.randint(i, N)
+    #     j = rng.randint(i, N)
     #     sigma[j], sigma[i] = sigma[i], sigma[j]
 
     return sigma

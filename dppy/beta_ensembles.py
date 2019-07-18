@@ -44,6 +44,8 @@ from re import findall as re_findall  # to convert class names to string
 
 import dppy.random_matrices as rm
 
+from dppy.utils import check_random_state
+
 
 class BetaEnsemble(metaclass=abc.ABCMeta):
     """ :math:`\\beta`-Ensemble object parametrized by
@@ -136,7 +138,8 @@ class HermiteEnsemble(BetaEnsemble):
                   'size_N': 10}
         self.params.update(params)
 
-    def sample_full_model(self, size_N=10):
+    def sample_full_model(self, size_N=10,
+                          random_state=None):
         """ Sample from :ref:`tridiagonal matrix model <Hermite_ensemble_full>` for Hermite ensemble.
         Only available for :py:attr:`beta` :math:`\\in\\{1, 2, 4\\}`
         and the degenerate case :py:attr:`beta` :math:`=0` corresponding to i.i.d. points from the Gaussian :math:`\\mathcal{N}(\\mu,\\sigma^2)` reference measure
@@ -158,6 +161,7 @@ class HermiteEnsemble(BetaEnsemble):
             - :ref:`Full matrix model <hermite_ensemble_full>` for Hermite ensemble
             - :py:meth:`sample_banded_model`
         """
+        rng = check_random_state(random_state)
 
         self.sampling_mode = 'full'
         params = {'loc': 0.0, 'scale': np.sqrt(2.0),
@@ -166,15 +170,18 @@ class HermiteEnsemble(BetaEnsemble):
 
         if self.beta == 0:  # Answer issue #28 raised by @rbardenet
             # Sample N i.i.d. gaussian N(0,2)
-            sampl = np.random.normal(loc=params['loc'],
-                                     scale=params['scale'],
-                                     size=params['size_N'])
+            sampl = rng.normal(loc=params['loc'],
+                               scale=params['scale'],
+                               size=params['size_N'])
         else:  # if beta > 0
-            sampl = rm.hermite_sampler_full(N=params['size_N'], beta=self.beta)
+            sampl = rm.hermite_sampler_full(N=params['size_N'],
+                                            beta=self.beta,
+                                            random_state=rng)
 
         self.list_of_samples.append(sampl)
 
-    def sample_banded_model(self, loc=0.0, scale=np.sqrt(2.0), size_N=10):
+    def sample_banded_model(self, loc=0.0, scale=np.sqrt(2.0), size_N=10,
+                            random_state=None):
         """ Sample from :ref:`tridiagonal matrix model <Hermite_ensemble_full>` for Hermite Ensemble.
         Available for :py:attr:`beta` attribute  :math:`\\beta>0` and the degenerate case :py:attr:`beta` :math:`=0` corresponding to i.i.d. points from the Gaussian :math:`\\mathcal{N}(\\mu,\\sigma^2)` reference measure
 
@@ -206,6 +213,7 @@ class HermiteEnsemble(BetaEnsemble):
             - :cite:`DuEd02` II-C
             - :py:meth:`sample_full_model`
         """
+        rng = check_random_state(random_state)
 
         self.sampling_mode = 'banded'
         params = {'loc': loc, 'scale': scale, 'size_N': size_N}
@@ -213,14 +221,15 @@ class HermiteEnsemble(BetaEnsemble):
 
         if self.beta == 0:  # Answer issue #28 raised by @rbardenet
             # Sample N i.i.d. gaussian N(mu, sigma^2)
-            sampl = np.random.normal(loc=params['loc'],
-                                     scale=params['scale'],
-                                     size=params['size_N'])
+            sampl = rng.normal(loc=params['loc'],
+                               scale=params['scale'],
+                               size=params['size_N'])
         else:  # if beta > 0
             sampl = rm.mu_ref_normal_sampler_tridiag(loc=params['loc'],
                                                      scale=params['scale'],
                                                      beta=self.beta,
-                                                     size=params['size_N'])
+                                                     size=params['size_N'],
+                                                     random_state=rng)
 
         self.list_of_samples.append(sampl)
 
@@ -387,7 +396,8 @@ class LaguerreEnsemble(BetaEnsemble):
                   'size_N': 10, 'size_M': None}
         self.params.update(params)
 
-    def sample_full_model(self, size_N=10, size_M=100):
+    def sample_full_model(self, size_N=10, size_M=100,
+                          random_state=None):
         """ Sample from :ref:`full matrix model <Laguerre_ensemble_full>` for Laguerre ensemble. Only available for :py:attr:`beta` :math:`\\in\\{1, 2, 4\\}` and the degenerate case :py:attr:`beta` :math:`=0` corresponding to i.i.d. points from the :math:`\\Gamma(k,\\theta)` reference measure
 
         :param size_N:
@@ -414,6 +424,7 @@ class LaguerreEnsemble(BetaEnsemble):
             - :ref:`Full matrix model <Laguerre_ensemble_full>` for Laguerre ensemble
             - :py:meth:`sample_banded_model`
         """
+        rng = check_random_state(random_state)
 
         self.sampling_mode = 'full'
 
@@ -430,12 +441,12 @@ class LaguerreEnsemble(BetaEnsemble):
         self.params.update(params)
 
         if self.beta == 0:  # Answer issue #28 raised by @rbardenet
-            # np.random.gamma(shape=0,...) when doesn't return error! contrary to sp.stats.gamma(a=0).rvs(), see https://github.com/numpy/numpy/issues/12367
+            # rng.gamma(shape=0,...) when doesn't return error! contrary to sp.stats.gamma(a=0).rvs(), see https://github.com/numpy/numpy/issues/12367
             # sampl = sp_gamma.rvs(a=params['shape'], loc=0.0, scale=params['scale'],                                       size=params['size_N'])
             if params['shape'] > 0:
-                sampl = np.random.gamma(shape=params['shape'],
-                                        scale=params['scale'],
-                                        size=params['size_N'])
+                sampl = rng.gamma(shape=params['shape'],
+                                  scale=params['scale'],
+                                  size=params['size_N'])
             else:
                 err_print = ('shape<=0.',
                              'Here beta=0, hence shape=beta/2*(M-N+1)=0')
@@ -444,13 +455,15 @@ class LaguerreEnsemble(BetaEnsemble):
         else:  # if beta > 0
             sampl = rm.laguerre_sampler_full(M=params['size_M'],
                                              N=params['size_N'],
-                                             beta=self.beta)
+                                             beta=self.beta,
+                                             random_state=rng)
 
         self.list_of_samples.append(sampl)
 
     def sample_banded_model(self,
                             shape=1.0, scale=2.0,
-                            size_N=10, size_M=None):
+                            size_N=10, size_M=None,
+                            random_state=None):
         """ Sample from :ref:`tridiagonal matrix model <Laguerre_ensemble_full>` for Laguerre ensemble. Available for :py:attr:`beta` :math:`>0` and the degenerate case :py:attr:`beta` :math:`=0` corresponding to i.i.d. points from the :math:`\\Gamma(k,\\theta)` reference measure
 
         :param shape:
@@ -499,6 +512,7 @@ class LaguerreEnsemble(BetaEnsemble):
             - :cite:`DuEd02` III-B
             - :py:meth:`sample_full_model`
         """
+        rng = check_random_state(random_state)
 
         self.sampling_mode = 'banded'
 
@@ -522,12 +536,12 @@ class LaguerreEnsemble(BetaEnsemble):
         self.params.update(params)
 
         if self.beta == 0:  # Answer issue #28 raised by @rbardenet
-            # np.random.gamma(shape=0,...) when doesn't return error! contrary to sp.stats.gamma(a=0).rvs(), see https://github.com/numpy/numpy/issues/12367
+            # rng.gamma(shape=0,...) when doesn't return error! contrary to sp.stats.gamma(a=0).rvs(), see https://github.com/numpy/numpy/issues/12367
             # sampl = sp_gamma.rvs(a=params['shape'], loc=0.0, scale=params['scale'], size=params['size_N'])
             if params['shape'] > 0:
-                sampl = np.random.gamma(shape=params['shape'],
-                                        scale=params['scale'],
-                                        size=params['size_N'])
+                sampl = rng.gamma(shape=params['shape'],
+                                  scale=params['scale'],
+                                  size=params['size_N'])
             else:
                 err_print = ('shape<=0.',
                              'Here beta=0, hence shape=beta/2*(M-N+1)=0')
@@ -537,7 +551,8 @@ class LaguerreEnsemble(BetaEnsemble):
             sampl = rm.mu_ref_gamma_sampler_tridiag(shape=params['shape'],
                                                     scale=params['scale'],
                                                     beta=self.beta,
-                                                    size=params['size_N'])
+                                                    size=params['size_N'],
+                                                    random_state=rng)
 
         self.list_of_samples.append(sampl)
 
@@ -706,7 +721,8 @@ class JacobiEnsemble(BetaEnsemble):
                   'size_N': 10, 'size_M1': None, 'size_M2': None}
         self.params.update(params)
 
-    def sample_full_model(self, size_N=100, size_M1=150, size_M2=200):
+    def sample_full_model(self, size_N=100, size_M1=150, size_M2=200,
+                          random_state=None):
         """ Sample from :ref:`full matrix model <Jacobi_ensemble_full>` for Jacobi ensemble. Only available for :py:attr:`beta` :math:`\\in\\{1, 2, 4\\}` and the degenerate case :py:attr:`beta` :math:`=0` corresponding to i.i.d. points from the :math:`\\operatorname{Beta}(a,b)` reference measure
 
         :param size_N:
@@ -742,6 +758,7 @@ class JacobiEnsemble(BetaEnsemble):
             - :ref:`Full matrix model <Jacobi_ensemble_full>` for Jacobi ensemble
             - :py:meth:`sample_banded_model`
         """
+        rng = check_random_state(random_state)
 
         self.sampling_mode = 'full'
 
@@ -763,18 +780,20 @@ class JacobiEnsemble(BetaEnsemble):
 
         if self.beta == 0:  # Answer issue #28 raised by @rbardenet
             # Sample i.i.d. Beta(a,b) if size_M1,2 were used a,b = beta/2 (M_1,2 - N + 1) = 0 => ERROR
-            sampl = np.random.beta(a=params['a'], b=params['b'],
-                                   size=params['size_N'])
+            sampl = rng.beta(a=params['a'], b=params['b'],
+                             size=params['size_N'])
         else:
             sampl = rm.jacobi_sampler_full(M_1=params['size_M1'],
                                            M_2=params['size_M2'],
                                            N=params['size_N'],
-                                           beta=self.beta)
+                                           beta=self.beta,
+                                           random_state=rng)
 
         self.list_of_samples.append(sampl)
 
     def sample_banded_model(self, a=1.0, b=2.0,
-                            size_N=10, size_M1=None, size_M2=None):
+                            size_N=10, size_M1=None, size_M2=None,
+                            random_state=None):
         """ Sample from :ref:`tridiagonal matrix model <Jacobi_ensemble_full>` for Jacobi ensemble. Available for :py:attr:`beta` :math:`>0` and the degenerate case :py:attr:`beta` :math:`=0` corresponding to i.i.d. points from the :math:`\\operatorname{Beta}(a,b)` reference measure
 
         :param shape:
@@ -832,6 +851,7 @@ class JacobiEnsemble(BetaEnsemble):
             - :cite:`KiNe04` Theorem 2
             - :py:meth:`sample_full_model`
         """
+        rng = check_random_state(random_state)
 
         self.sampling_mode = 'banded'
 
@@ -863,13 +883,14 @@ class JacobiEnsemble(BetaEnsemble):
         if self.beta == 0:  # Answer issue #28 raised by @rbardenet
             # Sample i.i.d. Beta(a,b)
             # If size_M1,2 is used a, b = beta/2 (M1,2 - N + 1) = 0 => ERROR
-            sampl = np.random.beta(a=params['a'], b=params['b'],
-                                   size=params['size_N'])
+            sampl = rng.beta(a=params['a'], b=params['b'],
+                             size=params['size_N'])
         else:
             sampl = rm.mu_ref_beta_sampler_tridiag(a=params['a'],
                                                    b=params['b'],
                                                    beta=self.beta,
-                                                   size=params['size_N'])
+                                                   size=params['size_N'],
+                                                   random_state=rng)
 
         self.list_of_samples.append(sampl)
 
@@ -986,7 +1007,8 @@ class CircularEnsemble(BetaEnsemble):
         params = {'size_N': 10}
         self.params.update(params)
 
-    def sample_full_model(self, size_N=10, haar_mode='Hermite'):
+    def sample_full_model(self, size_N=10, haar_mode='Hermite',
+                          random_state=None):
         """ Sample from :ref:`tridiagonal matrix model <Circular_ensemble_full>` for Circular ensemble. Only available for :py:attr:`beta` :math:`\\in\\{1, 2, 4\\}` and the degenerate case :py:attr:`beta` :math:`=0` corresponding to i.i.d. uniform points on the unit circle
 
         :param size_N:
@@ -1006,6 +1028,7 @@ class CircularEnsemble(BetaEnsemble):
             - :ref:`Full matrix model <circular_ensemble_full>` for Circular ensemble
             - :py:meth:`sample_banded_model`
         """
+        rng = check_random_state(random_state)
 
         self.sampling_mode = 'full'
         params = {'size_N': size_N, 'haar_mode': haar_mode}
@@ -1013,15 +1036,17 @@ class CircularEnsemble(BetaEnsemble):
 
         if self.beta == 0:  # i.i.d. points uniformly on the circle
             # Answer issue #28 raised by @rbardenet
-            sampl = np.exp(2 * 1j * np.pi * np.random.rand(params['size_N']))
+            sampl = np.exp(2 * 1j * np.pi * rng.rand(params['size_N']))
         else:
             sampl = rm.circular_sampler_full(N=params['size_N'],
                                              beta=self.beta,
-                                             haar_mode=params['haar_mode'])
+                                             haar_mode=params['haar_mode'],
+                                             random_state=rng)
 
         self.list_of_samples.append(sampl)
 
-    def sample_banded_model(self, size_N=10):
+    def sample_banded_model(self, size_N=10,
+                            random_state=None):
         """ Sample from :ref:`tridiagonal matrix model <Circular_ensemble_full>` for Circular Ensemble.
         Available for :py:attr:`beta` :math:`\\in\\mathbb{N}^*`, and the degenerate case :py:attr:`beta` :math:`=0` corresponding to i.i.d. uniform points on the unit circle
 
@@ -1039,6 +1064,7 @@ class CircularEnsemble(BetaEnsemble):
             - :ref:`Quindiagonal matrix model <circular_ensemble_banded>` for Circular ensemble
             - :py:meth:`sample_full_model`
         """
+        rng = check_random_state(random_state)
 
         self.sampling_mode = 'banded'
         params = {'size_N': size_N}
@@ -1046,9 +1072,12 @@ class CircularEnsemble(BetaEnsemble):
 
         if self.beta == 0:  # i.i.d. points uniformly on the circle
             # Answer issue #28 raised by @rbardenet
-            sampl = np.exp(2 * 1j * np.pi * np.random.rand(params['size_N']))
+            sampl = np.exp(2 * 1j * np.pi * rng.rand(params['size_N']))
         else:
-            sampl = rm.mu_ref_unif_unit_circle_sampler_quindiag(beta=self.beta,                                         size=params['size_N'])
+            sampl = rm.mu_ref_unif_unit_circle_sampler_quindiag(
+                        beta=self.beta,
+                        size=params['size_N'],
+                        random_state=rng)
 
         self.list_of_samples.append(sampl)
 
@@ -1144,7 +1173,8 @@ class GinibreEnsemble(BetaEnsemble):
         params = {'size_N': 10}
         self.params.update(params)
 
-    def sample_full_model(self, size_N=10):
+    def sample_full_model(self, size_N=10,
+                          random_state=None):
         """ Sample from :ref:`full matrix model <Ginibre_ensemble_full>` for Ginibre ensemble. Only available for :py:attr:`beta` :math:`=2`
 
         :param size_N:
@@ -1157,9 +1187,11 @@ class GinibreEnsemble(BetaEnsemble):
             - :ref:`Full matrix model <ginibre_ensemble_full>` for Ginibre ensemble
             - :py:meth:`sample_banded_model`
         """
+        rng = check_random_state(random_state)
 
         self.params.update({'size_N': size_N})
-        sampl = rm.ginibre_sampler_full(N=self.params['size_N'])
+        sampl = rm.ginibre_sampler_full(N=self.params['size_N'],
+                                        random_state=rng)
 
         self.list_of_samples.append(sampl)
 

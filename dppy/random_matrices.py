@@ -16,24 +16,29 @@ import numpy as np
 import scipy.linalg as la
 import scipy.sparse as sp
 
+from dppy.utils import check_random_state
+
 
 ###########
 # Hermite #
 ###########
 # Hermite, full matrix model
-def hermite_sampler_full(N, beta=2):
+def hermite_sampler_full(N, beta=2,
+                         random_state=None):
 
     # size_sym_mat = int(N * (N-1) / 2)
 
+    rng = check_random_state(random_state)
+
     if beta == 1:
-        A = np.random.randn(N, N)
+        A = rng.randn(N, N)
 
     elif beta == 2:
-        A = np.random.randn(N, N) + 1j * np.random.randn(N, N)
+        A = rng.randn(N, N) + 1j * rng.randn(N, N)
 
     elif beta == 4:
-        X = np.random.randn(N, N) + 1j * np.random.randn(N, N)
-        Y = np.random.randn(N, N) + 1j * np.random.randn(N, N)
+        X = rng.randn(N, N) + 1j * rng.randn(N, N)
+        Y = rng.randn(N, N) + 1j * rng.randn(N, N)
 
         A = np.block([[X, Y], [-Y.conj(), X.conj()]])
 
@@ -47,20 +52,23 @@ def hermite_sampler_full(N, beta=2):
 
 
 # Hermite tridiag
-def hermite_sampler_tridiag(N, beta=2):
-    """
-    .. seealso::
+# def hermite_sampler_tridiag(N, beta=2,
+#                             random_state=None):
+#     """
+#     .. seealso::
 
-        :cite:`DuEd02` II-C
-    """
+#         :cite:`DuEd02` II-C
+#     """
 
-    if not (beta > 0):
-        raise ValueError('`beta` must be positive. Given: {}'.format(beta))
+#     rng = check_random_state(random_state)
 
-    alpha_coef = np.sqrt(2) * np.random.randn(N)
-    beta_coef = np.random.chisquare(beta * np.arange(N - 1, 0, step=-1))
+#     if not (beta > 0):
+#         raise ValueError('`beta` must be positive. Given: {}'.format(beta))
 
-    return la.eigvalsh_tridiagonal(alpha_coef, np.sqrt(beta_coef))
+#     alpha_coef = np.sqrt(2) * rng.randn(N)
+#     beta_coef = rng.chisquare(beta * np.arange(N - 1, 0, step=-1))
+
+#     return la.eigvalsh_tridiagonal(alpha_coef, np.sqrt(beta_coef))
 
 
 # Semi-circle law
@@ -76,12 +84,15 @@ def semi_circle_law(x, R=2.0):
 
 
 # mu_ref = normal
-def mu_ref_normal_sampler_tridiag(loc=0.0, scale=1.0, beta=2, size=10):
+def mu_ref_normal_sampler_tridiag(loc=0.0, scale=1.0, beta=2, size=10,
+                                 random_state=None):
     """
     .. seealso::
 
         :cite:`DuEd02` II-C
     """
+
+    rng = check_random_state(random_state)
 
     if not (beta > 0):
         raise ValueError('`beta` must be positive. Given: {}'.format(beta))
@@ -89,8 +100,8 @@ def mu_ref_normal_sampler_tridiag(loc=0.0, scale=1.0, beta=2, size=10):
     # beta/2*[N-1, N-2, ..., 1]
     b_2_Ni = 0.5 * beta * np.arange(size - 1, 0, step=-1)
 
-    alpha_coef = np.random.normal(loc=loc, scale=scale, size=size)
-    beta_coef = np.random.gamma(shape=b_2_Ni, scale=scale**2)
+    alpha_coef = rng.normal(loc=loc, scale=scale, size=size)
+    beta_coef = rng.gamma(shape=b_2_Ni, scale=scale**2)
 
     return la.eigvalsh_tridiagonal(alpha_coef, np.sqrt(beta_coef))
 
@@ -99,17 +110,20 @@ def mu_ref_normal_sampler_tridiag(loc=0.0, scale=1.0, beta=2, size=10):
 # Laguerre #
 ############
 # Laguerre, full matrix model
-def laguerre_sampler_full(M, N, beta=2):
+def laguerre_sampler_full(M, N, beta=2,
+                          random_state=None):
+
+    rng = check_random_state(random_state)
 
     if beta == 1:
-        A = np.random.randn(N, M)
+        A = rng.randn(N, M)
 
     elif beta == 2:
-        A = np.random.randn(N, M) + 1j * np.random.randn(N, M)
+        A = rng.randn(N, M) + 1j * rng.randn(N, M)
 
     elif beta == 4:
-        X = np.random.randn(N, M) + 1j * np.random.randn(N, M)
-        Y = np.random.randn(N, M) + 1j * np.random.randn(N, M)
+        X = rng.randn(N, M) + 1j * rng.randn(N, M)
+        Y = rng.randn(N, M) + 1j * rng.randn(N, M)
         A = np.block([[X, Y], [-Y.conj(), X.conj()]])
 
     else:
@@ -121,31 +135,34 @@ def laguerre_sampler_full(M, N, beta=2):
 
 
 # Laguerre, tridiagonal model
-def laguerre_sampler_tridiag(M, N, beta=2):
-    """
-    .. seealso::
+# def laguerre_sampler_tridiag(M, N, beta=2,
+#                              random_state=None):
+#     """
+#     .. seealso::
 
-        :cite:`DuEd02` III-B
-    """
+#         :cite:`DuEd02` III-B
+#     """
 
-    if not (beta > 0):
-        raise ValueError('`beta` must be positive. Given: {}'.format(beta))
-    # M=>N
+#     rng = check_random_state(random_state)
 
-    # xi_odd = xi_1, ... , xi_2N-1
-    xi_odd = np.random.chisquare(beta * np.arange(M, M - N, step=-1))
+#     if not (beta > 0):
+#         raise ValueError('`beta` must be positive. Given: {}'.format(beta))
+#     # M=>N
 
-    # xi_even = xi_0=0, xi_2, ... ,xi_2N-2
-    xi_even = np.zeros(N)
-    xi_even[1:] = np.random.chisquare(beta * np.arange(N - 1, 0, step=-1))
+#     # xi_odd = xi_1, ... , xi_2N-1
+#     xi_odd = rng.chisquare(beta * np.arange(M, M - N, step=-1))
 
-    # alpha_i = xi_2i-2 + xi_2i-1
-    # alpha_1 = xi_0 + xi_1 = xi_1
-    alpha_coef = xi_even + xi_odd
-    # beta_i+1 = xi_2i-1 * xi_2i
-    beta_coef = xi_odd[:-1] * xi_even[1:]
+#     # xi_even = xi_0=0, xi_2, ... ,xi_2N-2
+#     xi_even = np.zeros(N)
+#     xi_even[1:] = rng.chisquare(beta * np.arange(N - 1, 0, step=-1))
 
-    return la.eigvalsh_tridiagonal(alpha_coef, np.sqrt(beta_coef))
+#     # alpha_i = xi_2i-2 + xi_2i-1
+#     # alpha_1 = xi_0 + xi_1 = xi_1
+#     alpha_coef = xi_even + xi_odd
+#     # beta_i+1 = xi_2i-1 * xi_2i
+#     beta_coef = xi_odd[:-1] * xi_even[1:]
+
+#     return la.eigvalsh_tridiagonal(alpha_coef, np.sqrt(beta_coef))
 
 
 # Marcenko Pastur law
@@ -165,12 +182,15 @@ def marcenko_pastur_law(x, M, N, sigma=1.0):
 
 
 # mu_ref = Gamma
-def mu_ref_gamma_sampler_tridiag(shape=1.0, scale=1.0, beta=2, size=10):
+def mu_ref_gamma_sampler_tridiag(shape=1.0, scale=1.0, beta=2, size=10,
+                                 random_state=None):
     """
     .. seealso::
 
         :cite:`DuEd02` III-B
     """
+
+    rng = check_random_state(random_state)
 
     if not (beta > 0):
         raise ValueError('`beta` must be positive. Given: {}'.format(beta))
@@ -179,11 +199,11 @@ def mu_ref_gamma_sampler_tridiag(shape=1.0, scale=1.0, beta=2, size=10):
     b_2_Ni = 0.5 * beta * np.arange(size - 1, -1, step=-1)
 
     # xi_odd = xi_1, ... , xi_2N-1
-    xi_odd = np.random.gamma(shape=b_2_Ni + shape, scale=scale)  # odd
+    xi_odd = rng.gamma(shape=b_2_Ni + shape, scale=scale)  # odd
 
     # xi_even = xi_0=0, xi_2, ... ,xi_2N-2
     xi_even = np.zeros(size)
-    xi_even[1:] = np.random.gamma(shape=b_2_Ni[:-1], scale=scale)  # even
+    xi_even[1:] = rng.gamma(shape=b_2_Ni[:-1], scale=scale)  # even
 
     # alpha_i = xi_2i-2 + xi_2i-1, xi_0 = 0
     alpha_coef = xi_even + xi_odd
@@ -197,22 +217,25 @@ def mu_ref_gamma_sampler_tridiag(shape=1.0, scale=1.0, beta=2, size=10):
 # Jacobi #
 ##########
 # Jacobi, full matrix model
-def jacobi_sampler_full(M_1, M_2, N, beta=2):
+def jacobi_sampler_full(M_1, M_2, N, beta=2,
+                        random_state=None):
+
+    rng = check_random_state(random_state)
 
     if beta == 1:
-        X = np.random.randn(N, M_1)
-        Y = np.random.randn(N, M_2)
+        X = rng.randn(N, M_1)
+        Y = rng.randn(N, M_2)
 
     elif beta == 2:
-        X = np.random.randn(N, M_1) + 1j * np.random.randn(N, M_1)
-        Y = np.random.randn(N, M_2) + 1j * np.random.randn(N, M_2)
+        X = rng.randn(N, M_1) + 1j * rng.randn(N, M_1)
+        Y = rng.randn(N, M_2) + 1j * rng.randn(N, M_2)
 
     elif beta == 4:
-        X_1 = np.random.randn(N, M_1) + 1j * np.random.randn(N, M_1)
-        X_2 = np.random.randn(N, M_1) + 1j * np.random.randn(N, M_1)
+        X_1 = rng.randn(N, M_1) + 1j * rng.randn(N, M_1)
+        X_2 = rng.randn(N, M_1) + 1j * rng.randn(N, M_1)
 
-        Y_1 = np.random.randn(N, M_2) + 1j * np.random.randn(N, M_2)
-        Y_2 = np.random.randn(N, M_2) + 1j * np.random.randn(N, M_2)
+        Y_1 = rng.randn(N, M_2) + 1j * rng.randn(N, M_2)
+        Y_2 = rng.randn(N, M_2) + 1j * rng.randn(N, M_2)
 
         X = np.block([[X_1, X_2], [-X_2.conj(), X_1.conj()]])
         Y = np.block([[Y_1, Y_2], [-Y_2.conj(), Y_1.conj()]])
@@ -229,41 +252,44 @@ def jacobi_sampler_full(M_1, M_2, N, beta=2):
 
 
 # Jacobi, tridiagonal model
-def jacobi_sampler_tridiag(M_1, M_2, N, beta=2):
-    """
-    .. seealso::
+# def jacobi_sampler_tridiag(M_1, M_2, N, beta=2,
+#                            random_state=None):
+#     """
+#     .. seealso::
 
-        :cite:`KiNe04` Theorem 2
-    """
+#         :cite:`KiNe04` Theorem 2
+#     """
 
-    if not (beta > 0):
-        raise ValueError('`beta` must be positive. Given: {}'.format(beta))
+#     rng = check_random_state(random_state)
 
-    # c_odd = c_1, c_2, ..., c_2N-1
-    c_odd = np.random.beta(a=0.5 * beta * np.arange(M_1, M_1 - N, step=-1),
-                           b=0.5 * beta * np.arange(M_2, M_2 - N, step=-1))
+#     if not (beta > 0):
+#         raise ValueError('`beta` must be positive. Given: {}'.format(beta))
 
-    # c_even = c_0, c_2, c_2N-2
-    c_even = np.zeros(N)
-    c_even[1:] = np.random.beta(a=0.5 * beta * np.arange(N - 1, 0, step=-1),
-                                b=0.5 * beta * np.arange(M_1 + M_2 - N,
-                                                         M_1 + M_2 - 2 * N + 1,
-                                                         step=-1))
+#     # c_odd = c_1, c_2, ..., c_2N-1
+#     c_odd = rng.beta(a=0.5 * beta * np.arange(M_1, M_1 - N, step=-1),
+#                            b=0.5 * beta * np.arange(M_2, M_2 - N, step=-1))
 
-    # xi_odd = xi_2i-1 = (1-c_2i-2) c_2i-1
-    xi_odd = (1 - c_even) * c_odd
+#     # c_even = c_0, c_2, c_2N-2
+#     c_even = np.zeros(N)
+#     c_even[1:] = rng.beta(a=0.5 * beta * np.arange(N - 1, 0, step=-1),
+#                           b=0.5 * beta * np.arange(M_1 + M_2 - N,
+#                                                    M_1 + M_2 - 2 * N + 1,
+#                                                    step=-1))
 
-    # xi_even = xi_0=0, xi_2, xi_2N-2
-    # xi_2i = (1-c_2i-1)*c_2i
-    xi_even = np.zeros(N)
-    xi_even[1:] = (1 - c_odd[:-1]) * c_even[1:]
+#     # xi_odd = xi_2i-1 = (1-c_2i-2) c_2i-1
+#     xi_odd = (1 - c_even) * c_odd
 
-    # alpha_i = xi_2i-2 + xi_2i-1, xi_0 = 0
-    alpha_coef = xi_even + xi_odd
-    # beta_i+1 = xi_2i-1 * xi_2i
-    beta_coef = xi_odd[:-1] * xi_even[1:]
+#     # xi_even = xi_0=0, xi_2, xi_2N-2
+#     # xi_2i = (1-c_2i-1)*c_2i
+#     xi_even = np.zeros(N)
+#     xi_even[1:] = (1 - c_odd[:-1]) * c_even[1:]
 
-    return la.eigvalsh_tridiagonal(alpha_coef, np.sqrt(beta_coef))
+#     # alpha_i = xi_2i-2 + xi_2i-1, xi_0 = 0
+#     alpha_coef = xi_even + xi_odd
+#     # beta_i+1 = xi_2i-1 * xi_2i
+#     beta_coef = xi_odd[:-1] * xi_even[1:]
+
+#     return la.eigvalsh_tridiagonal(alpha_coef, np.sqrt(beta_coef))
 
 
 # Wachter law
@@ -283,12 +309,15 @@ def wachter_law(x, M_1, M_2, N):
 
 
 # mu-ref = Beta
-def mu_ref_beta_sampler_tridiag(a, b, beta=2, size=10):
+def mu_ref_beta_sampler_tridiag(a, b, beta=2, size=10,
+                                random_state=None):
     """
     .. seealso::
 
         :cite:`KiNe04` Theorem 2
     """
+
+    rng = check_random_state(random_state)
 
     if not (beta > 0):
         raise ValueError('`beta` must be positive. Given: {}'.format(beta))
@@ -297,11 +326,11 @@ def mu_ref_beta_sampler_tridiag(a, b, beta=2, size=10):
     b_2_Ni = 0.5 * beta * np.arange(size - 1, -1, step=-1)
 
     # c_odd = c_1, c_2, ..., c_2N-1
-    c_odd = np.random.beta(b_2_Ni + a, b_2_Ni + b)
+    c_odd = rng.beta(b_2_Ni + a, b_2_Ni + b)
 
     # c_even = c_0, c_2, c_2N-2
     c_even = np.zeros(size)
-    c_even[1:] = np.random.beta(b_2_Ni[:-1], b_2_Ni[1:] + a + b)
+    c_even[1:] = rng.beta(b_2_Ni[:-1], b_2_Ni[1:] + a + b)
 
     # xi_odd = xi_2i-1 = (1-c_2i-2) c_2i-1
     xi_odd = (1 - c_even) * c_odd
@@ -324,25 +353,28 @@ def mu_ref_beta_sampler_tridiag(a, b, beta=2, size=10):
 # Circular ensemble #
 #####################
 # Full matrix model
-def circular_sampler_full(N, beta=2, haar_mode='QR'):
+def circular_sampler_full(N, beta=2, haar_mode='QR',
+                          random_state=None):
     """
     .. seealso::
 
         :cite:`Mez06` Section 5
     """
 
+    rng = check_random_state(random_state)
+
     if haar_mode == 'Hermite':
         # size_sym_mat = int(N*(N-1)/2)
 
         if beta == 1:  # COE
-            A = np.random.randn(N, N)
+            A = rng.randn(N, N)
 
         elif beta == 2:  # CUE
-            A = np.random.randn(N, N) + 1j * np.random.randn(N, N)
+            A = rng.randn(N, N) + 1j * rng.randn(N, N)
 
         elif beta == 4:
-            X = np.random.randn(N, N) + 1j * np.random.randn(N, N)
-            Y = np.random.randn(N, N) + 1j * np.random.randn(N, N)
+            X = rng.randn(N, N) + 1j * rng.randn(N, N)
+            Y = rng.randn(N, N) + 1j * rng.randn(N, N)
 
             A = np.block([[X, Y], [-Y.conj(), X.conj()]])
 
@@ -356,10 +388,10 @@ def circular_sampler_full(N, beta=2, haar_mode='QR'):
     elif haar_mode == 'QR':
 
         if beta == 1:  # COE
-            A = np.random.randn(N, N)
+            A = rng.randn(N, N)
 
         elif beta == 2:  # CUE
-            A = np.random.randn(N, N) + 1j * np.random.randn(N, N)
+            A = rng.randn(N, N) + 1j * rng.randn(N, N)
 
         # elif beta==4:
         else:
@@ -382,12 +414,15 @@ def circular_sampler_full(N, beta=2, haar_mode='QR'):
 
 
 # Quindiagonal model
-def mu_ref_unif_unit_circle_sampler_quindiag(beta=2, size=10):
+def mu_ref_unif_unit_circle_sampler_quindiag(beta=2, size=10,
+                                             random_state=None):
     """
     .. see also::
 
         :cite:`KiNe04` Theorem 1
     """
+
+    rng = check_random_state(random_state)
 
     if not (isinstance(beta, int) and (beta > 0)):
         raise ValueError('`beta` must be positive integer.\
@@ -397,7 +432,7 @@ def mu_ref_unif_unit_circle_sampler_quindiag(beta=2, size=10):
 
     # nu = 1 + beta*(N-1, N-2, ..., 0)
     for i, nu in enumerate(1 + beta * np.arange(size - 1, -1, step=-1)):
-        gauss_vec = np.random.randn(nu + 1)
+        gauss_vec = rng.randn(nu + 1)
         alpha[i] = (gauss_vec[0] + 1j * gauss_vec[1]) / la.norm(gauss_vec)
 
     rho = np.sqrt(1 - np.abs(alpha[:-1])**2)
@@ -426,8 +461,11 @@ def mu_ref_unif_unit_circle_sampler_quindiag(beta=2, size=10):
 ###########
 # Ginibre #
 ###########
-def ginibre_sampler_full(N):
+def ginibre_sampler_full(N, random_state=None):
+    """Compute the eigenvalues of a random complex standard Gaussian matrix"""
 
-    A = np.random.randn(N, N) + 1j * np.random.randn(N, N)
+    rng = check_random_state(random_state)
+
+    A = rng.randn(N, N) + 1j * rng.randn(N, N)
 
     return la.eigvals(A) / np.sqrt(2.0)

@@ -50,6 +50,8 @@ from dppy.exotic_dpps_core import RSK, xy_young_ru, limit_shape
 # For both Descent Processes and Poissonized Plancherel
 from dppy.exotic_dpps_core import uniform_permutation
 
+from dppy.utils import check_random_state
+
 
 #####################
 # Descent Processes #
@@ -72,7 +74,7 @@ class Descent(metaclass=abc.ABCMeta):
         return 0.5
 
     @abc.abstractmethod
-    def sample(self):
+    def sample(self, random_state=None):
         """Sample from corresponding process"""
 
     def flush_samples(self):
@@ -110,7 +112,7 @@ class Descent(metaclass=abc.ABCMeta):
         return ax, self.size
 
     @wrapper_plot_descent
-    def plot_vs_bernoullis(self, title=''):
+    def plot_vs_bernoullis(self, title='', random_state=None):
         """Display the process on the real line and compare it to a sequence of i.i.d. Bernoullis
 
         :param title:
@@ -124,11 +126,12 @@ class Descent(metaclass=abc.ABCMeta):
             - :py:meth:`sample`
             - :py:meth:`plot`
         """
+        rng = check_random_state(random_state)
 
         fig, ax = plt.subplots(figsize=(19, 2))
 
         sampl = self.list_of_samples[-1]
-        bern = np.where(np.random.rand(self.size) < self._bernoulli_param)[0]
+        bern = np.where(rng.rand(self.size) < self._bernoulli_param)[0]
 
         ax.scatter(sampl, np.ones_like(sampl),
                    color='b', s=20, label=self.name)
@@ -171,7 +174,7 @@ class CarriesProcess(Descent):
     def _bernoulli_param(self):
         return 0.5 * (1 - 1 / self.base)
 
-    def sample(self, size=100):
+    def sample(self, size=100, random_state=None):
         """ Compute the cumulative sum (in base :math:`b`) of a sequence of i.i.d. digits and record the position of carries.
 
         :param size:
@@ -180,9 +183,10 @@ class CarriesProcess(Descent):
         :type size:
             int
         """
+        rng = check_random_state(random_state)
 
         self.size = size
-        A = np.random.randint(0, self.base, self.size)
+        A = rng.randint(0, self.base, self.size)
         B = np.mod(np.cumsum(A), self.base)
 
         carries = 1 + np.where(B[:-1] > B[1:])[0]
@@ -213,7 +217,7 @@ class DescentProcess(Descent):
     def _bernoulli_param(self):
         return 0.5
 
-    def sample(self, size=100):
+    def sample(self, size=100, random_state=None):
         """ Draw a permutation :math:`\\sigma \\in \\mathfrak{S}_N` uniformly at random and record the descents i.e. :math:`\\{ i ~;~ \\sigma_i > \\sigma_{i+1} \\}`.
 
         :param size:
@@ -223,8 +227,11 @@ class DescentProcess(Descent):
             int
         """
 
+        rng = check_random_state(random_state)
+
         self.size = size
-        sigma = uniform_permutation(self.size)
+        sigma = uniform_permutation(self.size,
+                                    random_state=rng)
 
         descent = 1 + np.where(sigma[:-1] > sigma[1:])[0]
 
@@ -259,7 +266,7 @@ class VirtualDescentProcess(Descent):
     def _bernoulli_param(self):
         return 0.5 * (1 - self.x_0**2)
 
-    def sample(self, size=100):
+    def sample(self, size=100, random_state=None):
         """ Draw a permutation uniformly at random and record the descents i.e. indices where :math:`\\sigma(i+1) < \\sigma(i)` and something else...
 
         :param size:
@@ -277,12 +284,15 @@ class VirtualDescentProcess(Descent):
             ask @kammmoun to complete the docsting and Section in see also
         """
 
+        rng = check_random_state(random_state)
+
         self.size = size
-        sigma = uniform_permutation(self.size + 1)
+        sigma = uniform_permutation(self.size + 1,
+                                    random_state=rng)
 
         X = sigma[:-1] > sigma[1:]  # Record the descents in permutation
 
-        Y = np.random.binomial(n=2, p=self.x_0, size=self.size + 1) != 1
+        Y = rng.binomial(n=2, p=self.x_0, size=self.size + 1) != 1
 
         descent = [i for i in range(self.size)
                    if (~Y[i] and Y[i + 1])
@@ -328,12 +338,17 @@ class PoissonizedPlancherel:
     #     """
     #     print(self.__str__())
 
-    def sample(self):
+    def sample(self, random_state=None):
         """ Sample from the Poissonized Plancherel measure.
-        """
 
-        N = np.random.poisson(self.theta)
-        sigma = uniform_permutation(N)
+        :param random_state:
+        :type random_state:
+            None, np.random, int, np.random.RandomState
+        """
+        rng = check_random_state(random_state)
+
+        N = rng.poisson(self.theta)
+        sigma = uniform_permutation(N, random_state=rng)
         P, _ = RSK(sigma)
 
         # young_diag = [len(row) for row in P]
@@ -515,7 +530,7 @@ class UST:
         """
         self.list_of_samples = []
 
-    def sample(self, mode='Wilson', root=None):
+    def sample(self, mode='Wilson', root=None, random_state=None):
         """ Sample a spanning of the underlying graph uniformly at random.
         It generates a networkx graph object.
 
@@ -528,26 +543,40 @@ class UST:
         :type mode:
             string, default ``'Wilson'``
 
+        :param root:
+            Starting node of the random walk
+        :type root:
+            int
+
+        :param random_state:
+        :type random_state:
+            None, np.random, int, np.random.RandomState
+
         .. seealso::
 
             - Wilson algorithm :cite:`PrWi98`
             - Aldous-Broder :cite:`Ald90`
         """
 
+        rng = check_random_state(random_state)
+
         self.sampling_mode = mode
 
         if self.sampling_mode == 'Wilson':
-            sampl = ust_sampler_wilson(self.neighbors)
+            sampl = ust_sampler_wilson(self.neighbors,
+                                       random_state=rng)
 
         elif self.sampling_mode == 'Aldous-Broder':
-            sampl = ust_sampler_aldous_broder(self.neighbors)
+            sampl = ust_sampler_aldous_broder(self.neighbors,
+                                              random_state=rng)
 
         elif self.sampling_mode == 'DPP_exact':
 
             if self.kernel_eig_vecs is None:
                 self.__compute_kernel_eig_vecs()
 
-            dpp_sample = proj_dpp_sampler_eig(self.kernel_eig_vecs)
+            dpp_sample = proj_dpp_sampler_eig(self.kernel_eig_vecs,
+                                              random_state=rng)
 
             sampl = nx.Graph()
             edges_finite_dpp = [self.edges[e] for e in dpp_sample]

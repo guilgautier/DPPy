@@ -11,20 +11,22 @@
 
 import numpy as np
 import scipy.linalg as la
-from dppy.utils import inner1d
+from dppy.utils import inner1d, check_random_state
 
 
 #####################
 # Projection kernel #
 #####################
 # Sample projection DPP from kernel
-def proj_dpp_sampler_kernel(kernel, mode='GS', size=None):
+def proj_dpp_sampler_kernel(kernel, mode='GS', size=None, random_state=None):
     """
     .. seealso::
         - :func:`proj_dpp_sampler_kernel_GS <proj_dpp_sampler_kernel_GS>`
         - :func:`proj_dpp_sampler_kernel_Schur <proj_dpp_sampler_kernel_Schur>`
         - :func:`proj_dpp_sampler_kernel_Chol <proj_dpp_sampler_kernel_Chol>`
     """
+
+    rng = check_random_state(random_state)
 
     if size:
         rank = int(np.round(np.trace(kernel)))
@@ -33,13 +35,13 @@ def proj_dpp_sampler_kernel(kernel, mode='GS', size=None):
 
     # Sample from orthogonal projection kernel K = K^2 = K.H K
     if mode == 'GS':  # Gram-Schmidt equiv Cholesky
-        sampl = proj_dpp_sampler_kernel_GS(kernel, size)
+        sampl = proj_dpp_sampler_kernel_GS(kernel, size, rng)
 
     elif mode == 'Chol':  # Cholesky updates of Pou19
-        sampl = proj_dpp_sampler_kernel_Chol(kernel, size)[0]
+        sampl = proj_dpp_sampler_kernel_Chol(kernel, size, rng)[0]
 
     elif mode == 'Schur':  # Schur complement
-        sampl = proj_dpp_sampler_kernel_Schur(kernel, size)
+        sampl = proj_dpp_sampler_kernel_Schur(kernel, size, rng)
 
     else:
         str_list = ['Invalid sampling mode, choose among:',
@@ -52,7 +54,7 @@ def proj_dpp_sampler_kernel(kernel, mode='GS', size=None):
     return sampl
 
 
-def proj_dpp_sampler_kernel_Chol(K, size=None):
+def proj_dpp_sampler_kernel_Chol(K, size=None, random_state=None):
     """ Sample from:
 
     - :math:`\\operatorname{DPP}(K)` with orthogonal projection **correlation** kernel :math:`K` if ``size`` is not provided
@@ -86,6 +88,8 @@ def proj_dpp_sampler_kernel_Chol(K, size=None):
         - for the Hermitian swap routine see :ref:`catamari code <https://gitlab.com/hodge_star/catamari/blob/38718a1ea34872fb6567e019ece91fbeb5af5be1/include/catamari/dense_dpp/elementary_hermitian_dpp-impl.hpp#L37>`_
     """
 
+    rng = check_random_state(random_state)
+
     hermitian = True if K.dtype.kind == 'c' else False
 
     N, rank = len(K), np.round(np.trace(K)).astype(int)
@@ -101,7 +105,7 @@ def proj_dpp_sampler_kernel_Chol(K, size=None):
     for j in range(size):
 
         # Sample from pivot index and permute
-        t = np.random.choice(range(j, N), p=d[j:] / (rank - j))
+        t = rng.choice(range(j, N), p=d[j:] / (rank - j))
 
         # Hermitian swap of indices j and t of A (may be written in a function)
         # bottom swap
@@ -138,7 +142,7 @@ def proj_dpp_sampler_kernel_Chol(K, size=None):
     return orig_indices[:size].tolist(), A[:size, :size]
 
 
-def proj_dpp_sampler_kernel_GS(K, size=None):
+def proj_dpp_sampler_kernel_GS(K, size=None, random_state=None):
     """ Sample from:
 
     - :math:`\\operatorname{DPP}(K)` with orthogonal projection **correlation** kernel :math:`K` if ``size`` is not provided
@@ -171,6 +175,8 @@ def proj_dpp_sampler_kernel_GS(K, size=None):
         - :func:`proj_dpp_sampler_kernel_Schur <proj_dpp_sampler_kernel_Schur>`
     """
 
+    rng = check_random_state(random_state)
+
     # Initialization
     # ground set size / rank(K) = Tr(K)
     N, rank = len(K), np.round(np.trace(K)).astype(int)
@@ -186,7 +192,7 @@ def proj_dpp_sampler_kernel_GS(K, size=None):
     norm_2 = K.diagonal().copy()  # residual norm^2
 
     for it in range(size):
-        j = np.random.choice(ground_set[avail],
+        j = rng.choice(ground_set[avail],
                              p=np.abs(norm_2[avail]) / (rank - it))
         sampl[it] = j
         if it == size - 1:
@@ -201,7 +207,7 @@ def proj_dpp_sampler_kernel_GS(K, size=None):
     return sampl
 
 
-def proj_dpp_sampler_kernel_Schur(K, size=None):
+def proj_dpp_sampler_kernel_Schur(K, size=None, random_state=None):
     """ Sample from:
 
     - :math:`\\operatorname{DPP}(K)` with orthogonal projection **correlation** kernel :math:`K` if ``size`` is not provided
@@ -231,6 +237,8 @@ def proj_dpp_sampler_kernel_Schur(K, size=None):
         - :func:`proj_dpp_sampler_kernel_GS <proj_dpp_sampler_kernel_GS>`
     """
 
+    rng = check_random_state(random_state)
+
     # Initialization
     # ground set size / rank(K) = Tr(K)
     N, rank = len(K), np.round(np.trace(K)).astype(int)
@@ -248,7 +256,7 @@ def proj_dpp_sampler_kernel_Schur(K, size=None):
 
     for it in range(size):
         # Pick a new item proportionally to residual norm^2
-        j = np.random.choice(ground_set[avail],
+        j = rng.choice(ground_set[avail],
                              p=np.abs(schur_comp[avail]) / (rank - it))
         # store the item and make it unavailable
         sampl[it], avail[j] = j, False
@@ -298,7 +306,7 @@ def proj_dpp_sampler_kernel_Schur(K, size=None):
 
 # Directly from correlation kernel, without spectral decomposition
 ##################################################################
-def dpp_sampler_generic_kernel(K):
+def dpp_sampler_generic_kernel(K, random_state=None):
     """ Sample from generic :math:`\\operatorname{DPP}(\\mathbf{K})` with potentially non hermitian correlation kernel :math:`\\operatorname{DPP}(\\mathbf{K})` based on :math:`LU` factorization procedure.
 
     :param K:
@@ -317,12 +325,14 @@ def dpp_sampler_generic_kernel(K):
         - :cite:`Pou19` Algorithm 1
     """
 
+    rng = check_random_state(random_state)
+
     A = K.copy()
     sample = []
 
     for j in range(len(A)):
 
-        if np.random.rand() < A[j, j]:
+        if rng.rand() < A[j, j]:
             sample.append(j)
         else:
             A[j, j] -= 1
@@ -337,8 +347,9 @@ def dpp_sampler_generic_kernel(K):
 #############################
 
 # Phase 1: subsample eigenvectors by drawing independent Bernoulli variables with parameter the eigenvalues of the correlation kernel K.
-def dpp_eig_vecs_selector(ber_params, eig_vecs):
-    """ Phase 1 of exact sampling procedure. Subsample eigenvectors :math:`V` of the initial kernel (correlation :math:`K`, resp. likelihood :math:`L`) to build a projection DPP with kernel :math:`V V^{\top}` from which sampling is easy.
+def dpp_eig_vecs_selector(ber_params, eig_vecs,
+                          random_state=None):
+    """ Phase 1 of exact sampling procedure. Subsample eigenvectors :math:`V` of the initial kernel (correlation :math:`K`, resp. likelihood :math:`L`) to build a projection DPP with kernel :math:`V V^{\\top}` from which sampling is easy.
     The selection is made based on a realization of Bernoulli variables with parameters related to the eigenvalues of :math:`K`, resp. :math:`L`.
 
     :param ber_params:
@@ -361,15 +372,17 @@ def dpp_eig_vecs_selector(ber_params, eig_vecs):
 
         - :func:`dpp_sampler_eig <dpp_sampler_eig>`
     """
+    rng = check_random_state(random_state)
 
     # Realisation of Bernoulli random variables with params ber_params
-    ind_sel = np.random.rand(ber_params.size) < ber_params
+    ind_sel = rng.rand(ber_params.size) < ber_params
 
     return eig_vecs[:, ind_sel]
 
 
-def dpp_eig_vecs_selector_L_dual(eig_vals, eig_vecs, gram_factor):
-    """ Subsample eigenvectors :math:`V` of likelihood kernel :math:`L=\Phi^{\top} \Phi` based on the eigendecomposition dual kernel :math:`L'=\Phi \Phi^{\top}`. Note that :math:`L'` and :math:`L'` share the same nonzero eigenvalues.
+def dpp_eig_vecs_selector_L_dual(eig_vals, eig_vecs, gram_factor,
+                                 random_state=None):
+    """ Subsample eigenvectors :math:`V` of likelihood kernel :math:`L=\\Phi^{\\top} \\Phi` based on the eigendecomposition dual kernel :math:`L'=\\Phi \\Phi^{\\top}`. Note that :math:`L'` and :math:`L'` share the same nonzero eigenvalues.
 
     :param eig_vals:
         Collection of eigenvalues of :math:`L_dual` kernel.
@@ -382,7 +395,7 @@ def dpp_eig_vecs_selector_L_dual(eig_vals, eig_vecs, gram_factor):
         array_like
 
     :param gram_factor:
-        Feature matrix :math:`\Phi`
+        Feature matrix :math:`\\Phi`
     :type gram_factor:
         array_like
 
@@ -404,15 +417,17 @@ def dpp_eig_vecs_selector_L_dual(eig_vals, eig_vecs, gram_factor):
         - :func:`proj_dpp_sampler_eig_KuTa12 <proj_dpp_sampler_eig_KuTa12>`
     """
 
+    rng = check_random_state(random_state)
+
     # Realisation of Bernoulli random variables with params eig_vals
-    ind_sel = np.random.rand(eig_vals.size) < eig_vals / (1.0 + eig_vals)
+    ind_sel = rng.rand(eig_vals.size) < eig_vals / (1.0 + eig_vals)
 
     return gram_factor.T.dot(eig_vecs[:, ind_sel] / np.sqrt(eig_vals[ind_sel]))
 
-
 # Phase 2:
 # Sample projection kernel VV.T where V are the eigvecs selected in Phase 1.
-def proj_dpp_sampler_eig(eig_vecs, mode='GS', size=None):
+def proj_dpp_sampler_eig(eig_vecs, mode='GS', size=None,
+                         random_state=None):
     """ Sample from projection :math:`\\operatorname{DPP}(K)` using the eigendecomposition of the projection kernel :math:`K=VV^{\top}` where :math:`V^{\top}V = I_r` and :math:`r=\\operatorname{rank}(\\mathbf{K})`.
 
     .. seealso::
@@ -428,17 +443,20 @@ def proj_dpp_sampler_eig(eig_vecs, mode='GS', size=None):
         - :func:`proj_dpp_sampler_eig_GS_bis <proj_dpp_sampler_eig_GS_bis>`
         - :func:`proj_dpp_sampler_eig_KuTa12 <proj_dpp_sampler_eig_KuTa12>`
     """
+
+    rng = check_random_state(random_state)
+
     if eig_vecs.shape[1]:
         # Phase 2: Sample from projection kernel VV.T
         # Chain rule, conditionals are updated using:
         if mode == 'GS':  # Gram-Schmidt
-            sampl = proj_dpp_sampler_eig_GS(eig_vecs, size)
+            sampl = proj_dpp_sampler_eig_GS(eig_vecs, size, rng)
 
         elif mode == 'GS_bis':  # Slight modif of 'GS'
-            sampl = proj_dpp_sampler_eig_GS_bis(eig_vecs, size)
+            sampl = proj_dpp_sampler_eig_GS_bis(eig_vecs, size, rng)
 
         elif mode == 'KuTa12':  # cf Kulesza-Taskar
-            sampl = proj_dpp_sampler_eig_KuTa12(eig_vecs, size)
+            sampl = proj_dpp_sampler_eig_KuTa12(eig_vecs, size, rng)
 
         else:
             str_list = ['Invalid sampling mode, choose among:',
@@ -454,7 +472,8 @@ def proj_dpp_sampler_eig(eig_vecs, mode='GS', size=None):
 
 
 # Using Gram-Schmidt orthogonalization
-def proj_dpp_sampler_eig_GS(eig_vecs, size=None):
+def proj_dpp_sampler_eig_GS(eig_vecs, size=None,
+                            random_state=None):
     """ Sample from projection :math:`\\operatorname{DPP}(K)` using the eigendecomposition of the projection kernel :math:`K=VV^{\top}` where :math:`V^{\top}V = I_r` and :math:`r=\\operatorname{rank}(\\mathbf{K})`.
     It performs sequential update of Cholesky decomposition, which is equivalent to Gram-Schmidt orthogonalization of the rows of the eigenvectors.
 
@@ -474,6 +493,8 @@ def proj_dpp_sampler_eig_GS(eig_vecs, size=None):
         - :func:`proj_dpp_sampler_eig_GS_bis <proj_dpp_sampler_eig_GS_bis>`
         - :func:`proj_dpp_sampler_eig_KuTa12 <proj_dpp_sampler_eig_KuTa12>`
     """
+
+    rng = check_random_state(random_state)
 
     # Initialization
     V = eig_vecs
@@ -498,7 +519,7 @@ def proj_dpp_sampler_eig_GS(eig_vecs, size=None):
 
     for it in range(size):
         # Pick an item \propto this squred distance
-        j = np.random.choice(ground_set[avail],
+        j = rng.choice(ground_set[avail],
                              p=np.abs(norms_2[avail]) / (rank - it))
         sampl[it] = j
         if it == size - 1:
@@ -515,7 +536,7 @@ def proj_dpp_sampler_eig_GS(eig_vecs, size=None):
 
 
 # Slight modif of Gram-Schmidt above
-def proj_dpp_sampler_eig_GS_bis(eig_vecs, size=None):
+def proj_dpp_sampler_eig_GS_bis(eig_vecs, size=None, random_state=None):
     """ Sample from projection :math:`\\operatorname{DPP}(K)` using the eigendecomposition of the projection kernel :math:`K=VV^{\top}` where :math:`V^{\top}V = I_r` and :math:`r=\\operatorname{rank}(\\mathbf{K})`.
     It performs sequential Gram-Schmidt orthogonalization of the rows of the eigenvectors.
 
@@ -534,6 +555,8 @@ def proj_dpp_sampler_eig_GS_bis(eig_vecs, size=None):
         - This is a slight modification of :func:`proj_dpp_sampler_eig_GS <proj_dpp_sampler_eig_GS>`
         - :func:`proj_dpp_sampler_eig_KuTa12 <proj_dpp_sampler_eig_KuTa12>`
     """
+
+    rng = check_random_state(random_state)
 
     # Initialization
     V = eig_vecs.copy()
@@ -563,7 +586,7 @@ def proj_dpp_sampler_eig_GS_bis(eig_vecs, size=None):
 
         # Pick an item proportionally to the residual norm^2
         # ||P_{V_Y}^{orthog} V_j||^2
-        j = np.random.choice(ground_set[avail],
+        j = rng.choice(ground_set[avail],
                              p=np.abs(norms_2[avail]) / (rank - it))
         sampl[it] = j
         if it == size - 1:
@@ -606,7 +629,7 @@ def proj_dpp_sampler_eig_GS_bis(eig_vecs, size=None):
     return sampl
 
 
-def proj_dpp_sampler_eig_KuTa12(eig_vecs, size=None):
+def proj_dpp_sampler_eig_KuTa12(eig_vecs, size=None, random_state=None):
     """ Sample from :math:`\\operatorname{DPP}(K)` using the eigendecomposition of the similarity kernel :math:`K`.
     It is based on the orthogonalization of the selected eigenvectors.
 
@@ -632,6 +655,8 @@ def proj_dpp_sampler_eig_KuTa12(eig_vecs, size=None):
         - :func:`proj_dpp_sampler_eig_GS_bis <proj_dpp_sampler_eig_GS_bis>`
     """
 
+    rng = check_random_state(random_state)
+
     # Initialization
     V = eig_vecs.copy()
 
@@ -651,7 +676,7 @@ def proj_dpp_sampler_eig_KuTa12(eig_vecs, size=None):
     # Following [Algo 1, KuTa12], the aim is to compute the orhto complement of the subspace spanned by the selected eigenvectors to the canonical vectors \{e_i ; i \in Y\}. We proceed recursively.
     for it in range(size):
 
-        j = np.random.choice(N, p=np.abs(norms_2) / (rank - it))
+        j = rng.choice(N, p=np.abs(norms_2) / (rank - it))
         sampl[it] = j
         if it == size - 1:
             break
@@ -673,7 +698,8 @@ def proj_dpp_sampler_eig_KuTa12(eig_vecs, size=None):
 # k-DPPs #
 ##########
 
-def k_dpp_eig_vecs_selector(eig_vals, eig_vecs, size, E_poly=None):
+def k_dpp_eig_vecs_selector(eig_vals, eig_vecs, size,
+                            E_poly=None, random_state=None):
     """ Subsample eigenvectors V of the 'L' kernel to build a projection DPP with kernel V V.T from which sampling is easy. The selection is made based a realization of Bernoulli variables with parameters the eigenvalues of 'L' and evalutations of the elementary symmetric polynomials.
 
     :param eig_vals:
@@ -707,6 +733,8 @@ def k_dpp_eig_vecs_selector(eig_vals, eig_vecs, size, E_poly=None):
         - :func:`elem_symm_poly <elem_symm_poly>`
     """
 
+    rng = check_random_state(random_state)
+
     # Size of: ground set / sample
     N, k = eig_vecs.shape[0], size
 
@@ -722,7 +750,7 @@ def k_dpp_eig_vecs_selector(eig_vals, eig_vecs, size, E_poly=None):
     ind_selected = np.zeros(k, dtype=int)
     for n in range(N, 0, -1):
 
-        if np.random.rand() < eig_vals[n-1] * E_poly[k-1, n-1] / E_poly[k, n]:
+        if rng.rand() < eig_vals[n-1] * E_poly[k-1, n-1] / E_poly[k, n]:
             k -= 1
             ind_selected[k] = n - 1
             if k == 0:

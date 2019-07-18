@@ -41,9 +41,14 @@ from dppy.exact_sampling import (dpp_sampler_generic_kernel,
 
 from dppy.mcmc_sampling import dpp_sampler_mcmc, zonotope_sampler
 
-from dppy.utils import is_symmetric, is_projection
-from dppy.utils import is_orthonormal, is_full_row_rank
-from dppy.utils import is_in_01, is_geq_0, is_equal_to_O_or_1
+from dppy.utils import (check_random_state,
+                        is_symmetric,
+                        is_projection,
+                        is_orthonormal,
+                        is_full_row_rank,
+                        is_in_01,
+                        is_geq_0,
+                        is_equal_to_O_or_1)
 
 
 class FiniteDPP:
@@ -106,7 +111,7 @@ class FiniteDPP:
         self.list_of_samples = []
 
         # when using .sample_k_dpp_*
-        self.size_k_dpp = 0
+        self.size_k_dpp = None
         self.E_poly = None  # evaluation of the
 
         # Attributes relative to K correlation kernel:
@@ -230,7 +235,7 @@ class FiniteDPP:
         self.list_of_samples = []
 
     # Exact sampling
-    def sample_exact(self, mode='GS'):
+    def sample_exact(self, mode='GS', random_state=None):
         """ Sample exactly from the corresponding :class:`FiniteDPP <FiniteDPP>` object. The sampling scheme is based on the chain rule with Gram-Schmidt like updates of the conditionals.
 
         :param mode:
@@ -270,58 +275,66 @@ class FiniteDPP:
             - :py:meth:`~FiniteDPP.sample_mcmc`
         """
 
+        rng = check_random_state(random_state)
+
         self.sampling_mode = mode
 
         if self.sampling_mode == 'Chol':
             self.compute_K()
             if self.projection:
-                sampl = proj_dpp_sampler_kernel(self.K, self.sampling_mode)
+                sampl = proj_dpp_sampler_kernel(self.K, self.sampling_mode,
+                                                random_state=rng)
             else:
-                sampl = dpp_sampler_generic_kernel(self.K)[0]
+                sampl, _ = dpp_sampler_generic_kernel(self.K, random_state=rng)
             self.list_of_samples.append(sampl)
 
         # If eigen decoposition of K, L or L_dual is available USE IT!
         elif self.K_eig_vals is not None:
             # Phase 1
-            V = dpp_eig_vecs_selector(self.K_eig_vals, self.eig_vecs)
+            V = dpp_eig_vecs_selector(self.K_eig_vals, self.eig_vecs,
+                                      random_state=rng)
             # Phase 2
             if V.shape[1]:
-                sampl = proj_dpp_sampler_eig(V, self.sampling_mode)
+                sampl = proj_dpp_sampler_eig(V, self.sampling_mode,
+                                             random_state=rng)
             else:
                 sampl = np.array([])
             self.list_of_samples.append(sampl)
 
         elif self.L_eig_vals is not None:
             self.K_eig_vals = self.L_eig_vals / (1.0 + self.L_eig_vals)
-            self.sample_exact(self.sampling_mode)
+            self.sample_exact(mode=self.sampling_mode, random_state=rng)
 
         elif self.L_dual_eig_vals is not None:
             # Phase 1
             V = dpp_eig_vecs_selector_L_dual(self.L_dual_eig_vals,
                                              self.L_dual_eig_vecs,
-                                             self.L_gram_factor)
+                                             self.L_gram_factor,
+                                             random_state=rng)
             # Phase 2
-            sampl = proj_dpp_sampler_eig(V, self.sampling_mode)
+            sampl = proj_dpp_sampler_eig(V, self.sampling_mode,
+                                         random_state=rng)
             self.list_of_samples.append(sampl)
 
         # If DPP defined via projection correlation kernel K
         # no eigendecomposition required
         elif (self.K is not None) and self.projection:
-            sampl = proj_dpp_sampler_kernel(self.K, self.sampling_mode)
+            sampl = proj_dpp_sampler_kernel(self.K, self.sampling_mode,
+                                            random_state=rng)
             self.list_of_samples.append(sampl)
 
         elif self.L_dual is not None:
             self.L_dual_eig_vals, self.L_dual_eig_vecs =\
                 la.eigh(self.L_dual)
-            self.sample_exact(self.sampling_mode)
+            self.sample_exact(mode=self.sampling_mode, random_state=rng)
 
         elif self.K is not None:
             self.K_eig_vals, self.eig_vecs = la.eigh(self.K)
-            self.sample_exact(self.sampling_mode)
+            self.sample_exact(mode=self.sampling_mode, random_state=rng)
 
         elif self.L is not None:
             self.L_eig_vals, self.eig_vecs = la.eigh(self.L)
-            self.sample_exact(self.sampling_mode)
+            self.sample_exact(mode=self.sampling_mode, random_state=rng)
 
         # If DPP defined through correlation kernel with parameter 'A_zono'
         # a priori you wish to use the zonotope approximate sampler
@@ -331,9 +344,9 @@ class FiniteDPP:
             self.K_eig_vals = np.ones(self.A_zono.shape[0])
             self.eig_vecs, _ = la.qr(self.A_zono.T, mode='economic')
 
-            self.sample_exact(self.sampling_mode)
+            self.sample_exact(self.sampling_mode, random_state=rng)
 
-    def sample_exact_k_dpp(self, size, mode='GS'):
+    def sample_exact_k_dpp(self, size, mode='GS', random_state=None):
         """ Sample exactly from :math:`\\operatorname{k-DPP}`.
         A priori the :class:`FiniteDPP <FiniteDPP>` object was instanciated by its likelihood :math:`\\mathbf{L}` kernel so that
 
@@ -380,6 +393,8 @@ class FiniteDPP:
             - :py:meth:`~FiniteDPP.sample_mcmc_k_dpp`
         """
 
+        rng = check_random_state(random_state)
+
         self.sampling_mode = mode
 
         # If DPP defined via projection kernel
@@ -388,41 +403,44 @@ class FiniteDPP:
 
                 if self.K_eig_vals is not None:
                     rank = np.round(np.sum(self.K_eig_vals)).astype(int)
-                else:
-                    self.compute_K()
+                elif self.A_zono is not None:
+                    rank = self.A_zono.shape[0]
+                else: # self.K is not None
                     rank = np.round(np.trace(self.K)).astype(int)
 
                 if size != rank:
                     raise ValueError('size k={} != rank={} for projection correlation K kernel'.format(k, rank))
-                else:
-                    self.size_k_dpp = size
 
                 if self.K_eig_vals is not None:
                     sampl = proj_dpp_sampler_eig(
                             eig_vecs=self.eig_vecs[:, self.K_eig_vals > 0.5],
                             mode=self.sampling_mode,
-                            size=size)
+                            size=size,
+                            random_state=rng)
                 else:
                     sampl = proj_dpp_sampler_kernel(kernel=self.K,
                                                     mode=self.sampling_mode,
-                                                    size=size)
-
-                self.list_of_samples.append(sampl)
+                                                    size=size,
+                                                    random_state=rng)
 
             else:  # self.kernel_type == 'likelihood':
                 if self.L_eig_vals is not None:
+                    # L_eig_vals > 0.5 below to get indices where e_vals = 1
                     sampl = proj_dpp_sampler_eig(
                             eig_vecs=self.eig_vecs[:, self.L_eig_vals > 0.5],
                             mode=self.sampling_mode,
-                            size=size)
+                            size=size,
+                            random_state=rng)
                 else:
                     self.compute_L()
                     # size > rank treated internally in proj_dpp_sampler_kernel
                     sampl = proj_dpp_sampler_kernel(self.L,
                                                     mode=self.sampling_mode,
-                                                    size=size)
-                self.size_k_dpp = size
-                self.list_of_samples.append(sampl)
+                                                    size=size,
+                                                    random_state=rng)
+
+            self.size_k_dpp = size
+            self.list_of_samples.append(sampl)
 
         # If eigen decoposition of K, L or L_dual is available USE IT!
         elif self.L_eig_vals is not None:
@@ -433,11 +451,13 @@ class FiniteDPP:
                 self.E_poly = elem_symm_poly(self.L_eig_vals, size)
             # Select eigenvectors
             V = k_dpp_eig_vecs_selector(self.L_eig_vals, self.eig_vecs,
-                                        size,
-                                        self.E_poly)
+                                        size=size,
+                                        E_poly=self.E_poly,
+                                        random_state=rng)
             # Phase 2
             self.size_k_dpp = size
-            sampl = proj_dpp_sampler_eig(V, self.sampling_mode)
+            sampl = proj_dpp_sampler_eig(V, self.sampling_mode,
+                                         random_state=rng)
             self.list_of_samples.append(sampl)
 
         elif self.L_dual_eig_vals is not None:
@@ -446,26 +466,31 @@ class FiniteDPP:
             self.eig_vecs =\
                 self.gram_factor.T.dot(self.L_dual_eig_vecs\
                                         / np.sqrt(self.L_dual_eig_vals))
-            self.sample_exact_k_dpp(size, mode)
+            self.sample_exact_k_dpp(size, self.sampling_mode,
+                                    random_state=rng)
 
         elif self.K_eig_vals is not None:
             np.seterr(divide='raise')
             self.L_eig_vals = self.K_eig_vals / (1.0 - self.K_eig_vals)
-            self.sample_exact_k_dpp(size, mode)
+            self.sample_exact_k_dpp(size, self.sampling_mode,
+                                    random_state=rng)
 
         # Otherwise eigendecomposition is necessary
         elif self.L_dual is not None:
             self.L_dual_eig_vals, self.L_dual_eig_vecs =\
                 la.eigh(self.L_dual)
-            self.sample_exact_k_dpp(size, mode)
+            self.sample_exact_k_dpp(size, self.sampling_mode,
+                                    random_state=rng)
 
         elif self.K is not None:
             self.K_eig_vals, self.eig_vecs = la.eigh(self.K)
-            self.sample_exact_k_dpp(size, mode)
+            self.sample_exact_k_dpp(size, self.sampling_mode,
+                                    random_state=rng)
 
         elif self.L is not None:
             self.L_eig_vals, self.eig_vecs = la.eigh(self.L)
-            self.sample_exact_k_dpp(size, mode)
+            self.sample_exact_k_dpp(size, self.sampling_mode,
+                                    random_state=rng)
 
     # Approximate sampling
     def sample_mcmc(self, mode, **params):
@@ -483,6 +508,8 @@ class FiniteDPP:
 
         :param params:
             Dictionary containing the parameters for MCMC samplers with keys
+
+            ``'random_state'`` (default None)
 
             - If ``mode='AED','AD','E'``
 

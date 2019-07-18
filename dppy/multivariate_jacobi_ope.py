@@ -29,6 +29,8 @@ elif _platform == "darwin":
 
 import matplotlib.pyplot as plt
 
+from dppy.utils import check_random_state
+
 
 class MultivariateJacobiOPE:
     """
@@ -272,7 +274,8 @@ class MultivariateJacobiOPE:
                             axis=2),
                         axis=1)
 
-    def sample_proposal_lev_score(self, nb_trials_max=10000):
+    def sample_proposal_lev_score(self, nb_trials_max=10000,
+                                  random_state=None):
         """Sample from :math:`\\frac{1}{N} K(x,x) w(x)` using rejection sampling with proposal :math:`\\frac{1}{\\pi^d}w_{eq}(x) d x` where :math:`w_{eq}(x) = \\prod_{i=1}^{d} \\frac{1}{\\sqrt{1-(x^i)^2}}`
 
         The ratio target/proposal writes
@@ -292,15 +295,17 @@ class MultivariateJacobiOPE:
 
             - :py:meth:`compute_Gautschi_bound`
         """
+        rng = check_random_state(random_state)
+
         for trial in range(nb_trials_max):
 
             # Propose x ~ arcsine = \prod_{i=1}^{d} 1/pi 1/sqrt(1-(x^i)^2)
-            x = 1.0 - 2.0 * np.random.beta(0.5, 0.5, size=self.dim)
+            x = 1.0 - 2.0 * rng.beta(0.5, 0.5, size=self.dim)
 
             K_xx = self.K(x, None)
             ratio_w_w_eq = self.eval_w(x, self._jacobi_params_plus_05)
 
-            if np.random.rand() * self.Gautschi_bound\
+            if rng.rand() * self.Gautschi_bound\
                 < self._pi_power_dim * K_xx * ratio_w_w_eq:
                 break
         else:
@@ -369,7 +374,7 @@ class MultivariateJacobiOPE:
             return np.prod(poly_1D_jacobi[:, self.ordering, range(self.dim)],
                            axis=2)
 
-    def sample(self, nb_trials_max=10000):
+    def sample(self, nb_trials_max=10000, random_state=None):
         """Use the chain rule :cite:`HKPV06` (Algorithm 18) to sample :math:`\\left(x_{1}, \\dots, x_{N} \\right)` with density
 
         .. math::
@@ -406,10 +411,13 @@ class MultivariateJacobiOPE:
             - :py:meth:`sample_proposal_lev_score`
         """
 
+        rng = check_random_state(random_state)
+
         if self.dim == 1:
             sample = tridiagonal_model(a=self.jacobi_params[0, 0] + 1,
                                        b=self.jacobi_params[0, 1] + 1,
-                                       size=self.N)[:, None]
+                                       size=self.N,
+                                       random_state=rng)[:, None]
             return 1.0 - 2.0 * sample
 
         # In multi D
@@ -418,7 +426,7 @@ class MultivariateJacobiOPE:
         # schur = K(x, x) - K(x, Y) K(Y, Y)^-1 K(Y, x)
         #
         # K(x, x) = K_xx above
-        sample[0], K_xx = self.sample_proposal_lev_score()
+        sample[0], K_xx = self.sample_proposal_lev_score(random_state=rng)
         # K_YY^-1 = K(Y, Y)^-1
         K_Y_inv = np.zeros((self.N - 1, self.N - 1))
         K_Y_inv[0, 0] = 1.0 / K_xx
@@ -433,7 +441,7 @@ class MultivariateJacobiOPE:
             for trial in range(nb_trials_max):
 
                 # Propose a point from 1/N K(x,x) w(x) i.e. leverage score
-                sample[it], K_xx = self.sample_proposal_lev_score()
+                sample[it], K_xx = self.sample_proposal_lev_score(random_state=rng)
 
                 # Compute Schur cmplmt = K(x, x) - K(x, Y) K(Y, Y)^-1 K(Y, x)
                 #
@@ -443,7 +451,7 @@ class MultivariateJacobiOPE:
                 # Schur complement
                 schur = K_xx - K_Yx[:it].dot(K_Y_inv[:it, :it]).dot(K_Yx[:it])
 
-                if np.random.rand() < schur / K_xx:
+                if rng.rand() < schur / K_xx:
                     break
             else:
                 print('chain rule iteration {} not enough trials'.format(it))
