@@ -14,10 +14,11 @@
 Welcome to DPPy's documentation!
 ################################
 
-**Determinantal point processes** (DPPs) are specific probability distributions over clouds of points that have been popular as models or computational tools across physics, probability, statistics, random matrices and more recently of booming interest in machine learning.
-**Sampling from DPPs** is a nontrivial matter, and many approaches have been proposed.
+**Determinantal point processes** (DPPs) are specific probability distributions over clouds of points, which have been popular as models or computational tools across physics, probability, statistics, random matrices, and more recently machine learning. DPPs are often used to induce diversity or repulsiveness among the points of a sample.
 
-As a contraction of **DPPs and Python, DPPy** gathers:
+**Sampling from DPPs** is more tractable than sampling generic point processes with interaction, but it remains a nontrivial matter and a research area of its own.
+
+As a contraction of **DPPs and Python, DPPy** is an effort to gather:
 
 - all **exact and approximate samplers** for :ref:`finite DPPs <finite_dpps>` |explosion|
 - :ref:`full <full_matrix_models>` and :ref:`banded <banded_matrix_models>` (tri/quindiagonal) matrix models for :math:`\beta`-:ref:`Ensembles <beta_ensembles>` |fire|
@@ -25,7 +26,7 @@ As a contraction of **DPPs and Python, DPPy** gathers:
 
   * :ref:`uniform spanning trees <UST>` |tree|
   * :ref:`descent processes <stationary_1-dependent_process>` |numbers|
-  * :ref:`Poissonized Plancherel <poissonized_plancherel_measure>` |histogram|
+  * the :ref:`Poissonized Plancherel <poissonized_plancherel_measure>` |histogram|
 
 The purpose of this **documentation** is to both provide a **quick survey of DPPs and relate each mathematical property with its implementation in DPPy**.
 The documentation can thus be read in different ways:
@@ -43,7 +44,7 @@ For another entry point to DPPy see the `companion paper <https://arxiv.org/abs/
 .. image:: _images/sample_Wilson.png
    :width: 25%
 
-As :ref:`exotic <exotic_dpps>` as it may sound the uniform measure on spanning trees of a graph is a DPP!
+As an :ref:`exotic <exotic_dpps>` example, the uniform measure on the spanning trees of a connected graph is a DPP!
 
 Installation instructions
 =========================
