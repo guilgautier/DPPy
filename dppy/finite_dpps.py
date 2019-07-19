@@ -24,8 +24,9 @@ if _platform.startswith('linux'):
 elif _platform == "darwin":
     # MAC OS X
     # https://markhneedham.com/blog/2018/05/04/python-runtime-error-osx-matplotlib-not-installed-as-framework-mac/
-    import matplotlib
-    matplotlib.use('TkAgg')
+    # import matplotlib
+    # matplotlib.use('TkAgg')
+    pass
 
 import matplotlib.pyplot as plt
 

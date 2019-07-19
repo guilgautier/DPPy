@@ -24,8 +24,9 @@ if _platform.startswith('linux'):
 elif _platform == "darwin":
     # MAC OS X
     # https://markhneedham.com/blog/2018/05/04/python-runtime-error-osx-matplotlib-not-installed-as-framework-mac/
-    import matplotlib
-    matplotlib.use('TkAgg')
+    # import matplotlib
+    # matplotlib.use('TkAgg')
+    pass
 
 import matplotlib.pyplot as plt
 
@@ -481,8 +482,7 @@ class MultivariateJacobiOPE:
             raise NotImplementedError(
                 'Visualizations in dimension >= 3 are not implemented')
 
-        tols = self.jacobi_params.copy()
-        tols[tols >= 0] = 0.0
+        tols = np.zeros_like(self.jacobi_params)
         tols[tols < 0] = 5e-2
 
         if sample is None:

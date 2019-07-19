@@ -19,6 +19,7 @@ Carries process
 The sequence of carries appearing when computing the cumulative sum (in base :math:`b`) of a sequence of i.i.d. digits forms a DPP on :math:`\mathbb{N}` with non symmetric kernel.
 
 .. plot:: plots/ex_plot_carries_process.py
+    :include-source:
 
 .. seealso::
 
@@ -34,6 +35,7 @@ The descent process obtained from a uniformly chosen  permutation of  :math:`\{1
 
 
 .. plot:: plots/ex_plot_descent_process.py
+    :include-source:
 
 .. seealso::
 
@@ -49,6 +51,7 @@ For non uniform permutations the descent process is not necessarily determinanta
 
 
 .. plot:: plots/ex_plot_virt_descent_process.py
+    :include-source:
 
 .. seealso::
 

@@ -7,4 +7,4 @@ cp = CarriesProcess(base)
 size = 100
 cp.sample(size)
 
-cp.plot_vs_bernoullis()
+cp.plot(vs_bernoullis=True)

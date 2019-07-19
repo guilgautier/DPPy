@@ -6,4 +6,4 @@ dp = DescentProcess()
 size = 100
 dp.sample(size)
 
-dp.plot_vs_bernoullis()
+dp.plot(vs_bernoullis=True)

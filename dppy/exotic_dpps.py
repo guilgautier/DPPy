@@ -25,8 +25,9 @@ if _platform.startswith('linux'):
 elif _platform == "darwin":
     # MAC OS X
     # https://markhneedham.com/blog/2018/05/04/python-runtime-error-osx-matplotlib-not-installed-as-framework-mac/
-    import matplotlib
-    matplotlib.use('TkAgg')
+    # import matplotlib
+    # matplotlib.use('TkAgg')
+    pass
 
 import matplotlib.pyplot as plt
 from matplotlib import collections as mc  # see plot_diagram
@@ -42,7 +43,7 @@ from dppy.exact_sampling import proj_dpp_sampler_eig
 
 # For DescentProcess
 import re  # to convert class names to string in
-from dppy.exotic_dpps_core import wrapper_plot_descent
+# from dppy.exotic_dpps_core import wrapper_plot_descent
 
 # For Poissonized Plancherel measure
 from dppy.exotic_dpps_core import RSK, xy_young_ru, limit_shape
@@ -82,66 +83,59 @@ class Descent(metaclass=abc.ABCMeta):
         """
         self.list_of_samples = []
 
-    @wrapper_plot_descent
-    def plot(self, title=''):
-        """Display the process on the real line
-
-        :param title:
-            Plot title
-
-        :type title:
-            string
+    def plot(self, vs_bernoullis=True, random_state=None):
+        """Display the last realization of the process.
+        If ``vs_bernoullis=True`` compare it to a sequence of i.i.d. Bernoullis with parameter ``_bernoulli_param``
 
         .. seealso::
 
             - :py:meth:`sample`
-            - :py:meth:`plot_vs_bernoullis`
-        """
-
-        fig, ax = plt.subplots(figsize=(19, 2))
-
-        sampl = self.list_of_samples[-1]
-        ax.scatter(sampl, np.zeros_like(sampl),
-                   color='blue',
-                   s=20,
-                   label=self.name)
-
-        str_title = 'Realization of the {}'.format(self.name)
-        plt.title(title if title else str_title)
-
-        return ax, self.size
-
-    @wrapper_plot_descent
-    def plot_vs_bernoullis(self, title='', random_state=None):
-        """Display the process on the real line and compare it to a sequence of i.i.d. Bernoullis
-
-        :param title:
-            Plot title
-
-        :type title:
-            string
-
-        .. seealso::
-
-            - :py:meth:`sample`
-            - :py:meth:`plot`
         """
         rng = check_random_state(random_state)
+        title = 'Realization of the {} process'.format(self.name)
 
         fig, ax = plt.subplots(figsize=(19, 2))
 
         sampl = self.list_of_samples[-1]
-        bern = np.where(rng.rand(self.size) < self._bernoulli_param)[0]
-
-        ax.scatter(sampl, np.ones_like(sampl),
+        ax.scatter(sampl,
+                   np.zeros_like(sampl) + (1.0 if vs_bernoullis else 0.0),
                    color='b', s=20, label=self.name)
-        ax.scatter(bern, -np.ones_like(bern),
-                   color='r', s=20, label='Bernoullis')
 
-        str_title = r'Realization of the {} process vs independent Bernoulli variables with parameter $p$={:.3f}'.format(self.name, self._bernoulli_param)
-        plt.title(title if title else str_title)
+        if vs_bernoullis:
+            title += r' vs independent Bernoulli variables with parameter $p$={:.3f}'.format(self._bernoulli_param)
 
-        return ax, self.size
+            bern = np.where(rng.rand(self.size) < self._bernoulli_param)[0]
+            ax.scatter(bern, -np.ones_like(bern),
+                       color='r', s=20, label='Bernoullis')
+
+        plt.title(title)
+
+        # Spine options
+        ax.spines['bottom'].set_position('center')
+        ax.spines['left'].set_visible(False)
+        ax.spines['top'].set_visible(False)
+        ax.spines['right'].set_visible(False)
+
+        # Ticks options
+        minor_ticks = np.arange(0, self.size + 1)
+        major_ticks = np.arange(0, self.size + 1, 10)
+        ax.set_xticks(major_ticks)
+        ax.set_xticks(minor_ticks, minor=True)
+        ax.set_xticklabels(major_ticks, fontsize=15)
+        ax.xaxis.set_ticks_position('bottom')
+
+        ax.tick_params(
+            axis='y',           # changes apply to the y-axis
+            which='both',       # both major and minor ticks are affected
+            left=False,         # ticks along the left edge are off
+            right=False,        # ticks along the right edge are off
+            labelleft=False)    # labels along the left edge are off
+
+        ax.xaxis.grid(True)
+        ax.set_xlim([-1, self.size + 1])
+        ax.legend(bbox_to_anchor=(0, 0.85),
+                  frameon=False,
+                  prop={'size': 15})
 
 
 class CarriesProcess(Descent):
