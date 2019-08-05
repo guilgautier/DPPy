@@ -14,21 +14,25 @@ Generic DPPs as mixtures of projection DPPs
 
 .. important::
 
-	Given the spectral decomposition of the kernel
+	Consider :math:`\mathcal{X} \sim \operatorname{DPP}(\mathbf{K})` and write the spectral decomposition of the corresponding kernel as
 
 	.. math::
 
-		\mathbf{K} = \sum_{n=1}^N \lambda_n^{\mathbf{K}} u_n u_n^{\dagger}`
+		\mathbf{K} = \sum_{n=1}^N \lambda_n^{\mathbf{K}} u_n u_n^{\dagger}.
 
-	define the **random** orthogonal projection kernel
-	:math:`\mathbf{K}^B = \sum_{n=1}^N B_n u_n u_n^{\dagger}``
-
-	with independent :math:`B_i\sim\mathcal{B}(\lambda_n^{\mathbf{K}})`.
-	Then we have
+	Then, denote :math:`\mathcal{X}^B \sim \operatorname{DPP}(\mathbf{K}^B)` with
 
 	.. math::
 
-		\operatorname{DPP}(\mathbf{K})\sim\operatorname{DPP}(\mathbf{K}^B)
+		\mathbf{K}^B = \sum_{n=1}^N B_n u_n u_n^{\dagger},
+		\quad
+		\text{where}
+		\quad
+		B_n \overset{\text{i.i.d.}}{\sim} \mathcal{B}er(\lambda_n^{\mathbf{K}})
+
+	where :math:`\mathcal{X}^B` is obtained by first choosing :math:`B_1, \dots, B_N` independently and then sampling from :math:`\operatorname{DPP}(\mathbf{K}^B)` the DPP with orthogonal projection kernel :math:`\mathbf{K}^B`.
+
+	Finally, we have :math:`\mathcal{X} \overset{d}{=} \mathcal{X}^B`.
 
 .. seealso::
 
@@ -41,7 +45,7 @@ Generic DPPs as mixtures of projection DPPs
 Number of points
 ================
 
-Based on :ref:`finite_dpps_mixture`, we have
+Based on the fact that :ref:`generic DPPs are mixtures of projection DPPs <finite_dpps_mixture>`, we have
 
 .. math::
 	:label: number_points
@@ -190,7 +194,7 @@ where each item is represented by a feature vector :math:`\phi_i` (resp. :math:`
 
 The geometrical view is then straightforward.
 
-a. The inclusion probabilities interpret as
+a. The inclusion probabilities read
 
 	.. math::
 
@@ -198,8 +202,7 @@ a. The inclusion probabilities interpret as
 		= \det \mathbf{K}_S
 		= \operatorname{Vol}^2 \{\phi_s\}_{s\in S}
 
-b. The inclusion probabilities interpret as
-
+b. The likelihood reads
 	.. math::
 
 		\mathbb{P}[\mathcal{X} = S]
@@ -219,12 +222,12 @@ Deriving the pair inclusion probability, also called the 2-point correlation fun
 .. math::
 
 	\mathbb{P}[\{i, j\} \subset \mathcal{X}]
-  &= \begin{vmatrix}
-    \mathbb{P}[i \in \mathcal{X}]	& \mathbf{K}_{i j}\\
-    \overline{\mathbf{K}_{i j}}		& \mathbb{P}[j \in \mathcal{X}]
-  \end{vmatrix}\\
-  &= \mathbb{P}[i \in \mathcal{X}] \mathbb{P}[j \in \mathcal{X}]
-  	- |\mathbf{K}_{i j}|^2
+	&= \begin{vmatrix}
+		\mathbb{P}[i \in \mathcal{X}]	& \mathbf{K}_{i j}\\
+		\overline{\mathbf{K}_{i j}}		& \mathbb{P}[j \in \mathcal{X}]
+	\end{vmatrix}\\
+	&= \mathbb{P}[i \in \mathcal{X}] \mathbb{P}[j \in \mathcal{X}]
+		- |\mathbf{K}_{i j}|^2
 
 That is, the greater the similarity :math:`|\mathbf{K}_{i j}|` between items :math:`i` and :math:`j`, the less likely they co-occur.
 
@@ -284,3 +287,12 @@ Thus, except for correlation kernels :math:`\mathbf{K}` with some eigenvalues eq
 
 	- :py:meth:`~FiniteDPP.compute_K`
 	- :py:meth:`~FiniteDPP.compute_L`
+
+
+Conditioning
+============
+
+
+
+`Cauchy-Binet formula <https://en.wikipedia.org/wiki/Cauchy%E2%80%93Binet_formula>`_
+

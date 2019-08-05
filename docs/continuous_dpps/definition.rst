@@ -8,16 +8,18 @@ Point Process
 
 Let :math:`\mathbb{X} = \mathbb{R}^d, \mathbb{C}^d \text{ or } \mathbb{S}^{d-1}` be the ambiant space, we endow it with the corresponding Borel :math:`\sigma`-algebra :math:`\mathcal{B}(\mathbb{X})` together with a reference measure :math:`\mu`.
 
-For our purpose, we consider point processes as locally finite random subsets :math:`\gamma \subset \mathbb{X}` i.e.
+For our purpose, we consider point processes as locally finite random subsets :math:`\mathcal{X} \subset \mathbb{X}` i.e.
 
 	.. math::
 
 		\forall C \subset \mathbb{X} \text{ compact},
-			\quad \#(\gamma \cap C) < \infty
+			\quad \#(\mathcal{X} \cap C) < \infty
 
 .. hint::
 
-	A point process is a random subset of points :math:`\{X_1, \dots, X_N\} \subset \mathbb{X}`	with :math:`N` being random.
+	A point process is a random subset of points
+	:math:`\mathcal{X} \triangleq\{X_1, \dots, X_N\} \subset \mathbb{X}`
+	with :math:`N` being random.
 
 .. seealso::
 
@@ -42,7 +44,7 @@ For :math:`k\geq 0`, the :math:`k`-correlation function :math:`\rho_k` is define
   \left[ \sum_{
     \substack{
     	(X_1,\dots,X_k) \\
-    	X_1 \neq \dots \neq X_k \in \gamma} }
+    	X_1 \neq \dots \neq X_k \in \mathcal{X}} }
     f(X_1,\dots,X_k)
   \right]
 	  = \int_{\mathbb{X}^k}
@@ -52,12 +54,22 @@ For :math:`k\geq 0`, the :math:`k`-correlation function :math:`\rho_k` is define
 .. hint::
 
 	The :math:`k`-correlation function does not always exists, but but when they do, they have a meaningful interpretation.
-	On :math:`\mathbb{X}=\mathbb{R}` with :math:`\mu` absolutely continuous w.r.t. Lebesgue
 
 	.. math::
 
+		"
 		\rho_k(x_1,\dots,x_k)
-		= \lim_{\epsilon \to 0} \frac{1}{\epsilon^k} \mathbb{P}\left[ \gamma \text{ has a point in } [x_i,x_i +\epsilon], \forall 1\leq i \leq k \right]
+		\mu(dx_{1}), \dots, \mu(dx_{N})
+		= \mathbb{P}
+		\left[
+		\begin{array}{c}
+			\text{there is 1 point in each}\\
+			B(x_1, d x_1), \dots, B(x_n, d x_n)
+		\end{array}
+		\right]
+		"
+
+    where :math:`B(x, dx)` denotes the ball centered at :math:`x` with radius :math:`dx`
 
 A Determinant Point Process (DPP) is a point process on :math:`(\mathbb{X}, \mathcal{B}(\mathbb{X}), \mu)` parametrized by a kernel :math:`K` associated to the reference measure :math:`\mu`.
 The :math:`k`-correlation functions read
@@ -114,8 +126,6 @@ Under assumptions 1-3, the
 
 	\operatorname{DPP}(K) \text{ exists}
 	\Longleftrightarrow
-		0 \preceq K \preceq I
-			\quad \text{i.e.} \quad
 		\lambda_n \in [0,1], \quad \forall n
 
 .. hint::
@@ -128,11 +138,11 @@ Under assumptions 1-3, the
 
 			K(x,y) = \sum_{n=0}^{\infty} \lambda_n \phi_{n}(x)\phi_{n}(y), \quad \text{where } K\phi_{n} = \lambda_n \phi_{n}.
 
-	- 3. makes sure there is no accumulation of points
+	- 3. makes sure there is no accumulation of points: :math:`|\mathcal{X}\cap B| = \int_B K(x,x) \mu(dx) \leq \infty`, see also :ref:`continuous_dpps_number_of_points`
 
 .. warning::
 
-	These are only a sufficient conditions, there indeed exist DPPs with non symmetric kernels such as the :ref:`carries_process`.
+	These are only sufficient conditions, there indeed exist DPPs with non symmetric kernels such as the :ref:`carries_process`.
 
 .. seealso::
 

@@ -35,13 +35,13 @@ We say that :math:`\mathcal{X} \sim \operatorname{DPP}(\mathbf{K})` with correla
 
 where :math:`\mathbf{K}_S = [\mathbf{K}_{ij}]_{i,j\in S}` i.e. the square submatrix of :math:`\mathbf{K}` obtained by keeping only rows and columns indexed by :math:`S`.
 
-Marginal probabilities
-======================
+Likelihood
+==========
 
 We say that :math:`\mathcal{X} \sim \operatorname{DPP}(\mathbf{L})` with likelihood kernel a complex matrix :math:`\mathbf{L}` if
 
 	.. math::
-		:label: marginal_proba
+		:label: likelihood
 
 		\mathbb{P}[\mathcal{X}=S] = \frac{\det \mathbf{L}_S}{\det [I+\mathbf{L}]},
 		\quad \forall S\subset [N]
@@ -76,6 +76,7 @@ where the dagger :math:`\dagger` symbol means *conjugate transpose*.
   :include-source:
 
 .. important::
+	:label: finite_dpp_projection_dpp
 
 	DPPs defined by an *orthogonal projection* correlation kernel :math:`\mathbf{K}` are called *projection* DPPs.
 	They are indeed valid kernels since they meet the above sufficient conditions: they are Hermitian with eigenvalues :math:`0` or :math:`1`.
