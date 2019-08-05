@@ -311,7 +311,12 @@ def wachter_law(x, M_1, M_2, N):
 # mu-ref = Beta
 def mu_ref_beta_sampler_tridiag(a, b, beta=2, size=10,
                                 random_state=None):
-    """
+    """ Implementation of the tridiagonal model given by Theorem 2 of :cite:`KiNe04` to sample from
+
+    .. math::
+
+        \\Delta(x_{1}, \\dots, x_{N})^2 \\prod_{n=1}^{N} x^{a-1} (1-x)^{b-1} dx
+
     .. seealso::
 
         :cite:`KiNe04` Theorem 2
@@ -325,7 +330,7 @@ def mu_ref_beta_sampler_tridiag(a, b, beta=2, size=10,
     # beta/2*[N-1, N-2, ..., 1, 0]
     b_2_Ni = 0.5 * beta * np.arange(size - 1, -1, step=-1)
 
-    # c_odd = c_1, c_2, ..., c_2N-1
+    # c_odd = c_1, c_3, ..., c_2N-1
     c_odd = rng.beta(b_2_Ni + a, b_2_Ni + b)
 
     # c_even = c_0, c_2, c_2N-2

@@ -12,7 +12,7 @@ import itertools as itt
 from scipy import stats
 from scipy.special import beta, betaln, factorial, gamma, gammaln
 from scipy.special import eval_jacobi
-from scipy.special import logsumexp
+# from scipy.special import logsumexp
 
 from  dppy.random_matrices import mu_ref_beta_sampler_tridiag as tridiagonal_model
 
@@ -108,10 +108,10 @@ class MultivariateJacobiOPE:
 
         self.mass_of_mu = self.poly_multiD_square_norms[0]
 
-        self.Gautschi_bound =\
-            compute_Gautschi_bound(self.jacobi_params,
-                                   self.ordering,
-                                   log_scale=True)
+        self.Gautschi_bounds =\
+            compute_Gautschi_bounds(self.jacobi_params,
+                                    self.ordering,
+                                    log_scale=True)
 
         self._jacobi_params_plus_05 = 0.5 + self.jacobi_params
         self._pi_power_dim = np.pi**self.dim
@@ -277,15 +277,29 @@ class MultivariateJacobiOPE:
 
     def sample_proposal_lev_score(self, nb_trials_max=10000,
                                   random_state=None):
-        """Sample from :math:`\\frac{1}{N} K(x,x) w(x)` using rejection sampling with proposal :math:`\\frac{1}{\\pi^d}w_{eq}(x) d x` where :math:`w_{eq}(x) = \\prod_{i=1}^{d} \\frac{1}{\\sqrt{1-(x^i)^2}}`
+        """Sample from :math:`\\frac{1}{N} K(x,x) w(x) d x` using rejection sampling with proposal :math:`\\frac{1}{\\pi^d}w_{eq}(x) d x` where :math:`w_{eq}(x) = \\prod_{i=1}^{d} \\frac{1}{\\sqrt{1-(x^i)^2}}`
 
-        The ratio target/proposal writes
+        First, observe that
 
         .. math::
 
-            \\frac{1}{N} K(x,x) w(x) \\frac{1}{\\frac{w_{\\text{eq}}(x)}{\\pi^d}}
-            \\leq \\frac{1}{N} \\pi^d K(x,x) w(x)w_{\\text{eq}}(x)^{-1}
-            \\leq\\frac{\\text{Gautschi bound}}{N}
+            \\frac{1}{N} K(x,x) w(x)
+            = \\frac{1}{N} \\sum_{\\mathfrak{k}=0}^{N-1} \\P_k^2(x) w(x).
+
+        To get a sample:
+
+        1. Draw a multi-index :math:`k` uniformly at random
+        2. Sample from :math:`\\P_k^2(x) w(x) dx` with proposal :math:`w_{eq}(x) d x`.
+
+            The acceptance ratio writes
+
+            .. math::
+
+                \\P_k^2(x) w(x) \\frac{1}{\\frac{w_{\\text{eq}}(x)}{\\pi^d}}
+                = \\prod_{i=1}^{d} \\pi \\P_{k^i}^2(x) (1-x^i)^{a^i+\\frac{1}{2}} (1+x^i)^{b^i+\\frac{1}{2}}
+
+            which can be bounded using the result of :cite:`Gau09` on Jacobi polynomials.
+            It is computed at initialization of the :py:class:`MultivariateJacobiOPE` object with :py:meth:`compute_Gautschi_bounds`
 
         :return:
             A sample :math:`x\\in[-1,1]^d` with probability distribution :math:`\\frac{1}{N} K(x,x) w(x)`
@@ -294,25 +308,37 @@ class MultivariateJacobiOPE:
 
         .. seealso::
 
-            - :py:meth:`compute_Gautschi_bound`
+            - :py:meth:`compute_Gautschi_bounds`
         """
         rng = check_random_state(random_state)
+
+        ind = rng.randint(self.N)
+        k_multi_ind = self.ordering[ind]
+        square_norm = self.poly_multiD_square_norms[ind]
+        Gautschi_bound = self.Gautschi_bounds[ind]
 
         for trial in range(nb_trials_max):
 
             # Propose x ~ arcsine = \prod_{i=1}^{d} 1/pi 1/sqrt(1-(x^i)^2)
             x = 1.0 - 2.0 * rng.beta(0.5, 0.5, size=self.dim)
 
-            K_xx = self.K(x, None)
-            ratio_w_w_eq = self.eval_w(x, self._jacobi_params_plus_05)
+            Pk2_x = np.prod(eval_jacobi(k_multi_ind,
+                                        self.jacobi_params[:, 0],
+                                        self.jacobi_params[:, 1],
+                                        x))**2
+            Pk2_x /= square_norm
 
-            if rng.rand() * self.Gautschi_bound\
-                < self._pi_power_dim * K_xx * ratio_w_w_eq:
+            ratio_w_proposal =\
+                self._pi_power_dim\
+                * np.prod((1.0 - x)**(self._jacobi_params_plus_05[:, 0])
+                        * (1.0 + x)**(self._jacobi_params_plus_05[:, 1]))
+
+            if rng.rand() * Gautschi_bound < Pk2_x * ratio_w_proposal:
                 break
         else:
             print('proposal not enough trials')
 
-        return x, K_xx
+        return x, self.K(x, None)
 
     def eval_poly_multiD(self, X, normalize='norm'):
         """Evaluate (and potentially normalize) multivariate Jacobi polynomials :math:`P_{k}(x) = \\prod_{i=1}^d P_{k_i}^{a_i, b_i}(x_i)`
@@ -351,8 +377,8 @@ class MultivariateJacobiOPE:
             elif normalize == 'norm':
                 poly_1D_jacobi /= np.sqrt(self.poly_1D_square_norms)
 
-            else:
-                pass
+            # else:
+            #     pass
 
             return np.prod(poly_1D_jacobi[self.ordering, range(self.dim)],
                            axis=1)
@@ -369,8 +395,8 @@ class MultivariateJacobiOPE:
             elif normalize == 'norm':
                 poly_1D_jacobi /= np.sqrt(self.poly_1D_square_norms)
 
-            else:
-                pass
+            # else:
+            #     pass
 
             return np.prod(poly_1D_jacobi[:, self.ordering, range(self.dim)],
                            axis=2)
@@ -744,7 +770,7 @@ def compute_poly1D_square_norms(jacobi_params, deg_max):
     return square_norms
 
 
-def compute_Gautschi_bound(jacobi_params, ordering, log_scale=True):
+def compute_Gautschi_bounds(jacobi_params, ordering, log_scale=True):
     """ Compute the rejection constant to sample from
     :math:`\\frac{1}{N} K(x, x) w(x) dx` using rejection sampling with proposal distribution :math:`\\frac{1}{\\pi^d}w_{eq}(x) d x` where
 
@@ -912,9 +938,9 @@ def compute_Gautschi_bound(jacobi_params, ordering, log_scale=True):
                 / gamma(n + 1 + min_a_b)
 
     if log_scale:
-        return np.exp(logsumexp(np.sum(bounds[ordering, range(dim)], axis=1)))
+        return np.exp(np.sum(bounds[ordering, range(dim)], axis=1))
     else:
-        return np.sum(np.prod(bounds[ordering, range(dim)], axis=1))
+        return np.prod(bounds[ordering, range(dim)], axis=1)
 
 
 def poly_1D_degrees(max_degrees):

@@ -236,9 +236,9 @@ Relation between correlation and likelihood kernels
 .. math::
 	:label: relation_K_L
 
-	\mathbf{K} = \mathbf{L}(I+\mathbf{L})^{—1}
+	\mathbf{K} = \mathbf{L}(I+\mathbf{L})^{—1} = I - (I+\mathbf{L})^{—1}
 		\qquad \text{and} \qquad
-	\mathbf{L} = \mathbf{K}(I-\mathbf{K})^{—1}
+	\mathbf{L} = \mathbf{K}(I-\mathbf{K})^{—1} = -I + (I-\mathbf{K})^{—1}
 
 .. warning::
 

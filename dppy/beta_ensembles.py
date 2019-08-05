@@ -1186,7 +1186,6 @@ class GinibreEnsemble(BetaEnsemble):
         .. seealso::
 
             - :ref:`Full matrix model <ginibre_ensemble_full>` for Ginibre ensemble
-            - :py:meth:`sample_banded_model`
         """
         rng = check_random_state(random_state)
 
@@ -1197,6 +1196,8 @@ class GinibreEnsemble(BetaEnsemble):
         self.list_of_samples.append(sampl)
 
     def sample_banded_model(self, *args):
+        """ No banded model is known for Ginibre, use :py:meth:`sample_full_model`
+        """
         raise NotImplementedError('No banded model is known for Ginibre, use `sample_full_model`')
 
     def normalize_points(self, points):
