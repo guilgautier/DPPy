@@ -730,7 +730,7 @@ def k_dpp_eig_vecs_selector(eig_vals, eig_vecs, size,
     .. seealso::
 
         - :cite:`KuTa12` Algorithm 8
-        - :func:`elem_symm_poly <elem_symm_poly>`
+        - :func:`elementary_symmetric_polynomials <elementary_symmetric_polynomials>`
     """
 
     rng = check_random_state(random_state)
@@ -745,7 +745,7 @@ def k_dpp_eig_vecs_selector(eig_vals, eig_vecs, size,
         raise ValueError('size k={} > rank={}'.format(k, rank))
 
     if E_poly is None:
-        E_poly = elem_symm_poly(eig_vals, k)
+        E_poly = elementary_symmetric_polynomials(eig_vals, k)
 
     ind_selected = np.zeros(k, dtype=int)
     for n in range(eig_vals.size, 0, -1):
@@ -760,7 +760,7 @@ def k_dpp_eig_vecs_selector(eig_vals, eig_vecs, size,
 
 
 # Evaluate the elementary symmetric polynomials
-def elem_symm_poly(eig_vals, size):
+def elementary_symmetric_polynomials(eig_vals, size):
     """ Evaluate the elementary symmetric polynomials :math:`e_k` in the eigenvalues :math:`(\\lambda_1, \\cdots, \\lambda_N)`.
 
     :param eig_vals:

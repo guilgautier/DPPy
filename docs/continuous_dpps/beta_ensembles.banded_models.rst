@@ -30,7 +30,7 @@ Take for reference measure :math:`\mu=\mathcal{N}(\mu, \sigma)`
 
 .. note::
 
-	Recall that from the definition in :eq:`abs_vandermonde_det`
+	Recall that from the definition in :eq:`eq:abs_vandermonde_det`
 
 	.. math::
 
@@ -113,7 +113,7 @@ Take for reference measure :math:`\mu=\Gamma(k,\theta)`
 
 .. note::
 
-	Recall that from the definition in :eq:`abs_vandermonde_det`
+	Recall that from the definition in :eq:`eq:abs_vandermonde_det`
 
 	.. math::
 
@@ -209,7 +209,7 @@ Take for reference measure :math:`\mu=\operatorname{Beta}(a,b)`
 
 .. note::
 
-	Recall that from the definition in :eq:`abs_vandermonde_det`
+	Recall that from the definition in :eq:`eq:abs_vandermonde_det`
 
 	.. math::
 
@@ -318,7 +318,7 @@ Circular Ensemble
 
 .. note::
 
-	Recall that from the definition in :eq:`abs_vandermonde_det`
+	Recall that from the definition in :eq:`eq:abs_vandermonde_det`
 
 	.. math::
 

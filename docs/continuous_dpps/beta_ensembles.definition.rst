@@ -6,7 +6,7 @@ Definition
 Let :math:`\beta>0`, the joint distribution of the :math:`\beta`-Ensemble associated to the reference measure :math:`\mu` writes
 
 .. math::
-	:label: joint_beta_ensemble
+	:label: eq:joint_beta_ensemble
 
 	(x_1,\dots,x_N)
 	\sim
@@ -20,7 +20,7 @@ Let :math:`\beta>0`, the joint distribution of the :math:`\beta`-Ensemble associ
 	- :math:`|\Delta(x_1,\dots,x_N)| = \prod_{i<j} |x_i - x_j|` is the absolute value of the determinant of the Vandermonde matrix,
 
 		.. math::
-			:label: abs_vandermonde_det
+			:label: eq:abs_vandermonde_det
 
 			\Delta(x_1,\dots,x_N)
 			= \det \begin{bmatrix}
@@ -97,7 +97,7 @@ where :math:`(p_n)` are the orthonormal polynomials w.r.t. :math:`\mu` i.e. :mat
 	Finally, the joint distribution of :math:`(x_1, \dots, x_N)` reads
 
 	.. math::
-		:label: joint_OPE
+		:label: eq:joint_OPE
 
 		(x_1,\dots,x_N)
 		\sim

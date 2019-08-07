@@ -416,10 +416,10 @@ def basis_exchange_sampler(kernel, s_init, nb_iter=10, T_max=None,
 def extract_basis(y_sol, eps=1e-5):
     """ Subroutine of zono_sampling to extract the tile of the zonotope
     in which a point lies. It extracts the indices of entries of the solution
-    of LP :eq:`Px` that are in (0,1).
+    of LP :eq:`eq:Px` that are in (0,1).
 
     :param y_sol:
-        Optimal solution of LP :eq:`Px`
+        Optimal solution of LP :eq:`eq:Px`
     :type y_sol:
         list
 

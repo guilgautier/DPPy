@@ -8,7 +8,7 @@ MCMC sampling
 Add/exchange/delete
 ===================
 
-:cite:`AnGhRe16`, :cite:`LiJeSr16c` and :cite:`LiJeSr16d` derived variants of a Metropolis sampler having for stationary distribution :math:`\operatorname{DPP}(\mathbf{L})` :eq:`likelihood`.
+:cite:`AnGhRe16`, :cite:`LiJeSr16c` and :cite:`LiJeSr16d` derived variants of a Metropolis sampler having for stationary distribution :math:`\operatorname{DPP}(\mathbf{L})` :eq:`eq:likelihood`.
 The proposal mechanism works as follows.
 
 At state :math:`S\subset [N]`, propose :math:`S'` different from :math:`S` by at most 2 elements by picking
@@ -102,7 +102,7 @@ where :math:`\Phi` is the underlying :math:`r\times N` feature matrix satisfying
 In this setting the :ref:`finite_dpps_nb_points` is almost surely equal to :math:`r` and we have
 
 .. math::
-  :label: zonotope_marginal
+  :label: eq:zonotope_marginal
 
   \mathbb{P}[\mathcal{X}=S]
   = \det \mathbf{K}_S 1_{|S|=r}

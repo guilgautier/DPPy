@@ -11,44 +11,25 @@ Generic DPPs as mixtures of projection DPPs
 *Projection* DPPs are the building blocks of the model in the sense that generic DPPs are mixtures of *projection* DPPs.
 
 
-	Consider :math:`\mathcal{X} \sim \operatorname{DPP}(\mathbf{K})` and write the spectral decomposition of the corresponding kernel as
+	Consider :math:`\mathcal{X} \sim \operatorname{DPP}(K)` and write the spectral decomposition of the corresponding kernel as
 
 	.. math::
 
-		\mathbf{K} = \sum_{n=1}^N \lambda_n^{\mathbf{K}} u_n u_n^{\dagger}.
+		K = \sum_{n=1}^{\infty} \lambda_n \phi(x) \overline{\phi(y)}.
 
-	Then, denote :math:`\mathcal{X}^B \sim \operatorname{DPP}(\mathbf{K}^B)` with
+	Then, denote :math:`\mathcal{X}^B \sim \operatorname{DPP}(K^B)` with
 
 	.. math::
 
-		\mathbf{K}^B = \sum_{n=1}^N B_n u_n u_n^{\dagger},
+		K = \sum_{n=1}^{\infty} B_n \phi(x) \overline{\phi(y)},
 		\quad
 		\text{where}
 		\quad
-		B_n \overset{\text{i.i.d.}}{\sim} \mathcal{B}er(\lambda_n^{\mathbf{K}})
+		B_n \overset{\text{i.i.d.}}{\sim} \mathcal{B}er(\lambda_n)
 
-	where :math:`\mathcal{X}^B` is obtained by first choosing :math:`B_1, \dots, B_N` independently and then sampling from :math:`\operatorname{DPP}(\mathbf{K}^B)` the DPP with orthogonal projection kernel :math:`\mathbf{K}^B`.
+	where :math:`\mathcal{X}^B` is obtained by first choosing :math:`B_1, \dots, B_N` independently and then sampling from :math:`\operatorname{DPP}(K^B)` the DPP with orthogonal projection kernel :math:`K^B`.
 
 	Finally, we have :math:`\mathcal{X} \overset{d}{=} \mathcal{X}^B`.
-
-.. important::
-
-	Given the spectral decomposition of the kernel
-
-	.. math::
-
-	  K(x,y)=\sum_{i=1}^{\infty} \lambda_i \phi_i(x) \overline{\phi_i(y)},
-	  \quad \text{with }
-	  \int \phi_i(x) \overline{\phi_j(x)} \mu(dx) = \delta_{ij},
-
-	define the random orthogonal projection kernel
-	:math:`K^B(x,y) = \sum_{i=1}^{\infty} B_i \phi_i(x) \overline{\phi_i(y)}`
-	, with independent :math:`B_i\sim\mathcal{B}(\lambda_i)`.
-	Then we have
-
-	.. math::
-
-	  \operatorname{DPP}(K) \sim \operatorname{DPP}(K^B)
 
 .. seealso::
 
@@ -109,7 +90,9 @@ b. Orthogonal projection case i.e. :math:`K^2 = K = K^*`
 Number of points
 ================
 
-Based on :ref:`continuous_dpps_mixture`, we have
+For projection DPPs, i.e., when :math:`K` is the kernel associated to an orthogonal projector, one can show that :math:`|\mathcal{X}|=\operatorname{rank}(K)=\operatorname{Trace}(K)` almost surely (see, e.g., Lemma 17 of :cite:`HKPV06`)
+
+In the general case, based on the fact that :ref:`generic DPPs are mixtures of projection DPPs <finite_dpps_mixture>`, we have
 
 .. math::
 
@@ -124,7 +107,7 @@ Based on :ref:`continuous_dpps_mixture`, we have
 
 .. seealso::
 
-	:ref:`finite_dpps_nb_points` in the finite case
+	:ref:`continuous_dpps_nb_points` in the finite case
 
 .. _continuous_dpps_thinning:
 
@@ -132,7 +115,7 @@ Thinning
 ========
 
 Let :math:`\lambda > 1`.
-The configuration of points :math:`\mathcal{X}^{\lambda}` obtained after subsampling the points of a configuration :math:`\mathcal{X}\sim \operatorname{DPP}(\mathbf{K})` with i.i.d. :math:`\operatorname{\mathcal{B}er}\left(\frac{1}{\lambda}\right)` is still a DPP with kernel :math:`\frac{1}{\lambda} \mathbf{K}`.
+The configuration of points :math:`\mathcal{X}^{\lambda}` obtained after subsampling the points of a configuration :math:`\mathcal{X}\sim \operatorname{DPP}(K)` with i.i.d. :math:`\operatorname{\mathcal{B}er}\left(\frac{1}{\lambda}\right)` is still a DPP with kernel :math:`\frac{1}{\lambda} K`.
 
 	.. math::
 
@@ -157,4 +140,4 @@ The configuration of points :math:`\mathcal{X}^{\lambda}` obtained after subsamp
 		&= \int
 				f(x_1,\dots,x_k)
 				\det \left[ \frac{1}{\lambda} K(x_i,x_j) \right]_{1\leq i,j\leq k}
-				\mu^{\otimes k}(dx) \\
+				\mu^{\otimes k}(dx)

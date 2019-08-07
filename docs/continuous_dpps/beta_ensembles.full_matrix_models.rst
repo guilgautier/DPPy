@@ -26,7 +26,7 @@ Take for reference measure :math:`\mu=\mathcal{N}(0, 2)`, the pdf of the corresp
 
 .. note::
 
-	Recall that from the definition in :eq:`abs_vandermonde_det`
+	Recall that from the definition in :eq:`eq:abs_vandermonde_det`
 
 	.. math::
 
@@ -107,7 +107,7 @@ the pdf of the corresponding :math:`\beta`-Ensemble reads
 
 .. note::
 
-	Recall that from the definition in :eq:`abs_vandermonde_det`
+	Recall that from the definition in :eq:`eq:abs_vandermonde_det`
 
 	.. math::
 
@@ -198,7 +198,7 @@ the pdf of the corresponding :math:`\beta`-Ensemble reads
 
 .. note::
 
-	Recall that from the definition in :eq:`abs_vandermonde_det`
+	Recall that from the definition in :eq:`eq:abs_vandermonde_det`
 
 	.. math::
 
@@ -294,7 +294,7 @@ Circular Ensemble
 
 .. note::
 
-	Recall that from the definition in :eq:`abs_vandermonde_det`
+	Recall that from the definition in :eq:`eq:abs_vandermonde_det`
 
 	.. math::
 
@@ -405,7 +405,7 @@ Ginibre Ensemble
 
 .. note::
 
-	Recall that from the definition in :eq:`abs_vandermonde_det`
+	Recall that from the definition in :eq:`eq:abs_vandermonde_det`
 
 	.. math::
 

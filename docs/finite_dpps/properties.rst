@@ -3,7 +3,7 @@
 Properties
 **********
 
-Throughout this section, we assume :math:`\mathbf{K}` and :math:`\mathbf{L}` satisfy the sufficient conditions :eq:`suff_cond_K` and :eq:`suff_cond_L` respectively.
+Throughout this section, we assume :math:`\mathbf{K}` and :math:`\mathbf{L}` satisfy the sufficient conditions :eq:`eq:suff_cond_K` and :eq:`eq:suff_cond_L` respectively.
 
 .. _finite_dpps_mixture:
 
@@ -45,10 +45,12 @@ Generic DPPs as mixtures of projection DPPs
 Number of points
 ================
 
-Based on the fact that :ref:`generic DPPs are mixtures of projection DPPs <finite_dpps_mixture>`, we have
+For projection DPPs, i.e., when :math:`\mathbf{K}` is an orthogonal projection matrix, one can show that :math:`|\mathcal{X}|=\operatorname{rank}(\mathbf{K})=\operatorname{Trace}(\mathbf{K})` almost surely (see, e.g., Lemma 17 of :cite:`HKPV06` or Lemma 2.7 of :cite:`KuTa12`)
+
+In the general case, based on the fact that :ref:`generic DPPs are mixtures of projection DPPs <finite_dpps_mixture>`, we have
 
 .. math::
-	:label: number_points
+	:label: eq:number_points
 
 	|\mathcal{X}|
 		= \sum_{n=1}^N
@@ -66,7 +68,7 @@ Expectation
 -----------
 
 .. math::
-	:label: expect_number_points
+	:label: eq:expect_number_points
 
 	\mathbb{E}[|\mathcal{X}|]
 		= \operatorname{Tr} \mathbf{K}
@@ -77,7 +79,7 @@ Variance
 --------
 
 .. math::
-	:label: var_number_points
+	:label: eq:var_number_points
 
 	\operatorname{\mathbb{V}ar}[|\mathcal{X}|]
 		= \operatorname{Tr} \mathbf{K} - \operatorname{Tr} \mathbf{K}^2
@@ -123,32 +125,12 @@ Variance
 
 .. important::
 
-	Realizations of *projection* DPPs i.e. have fixed cardinality.
+	From :eq:`eq:number_points` it is clear that :math:`|\mathcal{X}|\leq \operatorname{rank}(\mathbf{K})=\operatorname{rank}(\mathbf{L})`.
+
+	Equality holds only for projection DPPs: realizations of *projection* DPPs have exactly :math:`|\mathcal{X}|\leq \operatorname{rank}(\mathbf{K})` points, almost surely, so that the likelihood takes the form given by
 
 	.. math::
-		:label: number_points_projection_K
-
-		|\mathcal{X}|
-			\overset{a.s.}{=}
-				\operatorname{Tr} \mathbf{K}
-			= \operatorname{rank} \mathbf{K}
-
-	Since :math:`\mathbf{K}^2=\mathbf{K}`, :eq:`expect_number_points` and :eq:`var_number_points` yield
-
-	.. math::
-
-		\mathbb{E}[|\mathcal{X}|]
-			= \operatorname{Tr} \mathbf{K}
-			= \operatorname{rank} \mathbf{K}
-		\quad \text{and} \quad
-		\mathbb{V}ar[|\mathcal{X}|]
-			= \operatorname{Tr} \mathbf{K} - \operatorname{Tr} \mathbf{K}^2
-			= 0
-
-	Thus,
-
-	.. math::
-		:label: marginal_projection_K
+		:label: eq:likelihood_projection_K
 
 		\mathbb{P}[\mathcal{X}=S]
 			= \det \mathbf{K}_S 1_{|S|=\operatorname{rank} \mathbf{K}}
@@ -182,7 +164,7 @@ Variance
 Geometrical insights
 ====================
 
-Kernels satisfying the sufficient conditions :eq:`suff_cond_K` and :eq:`suff_cond_L` can be expressed as
+Kernels satisfying the sufficient conditions :eq:`eq:suff_cond_K` and :eq:`eq:suff_cond_L` can be expressed as
 
 .. math::
 
@@ -217,7 +199,7 @@ Diversity
 =========
 
 The *determinantal* structure of DPPs encodes the notion of diversity.
-Deriving the pair inclusion probability, also called the 2-point correlation function using :eq:`inclusion_proba`, we obtain
+Deriving the pair inclusion probability, also called the 2-point correlation function using :eq:`eq:inclusion_proba`, we obtain
 
 .. math::
 
@@ -237,23 +219,11 @@ Relation between correlation and likelihood kernels
 ===================================================
 
 .. math::
-	:label: relation_K_L
+	:label: eq:relation_K_L
 
 	\mathbf{K} = \mathbf{L}(I+\mathbf{L})^{—1} = I - (I+\mathbf{L})^{—1}
 		\qquad \text{and} \qquad
 	\mathbf{L} = \mathbf{K}(I-\mathbf{K})^{—1} = -I + (I-\mathbf{K})^{—1}
-
-.. warning::
-
-	For DPPs with *projection* correlation kernel :math:`K`, the likelihood kernel :math:`\mathbf{L}` cannot be computed via  :eq:`relation_K_L` with :math:`\mathbf{L} = \mathbf{K}(I-\mathbf{K})^{—1}`, since :math:`\mathbf{K}` has at least one eigenvalue equal to :math:`1` (:math:`\mathbf{K}^2=\mathbf{K}`).
-
-	However, the likelihood kernel :math:`\mathbf{L}` coincides with :math:`\mathbf{K}`.
-
-	.. math::
-
-		\mathbb{P}[\mathcal{X}=S] =
-			\det \mathbf{K}_S 1_{|S|=\operatorname{rank}\mathbf{K}}
-			\quad \forall S\subset [N]
 
 Thus, except for correlation kernels :math:`\mathbf{K}` with some eigenvalues equal to :math:`1`, both :math:`\mathbf{K}` and :math:`\mathbf{L}` are diagonalizable in the same basis
 
@@ -263,6 +233,18 @@ Thus, except for correlation kernels :math:`\mathbf{K}` with some eigenvalues eq
 	\mathbf{L} = U \Gamma U^{\dagger}
 	\qquad \text{with} \qquad
 	\lambda_n = \frac{\gamma_n}{1+\gamma_n}
+
+.. warning::
+
+	For DPPs with *projection* correlation kernel :math:`\mathbf{K}`, the likelihood kernel :math:`\mathbf{L}` cannot be computed via  :eq:`eq:relation_K_L` with :math:`\mathbf{L} = \mathbf{K}(I-\mathbf{K})^{—1}`, since :math:`\mathbf{K}` has at least one eigenvalue equal to :math:`1` (:math:`\mathbf{K}^2=\mathbf{K}`).
+
+	However, the likelihood kernel :math:`\mathbf{L}` coincides with :math:`\mathbf{K}` in the following sense
+
+	.. math::
+
+		\mathbb{P}[\mathcal{X}=S] =
+			\det \mathbf{K}_S 1_{|S|=\operatorname{rank}\mathbf{K}}
+			\quad \forall S\subset [N]
 
 .. code-block:: python
 
@@ -288,11 +270,32 @@ Thus, except for correlation kernels :math:`\mathbf{K}` with some eigenvalues eq
 	- :py:meth:`~FiniteDPP.compute_K`
 	- :py:meth:`~FiniteDPP.compute_L`
 
+.. _finite_dpps_conditioning:
 
 Conditioning
 ============
 
+.. math::
+	:label: eq:conditioned_on_S_in_X
 
+	\mathbb{P}[T \subset \mathcal{X} \mid S \subset \mathcal{X}]
+        = \det\left[\mathbf{K}_T - \mathbf{K}_{TS} \mathbf{K}_S^{-1} \mathbf{K}_{ST}\right]
 
-`Cauchy-Binet formula <https://en.wikipedia.org/wiki/Cauchy%E2%80%93Binet_formula>`_
+.. ezrze
 
+.. math::
+	:label: eq:conditioned_on_S_notin_X
+
+	\mathbb{P}[T \subset \mathcal{X} \mid S \cap \mathcal{X} = \emptyset]
+    	= \det\left[\mathbf{K}_T - \mathbf{K}_{TS} (\mathbf{K}_S - I)^{-1} \mathbf{K}_{ST}\right]
+
+.. seealso::
+
+	- Propositions 3 and 5 of :cite:`Pou19` for the proofs
+	- Equations :eq:`eq:conditioned_on_S_in_X` and :eq:`eq:conditioned_on_S_in_X` are key to derive the
+
+	.. todo::
+
+		Add reference to exact sampling Cholesky based exact samplers
+
+.. `Cauchy-Binet formula <https://en.wikipedia.org/wiki/Cauchy%E2%80%93Binet_formula>`_

@@ -28,7 +28,7 @@ Inclusion probabilities
 We say that :math:`\mathcal{X} \sim \operatorname{DPP}(\mathbf{K})` with correlation kernel a complex matrix :math:`\mathbf{K}` if
 
 	.. math::
-		:label: inclusion_proba
+		:label: eq:inclusion_proba
 
 		\mathbb{P}[S\subset \mathcal{X}] = \det \mathbf{K}_S,
 		\quad \forall S\subset [N]
@@ -41,7 +41,7 @@ Likelihood
 We say that :math:`\mathcal{X} \sim \operatorname{DPP}(\mathbf{L})` with likelihood kernel a complex matrix :math:`\mathbf{L}` if
 
 	.. math::
-		:label: likelihood
+		:label: eq:likelihood
 
 		\mathbb{P}[\mathcal{X}=S] = \frac{\det \mathbf{L}_S}{\det [I+\mathbf{L}]},
 		\quad \forall S\subset [N]
@@ -52,14 +52,14 @@ Existence
 Some common sufficient conditions to guarantee existence are:
 
 	.. math::
-		:label: suff_cond_K
+		:label: eq:suff_cond_K
 
 		\mathbf{K} = \mathbf{K}^{\dagger}
 		\quad \text{and} \quad
 		0_N \preceq \mathbf{K} \preceq I_N
 
 	.. math::
-		:label: suff_cond_L
+		:label: eq:suff_cond_L
 
 		\mathbf{L} = \mathbf{L}^{\dagger}
 		\quad \text{and} \quad
@@ -76,7 +76,6 @@ where the dagger :math:`\dagger` symbol means *conjugate transpose*.
   :include-source:
 
 .. important::
-	:label: finite_dpp_projection_dpp
 
 	DPPs defined by an *orthogonal projection* correlation kernel :math:`\mathbf{K}` are called *projection* DPPs.
 	They are indeed valid kernels since they meet the above sufficient conditions: they are Hermitian with eigenvalues :math:`0` or :math:`1`.
@@ -131,7 +130,7 @@ where :math:`e_k(L)` corresponds to the `elementary symmetric polymial <https://
 .. warning::
 
 	k-DPPs are not DPPs in general.
-	Viewed as :math:`\operatorname{DPPs}` conditioned to a fixed sample size :math:`|\mathcal{X}|=k`, the only case where they coincide is when the original DPP is a *projection* :math:`\operatorname{DPP}(\mathbf{K})`, and :math:`k=\operatorname{rank}(\mathbf{K})`, see :eq:`marginal_projection_K`.
+	Viewed as :math:`\operatorname{DPPs}` conditioned to a fixed sample size :math:`|\mathcal{X}|=k`, the only case where they coincide is when the original DPP is a *projection* :math:`\operatorname{DPP}(\mathbf{K})`, and :math:`k=\operatorname{rank}(\mathbf{K})`, see :eq:`eq:likelihood_projection_K`.
 
 .. seealso::
 

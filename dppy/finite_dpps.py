@@ -38,7 +38,7 @@ from dppy.exact_sampling import (dpp_sampler_generic_kernel,
                                  dpp_eig_vecs_selector,
                                  dpp_eig_vecs_selector_L_dual,
                                  k_dpp_eig_vecs_selector,
-                                 elem_symm_poly)
+                                 elementary_symmetric_polynomials)
 
 from dppy.mcmc_sampling import dpp_sampler_mcmc, zonotope_sampler
 
@@ -462,7 +462,8 @@ class FiniteDPP:
             # Phase 1
             # Precompute elementary symmetric polynomials
             if self.E_poly is None or self.size_k_dpp < size:
-                self.E_poly = elem_symm_poly(self.L_eig_vals, size)
+                self.E_poly = elementary_symmetric_polynomials(self.L_eig_vals,
+                                                               size)
             # Select eigenvectors
             V = k_dpp_eig_vecs_selector(self.L_eig_vals, self.eig_vecs,
                                         size=size,
