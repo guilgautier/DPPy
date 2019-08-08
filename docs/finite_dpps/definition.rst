@@ -28,7 +28,7 @@ Inclusion probabilities
 We say that :math:`\mathcal{X} \sim \operatorname{DPP}(\mathbf{K})` with correlation kernel a complex matrix :math:`\mathbf{K}` if
 
 	.. math::
-		:label: eq:inclusion_proba
+		:label: eq:inclusion_proba_DPP_K
 
 		\mathbb{P}[S\subset \mathcal{X}] = \det \mathbf{K}_S,
 		\quad \forall S\subset [N]
@@ -41,7 +41,7 @@ Likelihood
 We say that :math:`\mathcal{X} \sim \operatorname{DPP}(\mathbf{L})` with likelihood kernel a complex matrix :math:`\mathbf{L}` if
 
 	.. math::
-		:label: eq:likelihood
+		:label: eq:likelihood_DPP_L
 
 		\mathbb{P}[\mathcal{X}=S] = \frac{\det \mathbf{L}_S}{\det [I+\mathbf{L}]},
 		\quad \forall S\subset [N]
@@ -71,7 +71,7 @@ where the dagger :math:`\dagger` symbol means *conjugate transpose*.
 
 	In the following, unless otherwise specified:
 
-	- we work under the sufficient conditions :eq:`eq:eq:suff_cond_K` and :eq:`eq:eq:suff_cond_K`
+	- we work under the sufficient conditions :eq:`eq:suff_cond_K` and :eq:`eq:suff_cond_K`
 	- :math:`\left(\lambda_{1}, \dots, \lambda_{N} \right)` denote the eigenvalues of :math:`\mathbf{K}`
 	- :math:`\left(\delta_{1}, \dots, \delta_{N} \right)` denote the eigenvalues of :math:`\mathbf{L}`
 
@@ -154,7 +154,7 @@ where the normalizing constant :math:`e_k(L)` corresponds to the `elementary sym
 
 .. seealso::
 
-	- :ref:`finite_dpps_exact_sampling_k_dpps`
+	- :ref:`Exact sampling of k-DPPs <finite_dpps_exact_sampling_k_dpps>`
 	- :class:`FiniteDPP <FiniteDPP>`
 	- :cite:`KuTa12` Section 2 for :math:`\operatorname{DPPs}`
 	- :cite:`KuTa12` Section 5 for :math:`\operatorname{k-DPPs}`

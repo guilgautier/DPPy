@@ -69,7 +69,7 @@ def proj_dpp_sampler_kernel_Chol(K, size=None, random_state=None):
 
     :param k:
         Size of the sample.
-        Default is :math:`k=\\operatorname{Tr}(K)=\\operatorname{rank}(K)`.
+        Default is :math:`k=\\operatorname{trace}(K)=\\operatorname{rank}(K)`.
     :type k:
         int
 
@@ -162,7 +162,7 @@ def proj_dpp_sampler_kernel_GS(K, size=None, random_state=None):
 
     :param k:
         Size of the sample.
-        Default is :math:`k=\\operatorname{Tr}(K)=\\operatorname{rank}(K)`.
+        Default is :math:`k=\\operatorname{trace}(K)=\\operatorname{rank}(K)`.
     :type k:
         int
 
@@ -228,7 +228,7 @@ def proj_dpp_sampler_kernel_Schur(K, size=None, random_state=None):
         array_like
     :param size:
         Size of the sample.
-        Default is :math:`k=\\operatorname{Tr}(K)=\\operatorname{rank}(K)`.
+        Default is :math:`k=\\operatorname{trace}(K)=\\operatorname{rank}(K)`.
     :type size:
         int
 

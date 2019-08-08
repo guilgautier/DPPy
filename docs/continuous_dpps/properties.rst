@@ -49,8 +49,8 @@ Expectation
 
 	\mathbb{E}\left[ \sum_{X \in \mathcal{X}} f(X) \right]
 		= \int f(x) K(x,x) \mu(dx)
-		= \operatorname{Tr}(Kf)
-		= \operatorname{Tr}(fK)
+		= \operatorname{trace}(Kf)
+		= \operatorname{trace}(fK)
 
 Variance
 --------
@@ -66,7 +66,7 @@ Variance
 			- \left[\int f(x) K(x,x) \mu(dx)\right]^2 \\
 		&= \int f(x)^2 K(x,x) \mu(dx)
 			 - \iint f(x)f(y) K(x,y)K(y,x) \mu(dx) \mu(dy)\\
-		&= \operatorname{Tr}(f^2K) - \operatorname{Tr}(fKfK)
+		&= \operatorname{trace}(f^2K) - \operatorname{trace}(fKfK)
 
 a. Hermitian kernel i.e. :math:`K(x,y)=\overline{K(y,x)}`
 
@@ -103,7 +103,7 @@ In the general case, based on the fact that :ref:`generic DPPs are mixtures of p
 .. important::
 
 	- For any Borel set :math:`B`, instanciating :math:`f=1_{B}` yields nice expressions for the expectation and variance of the number of points falling in :math:`B`.
-	- *Projection* DPPs have almost surely :math:`|\mathcal{X}| = \operatorname{Tr}(K) = \operatorname{rank}(K)` points (take :math:`f=1`).
+	- *Projection* DPPs have almost surely :math:`|\mathcal{X}| = \operatorname{trace}(K) = \operatorname{rank}(K)` points (take :math:`f=1`).
 
 .. seealso::
 

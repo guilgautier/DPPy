@@ -5,13 +5,12 @@ Properties
 
 Throughout this section, we assume :math:`\mathbf{K}` and :math:`\mathbf{L}` satisfy the sufficient conditions :eq:`eq:suff_cond_K` and :eq:`eq:suff_cond_L` respectively.
 
-
 .. _finite_dpps_relation_kernels:
 
 Relation between correlation and likelihood kernels
 ===================================================
 
-1. Considering the DPP defined by :math:`\mathbf{L} \succeq 0_N`, the associated correlation kernel :math:`\mathbf{K}` :eq:`eq:inclusion_proba` can be derived as
+1. Considering the DPP defined by :math:`\mathbf{L} \succeq 0_N`, the associated correlation kernel :math:`\mathbf{K}` :eq:`eq:inclusion_proba_DPP_K` can be derived as
 
 	.. math::
 		:label: eq:compute_K_from_L
@@ -22,7 +21,7 @@ Relation between correlation and likelihood kernels
 
 		Theorem 2.2 :cite:`KuTa12`
 
-2. Considering the DPP defined by :math:`0_N \preceq \mathbf{K} \prec I_N`, the associated likelihood kernel :math:`\mathbf{L}` :eq:`eq:likelihood` can be derived as
+2. Considering the DPP defined by :math:`0_N \preceq \mathbf{K} \prec I_N`, the associated likelihood kernel :math:`\mathbf{L}` :eq:`eq:likelihood_DPP_L` can be derived as
 
 	.. math::
 		:label: eq:compute_L_from_K
@@ -96,7 +95,7 @@ Generic DPPs as mixtures of projection DPPs
 
 	.. math::
 
-		\mathbf{K} = \sum_{n=1}^N \lambda_n^{\mathbf{K}} u_n u_n^{\dagger}.
+		\mathbf{K} = \sum_{n=1}^N \lambda_n u_n u_n^{\dagger}.
 
 	Then, denote :math:`\mathcal{X}^B \sim \operatorname{DPP}(\mathbf{K}^B)` with
 
@@ -106,7 +105,7 @@ Generic DPPs as mixtures of projection DPPs
 		\quad
 		\text{where}
 		\quad
-		B_n \overset{\text{i.i.d.}}{\sim} \mathcal{B}er(\lambda_n^{\mathbf{K}})
+		B_n \overset{\text{i.i.d.}}{\sim} \mathcal{B}er(\lambda_n)
 
 	where :math:`\mathcal{X}^B` is obtained by first choosing :math:`B_1, \dots, B_N` independently and then sampling from :math:`\operatorname{DPP}(\mathbf{K}^B)` the DPP with orthogonal projection kernel :math:`\mathbf{K}^B`.
 
@@ -134,12 +133,12 @@ In the general case, based on the fact that :ref:`generic DPPs are mixtures of p
 		= \sum_{n=1}^N
 			\operatorname{\mathcal{B}er}
 			\left(
-				\lambda_n^{\mathbf{K}}
+				\lambda_n
 			\right)
 		= \sum_{n=1}^N
 			\operatorname{\mathcal{B}er}
 			\left(
-				\frac{\lambda_n^{\mathbf{L}}}{1+\lambda_n^{\mathbf{L}}}
+				\frac{\gamma_n}{1+\gamma_n}
 			\right)
 
 .. note::
@@ -153,9 +152,9 @@ Expectation
 	:label: eq:expect_number_points
 
 	\mathbb{E}[|\mathcal{X}|]
-		= \operatorname{Tr} \mathbf{K}
-		= \sum_{n=1}^N \lambda_n^{\mathbf{K}}
-		= \sum_{n=1}^N \frac{\lambda_n^{\mathbf{L}}}{1+\lambda_n^{\mathbf{L}}}
+		= \operatorname{trace} \mathbf{K}
+		= \sum_{n=1}^N \lambda_n
+		= \sum_{n=1}^N \frac{\gamma_n}{1+\gamma_n}
 
 Variance
 --------
@@ -164,9 +163,9 @@ Variance
 	:label: eq:var_number_points
 
 	\operatorname{\mathbb{V}ar}[|\mathcal{X}|]
-		= \operatorname{Tr} \mathbf{K} - \operatorname{Tr} \mathbf{K}^2
-		= \sum_{n=1}^N \lambda_n^{\mathbf{K}}(1-\lambda_n^{\mathbf{K}})
-		= \sum_{n=1}^N \frac{\lambda_n^{\mathbf{L}}}{(1+\lambda_n^{\mathbf{L}})^2}
+		= \operatorname{trace} \mathbf{K} - \operatorname{trace} \mathbf{K}^2
+		= \sum_{n=1}^N \lambda_n(1-\lambda_n)
+		= \sum_{n=1}^N \frac{\gamma_n}{(1+\gamma_n)^2}
 
 .. seealso::
 
@@ -184,14 +183,14 @@ Variance
 	eig_vals = rng.rand(r) # 0< <1
 	eig_vecs, _ = qr(rng.randn(N, r), mode='economic')
 
-	DPP = FiniteDPP('correlation', projection=False,
+	dpp_K = FiniteDPP('correlation', projection=False,
 	                **{'K_eig_dec': (eig_vals, eig_vecs)})
 
 	nb_samples = 2000
 	for _ in range(nb_samples):
-	    DPP.sample_exact(random_state=rng)
+	    dpp_K.sample_exact(random_state=rng)
 
-	sizes = list(map(len, DPP.list_of_samples))
+	sizes = list(map(len, dpp_K.list_of_samples))
 	print('E[|X|]:\n emp={:.3f}, theo={:.3f}'
 	      .format(np.mean(sizes), np.sum(eig_vals)))
 	print('Var[|X|]:\n emp={:.3f}, theo={:.3f}'
@@ -301,7 +300,7 @@ That is to say, DPPs favor subsets :math:`S` whose corresponding feature vectors
 
 .. seealso::
 
-	note
+	:ref:`Geometric interpretation of the chain rule for projection DPPs <finite_dpps_exact_sampling_projection_dpp_chain_rule_geometrical_interpretation>`
 
 .. _finite_dpps_diversity:
 
@@ -309,7 +308,7 @@ Diversity
 =========
 
 The *determinantal* structure of DPPs encodes the notion of diversity.
-Deriving the pair inclusion probability, also called the 2-point correlation function using :eq:`eq:inclusion_proba`, we obtain
+Deriving the pair inclusion probability, also called the 2-point correlation function using :eq:`eq:inclusion_proba_DPP_K`, we obtain
 
 .. math::
 

@@ -5,7 +5,7 @@
 Exact sampling
 **************
 
-Consider a finite DPP defined by its correlation kernel :math:`\mathbf{K}` :eq:`eq:inclusion_proba` or likelihood kernel :math:`\mathbf{L}` :eq:`eq:likelihood`.
+Consider a finite DPP defined by its correlation kernel :math:`\mathbf{K}` :eq:`eq:inclusion_proba_DPP_K` or likelihood kernel :math:`\mathbf{L}` :eq:`eq:likelihood_DPP_L`.
 There exist three main types of exact sampling procedures:
 
 1. The spectral method requires the eigendecomposition of the correlation kernel :math:`\mathbf{K}` or the likelihood kernel :math:`\mathbf{L}`. It is based on the fact that :ref:`generic DPPs are mixtures of projection DPPs <finite_dpps_mixture>` together with the application of the chain rule to sample projection DPPs. It is presented in Section :ref:`finite_dpps_exact_sampling_spectral_method`.
@@ -82,7 +82,20 @@ Using `Woodbury's formula <https://en.wikipedia.org/wiki/Woodbury_matrix_identit
 		\prod_{i=2}^{r}
 			\dfrac{
 				K_{s_i s_i} - \mathbf{K}_{s_i, s_{1:i-1}} {\mathbf{K}_{\{s_{1:i}\}}}^{-1} \mathbf{K}_{s_{1:i-1}, s_1}
-				}{r-(i-1)}
+				}{r-(i-1)},
+
+.. hint::
+
+	MLers will recognize in :eq:`eq:chain_rule_schur` the incremental posterior variance of the Gaussian Process (GP) associated to :math:`\mathbf{K}`, see :cite:`RaWi06` Equation 2.26.
+
+	.. caution::
+
+		The connexion between the chain rule :eq:`eq:chain_rule_schur` and Gaussian Processes is valid only in the case where :math:`\mathbf{K}` is an **orthogonal projection kernel**, see also :ref:`finite_kdpps_exact_sampling_chain_rule_projection_kernel_caution`.
+
+.. _finite_dpps_exact_sampling_projection_dpp_chain_rule_geometrical_interpretation:
+
+Geometrical interpretation
+==========================
 
 .. hint::
 
@@ -320,14 +333,14 @@ In practice
 
   	**Step** 0. compute the eigendecomposition of :math:`\mathbf{L} = V \Delta V^{\dagger}` in :math:`\mathcal{O}(N^3)`.
 
- 	**Step** :ref:`1. <finite_dpps_exact_sampling_spectral_method_step_1>`  draw independent Bernoulli random variables :math:`B_n \sim \operatorname{\mathcal{B}er}(\frac{\delta_n}{1+\delta_n})` for :math:`n=1,\dots, N` and collect :math:`\mathcal{B}=\left\{ n ~;~ B_n=1 \right\}`
+ 	**Step** :ref:`1. <finite_dpps_exact_sampling_spectral_method_step_1>`  draw independent Bernoulli random variables :math:`B_n \sim \operatorname{\mathcal{B}er}(\frac{\gamma_n}{1+\gamma_n})` for :math:`n=1,\dots, N` and collect :math:`\mathcal{B}=\left\{ n ~;~ B_n=1 \right\}`
 
 	**Step** :ref:`2. <finite_dpps_exact_sampling_spectral_method_step_2>`
 	sample from the **projection** DPP with correlation kernel defined by its eigenvectors :math:`V_{:,\mathcal{B}}`.
 
 	.. important::
 
-		Step 0. must be performed once and for all in :math:`\mathcal{O}(N^3)`, the average cost of getting one sample is :math:`\mathcal{O}(N \mathbb{E}\left[|\mathcal{X}|\right]^2)`, where :math:`\mathbb{E}\left[|\mathcal{X}|\right]=\operatorname{trace}(\mathbf{L(I+L)^{-1}})=\sum_{n=1}^{N} \frac{\delta_n}{1+\delta_n}`
+		Step 0. must be performed once and for all in :math:`\mathcal{O}(N^3)`, the average cost of getting one sample is :math:`\mathcal{O}(N \mathbb{E}\left[|\mathcal{X}|\right]^2)`, where :math:`\mathbb{E}\left[|\mathcal{X}|\right]=\operatorname{trace}(\mathbf{L(I+L)^{-1}})=\sum_{n=1}^{N} \frac{\gamma_n}{1+\gamma_n}`
 
 	.. testcode::
 
@@ -356,18 +369,18 @@ In practice
 
 - Sampling a :math:`\operatorname{DPP}(\mathbf{L})` for which each item is represented by a :math:`d\leq N` dimensional feature vector, all stored in a _feature_ matrix :math:`\Phi \in \mathbb{R}^{d\times N}`, so that :math:`\mathbf{L}=\Phi^{\top} \Phi \succeq 0_N`, can be done by following
 
-  	**Step** 0. compute the so-called *dual* kernel :math:`\tilde{L}=\Phi \Phi^{\dagger}\in \mathbb{R}^{d\times}` and eigendecompose it :math:`\tilde{\mathbf{L}} = W \Gamma W^{\top}`.
+  	**Step** 0. compute the so-called *dual* kernel :math:`\tilde{L}=\Phi \Phi^{\dagger}\in \mathbb{R}^{d\times}` and eigendecompose it :math:`\tilde{\mathbf{L}} = W \Delta W^{\top}`.
   	This corresponds to a cost of order :math:`\mathcal{O}(Nd^2 + d^3)`.
 
- 	**Step** :ref:`1. <finite_dpps_exact_sampling_spectral_method_step_1>`  draw independent Bernoulli random variables :math:`B_i \sim \operatorname{\mathcal{B}er}(\gamma_i)` for :math:`i=1,\dots, d` and collect :math:`\mathcal{B}=\left\{ i ~;~ B_i=1 \right\}`
+ 	**Step** :ref:`1. <finite_dpps_exact_sampling_spectral_method_step_1>`  draw independent Bernoulli random variables :math:`B_i \sim \operatorname{\mathcal{B}er}(\delta_i)` for :math:`i=1,\dots, d` and collect :math:`\mathcal{B}=\left\{ i ~;~ B_i=1 \right\}`
 
 	**Step** :ref:`2. <finite_dpps_exact_sampling_spectral_method_step_2>`
-	sample from the **projection** DPP with correlation kernel defined by its eigenvectors :math:`\Phi^{\top} W_{:,\mathcal{B}} \Gamma_{\mathcal{B}}^{-1/2}`.
+	sample from the **projection** DPP with correlation kernel defined by its eigenvectors :math:`\Phi^{\top} W_{:,\mathcal{B}} \delta_{\mathcal{B}}^{-1/2}`.
 
 	.. important::
 
 		Step 0. must be performed once and for all in :math:`\mathcal{O}(Nd^2 + d^3)`.
-		Then, the average cost of getting one sample is :math:`\mathcal{O}(N \mathbb{E}\left[|\mathcal{X}|\right]^2)`, where :math:`\mathbb{E}\left[|\mathcal{X}|\right]=\operatorname{trace}(\mathbf{L(I+L)^{-1}})=\sum_{i=1}^{d} \frac{\gamma_i}{1+\gamma_i}`
+		Then, the average cost of getting one sample is :math:`\mathcal{O}(N \mathbb{E}\left[|\mathcal{X}|\right]^2)`, where :math:`\mathbb{E}\left[|\mathcal{X}|\right]=\operatorname{trace}(\mathbf{L(I+L)^{-1}})=\sum_{i=1}^{d} \frac{\delta_i}{1+\delta_i}`
 
 	.. testcode::
 
@@ -403,7 +416,7 @@ Cholesky-based method
 Main idea
 =========
 
-This method requires acces to the correlation kernel :math:`\mathbf{K}` to perform a bottom-up chain rule on sets: starting from the empty set, each item in turn is decided to be added or excluded from the sample.
+This method requires access to the correlation kernel :math:`\mathbf{K}` to perform a bottom-up chain rule on sets: starting from the empty set, each item in turn is decided to be added or excluded from the sample.
 This can be summarized as the exploration of the binary probability tree displayed in :numref:`fig:cholesky_chain_rule_sets`.
 
 .. figure:: ../_images/cholesky_chain_rule_sets.png
@@ -548,11 +561,119 @@ k-DPPs
 Main idea
 =========
 
-A :math:`\operatorname{k-DPP}` viewed as a :math:`\operatorname{DPP}(\mathbf{L})` constrained to a fixed cardinality :math:`k` (see :ref:`définition <finite_dpps_definition_k_dpps>`),  can be sampled using a rejection mechanism i.e. sample :math:`\mathcal{X} \sim \operatorname{DPP}(\mathbf{L})` and consider only realizations with cardinality :math:`|X| = k`.
+Recall that a :ref:`k-DPP <finite_dpps_definition_k_dpps>`) can be viewed as a :math:`\operatorname{DPP}(\mathbf{L})` constrained to a fixed cardinality :math:`k`.
 
-.. caution::
+.. note::
 
-	- :math:`k` must satisfy :math:`k \leq \operatorname{rank}(L)`
+	:math:`k` must satisfy :math:`k \leq \operatorname{rank}(L)`
+
+To generate a sample of :math:`k-\operatorname{DPP}(\mathbf{L})`, one natural solution would be to use a rejection mechanism: draw :math:`S \sim \operatorname{DPP}(\mathbf{L})` and keep it only if :math:`|X| = k`.
+However, the rejection constant may be pretty bad depending on the choice of :math:`k` regarding the distribution of the number of points :eq:`eq:number_points`.
+
+The alternative solution was found by :cite:`KuTa12` Section 5.2.2.
+The procedure relies on a slight modification of :ref:`Step 1. <finite_dpps_exact_sampling_spectral_method_step_1>` of the :ref:`finite_dpps_exact_sampling_spectral_method` which requires the computation of the elementary symmetric polynomials.
+
+.. todo::
+
+	Rewriting stopped here
+
+.. _finite_kdpps_exact_sampling_chain_rule_projection_kernel_caution:
+
+Caution
+=======
+
+.. attention::
+
+	Despite the fact that exactly
+
+	In the next section, we describe the Algorithm 18 of :cite:`HKPV06`, based on the chain rule, which was originally designed to sample continuous projection DPPs.
+	Obviously, it has found natural a application in the finite setting for sampling projection :math:`\operatorname{DPP}(\mathbf{K})`.
+	However, **we insist on the fact that this chain rule mechanism is specific to orthogonal projection kernels**.
+	In particular, it cannot be applied blindly to sample general :math:`\operatorname{k-DPP}(\mathbf{L})` but it remains valid **only** when :math:`\operatorname{DPP}(\mathbf{L})` is an orthogonal projection kernel.
+
+	This crucial point is developed in the following :ref:`finite_kdpps_exact_sampling_chain_rule_projection_kernel_caution` section.
+
+	As mentioned at the beginning of the page, Algorithm 18 of :cite:`HKPV06` was designed only for projection DPPs.
+	That is to say, the chain rule :eq:`eq:chain_rule_schur` can not be blindly applied to generic correlation kernels :math:`0_N \preceq \mathbf{K} \preceq I_N`, it is **only** valid for orthogonal projection kernels, which can be characterized equivalently by
+
+	a. :math:`\mathbf{K}^2=\mathbf{K}` and :math:`\mathbf{K}^{\dagger}=\mathbf{K}`
+	b. :math:`\mathbf{K}=U U^{\dagger}` with :math:`U^{\dagger} U=I_r` where :math:`r=\operatorname{rank}(\mathbf{K})`.
+
+	Next, we explain why the chain rule :eq:`eq:chain_rule_schur` only applies to projection DPPs.
+
+	Recall that a DPP can be understood as a random **subset** :math:`\mathcal{X}\sim \operatorname{DPP}(\mathbf{K})` whose size is also random in the general
+	The first questions that should come
+
+	To do this, consider a valid correlation kernel: :math:`0_N \preceq \mathbf{K} \preceq I_N`.
+	In that case we
+
+	Using the invariance by permutation of the derterminant it is sufficient to apply the chain rule to sample :math:`(s_1, \dots, s_r)` with joint distribution
+
+	.. math::
+
+		\mathbb{P}[s_1, \dots, s_r]
+		= \frac{1}{r!} \mathbb{P}[\mathcal{X}=\{s_1, \dots, s_r\}]
+		= \frac{1}{r!} \det \mathbf{K}_S,
+
+	Now consider the following factorization :math:`\mathbf{K} = VV^{\dagger}`.
+
+	and denote :math:`Y=\{s_1, \dots, s_{j-1}\}`.
+	Without prior asumption on :math:`V`, the Schur complement formula allows to express the ratio of determinants appearing in the conditionals as
+
+	.. math::
+
+		\frac{\det \mathbf{K}_{Y+i}}{\det \mathbf{K}_{Y}}
+		&= \mathbf{K}_{ii}
+			- \mathbf{K}_{iY} \left[\mathbf{\mathbf{K}}_{Y}\right]^{-1} \mathbf{K}_{Yi}\\
+		&= \mathbf{K}_{ii}
+			- V_{i:}V_{Y:}^{\dagger}
+			\left[V_{Y:} {V_{Y:}}^{\dagger}\right]^{-1}
+			V_{Y:} V_{i:}^{\dagger} \\
+		&= \mathbf{K}_{ii}
+			- V_{i:} \Pi_{V_{Y:}} {V_{i:}}^{\dagger}
+
+	where :math:`\Pi_{V_{Y:}}` is the orthogonal projection onto the span of the (independent) rows of :math:`V_{Y:}`.
+
+	Now, let's compute the normalizing constant.
+	The first term :math:`\operatorname{trace}(\mathbf{K})` is independent of :math:`Y`, contrary to the second term if no additional assumption is made on the Gram factor :math:`V`.
+	Indeed,
+
+	.. math::
+
+		\sum_{i=1}^N
+			\frac{\det \mathbf{K}_{Y+i}}{\det \mathbf{K}_{Y}}
+		&= \sum_{i=1}^N \mathbf{K}_{ii}
+		  - V_{i:} \Pi_{V_{Y:}} V_{i:}^{\dagger}\\
+		&= \operatorname{trace}(\mathbf{K})
+		  - \operatorname{trace}(V \Pi_{V_{Y:}} V^{\dagger})\\
+		&= \operatorname{trace}(\mathbf{K})
+		  - \operatorname{trace}(\Pi_{V_{Y:}}V^{\dagger}V)\\
+
+	The first term :math:`\operatorname{trace}(\mathbf{K})` is independent of :math:`Y`, but this is no longer true for the second term without additional assumption on the Gram factor V.
+
+	In particular, a. implies that :math:`\mathbf{K}=\mathbf{K}\mathbf{K}^{\dagger}`.
+
+	.. math::
+
+		&\qquad\operatorname{trace}(\mathbf{K})
+		&\qquad\operatorname{trace}(\mathbf{K})
+			- \operatorname{trace}(\Pi_{\mathbf{K}_{Y:}}\mathbf{K}\mathbf{K}^{\dagger})
+		&\qquad
+		\operatorname{trace}(\mathbf{K})
+			- \operatorname{trace}(\Pi_{U_{Y:}}U^{\dagger}U)
+			\\
+		&\qquad= \operatorname{rank}(\mathbf{K})
+		&\qquad= r - \operatorname{trace}(\Pi_{\mathbf{K}_{Y:}}\mathbf{K})
+		&\qquad= r - \operatorname{trace}(\Pi_{U_{Y:}}I_r)
+			\\
+		&\qquad= r
+		&\qquad= r - \operatorname{trace}(\Pi_{\mathbf{K}_{Y:}})
+		&\qquad= r - \operatorname{trace}(\Pi_{U_{Y:}})
+			\\
+		&
+		&\qquad= r - |Y|
+		&\qquad= r - |Y|
+
 
 In practice
 ===========
@@ -561,7 +682,7 @@ In practice, the 2 steps algorithm for :ref:`sampling generic DPPs <finite_dpps_
 
 More specifically,
 
-**Step** :ref:`1. <finite_dpps_exact_sampling_spectral_method_step_1>` is replaced by :cite:`KuTa12` Algorithm 8. It requires the evaluation of the `elementary symmetric polynomials <https://en.wikipedia.org/wiki/Elementary_symmetric_polynomial>`_ in the eigenvalues of :math:`\mathbf{L}` ; :math:`[E[l, n]]_{l=1, n=1}^{k, N}` with :math:`E[l, n]:=e_l(\lambda_1, \dots, \delta_n)`.
+**Step** :ref:`1. <finite_dpps_exact_sampling_spectral_method_step_1>` is replaced by :cite:`KuTa12` Algorithm 8. It requires the evaluation of the `elementary symmetric polynomials <https://en.wikipedia.org/wiki/Elementary_symmetric_polynomial>`_ in the eigenvalues of :math:`\mathbf{L}` ; :math:`[E[l, n]]_{l=1, n=1}^{k, N}` with :math:`E[l, n]:=e_l(\lambda_1, \dots, \gamma_n)`.
 
 .. code-block:: python
 
@@ -605,94 +726,4 @@ More specifically,
 .. seealso::
 
 	- :py:meth:`~FiniteDPP.sample_exact_k_dpp`
-	- :cite:`KuTa12` Algorithm 7 for the recursive evaluation of the elementary symmetric polynomials :math:`[e_l(\lambda_1, \dots, \delta_n)]_{l=1, n=1}^{k, N}` in the eigenvalues of :math:`\mathbf{L}`
-
-.. _finite_kdpps_exact_sampling_chain_rule_projection_kernel_caution:
-
-Caution
-=======
-
-.. attention::
-
-	As mentioned earlier, Algorithm 18 of :cite:`HKPV06` was designed only for projection DPPs.
-	That is to say, the chain rule :eq:`eq:chain_rule_schur` can not be blindly applied to generic correlation kernels :math:`0_N \preceq \mathbf{K} \preceq I_N`, it is **only** valid for orthogonal projection kernels, which can be characterized equivalently by
-
-	a. :math:`\mathbf{K}^2=\mathbf{K}` and :math:`\mathbf{K}^{\dagger}=\mathbf{K}`
-	b. :math:`\mathbf{K}=U U^{\dagger}` with :math:`U^{\dagger} U=I_r` where :math:`r=\operatorname{rank}(\mathbf{K})`.
-
-	Next, we explain why the chain rule :eq:`eq:chain_rule_schur` only applies to projection DPPs.
-
-	Recall that a DPP can be understood as a random **subset** :math:`\mathcal{X}\sim \operatorname{DPP}(\mathbf{K})` whose size is also random in the general
-	The first questions that should come
-
-	To do this, consider a valid correlation kernel: :math:`0_N \preceq \mathbf{K} \preceq I_N`.
-	In that case we
-
-Using the invariance by permutation of the derterminant it is sufficient to apply the chain rule to sample :math:`(s_1, \dots, s_r)` with joint distribution
-
-.. math::
-
-	\mathbb{P}[s_1, \dots, s_r]
-	= \frac{1}{r!} \mathbb{P}[\mathcal{X}=\{s_1, \dots, s_r\}]
-	= \frac{1}{r!} \det \mathbf{K}_S,
-
-	Now consider the following factorization :math:`\mathbf{K} = VV^{\dagger}`.
-
-	and denote :math:`Y=\{s_1, \dots, s_{j-1}\}`.
-	Without prior asumption on :math:`V`, the Schur complement formula allows to express the ratio of determinants appearing in the conditionals as
-
-	.. math::
-
-		\frac{\det \mathbf{K}_{Y+i}}{\det \mathbf{K}_{Y}}
-		&= \mathbf{K}_{ii}
-			- \mathbf{K}_{iY} \left[\mathbf{\mathbf{K}}_{Y}\right]^{-1} \mathbf{K}_{Yi}\\
-		&= \mathbf{K}_{ii}
-			- V_{i:}V_{Y:}^{\dagger}
-			\left[V_{Y:} {V_{Y:}}^{\dagger}\right]^{-1}
-			V_{Y:} V_{i:}^{\dagger} \\
-		&= \mathbf{K}_{ii}
-			- V_{i:} \Pi_{V_{Y:}} {V_{i:}}^{\dagger}
-
-	where :math:`\Pi_{V_{Y:}}` is the orthogonal projection onto the span of the (independent) rows of :math:`V_{Y:}`.
-
-	Now, let's compute the normalizing constant.
-	The first term :math:`\operatorname{Tr}(\mathbf{K})` is independent of :math:`Y`, contrary to the second term if no additional assumption is made on the Gram factor :math:`V`.
-	Indeed,
-
-	.. math::
-
-		\sum_{i=1}^N
-			\frac{\det \mathbf{K}_{Y+i}}{\det \mathbf{K}_{Y}}
-		&= \sum_{i=1}^N \mathbf{K}_{ii}
-		  - V_{i:} \Pi_{V_{Y:}} V_{i:}^{\dagger}\\
-		&= \operatorname{Tr}(\mathbf{K})
-		  - \operatorname{Tr}(V \Pi_{V_{Y:}} V^{\dagger})\\
-		&= \operatorname{Tr}(\mathbf{K})
-		  - \operatorname{Tr}(\Pi_{V_{Y:}}V^{\dagger}V)\\
-
-	The first term :math:`\operatorname{Tr}(\mathbf{K})` is independent of :math:`Y`, but this is no longer true for the second term without additional assumption on the Gram factor V.
-
-
-
-	In particular, a. implies that :math:`\mathbf{K}=\mathbf{K}\mathbf{K}^{\dagger}`.
-
-	.. math::
-
-		&\qquad\operatorname{Tr}(\mathbf{K})
-		&\qquad\operatorname{Tr}(\mathbf{K})
-			- \operatorname{Tr}(\Pi_{\mathbf{K}_{Y:}}\mathbf{K}\mathbf{K}^{\dagger})
-		&\qquad
-		\operatorname{Tr}(\mathbf{K})
-			- \operatorname{Tr}(\Pi_{U_{Y:}}U^{\dagger}U)
-			\\
-		&\qquad= \operatorname{rank}(\mathbf{K})
-		&\qquad= r - \operatorname{Tr}(\Pi_{\mathbf{K}_{Y:}}\mathbf{K})
-		&\qquad= r - \operatorname{Tr}(\Pi_{U_{Y:}}I_r)
-			\\
-		&\qquad= r
-		&\qquad= r - \operatorname{Tr}(\Pi_{\mathbf{K}_{Y:}})
-		&\qquad= r - \operatorname{Tr}(\Pi_{U_{Y:}})
-			\\
-		&
-		&\qquad= r - |Y|
-		&\qquad= r - |Y|
+	- :cite:`KuTa12` Algorithm 7 for the recursive evaluation of the elementary symmetric polynomials :math:`[e_l(\gamma_1, \dots, \gamma_n)]_{l=1, n=1}^{k, N}` in the eigenvalues of :math:`\mathbf{L}`

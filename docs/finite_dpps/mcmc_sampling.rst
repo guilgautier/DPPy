@@ -8,7 +8,7 @@ MCMC sampling
 Add/exchange/delete
 ===================
 
-:cite:`AnGhRe16`, :cite:`LiJeSr16c` and :cite:`LiJeSr16d` derived variants of a Metropolis sampler having for stationary distribution :math:`\operatorname{DPP}(\mathbf{L})` :eq:`eq:likelihood`.
+:cite:`AnGhRe16`, :cite:`LiJeSr16c` and :cite:`LiJeSr16d` derived variants of a Metropolis sampler having for stationary distribution :math:`\operatorname{DPP}(\mathbf{L})` :eq:`eq:likelihood_DPP_L`.
 The proposal mechanism works as follows.
 
 At state :math:`S\subset [N]`, propose :math:`S'` different from :math:`S` by at most 2 elements by picking

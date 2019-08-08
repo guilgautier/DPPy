@@ -292,8 +292,8 @@ class FiniteDPP:
         # If eigen decoposition of K, L or L_dual is available USE IT!
         elif self.K_eig_vals is not None:
             # Phase 1
-            if self.kernel_type == 'inclusion' and self.projection:
-                V = self.eig_vecs[:, self.eig_vals > 0.5]
+            if self.kernel_type == 'correlation' and self.projection:
+                V = self.eig_vecs[:, self.K_eig_vals > 0.5]
             else:
                 V = dpp_eig_vecs_selector(self.K_eig_vals, self.eig_vecs,
                                           random_state=rng)
@@ -536,7 +536,7 @@ class FiniteDPP:
                 + ``'T_max'`` (default None) Time horizon
                 + ``'size'`` (default None) Size of the initial sample for ``mode='AD'/'E'``
 
-                    * :math:`\\operatorname{rank}(\\mathbf{K})=\\operatorname{Tr}(\\mathbf{K})` for projection :math:`\\mathbf{K}` (correlation) kernel and ``mode='E'``
+                    * :math:`\\operatorname{rank}(\\mathbf{K})=\\operatorname{trace}(\\mathbf{K})` for projection :math:`\\mathbf{K}` (correlation) kernel and ``mode='E'``
 
             - If ``mode='zonotope'``:
 
