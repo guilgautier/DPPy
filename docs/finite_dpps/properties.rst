@@ -5,6 +5,84 @@ Properties
 
 Throughout this section, we assume :math:`\mathbf{K}` and :math:`\mathbf{L}` satisfy the sufficient conditions :eq:`eq:suff_cond_K` and :eq:`eq:suff_cond_L` respectively.
 
+
+.. _finite_dpps_relation_kernels:
+
+Relation between correlation and likelihood kernels
+===================================================
+
+1. Considering the DPP defined by :math:`\mathbf{L} \succeq 0_N`, the associated correlation kernel :math:`\mathbf{K}` :eq:`eq:inclusion_proba` can be derived as
+
+	.. math::
+		:label: eq:compute_K_from_L
+
+		\mathbf{K} = \mathbf{L}(I+\mathbf{L})^{—1} = I - (I+\mathbf{L})^{—1}
+
+	.. seealso::
+
+		Theorem 2.2 :cite:`KuTa12`
+
+2. Considering the DPP defined by :math:`0_N \preceq \mathbf{K} \prec I_N`, the associated likelihood kernel :math:`\mathbf{L}` :eq:`eq:likelihood` can be derived as
+
+	.. math::
+		:label: eq:compute_L_from_K
+
+		\mathbf{L} = \mathbf{K}(I-\mathbf{K})^{—1} = -I + (I-\mathbf{K})^{—1}
+
+	:math:`0_N \preceq \mathbf{K} \preceq I_N` and
+
+	.. seealso::
+
+		Equation 25 :cite:`KuTa12`
+
+.. important::
+
+	Thus, except for correlation kernels :math:`\mathbf{K}` with some eigenvalues equal to :math:`1`, both :math:`\mathbf{K}` and :math:`\mathbf{L}` are diagonalizable in the same basis
+
+	.. math::
+		:label: eq:eigendecomposition_K_L
+
+		\mathbf{K} = U \Lambda U^{\dagger}, \quad
+		\mathbf{L} = U \Gamma U^{\dagger}
+		\qquad \text{with} \qquad
+		\lambda_n = \frac{\gamma_n}{1+\gamma_n}
+
+.. note::
+
+	For DPPs with *projection* correlation kernel :math:`\mathbf{K}`, the likelihood kernel :math:`\mathbf{L}` cannot be computed via  :eq:`eq:compute_L_from_K`, since :math:`\mathbf{K}` has at least one eigenvalue equal to :math:`1` (:math:`\mathbf{K}^2=\mathbf{K}`).
+
+	Nevertheless, if you recall the :ref:`number of points of a projection DPP <finite_dpps_properties_number_of_points_dpp_K_projection>`, then its likelihood reads
+
+	.. math::
+
+		\mathbb{P}[\mathcal{X}=S] =
+			\det \mathbf{K}_S 1_{|S|=\operatorname{rank}(\mathbf{K})}
+			\quad \forall S\subset [N],
+
+.. code-block:: python
+
+	from numpy.random import randn, rand
+	from scipy.linalg import qr
+	from dppy.finite_dpps import FiniteDPP
+
+	r, N = 4, 10
+	eig_vals = rand(r)  # 0< <1
+	eig_vecs, _ = qr(randn(N, r), mode='economic')
+
+	DPP = FiniteDPP('correlation', **{'K_eig_dec': (eig_vals, eig_vecs)})
+	DPP.compute_L()
+
+	# - L (likelihood) kernel computed via:
+	# - eig_L = eig_K/(1-eig_K)
+	# - U diag(eig_L) U.T
+
+.. seealso::
+
+	.. currentmodule:: dppy.finite_dpps
+
+	- :py:meth:`~FiniteDPP.compute_K`
+	- :py:meth:`~FiniteDPP.compute_L`
+
 .. _finite_dpps_mixture:
 
 Generic DPPs as mixtures of projection DPPs
@@ -64,6 +142,10 @@ In the general case, based on the fact that :ref:`generic DPPs are mixtures of p
 				\frac{\lambda_n^{\mathbf{L}}}{1+\lambda_n^{\mathbf{L}}}
 			\right)
 
+.. note::
+
+	From :eq:`eq:number_points` it is clear that :math:`|\mathcal{X}|\leq \operatorname{rank}(\mathbf{K})=\operatorname{rank}(\mathbf{L})`.
+
 Expectation
 -----------
 
@@ -110,38 +192,35 @@ Variance
 	    DPP.sample_exact(random_state=rng)
 
 	sizes = list(map(len, DPP.list_of_samples))
-	print('E[|X|]:\n theo={:.3f}, emp={:.3f}'
+	print('E[|X|]:\n emp={:.3f}, theo={:.3f}'
 	      .format(np.mean(sizes), np.sum(eig_vals)))
-	print('Var[|X|]:\n theo={:.3f}, emp={:.3f}'
+	print('Var[|X|]:\n emp={:.3f}, theo={:.3f}'
 	      .format(np.var(sizes), np.sum(eig_vals*(1-eig_vals))))
 
 .. testoutput::
 
 	E[|X|]:
-	 theo=1.581, emp=1.587
+	 emp=1.581, theo=1.587
 	Var[|X|]:
-	 theo=0.795, emp=0.781
+	 emp=0.795, theo=0.781
 
+Special cases
+-------------
 
-.. important::
+.. _finite_dpps_properties_number_of_points_dpp_K_projection:
 
-	From :eq:`eq:number_points` it is clear that :math:`|\mathcal{X}|\leq \operatorname{rank}(\mathbf{K})=\operatorname{rank}(\mathbf{L})`.
+1. When the **correlation** kernel :math:`\mathbf{K}` of :math:`\operatorname{DPP}(\mathbf{K})` is an orthogonal projection kernel, i.e., :math:`\operatorname{DPP}(\mathbf{K})` is a :ref:`projection DPP <finite_dpps_definition_projection_dpps>`, we have
 
-	Equality holds only for projection DPPs: realizations of *projection* DPPs have exactly :math:`|\mathcal{X}|\leq \operatorname{rank}(\mathbf{K})` points, almost surely, so that the likelihood takes the form given by
+   	.. math::
+   		:label: number_of_points_dpp_K_projection
 
-	.. math::
-		:label: eq:likelihood_projection_K
+   		|\mathcal{X}| = \operatorname{rank}(\mathbf{K}) = \operatorname{trace}(\mathbf{K}), \quad \text{almost surely}
 
-		\mathbb{P}[\mathcal{X}=S]
-			= \det \mathbf{K}_S 1_{|S|=\operatorname{rank} \mathbf{K}}
-
-	.. testcode::
+   	.. testcode::
 
 		import numpy as np
 		from scipy.linalg import qr
 		from dppy.finite_dpps import FiniteDPP
-
-		rng = np.random.RandomState(1)
 
 		r, N = 4, 10
 		eig_vals = np.ones(r)
@@ -150,14 +229,41 @@ Variance
 		DPP = FiniteDPP('correlation', projection=True,
 		                **{'K_eig_dec': (eig_vals, eig_vecs)})
 
-		for _ in range(10):
-		    DPP.sample_exact(random_state=rng)
+		for _ in range(1000):
+		    DPP.sample_exact()
 
-		print(list(map(list, DPP.list_of_samples)))
+		sizes = list(map(len, DPP.list_of_samples))
+		# np.array(DPP.list_of_samples).shape = (1000, 4)
 
-	.. testoutput::
+		assert([np.mean(sizes), np.var(sizes)] == [r, 0])
 
-		[[0, 4, 8, 2], [1, 8, 2, 0], [8, 3, 6, 1], [6, 7, 1, 9], [9, 3, 0, 4], [9, 4, 0, 8], [9, 6, 1, 8], [0, 1, 2, 7], [1, 2, 8, 9], [8, 2, 9, 4]]
+	.. important:: **likelihood** kernel  :math:`\mathbf{K}`
+
+		Since :math:`|\mathcal{X}|=\operatorname{rank}(\mathbf{K})` points, almost surely, the likelihood of the projection :math:`\operatorname{DPP}(\mathbf{K})` reads
+
+		.. math::
+			:label: eq:likelihood_projection_K
+
+			\mathbb{P}[\mathcal{X}=S]
+				= \det \mathbf{K}_S 1_{|S|=\operatorname{rank} \mathbf{K}}
+
+		In other words, the projection DPP having for **correlation** kernel the orthogonal projection matrix :math:`\mathbf{K}` coincides with the :ref:`k-DPP <finite_dpps_definition_k_dpps>` having **likelihood** kernel  :math:`\mathbf{K}` when :math:`k=\operatorname{rank}(\mathbf{K})`.
+
+2. When the **likelihood** kernel :math:`\mathbf{L}` of :math:`\operatorname{DPP}(\mathbf{L})` is an orthogonal projection kernel we have
+
+   	.. math::
+   		:label: number_of_points_dpp_L_projection
+
+   		|\mathcal{X}| \sim \operatorname{Binomial}(\operatorname{rank}(\mathbf{L}), \frac{1}{2})
+
+	.. :ref:`Fig. <nb_points_DPP_L_projectin_plot>`
+
+	.. _nb_points_DPP_L_projectin_plot:
+
+	.. plot:: plots/ex_plot_number_of_points_finite_dpp_L_projection.py
+
+		Distribution of the numbe of points of :math:`\operatorname{DPP}(\mathbf{L})` with orthogonal projection kernel :math:`\mathbf{L}`
+
 
 .. _finite_dpps_geometry:
 
@@ -193,6 +299,10 @@ b. The likelihood reads
 
 That is to say, DPPs favor subsets :math:`S` whose corresponding feature vectors span a large volume i.e. *DPPs sample softened orthogonal bases*.
 
+.. seealso::
+
+	note
+
 .. _finite_dpps_diversity:
 
 Diversity
@@ -213,62 +323,6 @@ Deriving the pair inclusion probability, also called the 2-point correlation fun
 
 That is, the greater the similarity :math:`|\mathbf{K}_{i j}|` between items :math:`i` and :math:`j`, the less likely they co-occur.
 
-.. _finite_dpps_relation_kernels:
-
-Relation between correlation and likelihood kernels
-===================================================
-
-.. math::
-	:label: eq:relation_K_L
-
-	\mathbf{K} = \mathbf{L}(I+\mathbf{L})^{—1} = I - (I+\mathbf{L})^{—1}
-		\qquad \text{and} \qquad
-	\mathbf{L} = \mathbf{K}(I-\mathbf{K})^{—1} = -I + (I-\mathbf{K})^{—1}
-
-Thus, except for correlation kernels :math:`\mathbf{K}` with some eigenvalues equal to :math:`1`, both :math:`\mathbf{K}` and :math:`\mathbf{L}` are diagonalizable in the same basis
-
-.. math::
-
-	\mathbf{K} = U \Lambda U^{\dagger}, \quad
-	\mathbf{L} = U \Gamma U^{\dagger}
-	\qquad \text{with} \qquad
-	\lambda_n = \frac{\gamma_n}{1+\gamma_n}
-
-.. warning::
-
-	For DPPs with *projection* correlation kernel :math:`\mathbf{K}`, the likelihood kernel :math:`\mathbf{L}` cannot be computed via  :eq:`eq:relation_K_L` with :math:`\mathbf{L} = \mathbf{K}(I-\mathbf{K})^{—1}`, since :math:`\mathbf{K}` has at least one eigenvalue equal to :math:`1` (:math:`\mathbf{K}^2=\mathbf{K}`).
-
-	However, the likelihood kernel :math:`\mathbf{L}` coincides with :math:`\mathbf{K}` in the following sense
-
-	.. math::
-
-		\mathbb{P}[\mathcal{X}=S] =
-			\det \mathbf{K}_S 1_{|S|=\operatorname{rank}\mathbf{K}}
-			\quad \forall S\subset [N]
-
-.. code-block:: python
-
-	from numpy.random import randn, rand
-	from scipy.linalg import qr
-	from dppy.finite_dpps import FiniteDPP
-
-	r, N = 4, 10
-	eig_vals = rand(r)  # 0< <1
-	eig_vecs, _ = qr(randn(N, r), mode='economic')
-
-	DPP = FiniteDPP('correlation', **{'K_eig_dec': (eig_vals, eig_vecs)})
-	DPP.compute_L()
-
-	# - L (likelihood) kernel computed via:
-	# - eig_L = eig_K/(1-eig_K)
-	# - U diag(eig_L) U.T
-
-.. seealso::
-
-	.. currentmodule:: dppy.finite_dpps
-
-	- :py:meth:`~FiniteDPP.compute_K`
-	- :py:meth:`~FiniteDPP.compute_L`
 
 .. _finite_dpps_conditioning:
 
@@ -281,8 +335,6 @@ Conditioning
 	\mathbb{P}[T \subset \mathcal{X} \mid S \subset \mathcal{X}]
         = \det\left[\mathbf{K}_T - \mathbf{K}_{TS} \mathbf{K}_S^{-1} \mathbf{K}_{ST}\right]
 
-.. ezrze
-
 .. math::
 	:label: eq:conditioned_on_S_notin_X
 
@@ -293,9 +345,5 @@ Conditioning
 
 	- Propositions 3 and 5 of :cite:`Pou19` for the proofs
 	- Equations :eq:`eq:conditioned_on_S_in_X` and :eq:`eq:conditioned_on_S_in_X` are key to derive the
-
-	.. todo::
-
-		Add reference to exact sampling Cholesky based exact samplers
 
 .. `Cauchy-Binet formula <https://en.wikipedia.org/wiki/Cauchy%E2%80%93Binet_formula>`_

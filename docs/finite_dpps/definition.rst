@@ -1,3 +1,5 @@
+.. currentmodule:: dppy.finite_dpps
+
 .. _finite_dpps_definition:
 
 Definition
@@ -12,9 +14,7 @@ It is defined either via its:
 
 		\mathbb{P}[S\subset \mathcal{X}], \text{ for } S\subset [N]
 
-- marginal probabilities
-
-	.. math::
+- likelihood
 
 		\mathbb{P}[\mathcal{X}=S], \text{ for } S\subset [N]
 
@@ -69,7 +69,11 @@ where the dagger :math:`\dagger` symbol means *conjugate transpose*.
 
 .. note::
 
-	In the following, unless otherwise specified, we work under these sufficient conditions.
+	In the following, unless otherwise specified:
+
+	- we work under the sufficient conditions :eq:`eq:eq:suff_cond_K` and :eq:`eq:eq:suff_cond_K`
+	- :math:`\left(\lambda_{1}, \dots, \lambda_{N} \right)` denote the eigenvalues of :math:`\mathbf{K}`
+	- :math:`\left(\delta_{1}, \dots, \delta_{N} \right)` denote the eigenvalues of :math:`\mathbf{L}`
 
 .. :ref:`Fig. <correlation_kernel_plot>`
 
@@ -79,9 +83,20 @@ where the dagger :math:`\dagger` symbol means *conjugate transpose*.
 
 	Correlation :math:`\mathbf{K}` kernel
 
+.. _finite_dpps_definition_projection_dpps:
+
+Projection DPPs
+===============
+
 .. important::
 
-	DPPs defined by an *orthogonal projection* correlation kernel :math:`\mathbf{K}` are called *projection* DPPs.
+	:math:`\operatorname{DPP}(\mathbf{K})` defined by an *orthogonal projection* correlation kernel :math:`\mathbf{K}` are called *projection* DPPs.
+
+	Recall that `orthogonal projection matrices <https://en.wikipedia.org/wiki/Projection_(linear_algebra)#Projection_matrix>`_ are notably characterized by
+
+	a. :math:`\mathbf{K}^2=\mathbf{K}` and :math:`\mathbf{K}^{\dagger}=\mathbf{K}`
+	b. or equivalently by :math:`\mathbf{K}=U U^{\dagger}` with :math:`U^{\dagger} U=I_r` where :math:`r=\operatorname{rank}(\mathbf{K})`.
+
 	They are indeed valid kernels since they meet the above sufficient conditions: they are Hermitian with eigenvalues :math:`0` or :math:`1`.
 
 	.. code-block:: python
@@ -104,21 +119,22 @@ where the dagger :math:`\dagger` symbol means *conjugate transpose*.
 		# K = eig_vecs.dot(eig_vecs.T)
 		# proj_DPP = FiniteDPP('correlation', projection=True, **{'K': K})
 
-
 .. _finite_dpps_definition_k_dpps:
 
 k-DPPs
 ======
 
-:math:`\operatorname{k-DPPs}` can be defined as :math:`\operatorname{DPP(\mathbf{L})s}` conditioned to a fixed sample size :math:`|\mathcal{X}|=k`.
-Thus, they are defined through the joint probabilities
+A :math:`\operatorname{k-DPP}` can be defined as :math:`\operatorname{DPP(\mathbf{L})}` conditioned to a fixed sample size :math:`|\mathcal{X}|=k`, we denote it :math:`\operatorname{k-DPP}(\mathbf{L})`.
+
+It is naturally defined through its joint probabilities
 
 .. math::
+	:label: eq:likelihood_kDPP_L
 
 	\mathbb{P}_{\operatorname{k-DPP}}[\mathcal{X}=S]
-		= \frac{1}{e_k(L)} \det \mathbf{L}_S ~~ 1_{|S|=k}
+		= \frac{1}{e_k(L)} \det \mathbf{L}_S ~ 1_{|S|=k}
 
-where :math:`e_k(L)` corresponds to the `elementary symmetric polymial <https://en.wikipedia.org/wiki/Elementary_symmetric_polynomial>`_ of order :math:`k` evaluated in the eigenvalues of :math:`\mathbf{L}`,
+where the normalizing constant :math:`e_k(L)` corresponds to the `elementary symmetric polymial <https://en.wikipedia.org/wiki/Elementary_symmetric_polynomial>`_ of order :math:`k` evaluated in the eigenvalues of :math:`\mathbf{L}`,
 
 .. math::
 
@@ -127,19 +143,18 @@ where :math:`e_k(L)` corresponds to the `elementary symmetric polymial <https://
 		= \sum_{S\subset [N]: |S|=k} \prod_{n \in S} \delta_i
 		= \sum_{S\subset [N]: |S|=k} \det L_S
 
-.. caution::
+.. note::
 
-  - :math:`k` must satisfy :math:`k \leq \operatorname{rank}(L)`
+  - Obviously, one must take :math:`k \leq \operatorname{rank}(L)` otherwise :math:`\det \mathbf{L}_S = 0` for :math:`|S| = k > \operatorname{rank}(L)`
 
 .. warning::
 
 	k-DPPs are not DPPs in general.
-	Viewed as :math:`\operatorname{DPPs}` conditioned to a fixed sample size :math:`|\mathcal{X}|=k`, the only case where they coincide is when the original DPP is a *projection* :math:`\operatorname{DPP}(\mathbf{K})`, and :math:`k=\operatorname{rank}(\mathbf{K})`, see :eq:`eq:likelihood_projection_K`.
+	Viewed as a :math:`\operatorname{DPP}` conditioned to a fixed sample size :math:`|\mathcal{X}|=k`, the only case where they coincide is when the original DPP is a *projection* :math:`\operatorname{DPP}(\mathbf{K})`, and :math:`k=\operatorname{rank}(\mathbf{K})`, see :eq:`eq:likelihood_projection_K`.
 
 .. seealso::
 
-	.. currentmodule:: dppy.finite_dpps
-
+	- :ref:`finite_dpps_exact_sampling_k_dpps`
 	- :class:`FiniteDPP <FiniteDPP>`
 	- :cite:`KuTa12` Section 2 for :math:`\operatorname{DPPs}`
 	- :cite:`KuTa12` Section 5 for :math:`\operatorname{k-DPPs}`
