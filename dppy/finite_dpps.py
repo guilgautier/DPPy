@@ -292,8 +292,11 @@ class FiniteDPP:
         # If eigen decoposition of K, L or L_dual is available USE IT!
         elif self.K_eig_vals is not None:
             # Phase 1
-            V = dpp_eig_vecs_selector(self.K_eig_vals, self.eig_vecs,
-                                      random_state=rng)
+            if self.kernel_type == 'inclusion' and self.projection:
+                V = self.eig_vecs[:, self.eig_vals > 0.5]
+            else:
+                V = dpp_eig_vecs_selector(self.K_eig_vals, self.eig_vecs,
+                                          random_state=rng)
             # Phase 2
             if V.shape[1]:
                 sampl = proj_dpp_sampler_eig(V, self.sampling_mode,

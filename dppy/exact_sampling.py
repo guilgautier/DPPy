@@ -82,10 +82,15 @@ def proj_dpp_sampler_kernel_Chol(K, size=None, random_state=None):
     :rtype:
         list and array_like
 
+    .. caution::
+
+        The current implementation is an attempt of @guilgautier to reproduce the original C implementation of `catamari <https://gitlab.com/hodge_star/catamari>`_
+
     .. seealso::
 
-        - :cite:`Pou19` Algorithm 3
-        - for the Hermitian swap routine see :ref:`catamari code <https://gitlab.com/hodge_star/catamari/blob/38718a1ea34872fb6567e019ece91fbeb5af5be1/include/catamari/dense_dpp/elementary_hermitian_dpp-impl.hpp#L37>`_
+        - :cite:`Pou19` Algorithm 3 and :ref:`catamari code <https://gitlab.com/hodge_star/catamari/blob/38718a1ea34872fb6567e019ece91fbeb5af5be1/include/catamari/dense_dpp/elementary_hermitian_dpp-impl.hpp#L37>`_ for the Hermitian swap routine.
+        - :func:`proj_dpp_sampler_kernel_GS <proj_dpp_sampler_kernel_GS>`
+        - :func:`proj_dpp_sampler_kernel_Schur <proj_dpp_sampler_kernel_Schur>`
     """
 
     rng = check_random_state(random_state)
@@ -173,6 +178,7 @@ def proj_dpp_sampler_kernel_GS(K, size=None, random_state=None):
 
         - cite:`TrBaAm18` Algorithm 3, :cite:`Gil14` Algorithm 2
         - :func:`proj_dpp_sampler_kernel_Schur <proj_dpp_sampler_kernel_Schur>`
+        - :func:`proj_dpp_sampler_kernel_Chol <proj_dpp_sampler_kernel_Chol>`
     """
 
     rng = check_random_state(random_state)
@@ -193,7 +199,8 @@ def proj_dpp_sampler_kernel_GS(K, size=None, random_state=None):
 
     for it in range(size):
         j = rng.choice(ground_set[avail],
-                             p=np.abs(norm_2[avail]) / (rank - it))
+                       p=np.abs(norm_2[avail]) / (rank - it))
+
         sampl[it] = j
         if it == size - 1:
             break
@@ -235,6 +242,7 @@ def proj_dpp_sampler_kernel_Schur(K, size=None, random_state=None):
 
     .. seealso::
         - :func:`proj_dpp_sampler_kernel_GS <proj_dpp_sampler_kernel_GS>`
+        - :func:`proj_dpp_sampler_kernel_Chol <proj_dpp_sampler_kernel_Chol>`
     """
 
     rng = check_random_state(random_state)

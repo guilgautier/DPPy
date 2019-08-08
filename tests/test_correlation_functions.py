@@ -42,10 +42,11 @@ class InclusionProbabilitiesProjectionDPP(unittest.TestCase):
         freq, _ = np.histogram(singletons, bins=range(self.N + 1), density=True)
         marg_theo = np.diag(dpp.K) / self.rank
 
-        _, pval = chisquare(f_obs=freq, f_exp=marg_theo)
-
         print(freq)
         print(marg_theo)
+
+        _, pval = chisquare(f_obs=freq, f_exp=marg_theo)
+
         return pval > tol
 
     def doubleton_adequation(self, dpp, samples, tol=0.05):
@@ -373,7 +374,6 @@ class InclusionProbabilitiesProjectionDPP(unittest.TestCase):
 
         self.assertTrue(self.singleton_adequation(dpp, dpp.list_of_samples[0]))
         self.assertTrue(self.doubleton_adequation(dpp, dpp.list_of_samples[0]))
-
 
 
 def main():
