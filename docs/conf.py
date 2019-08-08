@@ -25,7 +25,7 @@ sys.path.insert(0, os.path.abspath('..'))
 # -- Project information -----------------------------------------------------
 
 project = 'DPPy'
-copyright = '2018, Guillaume Gautier'
+copyright = '2019, Guillaume Gautier'
 author = 'Guillaume Gautier'
 
 # The short X.Y version
@@ -180,6 +180,7 @@ smart_quotes = False
 html_use_smartypants = False
 html_theme = 'sphinx_rtd_theme'
 
+plot_include_source = True
 
 # -- Options for manual page output ------------------------------------------
 

@@ -6,12 +6,12 @@ Banded matrix models
 Computing the eigenvalues of a full :math:`N\times N` random matrix is :math:`\mathcal{O}(N^3)`, and can thus become prohibitive for large :math:`N`.
 A way to circumvent the problem is to adopt the equivalent banded models i.e. diagonalize banded matrices.
 
-The first tridiagonal models for the :ref:`hermite_ensemble_banded` and :ref:`laguerre_ensemble_banded` were revealed by :cite:`DuEd02`, who left the :ref:`jacobi_ensemble_banded` as an open question, addressed by :cite:`KiNe04`.
+The first tridiagonal models for the :ref:`hermite_banded_matrix_model` and :ref:`laguerre_banded_matrix_model` were revealed by :cite:`DuEd02`, who left the :ref:`jacobi_banded_matrix_model` as an open question, addressed by :cite:`KiNe04`.
 Such tridiagonal formulations made sampling possible at cost :math:`\mathcal{O}(N^2)` but also unlocked sampling for generic :math:`\beta>0`!
 
-Note that :cite:`KiNe04` also derived a quindiagonal model for the :ref:`circular_ensemble_banded`.
+Note that :cite:`KiNe04` also derived a quindiagonal model for the :ref:`circular_banded_matrix_model`.
 
-.. _hermite_ensemble_banded:
+.. _hermite_banded_matrix_model:
 
 Hermite Ensemble
 ^^^^^^^^^^^^^^^^
@@ -35,7 +35,6 @@ Take for reference measure :math:`\mu=\mathcal{N}(\mu, \sigma)`
 	.. math::
 
 		\left|\Delta(x_1,\dots,x_N)\right| = \prod_{i<j} |x_i - x_j|
-
 
 The equivalent tridiagonal model reads
 
@@ -62,7 +61,7 @@ with
 			\sim \Gamma\left(\frac{\beta}{2}(N - i), \sigma^2\right)
 
 
-To recover the full matrix model for :ref:`hermite_ensemble_full`, recall that :math:`\Gamma(\frac{k}{2}, 2)\equiv \chi_k^2` and take
+To recover the full matrix model for :ref:`hermite_full_matrix_model`, recall that :math:`\Gamma(\frac{k}{2}, 2)\equiv \chi_k^2` and take
 
 .. math::
 
@@ -82,17 +81,21 @@ That is to say,
 	\beta_{i+1}
 			\sim \chi_{\beta(N - i)}^2
 
+.. :ref:`Fig. <hermite_banded_model_plot>`
 
-.. plot:: plots/ex_plot_hermite_banded.py
-	:include-source:
+.. _hermite_banded_model_plot:
+
+.. plot:: plots/ex_plot_hermite_banded_matrix_model.py
+
+	Tridiagonal matrix model for the Hermite ensemble
 
 .. seealso::
 
 	- :cite:`DuEd02` II-C
-	- :ref:`Full matrix model <hermite_ensemble_full>` for Hermite ensemble
+	- :ref:`Full matrix model <hermite_full_matrix_model>` for Hermite ensemble
 	- :py:class:`~dppy.beta_ensembles.HermiteEnsemble` in API
 
-.. _laguerre_ensemble_banded:
+.. _laguerre_banded_matrix_model:
 
 Laguerre Ensemble
 ^^^^^^^^^^^^^^^^^
@@ -118,7 +121,6 @@ Take for reference measure :math:`\mu=\Gamma(k,\theta)`
 	.. math::
 
 		\left|\Delta(x_1,\dots,x_N)\right| = \prod_{i<j} |x_i - x_j|
-
 
 The equivalent tridiagonal model reads
 
@@ -158,8 +160,7 @@ with
 	\xi_{2i}
 			\sim \Gamma\left(\frac{\beta}{2}(N - i), \theta \right)
 
-
-To recover the full matrix model for :ref:`laguerre_ensemble_full`, recall that :math:`\Gamma(\frac{k}{2}, 2)\equiv \chi_k^2` and take
+To recover the full matrix model for :ref:`laguerre_full_matrix_model`, recall that :math:`\Gamma(\frac{k}{2}, 2)\equiv \chi_k^2` and take
 
 .. math::
 
@@ -179,16 +180,21 @@ That is to say,
 	\xi_{2i}
 			\sim \chi_{\beta(N - i)}^2
 
-.. plot:: plots/ex_plot_laguerre_banded.py
-	:include-source:
+.. :ref:`Fig. <laguerre_banded_model_plot>`
+
+.. _laguerre_banded_model_plot:
+
+.. plot:: plots/ex_plot_laguerre_banded_matrix_model.py
+
+	Tridiagonal matrix model for the Laguerre ensemble
 
 .. seealso::
 
 	- :cite:`DuEd02` III-B
-	- :ref:`Full matrix model <laguerre_ensemble_full>` for Laguerre ensemble
+	- :ref:`Full matrix model <laguerre_full_matrix_model>` for Laguerre ensemble
 	- :py:class:`~dppy.beta_ensembles.LaguerreEnsemble` in API
 
-.. _jacobi_ensemble_banded:
+.. _jacobi_banded_matrix_model:
 
 Jacobi Ensemble
 ^^^^^^^^^^^^^^^
@@ -215,7 +221,6 @@ Take for reference measure :math:`\mu=\operatorname{Beta}(a,b)`
 
 		\left|\Delta(x_1,\dots,x_N)\right| = \prod_{i<j} |x_i - x_j|
 
-
 The equivalent tridiagonal model reads
 
 .. math::
@@ -241,7 +246,6 @@ The equivalent tridiagonal model reads
 			\xi_k &= (1-c_{k-1})c_k    \quad &\gamma_k &= c_{k-1}(1-c_k)
 	\end{aligned}
 
-
 with,
 
 .. math::
@@ -264,8 +268,7 @@ with,
 					\frac{\beta}{2} (N-i-1) + a + b
 			\right)
 
-
-To recover the full matrix model for :ref:`laguerre_ensemble_full`, recall that :math:`\Gamma(\frac{k}{2}, 2)\equiv \chi_k^2` and take
+To recover the full matrix model for :ref:`laguerre_full_matrix_model`, recall that :math:`\Gamma(\frac{k}{2}, 2)\equiv \chi_k^2` and take
 
 .. math::
 
@@ -295,18 +298,23 @@ That is to say,
 					\frac{\beta}{2} (M_1+M_2-N-i+1)
 			\right)
 
-.. plot:: plots/ex_plot_jacobi_banded.py
-	:include-source:
+.. :ref:`Fig. <jacobi_banded_model_plot>`
+
+.. _jacobi_banded_model_plot:
+
+.. plot:: plots/ex_plot_jacobi_banded_matrix_model.py
+
+	Tridiagonal matrix model for the Jacobi ensemble
 
 .. seealso::
 
 	- :cite:`KiNe04` Theorem 2
-	- :ref:`Full matrix model <jacobi_ensemble_full>` for Jacobi ensemble
+	- :ref:`Full matrix model <jacobi_full_matrix_model>` for Jacobi ensemble
 	- :py:class:`~dppy.beta_ensembles.JacobiEnsemble` in API
 	- :ref:`multivariate_jacobi_ope`
 	- :py:class:`~dppy.multivariate_jacobi_ope.MultivariateJacobiOPE` in API
 
-.. _circular_ensemble_banded:
+.. _circular_banded_matrix_model:
 
 Circular Ensemble
 ^^^^^^^^^^^^^^^^^
@@ -323,7 +331,6 @@ Circular Ensemble
 	.. math::
 
 		\left|\Delta(x_1,\dots,x_N)\right| = \prod_{i<j} |x_i - x_j|
-
 
 .. important::
 
@@ -361,14 +368,19 @@ and where
 
 .. hint::
 
-	The effect of increasing the :math:`\beta` parameter can be nicely vizualized on this :ref:`circular_ensemble_banded`.
+	The effect of increasing the :math:`\beta` parameter can be nicely vizualized on this :ref:`circular_banded_matrix_model`.
 	Viewing :math:`\beta` as the inverse temperature, the configuration of the eigenvalues cristallizes with :math:`\beta`, see the figure below.
 
-.. plot:: plots/ex_plot_circular_banded.py
-	:include-source:
+.. :ref:`Fig. <circular_banded_model_plot>`
+
+.. _circular_banded_model_plot:
+
+.. plot:: plots/ex_plot_circular_banded_matrix_model.py
+
+	Quindiagonal matrix model for the Circular ensemble
 
 .. seealso::
 
 	- :cite:`KiNe04` Theorem 1
-	- :ref:`Full matrix model <circular_ensemble_full>` for Circular ensemble
+	- :ref:`Full matrix model <circular_full_matrix_model>` for Circular ensemble
 	- :py:class:`~dppy.beta_ensembles.CircularEnsemble` in API

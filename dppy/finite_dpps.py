@@ -94,7 +94,7 @@ class FiniteDPP:
     .. seealso::
 
         - :ref:`finite_dpps_definition`
-        - :ref:`finite_dpps_exact_sampling_projection_dpps`
+        - :ref:`finite_dpps_exact_sampling`
     """
 
     ###############

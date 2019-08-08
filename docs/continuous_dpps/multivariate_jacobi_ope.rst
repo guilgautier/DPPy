@@ -21,22 +21,9 @@ Red and green dashed curves refer to the marginal densities
 The orange curve corresponds to the marginal limiting (also called equilibrium) distribution, known to be the arcsine distribution :math:`\frac{1}{\pi\sqrt{1-x^2}}`
 
 .. plot:: plots/ex_plot_multivariate_jacobi_ensemble.py
-    :include-source:
     :width: 50%
-
-
-
-.. .. image:: ../_images/2D_JacobiOPE_N=1000_raw.png
-..    :width: 20%
-.. .. image:: ../_images/2D_JacobiOPE_N=1000_weighted.png
-..    :width: 20%
-
 
 .. automodule:: dppy.multivariate_jacobi_ope
     :members:
     :inherited-members:
     :show-inheritance:
-
-
-.. .. plot:: plots/ex_plot_multivariate_jacobi_ope.py
-..   :include-source:

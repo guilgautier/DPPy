@@ -107,7 +107,7 @@ In the general case, based on the fact that :ref:`generic DPPs are mixtures of p
 
 .. seealso::
 
-	:ref:`continuous_dpps_nb_points` in the finite case
+	:ref:`continuous_dpps_number_of_points` in the finite case
 
 .. _continuous_dpps_thinning:
 

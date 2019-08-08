@@ -9,8 +9,9 @@ In fact, one can discard any row of the vertex-edge incidence matrix - note  :ma
 
 .. code-block:: python
 
+    # The figures below are static and may not reflect the output of the following code
 
-    from exotic_dpps import UST
+    from dppy.exotic_dpps import UST
     import networkx as nx
 
     # Build graph
@@ -20,12 +21,15 @@ In fact, one can discard any row of the vertex-edge incidence matrix - note  :ma
 
     # Initialize UST object
     ust = UST(g)
+
     # Display original graph
     ust.plot_graph()
+
     # Display some samples
     for md in ("Wilson", "Aldous-Broder", "DPP_exact"):
         ust.sample(md); ust.plot()
-    # Display underlyin kernel i.e. transfer current matrix
+
+    # Display underlying kernel i.e. transfer current matrix
     ust.plot_kernel()
 
 .. image:: ../_images/original_graph.png

@@ -99,7 +99,7 @@ Zonotope
 
 where :math:`\Phi` is the underlying :math:`r\times N` feature matrix satisfying :math:`\operatorname{rank}(\Phi)=\operatorname{rank}(\mathbf{K})=r`.
 
-In this setting the :ref:`finite_dpps_nb_points` is almost surely equal to :math:`r` and we have
+In this setting the :ref:`continuous_dpps_number_of_points` is almost surely equal to :math:`r` and we have
 
 .. math::
   :label: eq:zonotope_marginal

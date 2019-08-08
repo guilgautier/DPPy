@@ -7,7 +7,7 @@ For specific reference measures the :math:`\beta = 1, 2, 4` cases are very singu
 
 This is a highway for sampling exactly such ensembles in :math:`\mathcal{O}(N^3)`!
 
-.. _hermite_ensemble_full:
+.. _hermite_full_matrix_model:
 
 Hermite Ensemble
 ^^^^^^^^^^^^^^^^
@@ -31,11 +31,9 @@ Take for reference measure :math:`\mu=\mathcal{N}(0, 2)`, the pdf of the corresp
 	.. math::
 
 		\left|\Delta(x_1,\dots,x_N)\right| = \prod_{i<j} |x_i - x_j|
-
 .. hint::
 
 	The Hermite ensemble (whose name comes from the fact that Hermite polynomials are orthogonal w.r.t the Gaussian distribution) refers to the eigenvalue distribution of random matrices formed by i.i.d. Gaussian vectors.
-
 
 - :math:`\beta=1`
 
@@ -68,23 +66,26 @@ Take for reference measure :math:`\mu=\mathcal{N}(0, 2)`, the pdf of the corresp
         \end{bmatrix}
     \quad A = \frac{X+X^{\dagger}}{\sqrt{2}}
 
-
 Normalization :math:`\sqrt{\beta N}` to concentrate as the semi-circle law.
 
 .. math::
 
 	\frac{\sqrt{4-x^2}}{2\pi} 1_{[-2,2]} dx
 
-.. plot:: plots/ex_plot_hermite_full_mat.py
-  :include-source:
+.. :ref:`Fig. <hermite_full_matrix_model_plot>`
 
+.. _hermite_full_matrix_model_plot:
+
+.. plot:: plots/ex_plot_hermite_full_matrix_model.py
+
+	Full matrix model for the Hermite ensemble
 
 .. seealso::
 
-	- :ref:`Banded matrix model <hermite_ensemble_banded>` for Hermite ensemble
+	- :ref:`Banded matrix model <hermite_banded_matrix_model>` for Hermite ensemble
 	- :py:class:`~dppy.beta_ensembles.HermiteEnsemble` in API
 
-.. _laguerre_ensemble_full:
+.. _laguerre_full_matrix_model:
 
 Laguerre Ensemble
 ^^^^^^^^^^^^^^^^^
@@ -112,7 +113,6 @@ the pdf of the corresponding :math:`\beta`-Ensemble reads
 	.. math::
 
 		\left|\Delta(x_1,\dots,x_N)\right| = \prod_{i<j} |x_i - x_j|
-
 
 .. hint::
 
@@ -149,7 +149,6 @@ the pdf of the corresponding :math:`\beta`-Ensemble reads
         \end{bmatrix}
     \quad A = A A^{\dagger}
 
-
 Normalization :math:`\beta M` to concentrate as Marcenko-Pastur law
 
 .. math::
@@ -167,15 +166,20 @@ where
 	\quad \text{and} \quad
 	\lambda_\pm = (1\pm\sqrt{c})^2
 
-.. plot:: plots/ex_plot_laguerre_full_mat.py
-  :include-source:
+.. :ref:`Fig. <laguerre_full_matrix_model_plot>`
+
+.. _laguerre_full_matrix_model_plot:
+
+.. plot:: plots/ex_plot_laguerre_full_matrix_model.py
+
+	Full matrix model for the Laguerre ensemble
 
 .. seealso::
 
-	- :ref:`Banded matrix model <laguerre_ensemble_banded>` for Laguerre ensemble
+	- :ref:`Banded matrix model <laguerre_banded_matrix_model>` for Laguerre ensemble
 	- :py:class:`~dppy.beta_ensembles.LaguerreEnsemble` in API
 
-.. _jacobi_ensemble_full:
+.. _jacobi_full_matrix_model:
 
 Jacobi Ensemble
 ^^^^^^^^^^^^^^^
@@ -203,7 +207,6 @@ the pdf of the corresponding :math:`\beta`-Ensemble reads
 	.. math::
 
 		\left|\Delta(x_1,\dots,x_N)\right| = \prod_{i<j} |x_i - x_j|
-
 
 .. hint::
 
@@ -272,17 +275,22 @@ where
 
 itself tending to the arcsine law in the limit
 
-.. plot:: plots/ex_plot_jacobi_full_mat.py
-  :include-source:
+.. :ref:`Fig. <jacobi_full_matrix_model_plot>`
+
+.. _jacobi_full_matrix_model_plot:
+
+.. plot:: plots/ex_plot_jacobi_full_matrix_model.py
+
+	Full matrix model for the Jacobi ensemble
 
 .. seealso::
 
-	- :ref:`Banded matrix model <jacobi_ensemble_banded>` for Jacobi ensemble
+	- :ref:`Banded matrix model <jacobi_banded_matrix_model>` for Jacobi ensemble
 	- :py:class:`~dppy.beta_ensembles.JacobiEnsemble` in API
 	- :ref:`multivariate_jacobi_ope`
 	- :py:class:`~dppy.multivariate_jacobi_ope.MultivariateJacobiOPE` in API
 
-.. _circular_ensemble_full:
+.. _circular_full_matrix_model:
 
 Circular Ensemble
 ^^^^^^^^^^^^^^^^^
@@ -299,7 +307,6 @@ Circular Ensemble
 	.. math::
 
 		\left|\Delta(x_1,\dots,x_N)\right| = \prod_{i<j} |x_i - x_j|
-
 
 .. hint::
 
@@ -353,8 +360,13 @@ Circular Ensemble
 		U = np.multiply(Q, d / np.abs(d), Q)
 		la.eigvals(U)
 
-	.. plot:: plots/ex_plot_circular_full_mat_QR.py
-		:include-source:
+	.. :ref:`Fig. <circular_full_matrix_model_qr_plot>`
+
+	.. _circular_full_matrix_model_qr_plot:
+
+	.. plot:: plots/ex_plot_circular_full_matrix_model_qr.py
+
+		Full matrix model for the Circular ensemble from QR on random Gaussian matrix
 
 	2. The Hermite way
 
@@ -365,9 +377,13 @@ Circular Ensemble
 	      = U^{\dagger}\Lambda U\\
 	    eigvals(U)
 
-	.. plot:: plots/ex_plot_circular_full_mat_hermite.py
-		:include-source:
+	.. :ref:`Fig. <circular_full_matrix_model_hermite_plot>`
 
+	.. _circular_full_matrix_model_hermite_plot:
+
+	.. plot:: plots/ex_plot_circular_full_matrix_model_hermite.py
+
+		Full matrix model for the Circular ensemble from Hermite matrix
 
 - :math:`\beta=4`
 
@@ -389,10 +405,10 @@ Circular Ensemble
 
 .. seealso::
 
-	- :ref:`Banded matrix model <circular_ensemble_banded>` for Circular ensemble
+	- :ref:`Banded matrix model <circular_banded_matrix_model>` for Circular ensemble
 	- :py:class:`~dppy.beta_ensembles.CircularEnsemble` in API
 
-.. _ginibre_ensemble_full:
+.. _ginibre_full_matrix_model:
 
 Ginibre Ensemble
 ^^^^^^^^^^^^^^^^
@@ -411,7 +427,6 @@ Ginibre Ensemble
 
 		\left|\Delta(x_1,\dots,x_N)\right| = \prod_{i<j} |x_i - x_j|
 
-
 .. math::
 
 	A \sim
@@ -420,8 +435,13 @@ Ginibre Ensemble
 
 Nomalization :math:`\sqrt{N}` to concentrate in the unit circle
 
-.. plot:: plots/ex_plot_ginibre_full_mat.py
-  :include-source:
+.. :ref:`Fig. <ginibre_full_matrix_model_plot>`
+
+.. _ginibre_full_matrix_model_plot:
+
+.. plot:: plots/ex_plot_ginibre_full_matrix_model.py
+
+	Full matrix model for the Ginibre ensemble
 
 .. seealso::
 

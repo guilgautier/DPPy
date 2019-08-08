@@ -71,9 +71,13 @@ where the dagger :math:`\dagger` symbol means *conjugate transpose*.
 
 	In the following, unless otherwise specified, we work under these sufficient conditions.
 
+.. :ref:`Fig. <correlation_kernel_plot>`
 
-.. plot:: plots/ex_plot_K_kernel.py
-  :include-source:
+.. _correlation_kernel_plot:
+
+.. plot:: plots/ex_plot_correlation_K_kernel.py
+
+	Correlation :math:`\mathbf{K}` kernel
 
 .. important::
 

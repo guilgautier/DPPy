@@ -13,8 +13,13 @@ Samples from this measure can be obtained in the following way
 
 Finally, the point process formed by :math:`\{\lambda_i - i + \frac12\}_{i\geq 1}` is a DPP on :math:`\mathbb{Z}+\frac12`.
 
+.. :ref:`Fig. <poissonized_plancherel_plot>`
+
+.. _poissonized_plancherel_plot:
+
 .. plot:: plots/ex_plot_poissonized_plancherel.py
-    :include-source:
+
+    Poissonized Plancherel measure
 
 .. seealso::
 

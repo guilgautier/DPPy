@@ -40,7 +40,7 @@ Generic DPPs as mixtures of projection DPPs
 	- :ref:`finite_dpps_exact_sampling`
 	- Continuous case of :ref:`continuous_dpps_mixture`
 
-.. _finite_dpps_nb_points:
+.. _finite_dpps_number_of_points:
 
 Number of points
 ================

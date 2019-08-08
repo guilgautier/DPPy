@@ -85,7 +85,7 @@ class MultivariateJacobiOPE:
     .. seealso::
 
         - :ref:`multivariate_jacobi_ope`
-        - Univariate :ref:`jacobi_ensemble_banded` sampled with the tridiagonal model of :cite:`KiNe04`
+        - Univariate :ref:`jacobi_banded_matrix_model` sampled with the tridiagonal model of :cite:`KiNe04`
         - :cite:`BaHa16` initiated the use of the multivariate Jacobi ensemble for Monte Carlo integration. In particular, they proved a fast CLT with variance decay of order :math:`N^{1+1/d}`
     """
 
