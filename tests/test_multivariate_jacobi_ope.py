@@ -13,7 +13,9 @@ from scipy.special import eval_jacobi
 import sys
 sys.path.append('..')
 
-from dppy.multivariate_jacobi_ope import MultivariateJacobiOPE, compute_ordering_BaHa16, compute_Gautschi_bound
+from dppy.multivariate_jacobi_ope import (MultivariateJacobiOPE,
+                                          compute_ordering_BaHa16,
+                                          compute_Gautschi_bounds)
 
 from dppy.utils import inner1d, check_random_state
 
@@ -70,7 +72,8 @@ class TestMultivariateJacobiOPE(unittest.TestCase):
                                 dpp.poly_1D_square_norms[pol_2_eval, range(dpp.dim)],
                                 quad_square_norms))
 
-    def test_Gautschi_bound(self):
+    def test_Gautschi_bounds(self):
+        """Test if bounds computed w/wo log scale coincide"""
 
         N = 100
         dims = np.arange(2, 5)
@@ -82,20 +85,16 @@ class TestMultivariateJacobiOPE(unittest.TestCase):
             jacobi_params[0, :] = -0.5
 
             dpp = MultivariateJacobiOPE(N, jacobi_params)
-            pol_2_eval = dpp.poly_1D_degrees[:max_deg]
 
-            quad_square_norms =\
-                [[quad(lambda x:
-                        (1-x)**a * (1+x)**b * eval_jacobi(n, a, b, x)**2,
-                        -1, 1)[0]
-                        for n, a, b in zip(deg,
-                                            dpp.jacobi_params[:, 0],
-                                            dpp.jacobi_params[:, 1])]
-                 for deg in pol_2_eval]
+            with_log_scale = compute_Gautschi_bounds(dpp.jacobi_params,
+                                                     dpp.ordering,
+                                                     log_scale=True)
 
-            self.assertTrue(np.allclose(
-                                dpp.poly_1D_square_norms[pol_2_eval, range(dpp.dim)],
-                                quad_square_norms))
+            without_log_scale = compute_Gautschi_bounds(dpp.jacobi_params,
+                                                        dpp.ordering,
+                                                        log_scale=False)
+
+            self.assertTrue(np.allclose(with_log_scale, without_log_scale))
 
     def test_kernel_symmetry(self):
         """
@@ -223,26 +222,26 @@ class TestMultivariateJacobiOPE(unittest.TestCase):
 
         sampl = dpp.sample(random_state=self.seed)
         # seed = 0
-        expected_sample = np.array([[ 0.95498072, -0.22594616],
-                                    [ 0.98381496, -0.82081218],
-                                    [ 0.42158869,  0.61463234],
+        expected_sample = np.array([[-0.44929357, -0.92988338],
+                                    [-0.38287518,  0.20141371],
+                                    [-0.82081218,  0.71370281],
                                     [ 0.54434591, -0.40548681],
-                                    [ 0.98081473,  0.19803013],
-                                    [ 0.99882389,  0.99990403],
-                                    [-0.35335212,  0.3435721 ],
-                                    [-0.67634921, -0.35013342],
-                                    [ 0.66598575, -0.631246  ],
-                                    [-0.50124937,  0.94603753],
-                                    [-0.6803047 , -0.68742367],
-                                    [ 0.83011209,  0.99759068],
-                                    [-0.31799037,  0.74906081],
-                                    [-0.95083201, -0.12957181],
-                                    [-0.85140857,  0.8893118 ],
-                                    [-0.99364381,  0.51145399],
-                                    [-0.97738132, -0.99975365],
-                                    [-0.2932641 , -0.96289101],
-                                    [ 0.3737085 , -0.97049334],
-                                    [ 0.99727958, -0.67208988]])
+                                    [ 0.83560033,  0.99975326],
+                                    [ 0.58479869, -0.97294791],
+                                    [-0.97140965, -0.9958691 ],
+                                    [ 0.73176809,  0.0462124 ],
+                                    [ 0.99999994,  0.62478638],
+                                    [-0.995107  ,  0.6146506 ],
+                                    [ 0.99956026, -0.54696107],
+                                    [-0.73400973,  0.99976412],
+                                    [-0.9940169 ,  0.16811198],
+                                    [ 0.26219327,  0.71667124],
+                                    [-0.76730512, -0.05402772],
+                                    [ 0.99910531,  0.90729924],
+                                    [ 0.99984566, -0.95942833],
+                                    [ 0.99996511, -0.01959666],
+                                    [ 0.05053165, -0.40778628],
+                                    [ 0.11004152,  0.99337928]])
 
         self.assertTrue(np.allclose(sampl, expected_sample))
 
