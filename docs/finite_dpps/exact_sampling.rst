@@ -23,7 +23,7 @@ There exist three main types of exact sampling procedures:
 	In the next section, we describe the Algorithm 18 of :cite:`HKPV06`, based on the chain rule, which was originally designed to sample continuous projection DPPs.
 	Obviously, it has found natural a application in the finite setting for sampling projection :math:`\operatorname{DPP}(\mathbf{K})`.
 	However, **we insist on the fact that this chain rule mechanism is specific to orthogonal projection kernels**.
-	In particular, it cannot be applied blindly to sample general :math:`k-\operatorname{DPP}(\mathbf{L})` but it remains valid **only** when :math:`\operatorname{DPP}(\mathbf{L})` is an orthogonal projection kernel.
+	In particular, it cannot be applied blindly to sample general :math:`\operatorname{k-DPP}(\mathbf{L})` but it is valid when :math:`\mathbf{L}` is an orthogonal projection kernel.
 
 	This crucial point is developed in the following :ref:`finite_kdpps_exact_sampling_chain_rule_projection_kernel_caution` section.
 
@@ -33,8 +33,7 @@ There exist three main types of exact sampling procedures:
 Projection DPPs: the chain rule
 -------------------------------
 
-Recall that projection :math:`\operatorname{DPP}(\mathbf{K})` generated subsets :math:`S=\{s_1, \dots, s_r\}` with fixed cardinality :math:`r=\operatorname{rank}(\mathbf{K})=\operatorname{trace}(\mathbf{K})`, almost surely.
-So that the likelihood :eq:`eq:likelihood_projection_K` of :math:`S=\{s_1, \dots, s_r\}` reads
+Recall that the :ref:`number of points of a projection <finite_dpps_properties_number_of_points_dpp_K_projection>` :math:`r=\operatorname{DPP}(\mathbf{K})` is, almost surely, equal to :math:`\operatorname{rank}(K)`, so that the likelihood :eq:`eq:likelihood_projection_K` of :math:`S=\{s_1, \dots, s_r\}` reads
 
 .. math::
 
@@ -45,7 +44,7 @@ Using the invariance by permutation of the derterminant it is sufficient to appl
 
 .. math::
 
-	\mathbb{P}[s_1, \dots, s_r]
+	\mathbb{P}[(s_1, \dots, s_r)]
 	= \frac{1}{r!} \mathbb{P}[\mathcal{X}=\{s_1, \dots, s_r\}]
 	= \frac{1}{r!} \det \mathbf{K}_S,
 
@@ -55,7 +54,7 @@ Considering :math:`S=\{s_1, \dots, s_r\}` such that :math:`\mathbb{P}[\mathcal{X
 
 .. math::
 
-	\mathbb{P}[s_1, \dots, s_r]
+	\mathbb{P}[(s_1, \dots, s_r)]
 	= \mathbb{P}[s_1]
 		\prod_{i=2}^{r}
 			\mathbb{P}[s_{i} | s_{1:i-1}]
@@ -65,7 +64,7 @@ can be expressed as a telescopic ratio of determinants
 .. math::
 	:label: eq:chain_rule_K
 
-	\mathbb{P}[s_1, \dots, s_r]
+	\mathbb{P}[(s_1, \dots, s_r)]
 	= \dfrac{\mathbf{K}_{s_1,s_1}}{r}
 		\prod_{i=2}^{r}
 			\dfrac{1}{r-(i-1)}
@@ -77,11 +76,11 @@ Using `Woodbury's formula <https://en.wikipedia.org/wiki/Woodbury_matrix_identit
 .. math::
 	:label: eq:chain_rule_schur
 
-	\mathbb{P}[s_1, \dots, s_r]
+	\mathbb{P}[(s_1, \dots, s_r)]
 	= \dfrac{\mathbf{K}_{s_1,s_1}}{r}
 		\prod_{i=2}^{r}
 			\dfrac{
-				K_{s_i s_i} - \mathbf{K}_{s_i, s_{1:i-1}} {\mathbf{K}_{\{s_{1:i}\}}}^{-1} \mathbf{K}_{s_{1:i-1}, s_1}
+				\mathbf{K}_{s_i s_i} - \mathbf{K}_{s_i, s_{1:i-1}} {\mathbf{K}_{\{s_{1:i-1}\}}}^{-1} \mathbf{K}_{s_{1:i-1}, s_1}
 				}{r-(i-1)},
 
 .. hint::
@@ -90,7 +89,7 @@ Using `Woodbury's formula <https://en.wikipedia.org/wiki/Woodbury_matrix_identit
 
 	.. caution::
 
-		The connexion between the chain rule :eq:`eq:chain_rule_schur` and Gaussian Processes is valid only in the case where :math:`\mathbf{K}` is an **orthogonal projection kernel**, see also :ref:`finite_kdpps_exact_sampling_chain_rule_projection_kernel_caution`.
+		The connexion between the chain rule :eq:`eq:chain_rule_schur` and Gaussian Processes is valid in the case where the GP kernel is an **orthogonal projection kernel**, see also :ref:`finite_kdpps_exact_sampling_chain_rule_projection_kernel_caution`.
 
 .. _finite_dpps_exact_sampling_projection_dpp_chain_rule_geometrical_interpretation:
 
@@ -116,7 +115,7 @@ Geometrical interpretation
 	.. math::
 		:label: eq:chain_rule_dist2_K
 
-		\mathbb{P}[s_1, \dots, s_r]
+		\mathbb{P}[(s_1, \dots, s_r)]
 		&=	\frac{1}{r!}
 			\operatorname{Volume}^2(
 			\mathbf{K}_{s_{1},:}, \dots, \mathbf{K}_{s_{r},:}
@@ -146,7 +145,7 @@ Geometrical interpretation
 	.. math::
 		:label: eq:chain_rule_dist2_U
 
-		\mathbb{P}[s_1, \dots, s_r]
+		\mathbb{P}[(s_1, \dots, s_r)]
 		&=	\frac{1}{r!}
 			\operatorname{Volume}^2(
 			U_{s_{1},:}, \dots, U_{s_{r},:}
@@ -286,7 +285,7 @@ Given the spectral decomposition of the correlation kernel :math:`\mathbf{K}`
 
 	**Step** :ref:`1. <finite_dpps_exact_sampling_spectral_method_step_1>` selects a component of the mixture
 
-	**Step** :ref:`2. <finite_dpps_exact_sampling_spectral_method_step_2>` requires sampling from the corresponding **projection** DPP, cf.
+	**Step** :ref:`2. <finite_dpps_exact_sampling_spectral_method_step_2>` requires sampling from the corresponding **projection** DPP, cf. :ref:`finite_dpps_exact_sampling_projection_dpp_chain_rule`
 
 In practice
 ===========
@@ -375,7 +374,7 @@ In practice
  	**Step** :ref:`1. <finite_dpps_exact_sampling_spectral_method_step_1>`  draw independent Bernoulli random variables :math:`B_i \sim \operatorname{\mathcal{B}er}(\delta_i)` for :math:`i=1,\dots, d` and collect :math:`\mathcal{B}=\left\{ i ~;~ B_i=1 \right\}`
 
 	**Step** :ref:`2. <finite_dpps_exact_sampling_spectral_method_step_2>`
-	sample from the **projection** DPP with correlation kernel defined by its eigenvectors :math:`\Phi^{\top} W_{:,\mathcal{B}} \delta_{\mathcal{B}}^{-1/2}`.
+	sample from the **projection** DPP with correlation kernel defined by its eigenvectors :math:`\Phi^{\top} W_{:,\mathcal{B}} \Delta_{\mathcal{B}}^{-1/2}`.
 
 	.. important::
 
@@ -454,7 +453,7 @@ This can be summarized as the exploration of the binary probability tree display
 					\left\{ 2, 3 \right\} \cap \mathcal{X} = \emptyset
 				\right],
 
-where each conditional probability has closed formed expression given by :eq:`eq:conditioned_on_S_in_X` and :eq:`eq:conditioned_on_S_notin_X`, namely
+where each conditional probability can be written in closed formed using :eq:`eq:conditioned_on_S_in_X` and :eq:`eq:conditioned_on_S_notin_X`, namely
 
 .. math::
 
@@ -470,7 +469,7 @@ where each conditional probability has closed formed expression given by :eq:`eq
 
 .. note::
 
-	The sparsity of :math:`\mathbf{K}` can be leveraged to get derive faster samples using the correspondence between the chain rule on sets and Cholesky-type factorizations, see e.g., :cite:`Pou19` Section 4.
+	The sparsity of :math:`\mathbf{K}` can be leveraged to get derive faster samplers using the correspondence between the chain rule on sets and Cholesky-type factorizations, see e.g., :cite:`Pou19` Section 4.
 
 In practice
 ===========
@@ -561,21 +560,17 @@ k-DPPs
 Main idea
 =========
 
-Recall that a :ref:`k-DPP <finite_dpps_definition_k_dpps>`) can be viewed as a :math:`\operatorname{DPP}(\mathbf{L})` constrained to a fixed cardinality :math:`k`.
+:ref:`Recall <finite_dpps_definition_k_dpps>` :eq:`eq:likelihood_kDPP_L` that :math:`\operatorname{k-DPP}(\mathbf{L})` can be viewed as a :math:`\operatorname{DPP}(\mathbf{L})` constrained to a have fixed cardinality :math:`k`.
 
 .. note::
 
-	:math:`k` must satisfy :math:`k \leq \operatorname{rank}(L)`
+	Obviously :math:`k \leq \operatorname{rank}(L)`, see :eq:`eq:number_of_points`
 
-To generate a sample of :math:`k-\operatorname{DPP}(\mathbf{L})`, one natural solution would be to use a rejection mechanism: draw :math:`S \sim \operatorname{DPP}(\mathbf{L})` and keep it only if :math:`|X| = k`.
-However, the rejection constant may be pretty bad depending on the choice of :math:`k` regarding the distribution of the number of points :eq:`eq:number_points`.
+To generate a sample of :math:`\operatorname{k-DPP}(\mathbf{L})`, one natural solution would be to use a rejection mechanism: draw :math:`S \sim \operatorname{DPP}(\mathbf{L})` and keep it only if :math:`|X| = k`.
+However, the rejection constant may be pretty bad depending on the choice of :math:`k` regarding the distribution of the number of points :eq:`eq:number_of_points`.
 
 The alternative solution was found by :cite:`KuTa12` Section 5.2.2.
-The procedure relies on a slight modification of :ref:`Step 1. <finite_dpps_exact_sampling_spectral_method_step_1>` of the :ref:`finite_dpps_exact_sampling_spectral_method` which requires the computation of the elementary symmetric polynomials.
-
-.. todo::
-
-	Rewriting stopped here
+The procedure relies on a slight modification of :ref:`Step 1. <finite_dpps_exact_sampling_spectral_method_step_1>` of the :ref:`finite_dpps_exact_sampling_spectral_method` which requires the computation of the `elementary symmetric polynomials <https://en.wikipedia.org/wiki/Elementary_symmetric_polynomial>`_.
 
 .. _finite_kdpps_exact_sampling_chain_rule_projection_kernel_caution:
 
@@ -584,96 +579,140 @@ Caution
 
 .. attention::
 
-	Despite the fact that exactly
+	Since the number of points :math:`k` is fixed, like for :ref:`projection DPPs <finite_dpps_properties_number_of_points_dpp_K_projection>`, it might be tempting to apply a chain rule similar to :eq:`eq:chain_rule_schur` for :math:`k` steps in order to sample :math:`\operatorname{k-DPP}(\mathbf{L})`.
+	However, this is a misleading impression: the chain rule it cannot be applied blindly to sample general :math:`\operatorname{k-DPP}(\mathbf{L})`.
+	Nevertheless, it is valid when :math:`\mathbf{L}` is an orthogonal projection kernel!
 
-	In the next section, we describe the Algorithm 18 of :cite:`HKPV06`, based on the chain rule, which was originally designed to sample continuous projection DPPs.
-	Obviously, it has found natural a application in the finite setting for sampling projection :math:`\operatorname{DPP}(\mathbf{K})`.
-	However, **we insist on the fact that this chain rule mechanism is specific to orthogonal projection kernels**.
-	In particular, it cannot be applied blindly to sample general :math:`\operatorname{k-DPP}(\mathbf{L})` but it remains valid **only** when :math:`\operatorname{DPP}(\mathbf{L})` is an orthogonal projection kernel.
+**Here are the reasons why**
 
-	This crucial point is developed in the following :ref:`finite_kdpps_exact_sampling_chain_rule_projection_kernel_caution` section.
+1. First keep in mind that, the ultimate goal is to draw a **subset** :math:`S=\{ s_{1}, \dots, s_{k} \} \sim \operatorname{k-DPP}(\mathbf{L})` with probability :eq:`eq:likelihood_kDPP_L`
 
-	As mentioned at the beginning of the page, Algorithm 18 of :cite:`HKPV06` was designed only for projection DPPs.
-	That is to say, the chain rule :eq:`eq:chain_rule_schur` can not be blindly applied to generic correlation kernels :math:`0_N \preceq \mathbf{K} \preceq I_N`, it is **only** valid for orthogonal projection kernels, which can be characterized equivalently by
+.. math::
+	:label: eq:caution_likelihood_kDPP_L
 
-	a. :math:`\mathbf{K}^2=\mathbf{K}` and :math:`\mathbf{K}^{\dagger}=\mathbf{K}`
-	b. :math:`\mathbf{K}=U U^{\dagger}` with :math:`U^{\dagger} U=I_r` where :math:`r=\operatorname{rank}(\mathbf{K})`.
+	\mathbb{P}[\mathcal{X}=S]
+	= \frac{1}{e_k(\mathbf{L})} \det \mathbf{L}_S ~ 1_{|S|=k}
 
-	Next, we explain why the chain rule :eq:`eq:chain_rule_schur` only applies to projection DPPs.
+2. Now, if we were to use a chain rule of the form :eq:`eq:chain_rule_schur` this would correspond to sampling sequentially the items :math:`s_1, \dots, s_{k}`, so that the resulting **vector** :math:`(s_{1}, \dots, s_{k})` has probability
 
-	Recall that a DPP can be understood as a random **subset** :math:`\mathcal{X}\sim \operatorname{DPP}(\mathbf{K})` whose size is also random in the general
-	The first questions that should come
+.. math::
+	:label: eq:chain_rule_caution_vector
 
-	To do this, consider a valid correlation kernel: :math:`0_N \preceq \mathbf{K} \preceq I_N`.
-	In that case we
+	\mathbb{Q}[(s_{1}, \dots, s_{k})]
+	&= \dfrac{\mathbf{L}_{s_1,s_1}}{Z_1}
+		\prod_{i=2}^{r}
+			\dfrac{
+				\mathbf{L}_{s_i s_i} - \mathbf{L}_{s_i, s_{1:i-1}} {\mathbf{L}_{\{s_{1:i-1}\}}}^{-1} \mathbf{L}_{s_{1:i-1}, s_1}
+				}{Z_i(s_{1}, \dots, s_{i-1})}\\
+	&= \frac{1}{Z(s_{1}, \dots, s_{k})} \det \mathbf{L}_S.
 
-	Using the invariance by permutation of the derterminant it is sufficient to apply the chain rule to sample :math:`(s_1, \dots, s_r)` with joint distribution
+Contrary to :math:`Z_1=\operatorname{trace}(\mathbf{L})`, the normalizations :math:`Z_i(s_{1}, \dots, s_{i-1})` of the successive conditionals depend, *a priori*, on the order :math:`s_{1}, \dots, s_{k}` were selected. For this reason we denote the global normalization constant :math:`Z(s_{1}, \dots, s_{k})`.
 
-	.. math::
+.. warning::
 
-		\mathbb{P}[s_1, \dots, s_r]
-		= \frac{1}{r!} \mathbb{P}[\mathcal{X}=\{s_1, \dots, s_r\}]
-		= \frac{1}{r!} \det \mathbf{K}_S,
+	Equation :eq:`eq:chain_rule_caution_vector` suggests that, the sequential feature of the chain rule matters, *a priori*; the distribution of :math:`\left(s_{1}, \dots, s_{k} \right)` is not `exchangeable <https://en.wikipedia.org/wiki/Exchangeable_random_variables>`_ *a priori*, i.e., it is not invariant to permutations of its coordinates.
+	This fact, would only come from the normalization :math:`Z(s_{1}, \dots, s_{k})`, since :math:`\mathbf{L}_S` is invariant by permutation.
 
-	Now consider the following factorization :math:`\mathbf{K} = VV^{\dagger}`.
+	.. note::
 
-	and denote :math:`Y=\{s_1, \dots, s_{j-1}\}`.
-	Without prior asumption on :math:`V`, the Schur complement formula allows to express the ratio of determinants appearing in the conditionals as
+		To see this, let's compute the normalization constant :math:`Z_i(s_1, \dots, s_{i-1})` in :eq:`eq:chain_rule_caution_vector` for a generic :math:`\mathbf{L}\succeq 0_N` factored as :math:`\mathbf{L} = VV^{\dagger}`, with no specific assumption on :math:`V`.
+		Further denote :math:`S_{i-1}=\{s_{1}, \dots, s_{i-1}\}`, so that
 
-	.. math::
+		.. math::
+			:label: eq:chain_rule_caution_normalization_constant_conditional
 
-		\frac{\det \mathbf{K}_{Y+i}}{\det \mathbf{K}_{Y}}
-		&= \mathbf{K}_{ii}
-			- \mathbf{K}_{iY} \left[\mathbf{\mathbf{K}}_{Y}\right]^{-1} \mathbf{K}_{Yi}\\
-		&= \mathbf{K}_{ii}
-			- V_{i:}V_{Y:}^{\dagger}
-			\left[V_{Y:} {V_{Y:}}^{\dagger}\right]^{-1}
-			V_{Y:} V_{i:}^{\dagger} \\
-		&= \mathbf{K}_{ii}
-			- V_{i:} \Pi_{V_{Y:}} {V_{i:}}^{\dagger}
+			Z_i(s_1, \dots, s_{i-1})
+			&= \sum_{i=1}^N \mathbf{L}_{ii}
+				- \mathbf{L}_{iS_{i-1}} \left[\mathbf{\mathbf{L}}_{S_{i-1}}\right]^{-1} \mathbf{L}_{S_{i-1}i}\\
+			&= \operatorname{trace}(
+			    \mathbf{L}
+			    - \mathbf{L}_{:, S_{i-1}}
+			      \left[\mathbf{\mathbf{L}}_{S_{i-1}}\right]^{-1} \mathbf{L}_{S_{i-1}, :}
+			    )\\
+			&=  \operatorname{trace}\left(
+			    \mathbf{L}
+			    - V {V^{\dagger}}_{:,S_{i-1}}
+			      \left[V_{S_{i-1},:} {V^{\dagger}}_{:,S_{i-1}}\right]^{-1}
+			      V_{S_{i-1},:} V^{\dagger}
+			    \right)\\
+			&= 	\operatorname{trace}
+				\big(
+				\mathbf{L}_{ii}
+				-
+				\underbrace{{V_{S_{i-1}:}}^{\dagger}
+				 			\left[V_{S_{i-1}:} {V_{S_{i-1}:}}^{\dagger}\right]^{-1}
+				 			V_{S_{i-1}:}}_{\Pi_{V_{S_{i-1}:}}}
+				V^{\dagger}V
+				\big)\\
+			&= \operatorname{trace}(\mathbf{L})
+			  - \operatorname{trace}(\Pi_{V_{S_{i-1}:}}V^{\dagger}V)
 
-	where :math:`\Pi_{V_{Y:}}` is the orthogonal projection onto the span of the (independent) rows of :math:`V_{Y:}`.
+		where :math:`\Pi_{V_{S_{i-1}:}}` denotes the `orthogonal projection <https://en.wikipedia.org/wiki/Proofs_involving_the_Moore–Penrose_inverse#Projectors_and_subspaces>`_ onto :math:`\operatorname{Span}\{V_{s_1,:}, \dots, V_{s_i-1, :}\}`, the supspace spanned the feature vectors associated to :math:`s_{1}, \dots, s_{i-1}`.
 
-	Now, let's compute the normalizing constant.
-	The first term :math:`\operatorname{trace}(\mathbf{K})` is independent of :math:`Y`, contrary to the second term if no additional assumption is made on the Gram factor :math:`V`.
-	Indeed,
+Then, summing :eq:`eq:chain_rule_caution_vector` over the :math:`k!` permutations of :math:`1, \dots, k`, yields the probability of drawing the **subset** :math:`S=\left\{ s_{1}, \dots, s_{k} \right\}`, namely
 
-	.. math::
+.. math::
+	:label: eq:chain_rule_caution_set
 
-		\sum_{i=1}^N
-			\frac{\det \mathbf{K}_{Y+i}}{\det \mathbf{K}_{Y}}
-		&= \sum_{i=1}^N \mathbf{K}_{ii}
-		  - V_{i:} \Pi_{V_{Y:}} V_{i:}^{\dagger}\\
-		&= \operatorname{trace}(\mathbf{K})
-		  - \operatorname{trace}(V \Pi_{V_{Y:}} V^{\dagger})\\
-		&= \operatorname{trace}(\mathbf{K})
-		  - \operatorname{trace}(\Pi_{V_{Y:}}V^{\dagger}V)\\
+	\mathbb{Q}[\{ s_{1}, \dots, s_{k} \}]
+	= \sum_{\sigma \in \mathfrak{S}_k}
+		\mathbb{Q}[(s_{\sigma(1)}, \dots, s_{\sigma(k)})]
+ 	= \det\mathbf{L}_S
+		\underbrace{
+			\sum_{\sigma \in \mathfrak{S}_k}
+			\frac{1}{Z(s_{\sigma(1)}, \dots, s_{\sigma(k)})}
+			}_{
+			1/Z_S
+			}.
 
-	The first term :math:`\operatorname{trace}(\mathbf{K})` is independent of :math:`Y`, but this is no longer true for the second term without additional assumption on the Gram factor V.
+3. For the chain rule :eq:`eq:chain_rule_caution_vector` to be a valid procedure for sampling :math:`\operatorname{k-DPP}(\mathbf{L})`, we must be able to identify :eq:`eq:caution_likelihood_kDPP_L` and :eq:`eq:chain_rule_caution_set`, i.e., :math:`\mathbb{Q}[S] = \mathbb{P}[S]` for all :math:`|S|=k`, or equivalently :math:`Z_S = e_k(L)` for all :math:`|S|=k`.
 
-	In particular, a. implies that :math:`\mathbf{K}=\mathbf{K}\mathbf{K}^{\dagger}`.
+.. important::
 
-	.. math::
+	A sufficient condition (very likely to be necessary) is that the joint distribution of :math:`(s_{1}, \dots, s_{k})`, generated by the chain rule mechanism :eq:`eq:chain_rule_caution_vector`, is exchangeable (invariant to permutations of the coordinates).
+	In that case, the normalizations in :eq:`eq:chain_rule_caution_vector` would then be constant :math:`Z(s_{1}, \dots, s_{k})=Z` .
+	So that :math:`Z_S` would in fact play the role of the normalization constant of :eq:`eq:chain_rule_caution_set`, since it would be constant as well and equal to :math:`Z_S = \frac{Z}{k!} = e_k(L)`.
 
-		&\qquad\operatorname{trace}(\mathbf{K})
-		&\qquad\operatorname{trace}(\mathbf{K})
-			- \operatorname{trace}(\Pi_{\mathbf{K}_{Y:}}\mathbf{K}\mathbf{K}^{\dagger})
-		&\qquad
-		\operatorname{trace}(\mathbf{K})
-			- \operatorname{trace}(\Pi_{U_{Y:}}U^{\dagger}U)
-			\\
-		&\qquad= \operatorname{rank}(\mathbf{K})
-		&\qquad= r - \operatorname{trace}(\Pi_{\mathbf{K}_{Y:}}\mathbf{K})
-		&\qquad= r - \operatorname{trace}(\Pi_{U_{Y:}}I_r)
-			\\
-		&\qquad= r
-		&\qquad= r - \operatorname{trace}(\Pi_{\mathbf{K}_{Y:}})
-		&\qquad= r - \operatorname{trace}(\Pi_{U_{Y:}})
-			\\
-		&
-		&\qquad= r - |Y|
-		&\qquad= r - |Y|
+**This is what we can prove in the particular case where** :math:`\mathbf{L}` **is an orthogonal projection matrix.**
 
+To do this, denote :math:`r=\operatorname{rank}(\mathbf{L})` and recall that in this case :math:`\mathbf{L}` satisfies :math:`\mathbf{L}^2=\mathbf{L}` and :math:`\mathbf{L}^{\dagger}=\mathbf{L}`, so that it can be factored as :math:`\mathbf{L}=\Pi_{\mathbf{L}}=\mathbf{L}^{\dagger}\mathbf{L}=\mathbf{L}\mathbf{L}^{\dagger}`
+
+Finally, we can plug :math:`V=\mathbf{L}` in :eq:`eq:chain_rule_caution_normalization_constant_conditional` to obtain
+
+.. math::
+
+	Z_i(s_1, \dots, s_{i-1})
+	&= \operatorname{trace}(\mathbf{L})
+	  - \operatorname{trace}(\Pi_{\mathbf{L}_{S_{i-1}:}}\mathbf{L}^{\dagger}\mathbf{L})\\
+	&= \operatorname{trace}(\Pi_{\mathbf{L}})
+	  - \operatorname{trace}(\Pi_{\mathbf{L}_{S_{i-1}:}}\Pi_{\mathbf{L}})\\
+	&= \operatorname{trace}(\Pi_{\mathbf{L}})
+	  - \operatorname{trace}(\Pi_{\mathbf{L}_{S_{i-1}:}})\\
+	&= \operatorname{rank}(\Pi_{\mathbf{L}})
+	  - \operatorname{rank}(\Pi_{\mathbf{L}_{S_{i-1}:}})\\
+	&= r - (i - 1) := Z_i
+
+Thus, the normalization :math:`Z(s_1, \dots, s_k)` in :eq:`eq:chain_rule_caution_normalization_constant_conditional` is constant as well equal to
+
+.. math::
+
+	Z(s_1, \dots, s_k)
+	= \prod_{i=1}^{k} Z_i
+	= \prod_{i=1}^{k} r - (i - 1)
+	= \frac{r!}{(r-k)!}
+	= k! {r \choose k}
+	= k! e_k(\mathbf{L})
+	:= Z
+
+where the last equality is a simple computation of the `elementary symmetric polynomial <https://en.wikipedia.org/wiki/Elementary_symmetric_polynomial>`_ :math:`e_k(\mathbf{L})=e_k(\gamma_{1:r}=1, \gamma_{r+1:N}=0) = {r \choose k}`
+
+.. important::
+
+	This shows that, when :math:`\mathbf{L}` is an orthogonal projection matrix, the order the items :math:`s_1, \dots, s_r` we selected by the chain rule :eq:`eq:chain_rule_caution_vector` can be forgotten, so that :math:`\{s_1, \dots, s_r\}` can be considered as valid sample of :math:`\operatorname{k-DPP}(\mathbf{L})`.
+
+.. todo::
+
+	To summarize, add code showing non exchangeability
 
 In practice
 ===========

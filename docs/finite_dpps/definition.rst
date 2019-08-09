@@ -73,7 +73,7 @@ where the dagger :math:`\dagger` symbol means *conjugate transpose*.
 
 	- we work under the sufficient conditions :eq:`eq:suff_cond_K` and :eq:`eq:suff_cond_K`
 	- :math:`\left(\lambda_{1}, \dots, \lambda_{N} \right)` denote the eigenvalues of :math:`\mathbf{K}`
-	- :math:`\left(\delta_{1}, \dots, \delta_{N} \right)` denote the eigenvalues of :math:`\mathbf{L}`
+	- :math:`\left(\gamma_{1}, \dots, \gamma_{N} \right)` denote the eigenvalues of :math:`\mathbf{L}`
 
 .. :ref:`Fig. <correlation_kernel_plot>`
 
@@ -124,7 +124,7 @@ Projection DPPs
 k-DPPs
 ======
 
-A :math:`\operatorname{k-DPP}` can be defined as :math:`\operatorname{DPP(\mathbf{L})}` conditioned to a fixed sample size :math:`|\mathcal{X}|=k`, we denote it :math:`\operatorname{k-DPP}(\mathbf{L})`.
+A :math:`\operatorname{k-DPP}` can be defined as :math:`\operatorname{DPP(\mathbf{L})}` :eq:`eq:likelihood_DPP_L` conditioned to a fixed sample size :math:`|\mathcal{X}|=k`, we denote it :math:`\operatorname{k-DPP}(\mathbf{L})`.
 
 It is naturally defined through its joint probabilities
 
@@ -134,13 +134,13 @@ It is naturally defined through its joint probabilities
 	\mathbb{P}_{\operatorname{k-DPP}}[\mathcal{X}=S]
 		= \frac{1}{e_k(L)} \det \mathbf{L}_S ~ 1_{|S|=k}
 
-where the normalizing constant :math:`e_k(L)` corresponds to the `elementary symmetric polymial <https://en.wikipedia.org/wiki/Elementary_symmetric_polynomial>`_ of order :math:`k` evaluated in the eigenvalues of :math:`\mathbf{L}`,
+where the normalizing constant :math:`e_k(L)` corresponds to the `elementary symmetric polynomial <https://en.wikipedia.org/wiki/Elementary_symmetric_polynomial>`_ of order :math:`k` evaluated in the eigenvalues of :math:`\mathbf{L}`,
 
 .. math::
 
 	e_k(\mathbf{L})
-		\triangleq e_k(\delta_1, \dots, \delta_N)
-		= \sum_{S\subset [N]: |S|=k} \prod_{n \in S} \delta_i
+		\triangleq e_k(\gamma_1, \dots, \gamma_N)
+		= \sum_{S\subset [N]: |S|=k} \prod_{n \in S} \gamma_i
 		= \sum_{S\subset [N]: |S|=k} \det L_S
 
 .. note::

@@ -50,7 +50,7 @@ Relation between correlation and likelihood kernels
 
 	For DPPs with *projection* correlation kernel :math:`\mathbf{K}`, the likelihood kernel :math:`\mathbf{L}` cannot be computed via  :eq:`eq:compute_L_from_K`, since :math:`\mathbf{K}` has at least one eigenvalue equal to :math:`1` (:math:`\mathbf{K}^2=\mathbf{K}`).
 
-	Nevertheless, if you recall the :ref:`number of points of a projection DPP <finite_dpps_properties_number_of_points_dpp_K_projection>`, then its likelihood reads
+	Nevertheless, if you recall that the :ref:`number of points of a projection DPP <finite_dpps_properties_number_of_points_dpp_K_projection>`, then its likelihood reads
 
 	.. math::
 
@@ -127,7 +127,7 @@ For projection DPPs, i.e., when :math:`\mathbf{K}` is an orthogonal projection m
 In the general case, based on the fact that :ref:`generic DPPs are mixtures of projection DPPs <finite_dpps_mixture>`, we have
 
 .. math::
-	:label: eq:number_points
+	:label: eq:number_of_points
 
 	|\mathcal{X}|
 		= \sum_{n=1}^N
@@ -143,7 +143,7 @@ In the general case, based on the fact that :ref:`generic DPPs are mixtures of p
 
 .. note::
 
-	From :eq:`eq:number_points` it is clear that :math:`|\mathcal{X}|\leq \operatorname{rank}(\mathbf{K})=\operatorname{rank}(\mathbf{L})`.
+	From :eq:`eq:number_of_points` it is clear that :math:`|\mathcal{X}|\leq \operatorname{rank}(\mathbf{K})=\operatorname{rank}(\mathbf{L})`.
 
 Expectation
 -----------
@@ -208,7 +208,7 @@ Special cases
 
 .. _finite_dpps_properties_number_of_points_dpp_K_projection:
 
-1. When the **correlation** kernel :math:`\mathbf{K}` of :math:`\operatorname{DPP}(\mathbf{K})` is an orthogonal projection kernel, i.e., :math:`\operatorname{DPP}(\mathbf{K})` is a :ref:`projection DPP <finite_dpps_definition_projection_dpps>`, we have
+1. When the correlation kernel :math:`\mathbf{K}` :eq:`eq:inclusion_proba_DPP_K` of :math:`\operatorname{DPP}(\mathbf{K})` is an orthogonal projection kernel, i.e., :math:`\operatorname{DPP}(\mathbf{K})` is a :ref:`projection DPP <finite_dpps_definition_projection_dpps>`, we have
 
    	.. math::
    		:label: number_of_points_dpp_K_projection
@@ -236,7 +236,7 @@ Special cases
 
 		assert([np.mean(sizes), np.var(sizes)] == [r, 0])
 
-	.. important:: **likelihood** kernel  :math:`\mathbf{K}`
+	.. important::
 
 		Since :math:`|\mathcal{X}|=\operatorname{rank}(\mathbf{K})` points, almost surely, the likelihood of the projection :math:`\operatorname{DPP}(\mathbf{K})` reads
 
@@ -248,12 +248,12 @@ Special cases
 
 		In other words, the projection DPP having for **correlation** kernel the orthogonal projection matrix :math:`\mathbf{K}` coincides with the :ref:`k-DPP <finite_dpps_definition_k_dpps>` having **likelihood** kernel  :math:`\mathbf{K}` when :math:`k=\operatorname{rank}(\mathbf{K})`.
 
-2. When the **likelihood** kernel :math:`\mathbf{L}` of :math:`\operatorname{DPP}(\mathbf{L})` is an orthogonal projection kernel we have
+2. When the likelihood kernel :math:`\mathbf{L}` of :math:`\operatorname{DPP}(\mathbf{L})` :eq:`eq:likelihood_DPP_L` is an orthogonal projection kernel we have
 
    	.. math::
    		:label: number_of_points_dpp_L_projection
 
-   		|\mathcal{X}| \sim \operatorname{Binomial}(\operatorname{rank}(\mathbf{L}), \frac{1}{2})
+   		|\mathcal{X}| \sim \operatorname{Binomial}(\operatorname{rank}(\mathbf{L}), 1/2)
 
 	.. :ref:`Fig. <nb_points_DPP_L_projectin_plot>`
 
@@ -261,7 +261,7 @@ Special cases
 
 	.. plot:: plots/ex_plot_number_of_points_finite_dpp_L_projection.py
 
-		Distribution of the numbe of points of :math:`\operatorname{DPP}(\mathbf{L})` with orthogonal projection kernel :math:`\mathbf{L}`
+		Distribution of the numbe of points of :math:`\operatorname{DPP}(\mathbf{L})` with orthogonal projection kernel :math:`\mathbf{L}` with rank :math:`5`.
 
 
 .. _finite_dpps_geometry:
@@ -290,6 +290,7 @@ a. The inclusion probabilities read
 		= \operatorname{Vol}^2 \{\phi_s\}_{s\in S}
 
 b. The likelihood reads
+
 	.. math::
 
 		\mathbb{P}[\mathcal{X} = S]
@@ -320,13 +321,16 @@ Deriving the pair inclusion probability, also called the 2-point correlation fun
 	&= \mathbb{P}[i \in \mathcal{X}] \mathbb{P}[j \in \mathcal{X}]
 		- |\mathbf{K}_{i j}|^2
 
-That is, the greater the similarity :math:`|\mathbf{K}_{i j}|` between items :math:`i` and :math:`j`, the less likely they co-occur.
-
+so that, the larger :math:`|\mathbf{K}_{i j}|` less likely items :math:`i` and :math:`j` co-occur. If :math:`K_{ij}` models the :ref:`similarity <finite_dpps_geometry>` between items :math:`i` and :math:`j`, DPPs are thus random diverse sets of elements.
 
 .. _finite_dpps_conditioning:
 
 Conditioning
 ============
+
+Like many other statistics of DPPs, the conditional probabilities can be expressed my means of a determinant and involve the correlation kernel :math:`\mathbf{K}` :eq:`eq:inclusion_proba_DPP_K`.
+
+For any disjoint subsets :math:`S, T \subset [N]`, i.e., such that :math:`S\cap T = \emptyset` we have
 
 .. math::
 	:label: eq:conditioned_on_S_in_X
@@ -343,6 +347,6 @@ Conditioning
 .. seealso::
 
 	- Propositions 3 and 5 of :cite:`Pou19` for the proofs
-	- Equations :eq:`eq:conditioned_on_S_in_X` and :eq:`eq:conditioned_on_S_in_X` are key to derive the
+	- Equations :eq:`eq:conditioned_on_S_in_X` and :eq:`eq:conditioned_on_S_in_X` are key to derive the :ref:`Cholesky-based exact sampler <finite_dpps_exact_sampling_cholesky_method>` which makes use of the chain rule on sets.
 
 .. `Cauchy-Binet formula <https://en.wikipedia.org/wiki/Cauchy%E2%80%93Binet_formula>`_
