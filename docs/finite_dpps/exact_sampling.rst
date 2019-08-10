@@ -275,32 +275,35 @@ Given the spectral decomposition of the correlation kernel :math:`\mathbf{K}`
 
 .. _finite_dpps_exact_sampling_spectral_method_step_1:
 
-**Step** 1. Draw independent Bernoulli random variables :math:`B_n \sim \operatorname{\mathcal{B}er}(\lambda_n)` for :math:`n=1,\dots, N` and collect :math:`\mathcal{B}=\left\{ n ~;~ B_n=1 \right\}`
+**Step 1.** Draw independent Bernoulli random variables :math:`B_n \sim \operatorname{\mathcal{B}er}(\lambda_n)` for :math:`n=1,\dots, N` and collect :math:`\mathcal{B}=\left\{ n ~;~ B_n=1 \right\}`
 
 .. _finite_dpps_exact_sampling_spectral_method_step_2:
 
-**Step** 2. Sample from the **projection** DPP with correlation kernel :math:`U_{:\mathcal{B}} {U_{:\mathcal{B}}}^{\dagger} = \sum_{n\in \mathcal{B}} u_n u_n^{\dagger}`.
+**Step 2.** Sample from the **projection** DPP with correlation kernel :math:`U_{:\mathcal{B}} {U_{:\mathcal{B}}}^{\dagger} = \sum_{n\in \mathcal{B}} u_n u_n^{\dagger}`, see :ref:`the section above <finite_dpps_exact_sampling_projection_dpp_chain_rule_in_practice>`
 
 .. note::
 
-	**Step** :ref:`1. <finite_dpps_exact_sampling_spectral_method_step_1>` selects a component of the mixture
-
-	**Step** :ref:`2. <finite_dpps_exact_sampling_spectral_method_step_2>` requires sampling from the corresponding **projection** DPP, cf. :ref:`finite_dpps_exact_sampling_projection_dpp_chain_rule`
+	**Step 1. ** selects a component of the mixture while
+	**Step 2.** requires sampling from the corresponding **projection** DPP, cf. :ref:`finite_dpps_exact_sampling_projection_dpp_chain_rule`
 
 In practice
 ===========
 
-- Sampling *projection* :math:`\operatorname{DPP}(\mathbf{K})` from the eigendecomposition of :math:`\mathbf{K}=U U^{\dagger}` with :math:`U^{\dagger}U = I_{\operatorname{rank}(\mathbf{K})}`) can be done by applying
-
-  	**Step** :ref:`2. <finite_dpps_exact_sampling_spectral_method_step_2>` with a cost of order :math:`\mathcal{O}(N\operatorname{rank}(\mathbf{K})^2)`, see :ref:`the section above <finite_dpps_exact_sampling_projection_dpp_chain_rule_in_practice>`
+- Sampling *projection* :math:`\operatorname{DPP}(\mathbf{K})` from the eigendecomposition of :math:`\mathbf{K}=U U^{\dagger}` with :math:`U^{\dagger}U = I_{\operatorname{rank}(\mathbf{K})}`) was presented in :ref:`the section above <finite_dpps_exact_sampling_projection_dpp_chain_rule_in_practice>`
 
 - Sampling :math:`\operatorname{DPP}(\mathbf{K})` from :math:`0_N \preceq\mathbf{K} \preceq I_N` can be done by following
 
-  	**Step** 0. compute the eigendecomposition of :math:`\mathbf{L} = U \Lambda U^{\dagger}` in :math:`\mathcal{O}(N^3)`.
+  	**Step** 0. compute the eigendecomposition of :math:`\mathbf{K} = U \Lambda ^{\dagger}` in :math:`\mathcal{O}(N^3)`.
 
- 	**Step** :ref:`1. <finite_dpps_exact_sampling_spectral_method_step_1>`  draw independent Bernoulli random variables :math:`B_n \sim \operatorname{\mathcal{B}er}(\lambda_n)` for :math:`n=1,\dots, N` and collect :math:`\mathcal{B}=\left\{ n ~;~ B_n=1 \right\}`
+ 	**Step** :ref:`1. <finite_dpps_exact_sampling_spectral_method_step_1>` draw independent Bernoulli random variables :math:`B_n \sim \operatorname{\mathcal{B}er}(\lambda_n)` for :math:`n=1,\dots, N` and collect :math:`\mathcal{B}=\left\{ n ~;~ B_n=1 \right\}`
 
-	**Step** :ref:`2. <finite_dpps_exact_sampling_spectral_method_step_2>` with an average cost of order :math:`\mathcal{O}(N \mathbb{E}\left[|\mathcal{X}|\right]^2)`, where :math:`\mathbb{E}\left[|\mathcal{X}|\right]=\operatorname{trace}(\mathbf{K})=\sum_{n=1}^{N} \lambda_n`.
+	**Step** :ref:`2. <finite_dpps_exact_sampling_spectral_method_step_2>`
+	sample from the **projection** DPP with correlation kernel defined by its eigenvectors :math:`U_{:, \mathcal{B}}`
+
+	.. important::
+
+		Step 0. must be performed once and for all in :math:`\mathcal{O}(N^3)`.
+		Then the average cost of getting one sample by applying Steps 1. and 2. is :math:`\mathcal{O}(N \mathbb{E}\left[|\mathcal{X}|\right]^2)`, where :math:`\mathbb{E}\left[|\mathcal{X}|\right]=\operatorname{trace}(\mathbf{K})=\sum_{n=1}^{N} \lambda_n`.
 
 	.. testcode::
 
@@ -330,16 +333,16 @@ In practice
 
 - Sampling :math:`\operatorname{DPP}(\mathbf{L})` from :math:`\mathbf{L} \succeq 0_N` can be done by following
 
-  	**Step** 0. compute the eigendecomposition of :math:`\mathbf{L} = V \Delta V^{\dagger}` in :math:`\mathcal{O}(N^3)`.
+  	**Step** 0. compute the eigendecomposition of :math:`\mathbf{L} = V \Gamma V^{\dagger}` in :math:`\mathcal{O}(N^3)`.
 
- 	**Step** :ref:`1. <finite_dpps_exact_sampling_spectral_method_step_1>`  draw independent Bernoulli random variables :math:`B_n \sim \operatorname{\mathcal{B}er}(\frac{\gamma_n}{1+\gamma_n})` for :math:`n=1,\dots, N` and collect :math:`\mathcal{B}=\left\{ n ~;~ B_n=1 \right\}`
+ 	**Step** :ref:`1. <finite_dpps_exact_sampling_spectral_method_step_1>` is adapted to: draw independent Bernoulli random variables :math:`B_n \sim \operatorname{\mathcal{B}er}(\frac{\gamma_n}{1+\gamma_n})` for :math:`n=1,\dots, N` and collect :math:`\mathcal{B}=\left\{ n ~;~ B_n=1 \right\}`
 
-	**Step** :ref:`2. <finite_dpps_exact_sampling_spectral_method_step_2>`
-	sample from the **projection** DPP with correlation kernel defined by its eigenvectors :math:`V_{:,\mathcal{B}}`.
+	**Step** :ref:`2. <finite_dpps_exact_sampling_spectral_method_step_2>` is adapted to: sample from the **projection** DPP with correlation kernel defined by its eigenvectors :math:`V_{:,\mathcal{B}}`.
 
 	.. important::
 
-		Step 0. must be performed once and for all in :math:`\mathcal{O}(N^3)`, the average cost of getting one sample is :math:`\mathcal{O}(N \mathbb{E}\left[|\mathcal{X}|\right]^2)`, where :math:`\mathbb{E}\left[|\mathcal{X}|\right]=\operatorname{trace}(\mathbf{L(I+L)^{-1}})=\sum_{n=1}^{N} \frac{\gamma_n}{1+\gamma_n}`
+		Step 0. must be performed once and for all in :math:`\mathcal{O}(N^3)`.
+		Then the average cost of getting one sample by applying Steps 1. and 2. is :math:`\mathcal{O}(N \mathbb{E}\left[|\mathcal{X}|\right]^2)`, where :math:`\mathbb{E}\left[|\mathcal{X}|\right]=\operatorname{trace}(\mathbf{L(I+L)^{-1}})=\sum_{n=1}^{N} \frac{\gamma_n}{1+\gamma_n}`
 
 	.. testcode::
 
@@ -371,15 +374,14 @@ In practice
   	**Step** 0. compute the so-called *dual* kernel :math:`\tilde{L}=\Phi \Phi^{\dagger}\in \mathbb{R}^{d\times}` and eigendecompose it :math:`\tilde{\mathbf{L}} = W \Delta W^{\top}`.
   	This corresponds to a cost of order :math:`\mathcal{O}(Nd^2 + d^3)`.
 
- 	**Step** :ref:`1. <finite_dpps_exact_sampling_spectral_method_step_1>`  draw independent Bernoulli random variables :math:`B_i \sim \operatorname{\mathcal{B}er}(\delta_i)` for :math:`i=1,\dots, d` and collect :math:`\mathcal{B}=\left\{ i ~;~ B_i=1 \right\}`
+ 	**Step** :ref:`1. <finite_dpps_exact_sampling_spectral_method_step_1>` is adapted to: draw independent Bernoulli random variables :math:`B_i \sim \operatorname{\mathcal{B}er}(\delta_i)` for :math:`i=1,\dots, d` and collect :math:`\mathcal{B}=\left\{ i ~;~ B_i=1 \right\}`
 
-	**Step** :ref:`2. <finite_dpps_exact_sampling_spectral_method_step_2>`
-	sample from the **projection** DPP with correlation kernel defined by its eigenvectors :math:`\Phi^{\top} W_{:,\mathcal{B}} \Delta_{\mathcal{B}}^{-1/2}`.
+	**Step** :ref:`2. <finite_dpps_exact_sampling_spectral_method_step_2>` is adapted to: sample from the **projection** DPP with correlation kernel defined by its eigenvectors :math:`\Phi^{\top} W_{:,\mathcal{B}} \Delta_{\mathcal{B}}^{-1/2}`.
 
 	.. important::
 
 		Step 0. must be performed once and for all in :math:`\mathcal{O}(Nd^2 + d^3)`.
-		Then, the average cost of getting one sample is :math:`\mathcal{O}(N \mathbb{E}\left[|\mathcal{X}|\right]^2)`, where :math:`\mathbb{E}\left[|\mathcal{X}|\right]=\operatorname{trace}(\mathbf{L(I+L)^{-1}})=\sum_{i=1}^{d} \frac{\delta_i}{1+\delta_i}`
+		Then the average cost of getting one sample by applying Steps 1. and 2. is :math:`\mathcal{O}(N \mathbb{E}\left[|\mathcal{X}|\right]^2)`, where :math:`\mathbb{E}\left[|\mathcal{X}|\right]=\operatorname{trace}(\mathbf{L(I+L)^{-1}})=\sum_{i=1}^{d} \frac{\delta_i}{1+\delta_i}`
 
 	.. testcode::
 
@@ -560,17 +562,74 @@ k-DPPs
 Main idea
 =========
 
-:ref:`Recall <finite_dpps_definition_k_dpps>` :eq:`eq:likelihood_kDPP_L` that :math:`\operatorname{k-DPP}(\mathbf{L})` can be viewed as a :math:`\operatorname{DPP}(\mathbf{L})` constrained to a have fixed cardinality :math:`k`.
-
-.. note::
-
-	Obviously :math:`k \leq \operatorname{rank}(L)`, see :eq:`eq:number_of_points`
+:ref:`Recall <finite_dpps_definition_k_dpps>` :eq:`eq:likelihood_kDPP_L` that :math:`\operatorname{k-DPP}(\mathbf{L})` can be viewed as a :math:`\operatorname{DPP}(\mathbf{L})` constrained to a have fixed cardinality :math:`k \leq \operatorname{rank}(L)`.
 
 To generate a sample of :math:`\operatorname{k-DPP}(\mathbf{L})`, one natural solution would be to use a rejection mechanism: draw :math:`S \sim \operatorname{DPP}(\mathbf{L})` and keep it only if :math:`|X| = k`.
 However, the rejection constant may be pretty bad depending on the choice of :math:`k` regarding the distribution of the number of points :eq:`eq:number_of_points`.
 
 The alternative solution was found by :cite:`KuTa12` Section 5.2.2.
 The procedure relies on a slight modification of :ref:`Step 1. <finite_dpps_exact_sampling_spectral_method_step_1>` of the :ref:`finite_dpps_exact_sampling_spectral_method` which requires the computation of the `elementary symmetric polynomials <https://en.wikipedia.org/wiki/Elementary_symmetric_polynomial>`_.
+
+In practice
+===========
+
+Sampling :math:`\operatorname{k-DPP}(\mathbf{L})` from :math:`\mathbf{L} \succeq 0_N` can be done by following
+
+	**Step 0.**
+		a) compute the eigendecomposition of :math:`\mathbf{L} = V \Gamma V^{\dagger}` in :math:`\mathcal{O}(N^3)`
+		b) evaluate the `elementary symmetric polynomials <https://en.wikipedia.org/wiki/Elementary_symmetric_polynomial>`_ in the eigenvalues of :math:`\mathbf{L}`: :math:`E[l, n]:=e_l(\gamma, \dots, \gamma_n)` for :math:`l=0,\dots,k` and :math:`n=0,\dots,N`. These computations can done recursively using :cite:`KuTa12` Algorithm 8 in :math:`\mathcal{O}(N k^2)`.
+
+	**Step** :ref:`1. <finite_dpps_exact_sampling_spectral_method_step_1>` is replaced by :cite:`KuTa12` Algorithm 8.
+
+	.. code-block:: python
+
+		# This is a pseudo code, in particular Python indexing is not respected everywhere
+		B = set({})
+		l = k
+
+		for n in range(N, 0, -1):
+
+		  if Unif(0,1) < delta[n] * E[l-1, n-1] / E[l, n]:
+		    l -= 1
+		    B.union({n})
+
+		    if l == 0:
+		      break
+
+	**Step** :ref:`2. <finite_dpps_exact_sampling_spectral_method_step_2>` is adapted to: sample from the **projection** DPP with correlation kernel defined by its eigenvectors :math:`V_{:,\mathcal{B}}`, with a cost of order :math:`\mathcal{O}(N k^2)`.
+
+.. important::
+
+	Step 0. must be performed once and for all in :math:`\mathcal{O}(N^3 + Nk^2)`.
+	Then the cost of getting one sample by applying Steps 1. and 2. is :math:`\mathcal{O}(N k^2)`
+
+.. testcode::
+
+	import numpy as np
+	from dppy.finite_dpps import FiniteDPP
+
+	rng = np.random.RandomState(1)
+
+	r, N = 5, 10
+	# Random feature vectors
+	Phi = rng.randn(r, N)
+	DPP = FiniteDPP('likelihood', **{'L': Phi.T.dot(Phi)})
+
+	k = 4
+	for _ in range(10):
+	    DPP.sample_exact_k_dpp(size=k, random_state=rng)
+
+	print(list(map(list, DPP.list_of_samples)))
+
+.. testoutput::
+
+	[[1, 8, 5, 7], [3, 8, 5, 9], [5, 3, 1, 8], [5, 8, 2, 9], [1, 2, 9, 6], [1, 0, 2, 3], [7, 0, 3, 5], [8, 3, 7, 6], [0, 2, 3, 7], [1, 3, 7, 5]]
+
+.. seealso::
+
+	- :py:meth:`~FiniteDPP.sample_exact_k_dpp`
+	- Step 0. requires :cite:`KuTa12` Algorithm 7 for the recursive evaluation of the elementary symmetric polynomials :math:`[e_l(\gamma_1, \dots, \gamma_n)]_{l=1, n=1}^{k, N}` in the eigenvalues of :math:`\mathbf{L}`
+	- Step 1. calls :cite:`KuTa12` Algorithm 8 for selecting the eigenvectors for Step 2.
 
 .. _finite_kdpps_exact_sampling_chain_rule_projection_kernel_caution:
 
@@ -669,9 +728,10 @@ Then, summing :eq:`eq:chain_rule_caution_vector` over the :math:`k!` permutation
 
 .. important::
 
-	A sufficient condition (very likely to be necessary) is that the joint distribution of :math:`(s_{1}, \dots, s_{k})`, generated by the chain rule mechanism :eq:`eq:chain_rule_caution_vector`, is exchangeable (invariant to permutations of the coordinates).
-	In that case, the normalizations in :eq:`eq:chain_rule_caution_vector` would then be constant :math:`Z(s_{1}, \dots, s_{k})=Z` .
-	So that :math:`Z_S` would in fact play the role of the normalization constant of :eq:`eq:chain_rule_caution_set`, since it would be constant as well and equal to :math:`Z_S = \frac{Z}{k!} = e_k(L)`.
+	A sufficient condition (very likely to be necessary) is that the joint distribution of :math:`(s_{1}, \dots, s_{k})`, generated by the chain rule mechanism :eq:`eq:chain_rule_caution_vector` is `exchangeable <https://en.wikipedia.org/wiki/Exchangeable_random_variables>`_ (invariant to permutations of the coordinates).
+	In that case, the normalization in :eq:`eq:chain_rule_caution_vector` would then be constant :math:`Z(s_{1}, \dots, s_{k})=Z` .
+	So that :math:`Z_S` would in fact play the role of the normalization constant of :eq:`eq:chain_rule_caution_set`, since it would be constant as well and equal to :math:`Z_S = \frac{Z}{k!}`.
+	Finally, :math:`Z_S = e_k(L)` by identification of :eq:`eq:caution_likelihood_kDPP_L` and :eq:`eq:chain_rule_caution_set`.
 
 **This is what we can prove in the particular case where** :math:`\mathbf{L}` **is an orthogonal projection matrix.**
 
@@ -704,65 +764,92 @@ Thus, the normalization :math:`Z(s_1, \dots, s_k)` in :eq:`eq:chain_rule_caution
 	= k! e_k(\mathbf{L})
 	:= Z
 
-where the last equality is a simple computation of the `elementary symmetric polynomial <https://en.wikipedia.org/wiki/Elementary_symmetric_polynomial>`_ :math:`e_k(\mathbf{L})=e_k(\gamma_{1:r}=1, \gamma_{r+1:N}=0) = {r \choose k}`
+where the last equality is a simple computation of the `elementary symmetric polynomial <https://en.wikipedia.org/wiki/Elementary_symmetric_polynomial>`_
+
+.. math::
+
+	e_k(\mathbf{L})
+	= e_k(\gamma_{1:r}=1, \gamma_{r+1:N}=0)
+	= \sum_{\substack{S \subset [N]\\|S|=k}} \prod_{s\in S} \gamma_{s}
+	= {r \choose k}
 
 .. important::
 
 	This shows that, when :math:`\mathbf{L}` is an orthogonal projection matrix, the order the items :math:`s_1, \dots, s_r` we selected by the chain rule :eq:`eq:chain_rule_caution_vector` can be forgotten, so that :math:`\{s_1, \dots, s_r\}` can be considered as valid sample of :math:`\operatorname{k-DPP}(\mathbf{L})`.
 
-.. todo::
-
-	To summarize, add code showing non exchangeability
-
-In practice
-===========
-
-In practice, the 2 steps algorithm for :ref:`sampling generic DPPs <finite_dpps_exact_sampling_spectral_method>` can be adapted to generate fixed cardinality samples.
-
-More specifically,
-
-**Step** :ref:`1. <finite_dpps_exact_sampling_spectral_method_step_1>` is replaced by :cite:`KuTa12` Algorithm 8. It requires the evaluation of the `elementary symmetric polynomials <https://en.wikipedia.org/wiki/Elementary_symmetric_polynomial>`_ in the eigenvalues of :math:`\mathbf{L}` ; :math:`[E[l, n]]_{l=1, n=1}^{k, N}` with :math:`E[l, n]:=e_l(\lambda_1, \dots, \gamma_n)`.
-
 .. code-block:: python
 
-	# This is a pseudo code, in particular Python indexing is not respected everywhere
-	B = set({})
-	l = k
-
-	for n in range(N, 0, -1):
-
-	  if Unif(0,1) < delta[n] * E[l-1, n-1] / E[l, n]:
-	    l -= 1
-	    B.union({n})
-
-	    if l == 0:
-	      break
-
-**Step** :ref:`2. <finite_dpps_exact_sampling_spectral_method_step_2>` is unchanged
-
-.. testcode::
+	# For our toy example, this sub-optimized implementation is enough
+	# to illustrate that the chain rule applied to sample k-DPP(L)
+	# draws s_1, ..., s_k sequentially, with joint probability
+	# P[(s_1, ..., s_k)] = det L_S / Z(s_1, ..., s_k)
+	#
+	# 1. is exchangeable when L is an orthogonal projection matrix
+	#    P[(s1, s2)] = P[(s_2, s_1)]
+	# 2. is a priori NOT exchangeable for a generic L >= 0
+	#    P[(s1, s2)] /= P[(s_2, s_1)]
 
 	import numpy as np
-	from dppy.finite_dpps import FiniteDPP
+	import scipy.linalg as LA
+	from itertools import combinations, permutations
+
+	k, N = 2, 4
+	potential_samples = list(combinations(range(N), k))
+
+	rank_L = 3
 
 	rng = np.random.RandomState(1)
 
-	r, N = 5, 10
-	# Random feature vectors
-	Phi = rng.randn(r, N)
-	DPP = FiniteDPP('likelihood', **{'L': Phi.T.dot(Phi)})
+	eig_vecs, _ = LA.qr(rng.randn(N, rank_L), mode='economic')
 
-	k = 4
-	for _ in range(10):
-	    DPP.sample_exact_k_dpp(size=k, random_state=rng)
+	for projection in [True, False]:
 
-	print(list(map(list, DPP.list_of_samples)))
+	    eig_vals = 1.0 + (0.0 if projection else 2 * rng.rand(rank_L))
+	    L = (eig_vecs * eig_vals).dot(eig_vecs.T)
 
-.. testoutput::
+	    proba = np.zeros((N, N))
+	    Z_1 = np.trace(L)
 
-	[[1, 8, 5, 7], [3, 8, 5, 9], [5, 3, 1, 8], [5, 8, 2, 9], [1, 2, 9, 6], [1, 0, 2, 3], [7, 0, 3, 5], [8, 3, 7, 6], [0, 2, 3, 7], [1, 3, 7, 5]]
+	    for S in potential_samples:
 
-.. seealso::
+	        for s in permutations(S):
 
-	- :py:meth:`~FiniteDPP.sample_exact_k_dpp`
-	- :cite:`KuTa12` Algorithm 7 for the recursive evaluation of the elementary symmetric polynomials :math:`[e_l(\gamma_1, \dots, \gamma_n)]_{l=1, n=1}^{k, N}` in the eigenvalues of :math:`\mathbf{L}`
+	            proba[s] = LA.det(L[np.ix_(s, s)])
+
+	            Z_2_s0 = np.trace(L - L[:, s[:1]].dot(LA.inv(L[np.ix_(s[:1], s[:1])])).dot(L[s[:1], :]))
+
+	            proba[s] /= Z_1 * Z_2_s0
+
+	    print('L is {}projection'.format('' if projection else 'NOT '))
+
+	    print('P[s0, s1]', proba, sep='\n')
+	    print('P[s0]', proba.sum(axis=0), sep='\n')
+	    print('P[s1]', proba.sum(axis=1), sep='\n')
+
+	    print(proba.sum(), '\n' if projection else '')
+
+.. code-block:: python
+
+    L is projection
+    P[s0, s1]
+    [[0.         0.09085976 0.01298634 0.10338529]
+     [0.09085976 0.         0.06328138 0.15368033]
+     [0.01298634 0.06328138 0.         0.07580691]
+     [0.10338529 0.15368033 0.07580691 0.        ]]
+    P[s0]
+    [0.20723139 0.30782147 0.15207463 0.33287252]
+    P[s1]
+    [0.20723139 0.30782147 0.15207463 0.33287252]
+    1.0000000000000002
+
+    L is NOT projection
+    P[s0, s1]
+    [[0.         0.09986722 0.01463696 0.08942385]
+     [0.11660371 0.         0.08062998 0.20535251]
+     [0.01222959 0.05769901 0.         0.04170435]
+     [0.07995922 0.15726273 0.04463087 0.        ]]
+    P[s0]
+    [0.20879253 0.31482896 0.13989781 0.33648071]
+    P[s1]
+    [0.20392803 0.4025862  0.11163295 0.28185282]
+    1.0

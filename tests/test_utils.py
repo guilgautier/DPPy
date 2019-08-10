@@ -1,7 +1,7 @@
 # coding: utf8
 """ Unit tests:
 
-- :class:`TestRSKCorrespondence`
+- :class:`TestUtils`
 """
 
 

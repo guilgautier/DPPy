@@ -140,12 +140,12 @@ where the normalizing constant :math:`e_k(L)` corresponds to the `elementary sym
 
 	e_k(\mathbf{L})
 		\triangleq e_k(\gamma_1, \dots, \gamma_N)
-		= \sum_{S\subset [N]: |S|=k} \prod_{n \in S} \gamma_i
-		= \sum_{S\subset [N]: |S|=k} \det L_S
+		= \sum_{\substack{S \subset [N]\\|S|=k}} \prod_{s\in S} \gamma_{s}
+		= \sum_{\substack{S \subset [N]\\|S|=k}} \det L_S
 
 .. note::
 
-  - Obviously, one must take :math:`k \leq \operatorname{rank}(L)` otherwise :math:`\det \mathbf{L}_S = 0` for :math:`|S| = k > \operatorname{rank}(L)`
+  	Obviously, one must take :math:`k \leq \operatorname{rank}(L)` otherwise :math:`\det \mathbf{L}_S = 0` for :math:`|S| = k > \operatorname{rank}(L)`
 
 .. warning::
 
