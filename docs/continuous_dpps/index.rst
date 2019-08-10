@@ -12,4 +12,3 @@ Continuous DPPs
   beta_ensembles
   multivariate_jacobi_ope
   api
-

@@ -1,3 +1,5 @@
+.. currentmodule:: dppy.finite_dpps
+
 .. _finite_dpps_mcmc_sampling:
 
 MCMC sampling
@@ -17,7 +19,7 @@ At state :math:`S\subset [N]`, propose :math:`S'` different from :math:`S` by at
 
   s \sim \mathcal{U}_{S}
   \quad \text{and} \quad
-  t \sim \mathcal{U}_{[N]\setminus S}
+  t \sim \mathcal{U}_{[N]\setminus S}.
 
 Then perform
 
@@ -30,7 +32,7 @@ Pure exchange moves
 
 .. math::
 
-  S' \leftrightarrow S \setminus s \cup t
+  S' \leftrightarrow S \setminus s \cup t.
 
 .. _finite_dpps_mcmc_sampling_AD:
 
@@ -71,7 +73,7 @@ Mix of exchange and add-delete moves
   L = Phi.T.dot(Phi)
   DPP = FiniteDPP('likelihood', **{'L': L})
 
-  DPP.sample_mcmc('AED', random_state=rng)
+  DPP.sample_mcmc('AED', random_state=rng)  # AED, AD, E
   print(DPP.list_of_samples)
 
 .. testoutput::
@@ -80,11 +82,9 @@ Mix of exchange and add-delete moves
 
 .. seealso::
 
-  .. currentmodule:: dppy.finite_dpps
-
   - :py:meth:`~FiniteDPP.sample_mcmc`
   - :cite:`AnGhRe16`, :cite:`LiJeSr16c` and :cite:`LiJeSr16d`
-
+  - :ref:`Exact samplers for DPPs <finite_dpps_exact_sampling>`
 
 .. _finite_dpps_mcmc_sampling_zonotope:
 
@@ -95,9 +95,9 @@ Zonotope
 
 .. math::
 
-  \mathbf{K} = \Phi^{\top} [\Phi \Phi^{\top}]^{-1} \Phi
+  \mathbf{K} = \Phi^{\top} [\Phi \Phi^{\top}]^{-1} \Phi,
 
-where :math:`\Phi` is the underlying :math:`r\times N` feature matrix satisfying :math:`\operatorname{rank}(\Phi)=\operatorname{rank}(\mathbf{K})=r`.
+where :math:`\Phi`, is the underlying :math:`r\times N` feature matrix satisfying :math:`\operatorname{rank}(\Phi)=\operatorname{rank}(\mathbf{K})=r`.
 
 In this setting the :ref:`continuous_dpps_number_of_points` is almost surely equal to :math:`r` and we have
 
@@ -108,7 +108,7 @@ In this setting the :ref:`continuous_dpps_number_of_points` is almost surely equ
   = \det \mathbf{K}_S 1_{|S|=r}
   = \frac{\det^2\Phi_{:S}}{\det\Phi \Phi^{\top}} 1_{|S|=r}
   = \frac{\operatorname{Vol}^2 \{\phi_s\}_{s\in S}}
-      {\det\Phi \Phi^{\top}} 1_{|S|=r}
+      {\det\Phi \Phi^{\top}} 1_{|S|=r}.
 
 The original finite ground set is embedded into a continuous domain called a zonotope.
 The hit-and-run procedure is used to move across this polytope and visit the different tiles.
@@ -154,8 +154,6 @@ To recover the finite DPP samples one needs to identify the tile in which the su
 
 .. seealso::
 
-  .. currentmodule:: dppy.finite_dpps
-
   - :py:meth:`~FiniteDPP.sample_mcmc`
   - :cite:`GaBaVa17`
 
@@ -164,7 +162,7 @@ To recover the finite DPP samples one needs to identify the tile in which the su
 k-DPPs
 ======
 
-To preserve the size :math:`k` of the sample, only :ref:`finite_dpps_mcmc_sampling_E` moves can be performed.
+To preserve the size :math:`k` of the samples of :math:`k\!\operatorname{-DPP}(\mathbf{L})`, only :ref:`finite_dpps_mcmc_sampling_E` moves can be performed.
 
 .. caution::
 
@@ -194,8 +192,6 @@ To preserve the size :math:`k` of the sample, only :ref:`finite_dpps_mcmc_sampli
 
 .. seealso::
 
-  .. currentmodule:: dppy.finite_dpps
-
   - :py:meth:`~FiniteDPP.sample_mcmc_k_dpp`
-  - :cite:`KuTa12` Section 5
-  - :cite:`LiJeSr16a`
+  - :cite:`LiJeSr16a` for a core-set perspective
+  - :ref:`Exact sampling of k-DPPs <finite_dpps_exact_sampling_k_dpps>`

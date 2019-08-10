@@ -10,32 +10,31 @@ Generic DPPs as mixtures of projection DPPs
 
 *Projection* DPPs are the building blocks of the model in the sense that generic DPPs are mixtures of *projection* DPPs.
 
+Consider :math:`\mathcal{X} \sim \operatorname{DPP}(K)` and write the spectral decomposition of the corresponding kernel as
 
-	Consider :math:`\mathcal{X} \sim \operatorname{DPP}(K)` and write the spectral decomposition of the corresponding kernel as
+.. math::
 
-	.. math::
+	K = \sum_{n=1}^{\infty} \lambda_n \phi(x) \overline{\phi(y)}.
 
-		K = \sum_{n=1}^{\infty} \lambda_n \phi(x) \overline{\phi(y)}.
+Then, denote :math:`\mathcal{X}^B \sim \operatorname{DPP}(K^B)` with
 
-	Then, denote :math:`\mathcal{X}^B \sim \operatorname{DPP}(K^B)` with
+.. math::
 
-	.. math::
+	K = \sum_{n=1}^{\infty} B_n \phi(x) \overline{\phi(y)},
+	\quad
+	\text{where}
+	\quad
+	B_n \overset{\text{i.i.d.}}{\sim} \mathcal{B}er(\lambda_n),
 
-		K = \sum_{n=1}^{\infty} B_n \phi(x) \overline{\phi(y)},
-		\quad
-		\text{where}
-		\quad
-		B_n \overset{\text{i.i.d.}}{\sim} \mathcal{B}er(\lambda_n)
+where :math:`\mathcal{X}^B` is obtained by first choosing :math:`B_1, \dots, B_N` independently and then sampling from :math:`\operatorname{DPP}(K^B)` the DPP with orthogonal projection kernel :math:`K^B`.
 
-	where :math:`\mathcal{X}^B` is obtained by first choosing :math:`B_1, \dots, B_N` independently and then sampling from :math:`\operatorname{DPP}(K^B)` the DPP with orthogonal projection kernel :math:`K^B`.
-
-	Finally, we have :math:`\mathcal{X} \overset{d}{=} \mathcal{X}^B`.
+Finally, we have :math:`\mathcal{X} \overset{d}{=} \mathcal{X}^B`.
 
 .. seealso::
 
 	- Theorem 7 in :cite:`HKPV06`
-	- :ref:`continuous_dpps_sampling`
 	- Finite case of :ref:`finite_dpps_mixture`
+	- :ref:`continuous_dpps_sampling`
 
 .. _continuous_dpps_linear_statistics:
 
@@ -50,7 +49,7 @@ Expectation
 	\mathbb{E}\left[ \sum_{X \in \mathcal{X}} f(X) \right]
 		= \int f(x) K(x,x) \mu(dx)
 		= \operatorname{trace}(Kf)
-		= \operatorname{trace}(fK)
+		= \operatorname{trace}(fK).
 
 Variance
 --------
@@ -66,14 +65,14 @@ Variance
 			- \left[\int f(x) K(x,x) \mu(dx)\right]^2 \\
 		&= \int f(x)^2 K(x,x) \mu(dx)
 			 - \iint f(x)f(y) K(x,y)K(y,x) \mu(dx) \mu(dy)\\
-		&= \operatorname{trace}(f^2K) - \operatorname{trace}(fKfK)
+		&= \operatorname{trace}(f^2K) - \operatorname{trace}(fKfK).
 
 a. Hermitian kernel i.e. :math:`K(x,y)=\overline{K(y,x)}`
 
 	.. math::
 
 		\operatorname{\mathbb{V}ar}\left[ \sum_{X \in \mathcal{X}} f(X) \right]
-		= \int f(x)^2 K(x,x) \mu(dx) - \iint f(x)f(y) |K(x,y)|^2 \mu(dx) \mu(dy)
+		= \int f(x)^2 K(x,x) \mu(dx) - \iint f(x)f(y) |K(x,y)|^2 \mu(dx) \mu(dy).
 
 b. Orthogonal projection case i.e. :math:`K^2 = K = K^*`
 
@@ -83,14 +82,14 @@ b. Orthogonal projection case i.e. :math:`K^2 = K = K^*`
 	.. math::
 
 		\operatorname{\mathbb{V}ar}\left[ \sum_{X \in \mathcal{X}} f(X) \right]
-		= \frac12 \iint [f(x) - f(y)]^2 |K(x,y)|^2 \mu(dy) \mu(dx)
+		= \frac12 \iint [f(x) - f(y)]^2 |K(x,y)|^2 \mu(dy) \mu(dx).
 
 .. _continuous_dpps_number_of_points:
 
 Number of points
 ================
 
-For projection DPPs, i.e., when :math:`K` is the kernel associated to an orthogonal projector, one can show that :math:`|\mathcal{X}|=\operatorname{rank}(K)=\operatorname{Trace}(K)` almost surely (see, e.g., Lemma 17 of :cite:`HKPV06`)
+For projection DPPs, i.e., when :math:`K` is the kernel associated to an orthogonal projector, one can show that :math:`|\mathcal{X}|=\operatorname{rank}(K)=\operatorname{Trace}(K)` almost surely (see, e.g., Lemma 17 of :cite:`HKPV06`).
 
 In the general case, based on the fact that :ref:`generic DPPs are mixtures of projection DPPs <finite_dpps_mixture>`, we have
 
@@ -98,12 +97,11 @@ In the general case, based on the fact that :ref:`generic DPPs are mixtures of p
 
 	|\mathcal{X}|
 		= \sum_{i=1}^{\infty}
-			\operatorname{\mathcal{B}er}(\lambda_i)
+			\operatorname{\mathcal{B}er}(\lambda_i).
 
-.. important::
+.. note::
 
-	- For any Borel set :math:`B`, instanciating :math:`f=1_{B}` yields nice expressions for the expectation and variance of the number of points falling in :math:`B`.
-	- *Projection* DPPs have almost surely :math:`|\mathcal{X}| = \operatorname{trace}(K) = \operatorname{rank}(K)` points (take :math:`f=1`).
+	- For any Borel set :math:`B`, instantiating :math:`f=1_{B}` yields nice expressions for the expectation and variance of the number of points falling in :math:`B`.
 
 .. seealso::
 
@@ -140,4 +138,4 @@ The configuration of points :math:`\mathcal{X}^{\lambda}` obtained after subsamp
 		&= \int
 				f(x_1,\dots,x_k)
 				\det \left[ \frac{1}{\lambda} K(x_i,x_j) \right]_{1\leq i,j\leq k}
-				\mu^{\otimes k}(dx)
+				\mu^{\otimes k}(dx).

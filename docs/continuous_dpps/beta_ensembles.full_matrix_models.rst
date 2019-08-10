@@ -22,15 +22,10 @@ Take for reference measure :math:`\mu=\mathcal{N}(0, 2)`, the pdf of the corresp
 		\prod_{i= 1}^N
 			e^{- \frac{1}{2}\frac{x_i^2}{2}}
 			% \indic_{\bbR}(x_i)
-		\ d x_i
+		\ d x_i,
 
-.. note::
+	where from the definition in :eq:`eq:abs_vandermonde_det` we have :math:`\left|\Delta(x_1,\dots,x_N)\right| = \prod_{i<j} |x_i - x_j|`.
 
-	Recall that from the definition in :eq:`eq:abs_vandermonde_det`
-
-	.. math::
-
-		\left|\Delta(x_1,\dots,x_N)\right| = \prod_{i<j} |x_i - x_j|
 .. hint::
 
 	The Hermite ensemble (whose name comes from the fact that Hermite polynomials are orthogonal w.r.t the Gaussian distribution) refers to the eigenvalue distribution of random matrices formed by i.i.d. Gaussian vectors.
@@ -41,7 +36,7 @@ Take for reference measure :math:`\mu=\mathcal{N}(0, 2)`, the pdf of the corresp
 
 	X \sim \mathcal{N}_{N, N}(0,1)
 	\qquad
-	A = \frac{X+X^{\top}}{\sqrt{2}}
+	A = \frac{X+X^{\top}}{\sqrt{2}}.
 
 - :math:`\beta=2`
 
@@ -49,7 +44,7 @@ Take for reference measure :math:`\mu=\mathcal{N}(0, 2)`, the pdf of the corresp
 
 	X \sim \mathcal{N}_{N, N}(0,1) + i~ \mathcal{N}_{N, N}(0,1)
 	\qquad
-	A = \frac{X+X^{\dagger}}{\sqrt{2}}
+	A = \frac{X+X^{\dagger}}{\sqrt{2}}.
 
 - :math:`\beta=4`
 
@@ -64,13 +59,13 @@ Take for reference measure :math:`\mu=\mathcal{N}(0, 2)`, the pdf of the corresp
             X    & Y   \\
             -Y^* & X^*
         \end{bmatrix}
-    \quad A = \frac{X+X^{\dagger}}{\sqrt{2}}
+    \quad A = \frac{X+X^{\dagger}}{\sqrt{2}}.
 
 Normalization :math:`\sqrt{\beta N}` to concentrate as the semi-circle law.
 
 .. math::
 
-	\frac{\sqrt{4-x^2}}{2\pi} 1_{[-2,2]} dx
+	\frac{\sqrt{4-x^2}}{2\pi} 1_{[-2,2]} dx.
 
 .. :ref:`Fig. <hermite_full_matrix_model_plot>`
 
@@ -104,15 +99,9 @@ the pdf of the corresponding :math:`\beta`-Ensemble reads
 	        x_i^{\frac{\beta}{2}(M-N+1)-1}
 			e^{- \frac12 x_i}
 			% \indic_{\bbR}(x_i)
-		\ d x_i
+		\ d x_i,
 
-.. note::
-
-	Recall that from the definition in :eq:`eq:abs_vandermonde_det`
-
-	.. math::
-
-		\left|\Delta(x_1,\dots,x_N)\right| = \prod_{i<j} |x_i - x_j|
+	where from the definition in :eq:`eq:abs_vandermonde_det` we have :math:`\left|\Delta(x_1,\dots,x_N)\right| = \prod_{i<j} |x_i - x_j|`.
 
 .. hint::
 
@@ -124,7 +113,7 @@ the pdf of the corresponding :math:`\beta`-Ensemble reads
 
 	X \sim \mathcal{N}_{N, M}(0,1)
 	\qquad
-	A = XX^{\top}
+	A = XX^{\top}.
 
 - :math:`\beta=2`
 
@@ -132,7 +121,7 @@ the pdf of the corresponding :math:`\beta`-Ensemble reads
 
 	X \sim \mathcal{N}_{N, M}(0,1) + i~ \mathcal{N}_{N, M}(0,1)
 	\qquad
-	A = XX^{\dagger}
+	A = XX^{\dagger}.
 
 - :math:`\beta=4`
 
@@ -147,16 +136,16 @@ the pdf of the corresponding :math:`\beta`-Ensemble reads
             X    & Y   \\
             -Y^* & X^*
         \end{bmatrix}
-    \quad A = A A^{\dagger}
+    \quad A = A A^{\dagger}.
 
-Normalization :math:`\beta M` to concentrate as Marcenko-Pastur law
+Normalization :math:`\beta M` to concentrate as Marcenko-Pastur law.
 
 .. math::
 
 	\frac{1}{2\pi}
 	\frac{\sqrt{(\lambda_+-x)(x-\lambda_-)}}{cx}
 	1_{[\lambda_-,\lambda_+]}
-	dx
+	dx,
 
 where
 
@@ -164,7 +153,7 @@ where
 
 	c = \frac{M}{N}
 	\quad \text{and} \quad
-	\lambda_\pm = (1\pm\sqrt{c})^2
+	\lambda_\pm = (1\pm\sqrt{c})^2.
 
 .. :ref:`Fig. <laguerre_full_matrix_model_plot>`
 
@@ -198,15 +187,9 @@ the pdf of the corresponding :math:`\beta`-Ensemble reads
 	        x_i^{\frac{\beta}{2}(M_1-N+1)-1}
 	        (1-x_i)^{\frac{\beta}{2}(M_2-N+1)-1}
 			% \indic_{\bbR}(x_i)
-		\ d x_i
+		\ d x_i,
 
-.. note::
-
-	Recall that from the definition in :eq:`eq:abs_vandermonde_det`
-
-	.. math::
-
-		\left|\Delta(x_1,\dots,x_N)\right| = \prod_{i<j} |x_i - x_j|
+	where from the definition in :eq:`eq:abs_vandermonde_det` we have :math:`\left|\Delta(x_1,\dots,x_N)\right| = \prod_{i<j} |x_i - x_j|`.
 
 .. hint::
 
@@ -221,7 +204,7 @@ the pdf of the corresponding :math:`\beta`-Ensemble reads
 		Y \sim \mathcal{N}_{N, M_2}(0,1)\\
 	\end{cases}
 	\qquad
-	A = XX^{\top}\left(XX^{\top} + YY^{\top}\right)^{-1}
+	A = XX^{\top}\left(XX^{\top} + YY^{\top}\right)^{-1}.
 
 - :math:`\beta=2`
 
@@ -232,7 +215,7 @@ the pdf of the corresponding :math:`\beta`-Ensemble reads
 		Y \sim \mathcal{N}_{N, M_2}(0,1) + i~ \mathcal{N}_{N, M_2}(0,1)\\
 	\end{cases}
 	\qquad
-	A = XX^{\dagger}\left(XX^{\dagger} + YY^{\dagger}\right)^{-1}
+	A = XX^{\dagger}\left(XX^{\dagger} + YY^{\dagger}\right)^{-1}.
 
 - :math:`\beta=4`
 
@@ -256,13 +239,13 @@ the pdf of the corresponding :math:`\beta`-Ensemble reads
             \end{bmatrix}
     \end{cases}
     \qquad
-	A = XX^{\dagger}\left(XX^{\dagger} + YY^{\dagger}\right)^{-1}
+	A = XX^{\dagger}\left(XX^{\dagger} + YY^{\dagger}\right)^{-1}.
 
 Concentrates as Wachter law
 
 .. math::
 
-	\frac{(a+b)\sqrt{(\sigma_+-x)(x-\sigma_-)}}{2\pi x(1-x)}dx
+	\frac{(a+b)\sqrt{(\sigma_+-x)(x-\sigma_-)}}{2\pi x(1-x)}dx,
 
 where
 
@@ -271,9 +254,9 @@ where
 	a = \frac{M_1}{N},
 	b = \frac{M_2}{N}
 	\quad\text{and}\quad
-	\sigma_{\pm} = \left(\frac{\sqrt{a(a+b-1)} \pm \sqrt{b}}{a+b}\right)^2
+	\sigma_{\pm} = \left(\frac{\sqrt{a(a+b-1)} \pm \sqrt{b}}{a+b}\right)^2,
 
-itself tending to the arcsine law in the limit
+itself tending to the arcsine law in the limit.
 
 .. :ref:`Fig. <jacobi_full_matrix_model_plot>`
 
@@ -298,15 +281,9 @@ Circular Ensemble
 .. math::
 
 	\left|\Delta(e^{i \theta_1 },\dots, e^{i \theta_N})\right|^{\beta}
-    \prod_{j = 1}^N \frac{1}{2\pi} \mathbf{1}_{[0,2\pi]} (\theta_j) d\theta_j
+    \prod_{j = 1}^N \frac{1}{2\pi} \mathbf{1}_{[0,2\pi]} (\theta_j) d\theta_j,
 
-.. note::
-
-	Recall that from the definition in :eq:`eq:abs_vandermonde_det`
-
-	.. math::
-
-		\left|\Delta(x_1,\dots,x_N)\right| = \prod_{i<j} |x_i - x_j|
+   where from the definition in :eq:`eq:abs_vandermonde_det` we have :math:`\left|\Delta(x_1,\dots,x_N)\right| = \prod_{i<j} |x_i - x_j|`.
 
 .. hint::
 
@@ -340,7 +317,7 @@ Circular Ensemble
 		X \sim \mathcal{N}_{N, N}(0,1)\\
 		A = X+X^{\top}
 	      = U^{\top}\Lambda U\\
-	    eigvals(U)
+	    eigvals(U).
 
 - :math:`\beta=2`
 
@@ -375,7 +352,7 @@ Circular Ensemble
 		X \sim \mathcal{N}_{N, N}(0,1) + i~ \mathcal{N}_{N, N}(0,1)\\
 	    A = X+X^{\dagger}
 	      = U^{\dagger}\Lambda U\\
-	    eigvals(U)
+	    eigvals(U).
 
 	.. :ref:`Fig. <circular_full_matrix_model_hermite_plot>`
 
@@ -401,7 +378,7 @@ Circular Ensemble
 	        \end{bmatrix}
 	    \quad A = X+X^{\dagger}
 	            = U^{\dagger} \Lambda U\\
-	    eigvals(U)
+	    eigvals(U).
 
 .. seealso::
 
@@ -417,23 +394,17 @@ Ginibre Ensemble
 
 	\left|\Delta(z_1,\dots,z_N)\right|^{2}
 	\prod_{i = 1}^N e^{ - \frac{1}{2}|z_i|^2 }
-	d z_i
+	d z_i,
 
-.. note::
-
-	Recall that from the definition in :eq:`eq:abs_vandermonde_det`
-
-	.. math::
-
-		\left|\Delta(x_1,\dots,x_N)\right| = \prod_{i<j} |x_i - x_j|
+where from the definition in :eq:`eq:abs_vandermonde_det` we have :math:`\left|\Delta(x_1,\dots,x_N)\right| = \prod_{i<j} |x_i - x_j|`.
 
 .. math::
 
 	A \sim
 	\frac{1}{\sqrt{2}}
-	\left( \mathcal{N}_{N,N}(0,1) + i~ \mathcal{N}_{N, N}(0,1) \right)
+	\left( \mathcal{N}_{N,N}(0,1) + i~ \mathcal{N}_{N, N}(0,1) \right).
 
-Nomalization :math:`\sqrt{N}` to concentrate in the unit circle
+Nomalization :math:`\sqrt{N}` to concentrate in the unit circle.
 
 .. :ref:`Fig. <ginibre_full_matrix_model_plot>`
 

@@ -26,7 +26,7 @@ Take for reference measure :math:`\mu=\mathcal{N}(\mu, \sigma)`
 		\prod_{i= 1}^N
 			e^{- \frac{(x_i-\mu)^2}{2\sigma^2}}
 			% \indic_{\bbR}(x_i)
-		\ d x_i
+		\ d x_i.
 
 .. note::
 
@@ -34,7 +34,7 @@ Take for reference measure :math:`\mu=\mathcal{N}(\mu, \sigma)`
 
 	.. math::
 
-		\left|\Delta(x_1,\dots,x_N)\right| = \prod_{i<j} |x_i - x_j|
+		\left|\Delta(x_1,\dots,x_N)\right| = \prod_{i<j} |x_i - x_j|.
 
 The equivalent tridiagonal model reads
 
@@ -46,7 +46,7 @@ The equivalent tridiagonal model reads
 					0       & \ddots      & \ddots        & \ddots  & 0         \\
 					0       & 0       & \sqrt{\beta_{N-1}} & \alpha_{N- 1}   & \sqrt{\beta_{N}} \\
 					0       & 0        & 0            & \sqrt{\beta_N}  & \alpha_{N}
-	\end{bmatrix}
+	\end{bmatrix},
 
 with
 
@@ -58,8 +58,7 @@ with
 	\text{and}
 			\quad
 	\beta_{i+1}
-			\sim \Gamma\left(\frac{\beta}{2}(N - i), \sigma^2\right)
-
+			\sim \Gamma\left(\frac{\beta}{2}(N - i), \sigma^2\right).
 
 To recover the full matrix model for :ref:`hermite_full_matrix_model`, recall that :math:`\Gamma(\frac{k}{2}, 2)\equiv \chi_k^2` and take
 
@@ -67,7 +66,7 @@ To recover the full matrix model for :ref:`hermite_full_matrix_model`, recall th
 
 	\mu = 0
 	\quad \text{and} \quad
-	\sigma^2 = 2
+	\sigma^2 = 2.
 
 That is to say,
 
@@ -79,7 +78,7 @@ That is to say,
 	\text{and}
 			\quad
 	\beta_{i+1}
-			\sim \chi_{\beta(N - i)}^2
+			\sim \chi_{\beta(N - i)}^2.
 
 .. :ref:`Fig. <hermite_banded_model_plot>`
 
@@ -112,7 +111,7 @@ Take for reference measure :math:`\mu=\Gamma(k,\theta)`
 					x_i^{k-1}
 			e^{- \frac{x_i}{\theta}}
 			% \indic_{\bbR}(x_i)
-		\ d x_i
+		\ d x_i.
 
 .. note::
 
@@ -120,7 +119,7 @@ Take for reference measure :math:`\mu=\Gamma(k,\theta)`
 
 	.. math::
 
-		\left|\Delta(x_1,\dots,x_N)\right| = \prod_{i<j} |x_i - x_j|
+		\left|\Delta(x_1,\dots,x_N)\right| = \prod_{i<j} |x_i - x_j|.
 
 The equivalent tridiagonal model reads
 
@@ -145,8 +144,7 @@ The equivalent tridiagonal model reads
 								& \sqrt{\xi_3}  & \ddots    &                  \\
 								&         & \ddots  & \sqrt{\xi_{2N-2}} \\
 									&           &     & \sqrt{\xi_{2N-1}}
-	\end{bmatrix}
-
+	\end{bmatrix},
 
 with
 
@@ -158,7 +156,7 @@ with
 	\text{and}
 			\quad
 	\xi_{2i}
-			\sim \Gamma\left(\frac{\beta}{2}(N - i), \theta \right)
+			\sim \Gamma\left(\frac{\beta}{2}(N - i), \theta \right).
 
 To recover the full matrix model for :ref:`laguerre_full_matrix_model`, recall that :math:`\Gamma(\frac{k}{2}, 2)\equiv \chi_k^2` and take
 
@@ -166,7 +164,7 @@ To recover the full matrix model for :ref:`laguerre_full_matrix_model`, recall t
 
 	k = \frac{\beta}{2}(M-N+1)
 	\quad \text{and} \quad
-	\theta = 2
+	\theta = 2.
 
 That is to say,
 
@@ -178,7 +176,7 @@ That is to say,
 	\text{and}
 			\quad
 	\xi_{2i}
-			\sim \chi_{\beta(N - i)}^2
+			\sim \chi_{\beta(N - i)}^2.
 
 .. :ref:`Fig. <laguerre_banded_model_plot>`
 
@@ -211,7 +209,7 @@ Take for reference measure :math:`\mu=\operatorname{Beta}(a,b)`
 					x_i^{a-1}
 					(1-x_i)^{b-1}
 			% \indic_{\bbR}(x_i)
-		\ d x_i
+		\ d x_i.
 
 .. note::
 
@@ -219,7 +217,7 @@ Take for reference measure :math:`\mu=\operatorname{Beta}(a,b)`
 
 	.. math::
 
-		\left|\Delta(x_1,\dots,x_N)\right| = \prod_{i<j} |x_i - x_j|
+		\left|\Delta(x_1,\dots,x_N)\right| = \prod_{i<j} |x_i - x_j|.
 
 The equivalent tridiagonal model reads
 
@@ -231,8 +229,7 @@ The equivalent tridiagonal model reads
 					0       & \ddots      & \ddots        & \ddots  & 0         \\
 					0       & 0       & \sqrt{\beta_{N-1}} & \alpha_{N- 1}   & \sqrt{\beta_{N}} \\
 					0       & 0        & 0            & \sqrt{\beta_N}  & \alpha_{N}
-	\end{bmatrix}
-
+	\end{bmatrix}.
 
 .. math::
 
@@ -244,9 +241,9 @@ The equivalent tridiagonal model reads
 	\begin{aligned}
 			\xi_1 &= c_1             \quad &\gamma_1 &= 1-c_1 \\
 			\xi_k &= (1-c_{k-1})c_k    \quad &\gamma_k &= c_{k-1}(1-c_k)
-	\end{aligned}
+	\end{aligned},
 
-with,
+with
 
 .. math::
 
@@ -266,7 +263,7 @@ with,
 			\left(
 					\frac{\beta}{2} (N-i),
 					\frac{\beta}{2} (N-i-1) + a + b
-			\right)
+			\right).
 
 To recover the full matrix model for :ref:`laguerre_full_matrix_model`, recall that :math:`\Gamma(\frac{k}{2}, 2)\equiv \chi_k^2` and take
 
@@ -274,7 +271,7 @@ To recover the full matrix model for :ref:`laguerre_full_matrix_model`, recall t
 
 	a = \frac{\beta}{2}(M_1-N+1)
 	\quad \text{and} \quad
-	b = \frac{\beta}{2}(M_2-N+1)
+	b = \frac{\beta}{2}(M_2-N+1).
 
 That is to say,
 
@@ -296,7 +293,7 @@ That is to say,
 			\left(
 					\frac{\beta}{2} (N-i),
 					\frac{\beta}{2} (M_1+M_2-N-i+1)
-			\right)
+			\right).
 
 .. :ref:`Fig. <jacobi_banded_model_plot>`
 
@@ -322,7 +319,7 @@ Circular Ensemble
 .. math::
 
 	\left|\Delta(e^{i \theta_1},\dots, e^{i \theta_N})\right|^{\beta}
-		\prod_{j = 1}^N \frac{1}{2\pi} \mathbf{1}_{[0,2\pi]} (\theta_j) d\theta_j
+		\prod_{j = 1}^N \frac{1}{2\pi} \mathbf{1}_{[0,2\pi]} (\theta_j) d\theta_j.
 
 .. note::
 
@@ -330,7 +327,7 @@ Circular Ensemble
 
 	.. math::
 
-		\left|\Delta(x_1,\dots,x_N)\right| = \prod_{i<j} |x_i - x_j|
+		\left|\Delta(x_1,\dots,x_N)\right| = \prod_{i<j} |x_i - x_j|.
 
 .. important::
 
@@ -349,7 +346,7 @@ Then, the equivalent quindiagonal model corresponds to the eigenvalues of either
 
 	L = \operatorname{diag}[\Xi_0,\Xi_2,\dots]
 	\quad \text{and} \quad
-	M = \operatorname{diag}[\Xi_{-1},\Xi_1,\Xi_3\dots]
+	M = \operatorname{diag}[\Xi_{-1},\Xi_1,\Xi_3\dots],
 
 and where
 
@@ -364,12 +361,12 @@ and where
 	, \quad \text{with} \quad
 	\Xi_{-1} = [1]
 	\quad \text{and} \quad
-	\Xi_{N-1} = [\overline{\alpha}_{N-1}]
+	\Xi_{N-1} = [\overline{\alpha}_{N-1}].
 
 .. hint::
 
-	The effect of increasing the :math:`\beta` parameter can be nicely vizualized on this :ref:`circular_banded_matrix_model`.
-	Viewing :math:`\beta` as the inverse temperature, the configuration of the eigenvalues cristallizes with :math:`\beta`, see the figure below.
+	The effect of increasing the :math:`\beta` parameter can be nicely visualized on this :ref:`circular_banded_matrix_model`.
+	Viewing :math:`\beta` as the inverse temperature, the configuration of the eigenvalues crystallizes with :math:`\beta`, see the figure below.
 
 .. :ref:`Fig. <circular_banded_model_plot>`
 

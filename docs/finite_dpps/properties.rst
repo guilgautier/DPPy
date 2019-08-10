@@ -15,24 +15,22 @@ Relation between correlation and likelihood kernels
 	.. math::
 		:label: eq:compute_K_from_L
 
-		\mathbf{K} = \mathbf{L}(I+\mathbf{L})^{—1} = I - (I+\mathbf{L})^{—1}
+		\mathbf{K} = \mathbf{L}(I+\mathbf{L})^{—1} = I - (I+\mathbf{L})^{—1}.
 
 	.. seealso::
 
-		Theorem 2.2 :cite:`KuTa12`
+		Theorem 2.2 :cite:`KuTa12`.
 
 2. Considering the DPP defined by :math:`0_N \preceq \mathbf{K} \prec I_N`, the associated likelihood kernel :math:`\mathbf{L}` :eq:`eq:likelihood_DPP_L` can be derived as
 
 	.. math::
 		:label: eq:compute_L_from_K
 
-		\mathbf{L} = \mathbf{K}(I-\mathbf{K})^{—1} = -I + (I-\mathbf{K})^{—1}
-
-	:math:`0_N \preceq \mathbf{K} \preceq I_N` and
+		\mathbf{L} = \mathbf{K}(I-\mathbf{K})^{—1} = -I + (I-\mathbf{K})^{—1}.
 
 	.. seealso::
 
-		Equation 25 :cite:`KuTa12`
+		Equation 25 :cite:`KuTa12`.
 
 .. important::
 
@@ -44,7 +42,7 @@ Relation between correlation and likelihood kernels
 		\mathbf{K} = U \Lambda U^{\dagger}, \quad
 		\mathbf{L} = U \Gamma U^{\dagger}
 		\qquad \text{with} \qquad
-		\lambda_n = \frac{\gamma_n}{1+\gamma_n}
+		\lambda_n = \frac{\gamma_n}{1+\gamma_n}.
 
 .. note::
 
@@ -56,7 +54,7 @@ Relation between correlation and likelihood kernels
 
 		\mathbb{P}[\mathcal{X}=S] =
 			\det \mathbf{K}_S 1_{|S|=\operatorname{rank}(\mathbf{K})}
-			\quad \forall S\subset [N],
+			\quad \forall S\subset [N].
 
 .. code-block:: python
 
@@ -105,7 +103,7 @@ Generic DPPs as mixtures of projection DPPs
 		\quad
 		\text{where}
 		\quad
-		B_n \overset{\text{i.i.d.}}{\sim} \mathcal{B}er(\lambda_n)
+		B_n \overset{\text{i.i.d.}}{\sim} \mathcal{B}er(\lambda_n),
 
 	where :math:`\mathcal{X}^B` is obtained by first choosing :math:`B_1, \dots, B_N` independently and then sampling from :math:`\operatorname{DPP}(\mathbf{K}^B)` the DPP with orthogonal projection kernel :math:`\mathbf{K}^B`.
 
@@ -122,7 +120,7 @@ Generic DPPs as mixtures of projection DPPs
 Number of points
 ================
 
-For projection DPPs, i.e., when :math:`\mathbf{K}` is an orthogonal projection matrix, one can show that :math:`|\mathcal{X}|=\operatorname{rank}(\mathbf{K})=\operatorname{Trace}(\mathbf{K})` almost surely (see, e.g., Lemma 17 of :cite:`HKPV06` or Lemma 2.7 of :cite:`KuTa12`)
+For projection DPPs, i.e., when :math:`\mathbf{K}` is an orthogonal projection matrix, one can show that :math:`|\mathcal{X}|=\operatorname{rank}(\mathbf{K})=\operatorname{Trace}(\mathbf{K})` almost surely (see, e.g., Lemma 17 of :cite:`HKPV06` or Lemma 2.7 of :cite:`KuTa12`).
 
 In the general case, based on the fact that :ref:`generic DPPs are mixtures of projection DPPs <finite_dpps_mixture>`, we have
 
@@ -139,7 +137,7 @@ In the general case, based on the fact that :ref:`generic DPPs are mixtures of p
 			\operatorname{\mathcal{B}er}
 			\left(
 				\frac{\gamma_n}{1+\gamma_n}
-			\right)
+			\right).
 
 .. note::
 
@@ -154,7 +152,7 @@ Expectation
 	\mathbb{E}[|\mathcal{X}|]
 		= \operatorname{trace} \mathbf{K}
 		= \sum_{n=1}^N \lambda_n
-		= \sum_{n=1}^N \frac{\gamma_n}{1+\gamma_n}
+		= \sum_{n=1}^N \frac{\gamma_n}{1+\gamma_n}.
 
 Variance
 --------
@@ -165,11 +163,11 @@ Variance
 	\operatorname{\mathbb{V}ar}[|\mathcal{X}|]
 		= \operatorname{trace} \mathbf{K} - \operatorname{trace} \mathbf{K}^2
 		= \sum_{n=1}^N \lambda_n(1-\lambda_n)
-		= \sum_{n=1}^N \frac{\gamma_n}{(1+\gamma_n)^2}
+		= \sum_{n=1}^N \frac{\gamma_n}{(1+\gamma_n)^2}.
 
 .. seealso::
 
-	Expectation and variance of :ref:`continuous_dpps_linear_statistics`
+	Expectation and variance of :ref:`continuous_dpps_linear_statistics`.
 
 .. testcode::
 
@@ -213,7 +211,7 @@ Special cases
    	.. math::
    		:label: number_of_points_dpp_K_projection
 
-   		|\mathcal{X}| = \operatorname{rank}(\mathbf{K}) = \operatorname{trace}(\mathbf{K}), \quad \text{almost surely}
+   		|\mathcal{X}| = \operatorname{rank}(\mathbf{K}) = \operatorname{trace}(\mathbf{K}), \quad \text{almost surely}.
 
    	.. testcode::
 
@@ -244,7 +242,7 @@ Special cases
 			:label: eq:likelihood_projection_K
 
 			\mathbb{P}[\mathcal{X}=S]
-				= \det \mathbf{K}_S 1_{|S|=\operatorname{rank} \mathbf{K}}
+				= \det \mathbf{K}_S 1_{|S|=\operatorname{rank} \mathbf{K}}.
 
 		In other words, the projection DPP having for **correlation** kernel the orthogonal projection matrix :math:`\mathbf{K}` coincides with the :ref:`k-DPP <finite_dpps_definition_k_dpps>` having **likelihood** kernel  :math:`\mathbf{K}` when :math:`k=\operatorname{rank}(\mathbf{K})`.
 
@@ -253,7 +251,7 @@ Special cases
    	.. math::
    		:label: number_of_points_dpp_L_projection
 
-   		|\mathcal{X}| \sim \operatorname{Binomial}(\operatorname{rank}(\mathbf{L}), 1/2)
+   		|\mathcal{X}| \sim \operatorname{Binomial}(\operatorname{rank}(\mathbf{L}), 1/2).
 
 	.. :ref:`Fig. <nb_points_DPP_L_projectin_plot>`
 
@@ -262,7 +260,6 @@ Special cases
 	.. plot:: plots/ex_plot_number_of_points_finite_dpp_L_projection.py
 
 		Distribution of the numbe of points of :math:`\operatorname{DPP}(\mathbf{L})` with orthogonal projection kernel :math:`\mathbf{L}` with rank :math:`5`.
-
 
 .. _finite_dpps_geometry:
 
@@ -287,7 +284,7 @@ a. The inclusion probabilities read
 
 		\mathbb{P}[S\subset \mathcal{X}]
 		= \det \mathbf{K}_S
-		= \operatorname{Vol}^2 \{\phi_s\}_{s\in S}
+		= \operatorname{Vol}^2 \{\phi_s\}_{s\in S}.
 
 b. The likelihood reads
 
@@ -295,7 +292,7 @@ b. The likelihood reads
 
 		\mathbb{P}[\mathcal{X} = S]
 		\propto \det \mathbf{L}_S
-		= \operatorname{Vol}^2 \{\psi_s\}_{s\in S}
+		= \operatorname{Vol}^2 \{\psi_s\}_{s\in S}.
 
 That is to say, DPPs favor subsets :math:`S` whose corresponding feature vectors span a large volume i.e. *DPPs sample softened orthogonal bases*.
 
@@ -319,7 +316,7 @@ Deriving the pair inclusion probability, also called the 2-point correlation fun
 		\overline{\mathbf{K}_{i j}}		& \mathbb{P}[j \in \mathcal{X}]
 	\end{vmatrix}\\
 	&= \mathbb{P}[i \in \mathcal{X}] \mathbb{P}[j \in \mathcal{X}]
-		- |\mathbf{K}_{i j}|^2
+		- |\mathbf{K}_{i j}|^2,
 
 so that, the larger :math:`|\mathbf{K}_{i j}|` less likely items :math:`i` and :math:`j` co-occur. If :math:`K_{ij}` models the :ref:`similarity <finite_dpps_geometry>` between items :math:`i` and :math:`j`, DPPs are thus random diverse sets of elements.
 
@@ -336,17 +333,15 @@ For any disjoint subsets :math:`S, T \subset [N]`, i.e., such that :math:`S\cap 
 	:label: eq:conditioned_on_S_in_X
 
 	\mathbb{P}[T \subset \mathcal{X} \mid S \subset \mathcal{X}]
-        = \det\left[\mathbf{K}_T - \mathbf{K}_{TS} \mathbf{K}_S^{-1} \mathbf{K}_{ST}\right]
+        = \det\left[\mathbf{K}_T - \mathbf{K}_{TS} \mathbf{K}_S^{-1} \mathbf{K}_{ST}\right],
 
 .. math::
 	:label: eq:conditioned_on_S_notin_X
 
 	\mathbb{P}[T \subset \mathcal{X} \mid S \cap \mathcal{X} = \emptyset]
-    	= \det\left[\mathbf{K}_T - \mathbf{K}_{TS} (\mathbf{K}_S - I)^{-1} \mathbf{K}_{ST}\right]
+    	= \det\left[\mathbf{K}_T - \mathbf{K}_{TS} (\mathbf{K}_S - I)^{-1} \mathbf{K}_{ST}\right].
 
 .. seealso::
 
 	- Propositions 3 and 5 of :cite:`Pou19` for the proofs
 	- Equations :eq:`eq:conditioned_on_S_in_X` and :eq:`eq:conditioned_on_S_in_X` are key to derive the :ref:`Cholesky-based exact sampler <finite_dpps_exact_sampling_cholesky_method>` which makes use of the chain rule on sets.
-
-.. `Cauchy-Binet formula <https://en.wikipedia.org/wiki/Cauchy%E2%80%93Binet_formula>`_

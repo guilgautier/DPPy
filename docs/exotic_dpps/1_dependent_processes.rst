@@ -3,11 +3,15 @@
 Stationary 1-dependent process
 ******************************
 
-A point process :math:`\mathbb{X}` on :math:`\mathbb{Z}` (resp. :math:`\mathbb{N}`) is called 1-dependent if for any :math:`A,B\subset \mathbb{Z}` (resp. :math:`\mathbb{N}`), such as the distance between :math:`A` and :math:`B` is greater than 1,
+A point process :math:`\mathcal{X}` on :math:`\mathbb{Z}` (resp. :math:`\mathbb{N}`) is called 1-dependent if for any :math:`A,B\subset \mathbb{Z}` (resp. :math:`\mathbb{N}`), such as the distance between :math:`A` and :math:`B` is greater than 1,
 
-:math:`\mathbb{P}(A\cup B\subset \mathbb{X})=\mathbb{P}(A\subset \mathbb{X})\mathbb{P}(B\subset \mathbb{X}).`
+.. math::
 
-If :math:`\mathbb{X}` is stationary and 1-dependent then :math:`\mathbb{X}` forms a DPP.
+    \mathbb{P}(A\cup B\subset \mathcal{X})
+        =\mathbb{P}(A\subset \mathcal{X})
+            \mathbb{P}(B\subset \mathcal{X}).
+
+If :math:`\mathcal{X}` is stationary and 1-dependent then :math:`\mathcal{X}` forms a DPP.
 
 The following 3 examples are stationary and 1-dependent process.
 

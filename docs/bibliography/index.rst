@@ -6,7 +6,7 @@ Bibliography
 .. bibliography:: biblio.bib
 	:encoding: latin
 	:style: alpha
-	:all:	
+	:all:
 
 .. Fix to make sure bibliography appear when bibliography called in separate file
 .. latex+latin => latin

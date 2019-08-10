@@ -6,14 +6,14 @@ Definition
 Point Process
 =============
 
-Let :math:`\mathbb{X} = \mathbb{R}^d, \mathbb{C}^d \text{ or } \mathbb{S}^{d-1}` be the ambiant space, we endow it with the corresponding Borel :math:`\sigma`-algebra :math:`\mathcal{B}(\mathbb{X})` together with a reference measure :math:`\mu`.
+Let :math:`\mathbb{X} = \mathbb{R}^d, \mathbb{C}^d \text{ or } \mathbb{S}^{d-1}` be the ambient space, we endow it with the corresponding Borel :math:`\sigma`-algebra :math:`\mathcal{B}(\mathbb{X})` together with a reference measure :math:`\mu`.
 
 For our purpose, we consider point processes as locally finite random subsets :math:`\mathcal{X} \subset \mathbb{X}` i.e.
 
 	.. math::
 
 		\forall C \subset \mathbb{X} \text{ compact},
-			\quad \#(\mathcal{X} \cap C) < \infty
+			\quad \#(\mathcal{X} \cap C) < \infty.
 
 .. hint::
 
@@ -27,7 +27,6 @@ For our purpose, we consider point processes as locally finite random subsets :m
 
 To understand the interaction between the points of a point process, one focuses on the interaction of each cloud of :math:`k` points (for all :math:`k`).
 The corresponding :math:`k`-correlation functions characterize the underlying point process.
-
 
 .. _continuous_dpps_correlation_functions:
 
@@ -49,7 +48,7 @@ For :math:`k\geq 0`, the :math:`k`-correlation function :math:`\rho_k` is define
   \right]
 	  = \int_{\mathbb{X}^k}
 	  	f(x_1,\dots,x_k) \rho_k(x_1,\dots,x_k)
-	  	\prod_{i=1}^k \mu(dx_i)
+	  	\prod_{i=1}^k \mu(dx_i).
 
 .. hint::
 
@@ -67,9 +66,9 @@ For :math:`k\geq 0`, the :math:`k`-correlation function :math:`\rho_k` is define
 			B(x_1, d x_1), \dots, B(x_n, d x_n)
 		\end{array}
 		\right]
-		"
+		",
 
-    where :math:`B(x, dx)` denotes the ball centered at :math:`x` with radius :math:`dx`
+    where :math:`B(x, dx)` denotes the ball centered at :math:`x` with radius :math:`dx`.
 
 A Determinant Point Process (DPP) is a point process on :math:`(\mathbb{X}, \mathcal{B}(\mathbb{X}), \mu)` parametrized by a kernel :math:`K` associated to the reference measure :math:`\mu`.
 The :math:`k`-correlation functions read
@@ -78,7 +77,7 @@ The :math:`k`-correlation functions read
 
 	\forall k\geq 1, \quad
 	\rho_k(x_1,\dots,x_k)
-		= \det [K(x_i, x_j)]_{i,j=1}^k
+		= \det [K(x_i, x_j)]_{i,j=1}^k.
 
 .. seealso::
 
@@ -97,7 +96,7 @@ One can view :math:`K` as an integral operator on :math:`L^2(\mu)`
 .. math::
 
 	\forall x \in \mathbb{X},
-	Kf(x) = \int_{\mathbb{X}} K(x,y) f(y) \mu(dy)
+	Kf(x) = \int_{\mathbb{X}} K(x,y) f(y) \mu(dy).
 
 To access spectral properties of the kernel, it is common practice to assume :math:`K`
 
@@ -105,20 +104,20 @@ To access spectral properties of the kernel, it is common practice to assume :ma
 
 	.. math::
 
-		\iint |K(x,y)|^2  \mu(dx) \mu(dy) < \infty
+		\iint |K(x,y)|^2  \mu(dx) \mu(dy) < \infty,
 
 2. Self adjoint equiv. hermitian
 
 	.. math::
 
-		K(x,y) = \overline{K(y,x)}
+		K(x,y) = \overline{K(y,x)},
 
 3. Locally trace class
 
 	.. math::
 
 		\forall B\subset \mathbb{X} \text{ compact}, \quad
-		\int_B K(x,x) \mu(dx) < \infty
+		\int_B K(x,x) \mu(dx) < \infty.
 
 Under assumptions 1-3, the
 
@@ -126,7 +125,7 @@ Under assumptions 1-3, the
 
 	\operatorname{DPP}(K) \text{ exists}
 	\Longleftrightarrow
-		\lambda_n \in [0,1], \quad \forall n
+		\lambda_n \in [0,1], \quad \forall n.
 
 .. hint::
 
@@ -149,7 +148,6 @@ Under assumptions 1-3, the
 	- Remarks 1-2 and Theorem 3 :cite:`Sos00`
 	- Theorem 22 :cite:`HKPV06`
 
-
 Construction
 ============
 
@@ -165,7 +163,7 @@ and attach :math:`[0,1]`-valued coefficients :math:`\lambda_n` such that
 
 .. math::
 
-	K_N (x, y) = \sum_{n=0}^{N-1} \lambda_n \phi_{n}(x)\phi_{n}(y)
+	K_N (x, y) = \sum_{n=0}^{N-1} \lambda_n \phi_{n}(x)\phi_{n}(y).
 
 .. note::
 

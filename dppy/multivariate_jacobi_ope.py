@@ -284,19 +284,19 @@ class MultivariateJacobiOPE:
         .. math::
 
             \\frac{1}{N} K(x,x) w(x)
-            = \\frac{1}{N} \\sum_{\\mathfrak{k}=0}^{N-1} \\P_k^2(x) w(x).
+            = \\frac{1}{N} \\sum_{\\mathfrak{k}=0}^{N-1} P_k^2(x) w(x).
 
         To get a sample:
 
         1. Draw a multi-index :math:`k` uniformly at random
-        2. Sample from :math:`\\P_k^2(x) w(x) dx` with proposal :math:`w_{eq}(x) d x`.
+        2. Sample from :math:`P_k^2(x) w(x) dx` with proposal :math:`w_{eq}(x) d x`.
 
             The acceptance ratio writes
 
             .. math::
 
-                \\P_k^2(x) w(x) \\frac{1}{\\frac{w_{\\text{eq}}(x)}{\\pi^d}}
-                = \\prod_{i=1}^{d} \\pi \\P_{k^i}^2(x) (1-x^i)^{a^i+\\frac{1}{2}} (1+x^i)^{b^i+\\frac{1}{2}}
+                P_k^2(x) w(x) \\frac{1}{\\frac{w_{\\text{eq}}(x)}{\\pi^d}}
+                = \\prod_{i=1}^{d} \\pi P_{k^i}^2(x) (1-x^i)^{a^i+\\frac{1}{2}} (1+x^i)^{b^i+\\frac{1}{2}}
 
             which can be bounded using the result of :cite:`Gau09` on Jacobi polynomials.
             It is computed at initialization of the :py:class:`MultivariateJacobiOPE` object with :py:meth:`compute_Gautschi_bounds`
@@ -429,7 +429,7 @@ class MultivariateJacobiOPE:
 
             .. math::
 
-                \\frac{1}{N-|Y|} K(x,x) - K(x, Y) K_Y^{-1} K(Y, x) w(x)
+                \\frac{1}{N-|Y|} [K(x,x) - K(x, Y) K_Y^{-1} K(Y, x)] w(x)
                 \\leq \\frac{N}{N-|Y|} \\frac{1}{N} K(x,x) w(x)
 
         .. seealso::

@@ -12,11 +12,13 @@ It is defined either via its:
 
 	.. math::
 
-		\mathbb{P}[S\subset \mathcal{X}], \text{ for } S\subset [N]
+		\mathbb{P}[S\subset \mathcal{X}], \text{ for } S\subset [N],
 
 - likelihood
 
-		\mathbb{P}[\mathcal{X}=S], \text{ for } S\subset [N]
+  	.. math::
+
+		\mathbb{P}[\mathcal{X}=S], \text{ for } S\subset [N].
 
 .. hint::
 
@@ -31,7 +33,7 @@ We say that :math:`\mathcal{X} \sim \operatorname{DPP}(\mathbf{K})` with correla
 		:label: eq:inclusion_proba_DPP_K
 
 		\mathbb{P}[S\subset \mathcal{X}] = \det \mathbf{K}_S,
-		\quad \forall S\subset [N]
+		\quad \forall S\subset [N],
 
 where :math:`\mathbf{K}_S = [\mathbf{K}_{ij}]_{i,j\in S}` i.e. the square submatrix of :math:`\mathbf{K}` obtained by keeping only rows and columns indexed by :math:`S`.
 
@@ -40,30 +42,30 @@ Likelihood
 
 We say that :math:`\mathcal{X} \sim \operatorname{DPP}(\mathbf{L})` with likelihood kernel a complex matrix :math:`\mathbf{L}` if
 
-	.. math::
-		:label: eq:likelihood_DPP_L
+.. math::
+	:label: eq:likelihood_DPP_L
 
-		\mathbb{P}[\mathcal{X}=S] = \frac{\det \mathbf{L}_S}{\det [I+\mathbf{L}]},
-		\quad \forall S\subset [N]
+	\mathbb{P}[\mathcal{X}=S] = \frac{\det \mathbf{L}_S}{\det [I+\mathbf{L}]},
+	\quad \forall S\subset [N].
 
 Existence
 =========
 
 Some common sufficient conditions to guarantee existence are:
 
-	.. math::
-		:label: eq:suff_cond_K
+.. math::
+	:label: eq:suff_cond_K
 
-		\mathbf{K} = \mathbf{K}^{\dagger}
-		\quad \text{and} \quad
-		0_N \preceq \mathbf{K} \preceq I_N
+	\mathbf{K} = \mathbf{K}^{\dagger}
+	\quad \text{and} \quad
+	0_N \preceq \mathbf{K} \preceq I_N,
 
-	.. math::
-		:label: eq:suff_cond_L
+.. math::
+	:label: eq:suff_cond_L
 
-		\mathbf{L} = \mathbf{L}^{\dagger}
-		\quad \text{and} \quad
-		\mathbf{L} \succeq 0_N
+	\mathbf{L} = \mathbf{L}^{\dagger}
+	\quad \text{and} \quad
+	\mathbf{L} \succeq 0_N,
 
 where the dagger :math:`\dagger` symbol means *conjugate transpose*.
 
@@ -71,9 +73,9 @@ where the dagger :math:`\dagger` symbol means *conjugate transpose*.
 
 	In the following, unless otherwise specified:
 
-	- we work under the sufficient conditions :eq:`eq:suff_cond_K` and :eq:`eq:suff_cond_K`
-	- :math:`\left(\lambda_{1}, \dots, \lambda_{N} \right)` denote the eigenvalues of :math:`\mathbf{K}`
-	- :math:`\left(\gamma_{1}, \dots, \gamma_{N} \right)` denote the eigenvalues of :math:`\mathbf{L}`
+	- we work under the sufficient conditions :eq:`eq:suff_cond_K` and :eq:`eq:suff_cond_K`,
+	- :math:`\left(\lambda_{1}, \dots, \lambda_{N} \right)` denote the eigenvalues of :math:`\mathbf{K}`,
+	- :math:`\left(\gamma_{1}, \dots, \gamma_{N} \right)` denote the eigenvalues of :math:`\mathbf{L}`.
 
 .. :ref:`Fig. <correlation_kernel_plot>`
 
@@ -94,7 +96,7 @@ Projection DPPs
 
 	Recall that `orthogonal projection matrices <https://en.wikipedia.org/wiki/Projection_(linear_algebra)#Projection_matrix>`_ are notably characterized by
 
-	a. :math:`\mathbf{K}^2=\mathbf{K}` and :math:`\mathbf{K}^{\dagger}=\mathbf{K}`
+	a. :math:`\mathbf{K}^2=\mathbf{K}` and :math:`\mathbf{K}^{\dagger}=\mathbf{K}`,
 	b. or equivalently by :math:`\mathbf{K}=U U^{\dagger}` with :math:`U^{\dagger} U=I_r` where :math:`r=\operatorname{rank}(\mathbf{K})`.
 
 	They are indeed valid kernels since they meet the above sufficient conditions: they are Hermitian with eigenvalues :math:`0` or :math:`1`.
@@ -124,15 +126,15 @@ Projection DPPs
 k-DPPs
 ======
 
-A :math:`\operatorname{k-DPP}` can be defined as :math:`\operatorname{DPP(\mathbf{L})}` :eq:`eq:likelihood_DPP_L` conditioned to a fixed sample size :math:`|\mathcal{X}|=k`, we denote it :math:`\operatorname{k-DPP}(\mathbf{L})`.
+A :math:`k\!\operatorname{-DPP}` can be defined as :math:`\operatorname{DPP(\mathbf{L})}` :eq:`eq:likelihood_DPP_L` conditioned to a fixed sample size :math:`|\mathcal{X}|=k`, we denote it :math:`k\!\operatorname{-DPP}(\mathbf{L})`.
 
 It is naturally defined through its joint probabilities
 
 .. math::
 	:label: eq:likelihood_kDPP_L
 
-	\mathbb{P}_{\operatorname{k-DPP}}[\mathcal{X}=S]
-		= \frac{1}{e_k(L)} \det \mathbf{L}_S ~ 1_{|S|=k}
+	\mathbb{P}_{k\!\operatorname{-DPP}}[\mathcal{X}=S]
+		= \frac{1}{e_k(L)} \det \mathbf{L}_S ~ 1_{|S|=k},
 
 where the normalizing constant :math:`e_k(L)` corresponds to the `elementary symmetric polynomial <https://en.wikipedia.org/wiki/Elementary_symmetric_polynomial>`_ of order :math:`k` evaluated in the eigenvalues of :math:`\mathbf{L}`,
 
@@ -141,11 +143,11 @@ where the normalizing constant :math:`e_k(L)` corresponds to the `elementary sym
 	e_k(\mathbf{L})
 		\triangleq e_k(\gamma_1, \dots, \gamma_N)
 		= \sum_{\substack{S \subset [N]\\|S|=k}} \prod_{s\in S} \gamma_{s}
-		= \sum_{\substack{S \subset [N]\\|S|=k}} \det L_S
+		= \sum_{\substack{S \subset [N]\\|S|=k}} \det L_S.
 
 .. note::
 
-  	Obviously, one must take :math:`k \leq \operatorname{rank}(L)` otherwise :math:`\det \mathbf{L}_S = 0` for :math:`|S| = k > \operatorname{rank}(L)`
+  	Obviously, one must take :math:`k \leq \operatorname{rank}(L)` otherwise :math:`\det \mathbf{L}_S = 0` for :math:`|S| = k > \operatorname{rank}(L)`.
 
 .. warning::
 
@@ -156,5 +158,5 @@ where the normalizing constant :math:`e_k(L)` corresponds to the `elementary sym
 
 	- :ref:`Exact sampling of k-DPPs <finite_dpps_exact_sampling_k_dpps>`
 	- :class:`FiniteDPP <FiniteDPP>`
-	- :cite:`KuTa12` Section 2 for :math:`\operatorname{DPPs}`
-	- :cite:`KuTa12` Section 5 for :math:`\operatorname{k-DPPs}`
+	- :cite:`KuTa12` Section 2 for DPPs
+	- :cite:`KuTa12` Section 5 for :math:`k`-DPPs

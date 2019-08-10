@@ -7,4 +7,4 @@ Approximate sampling
 
 .. todo::
 
-	In a near future this section will include approximation of the kernel through random projections
+	In a near future this section will include approximation of the kernel through random projections.
