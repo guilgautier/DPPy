@@ -3,9 +3,6 @@
 	 You can adapt this file completely to your liking, but it should at least
 	 contain the root `toctree` directive.
 
-
-|Documentation Status| |Build Status| |Coverage Status|
-
 .. |Documentation Status| image:: https://readthedocs.org/projects/dppy/badge/?version=latest
    :target: https://dppy.readthedocs.io/en/latest/?badge=latest
 
@@ -18,6 +15,10 @@
 .. |Google Colab| image:: https://badgen.net/badge/Launch/on%20Google%20Colab/blue?icon=terminal
    :target: https://colab.research.google.com/github/guilgautier/DPPy/blob/master/notebooks/Tuto_DPPy.ipynbs
 
+.. _DPPy: https://github.com/guilgautier/DPPy
+
+|Documentation Status| |Build Status| |Coverage Status|
+
 .. |siren| replace:: 🚨
 .. |fire| replace:: 🔥
 .. |explosion| replace:: 💥
@@ -27,14 +28,14 @@
 .. |histogram| replace:: 📶
 .. |die| replace:: 🎲
 
-Welcome to DPPy's documentation!
-################################
+Welcome to DPPy_'s documentation!
+########################################
 
 **Determinantal point processes** (DPPs) are specific probability distributions over clouds of points, which have been popular as models or computational tools across physics, probability, statistics, random matrices, and more recently machine learning. DPPs are often used to induce diversity or repulsiveness among the points of a sample.
 
 **Sampling from DPPs** is more tractable than sampling generic point processes with interaction, but it remains a nontrivial matter and a research area of its own.
 
-As a contraction of **DPPs and Python, DPPy** is an effort to gather:
+As a contraction of **DPPs and Python**, DPPy_ is an effort to gather:
 
 - :ref:`exact <finite_dpps_exact_sampling>` **and** :ref:`approximate <finite_dpps_mcmc_sampling>` **samplers** for :ref:`finite DPPs <finite_dpps>` |explosion|
 - **random matrix models** (:ref:`full <full_matrix_models>` and :ref:`banded <banded_matrix_models>`) for :math:`\beta`-:ref:`Ensembles <beta_ensembles>` |fire|
@@ -51,8 +52,6 @@ The documentation can thus be read in different ways:
 	- if you read the sections in the order they appear, they will first take you through mathematical definitions and quick illustrations of how these definitions are encoded in DPPy.
 	- for more a traditional library documentation please refer to the corresponding API sections documenting the methods of each object, along with pointers to the mathematical definitions if needed.
 	- you can also directly jump to the Jupyter `notebooks <https://github.com/guilgautier/DPPy/tree/master/notebooks>`_, which showcase the use of some DPPy objects in more detail.
-
-For another entry point to DPPy see the `companion paper <https://arxiv.org/abs/1809.07258>`_ :cite:`GaBaVa18`.
 
 .. |fig1|  image:: _images/multivariate_jacobi_2D_1000points.png
     :width: 100%
@@ -78,7 +77,6 @@ For another entry point to DPPy see the `companion paper <https://arxiv.org/abs/
 
 .. |cap4| replace:: Graph associated to :math:`\mathbf{K}`
 
-
 +---------+---------+
 | |fig1|  | |fig2|  |
 +---------+---------+
@@ -89,12 +87,41 @@ For another entry point to DPPy see the `companion paper <https://arxiv.org/abs/
 | |cap3|  | |cap4|  |
 +---------+---------+
 
-As an :ref:`exotic <exotic_dpps>` example, the uniform measure on the spanning trees of a connected graph is a DPP!
+.. _index_installation_instructions:
 
 Installation instructions
 =========================
 
 See the `installation instructions <https://github.com/guilgautier/DPPy#installation>`_ on GitHub.
+
+.. _index_how_to_cite_this_work:
+
+How to cite this work?
+======================
+
+We wrote a companion paper to
+`DPPy <https://github.com/guilgautier/DPPy>`__ which is available on
+
+-  `arXiv <http://arxiv.org/abs/1809.07258>`__ (maybe not upto date)
+-  `GitHub <https://github.com/guilgautier/DPPy_paper>`__ for the lastest version
+
+If you use this package, please consider citing it with this piece of
+BibTeX:
+
+.. code:: bibtex
+
+  @article{GaBaVa18,
+    archivePrefix = {arXiv},
+    arxivId = {1809.07258},
+    author = {Gautier, Guillaume and Bardenet, R{\'{e}}mi and Valko, Michal},
+    eprint = {1809.07258},
+    journal = {ArXiv e-prints},
+    title = {{DPPy: Sampling Determinantal Point Processes with Python}},
+    keywords = {Computer Science - Machine Learning, Computer Science - Mathematical Software, Statistics - Machine Learning},
+    url = {http://arxiv.org/abs/1809.07258},
+    year = {2018},
+    note = {Code at http://github.com/guilgautier/DPPy/ Documentation at http://dppy.readthedocs.io/}
+  }
 
 Documentation contents
 ======================
