@@ -94,7 +94,7 @@ As an :ref:`exotic <exotic_dpps>` example, the uniform measure on the spanning t
 Installation instructions
 =========================
 
-See `README <https://github.com/guilgautier/DPPy/blob/master/README.rst>`_
+See the `installation instructions <https://github.com/guilgautier/DPPy#installation>`_ on GitHub.
 
 Documentation contents
 ======================

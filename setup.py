@@ -19,12 +19,12 @@ with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
     long_description = f.read()
 
 setup(
-    name='DPPyPI',
+    name='dppy',
 
     # Versions should comply with PEP440.  For a discussion on single-sourcing
     # the version across setup.py and the project code, see
     # https://packaging.python.org/en/latest/single_source_version.html
-    version='0.1.0.dev1',
+    version='0.2.0dev1',
 
     description='DPPy is a Python library for exact and approximate sampling of Determinantal Point Processes.',
     long_description=long_description,
@@ -93,9 +93,10 @@ setup(
     project_urls={  # Optional
         "Companion paper": "https://github.com/guilgautier/DPPy_paper",
         "arXiv": "https://arxiv.org/abs/1809.07258",
+        "Coverage": "https://coveralls.io/github/guilgautier/DPPy?branch=master",
         "Travis": "https://travis-ci.com/guilgautier/DPPy",
         "Documentation": "https://dppy.readthedocs.io/en/latest/",
-        "Source": "https://github.com/guilgautier/DPPy"
+        "Source code": "https://github.com/guilgautier/DPPy"
     }
     # List additional groups of dependencies here (e.g. development dependencies). You can install these using the following syntax, for example:
     # $ pip install -e .[dev,test]

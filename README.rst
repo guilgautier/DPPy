@@ -3,8 +3,19 @@ DPPy: Sampling Determinantal Point Processes with Python
 
 |Documentation Status| |Build Status| |Coverage Status|
 
-    *"Anything that can go wrong, will go wrong"*. − `Murphy's
-    Law <http://phdcomics.com/comics/archive.php?comicid=1867>`__
+.. |Documentation Status| image:: https://readthedocs.org/projects/dppy/badge/?version=latest
+   :target: https://dppy.readthedocs.io/en/latest/?badge=latest
+
+.. |Build Status| image:: https://travis-ci.com/guilgautier/DPPy.svg?branch=master
+   :target: https://travis-ci.com/guilgautier/DPPy
+
+.. |Coverage Status| image:: https://coveralls.io/repos/github/guilgautier/DPPy/badge.svg?branch=master
+  :target: https://coveralls.io/github/guilgautier/DPPy?branch=master
+
+.. |Google Colab| image:: https://badgen.net/badge/Launch/on%20Google%20Colab/blue?icon=terminal
+   :target: https://colab.research.google.com/github/guilgautier/DPPy/blob/master/notebooks/Tuto_DPPy.ipynb
+
+*"Anything that can go wrong, will go wrong"* − `Murphy's Law <http://phdcomics.com/comics/archive.php?comicid=1867>`_
 
 Introduction
 ------------
@@ -46,11 +57,11 @@ Dependencies
 Installation
 ------------
 
-Long story short, since the name DPPy is being `squatted <https://github.com/pypa/warehouse/issues/5307>`__ we decided to release the project under the name ``DPPyPI`` on `PyPI <https://pypi.org/project/DPPyPI/>`__ and you can install it using
+DPPy is now available on `PyPI <https://pypi.org/project/dppy/>`__
 
 .. code:: bash
 
-  pip install DPPyPI
+  pip install dppy
 
 However you may not work with the latest version, so
 
@@ -80,14 +91,12 @@ However you may not work with the latest version, so
        cd DPPy
        pip install .
 
-Tutorial in `a Jupyter notebook <https://www.Jupyter.org/>`__
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Tutorials in `Jupyter notebooks <https://github.com/guilgautier/DPPy/blob/master/notebooks/>`_
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-You can read and work on this interactive tutorial, directly from your
+You can read and work on these interactive tutorial `Notebooks <https://github.com/guilgautier/DPPy/blob/master/notebooks/>`_, directly from your
 web browser, without having to download or install Python or anything.
 Just click, wait a little bit, and play with the notebook!
-
--  `Tutorial for DPPy (Tuto\_DPPy) <https://github.com/guilgautier/DPPy/blob/master/notebooks/Tuto_DPPy.ipynb>`__: |Google Colab|
 
 Contribute to the documentation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -121,9 +130,6 @@ locally, you can:
 
        open _build/html/index.html
 
-If you wish pull request your contribution, please use the ``docs``
-branch.
-
 How to cite this work?
 ~~~~~~~~~~~~~~~~~~~~~~
 
@@ -133,28 +139,26 @@ the `MLOSS <http://www.jmlr.org/mloss/>`__ track of JMLR.
 
 The companion paper is available on
 
--  `arXiv <http://arxiv.org/abs/1809.07258>`__
--  `GitHub <https://github.com/guilgautier/DPPy_paper>`__, see the
-   `arxiv <https://github.com/guilgautier/DPPy_paper/tree/arxiv>`__
-   branch
+-  `arXiv <http://arxiv.org/abs/1809.07258>`__ (maybe not upto date)
+-  `GitHub <https://github.com/guilgautier/DPPy_paper>`__ for the lastest version
 
 If you use this package, please consider citing it with this piece of
 BibTeX:
 
 .. code:: bibtex
 
-    @article{GaBaVa18,
-        archivePrefix = {arXiv},
-        arxivId = {1809.07258},
-        author = {Gautier, Guillaume and Bardenet, R{\'{e}}mi and Valko, Michal},
-        eprint = {1809.07258},
-        journal = {ArXiv e-prints},
-        title = {{DPPy: Sampling Determinantal Point Processes with Python}},
-        keywords = {Computer Science - Machine Learning, Computer Science - Mathematical Software, Statistics - Machine Learning},
-        url = {http://arxiv.org/abs/1809.07258},
-        year = {2018},
-        note = {Code at http://github.com/guilgautier/DPPy/ Documentation at http://dppy.readthedocs.io/}
-    }
+  @article{GaBaVa18,
+    archivePrefix = {arXiv},
+    arxivId = {1809.07258},
+    author = {Gautier, Guillaume and Bardenet, R{\'{e}}mi and Valko, Michal},
+    eprint = {1809.07258},
+    journal = {ArXiv e-prints},
+    title = {{DPPy: Sampling Determinantal Point Processes with Python}},
+    keywords = {Computer Science - Machine Learning, Computer Science - Mathematical Software, Statistics - Machine Learning},
+    url = {http://arxiv.org/abs/1809.07258},
+    year = {2018},
+    note = {Code at http://github.com/guilgautier/DPPy/ Documentation at http://dppy.readthedocs.io/}
+  }
 
 Reproducibility
 ---------------
@@ -167,15 +171,3 @@ this project owes him a lot.
 Take a look at the corresponding
 `booklet <https://github.com/CRIStAL-PADR/reproducible-research-SE-notes>`__
 to learn more on how to make your research reproducible!
-
-.. |Documentation Status| image:: https://readthedocs.org/projects/dppy/badge/?version=latest
-   :target: https://dppy.readthedocs.io/en/latest/?badge=latest
-
-.. |Build Status| image:: https://travis-ci.com/guilgautier/DPPy.svg?branch=master
-   :target: https://travis-ci.com/guilgautier/DPPy
-
-.. |Coverage Status| image:: https://coveralls.io/repos/github/guilgautier/DPPy/badge.svg?branch=master
-  :target: https://coveralls.io/github/guilgautier/DPPy?branch=master
-
-.. |Google Colab| image:: https://badgen.net/badge/Launch/on%20Google%20Colab/blue?icon=terminal
-   :target: https://colab.research.google.com/github/guilgautier/DPPy/blob/master/notebooks/Tuto_DPPy.ipynb
