@@ -3,6 +3,21 @@
 	 You can adapt this file completely to your liking, but it should at least
 	 contain the root `toctree` directive.
 
+
+|Documentation Status| |Build Status| |Coverage Status|
+
+.. |Documentation Status| image:: https://readthedocs.org/projects/dppy/badge/?version=latest
+   :target: https://dppy.readthedocs.io/en/latest/?badge=latest
+
+.. |Build Status| image:: https://travis-ci.com/guilgautier/DPPy.svg?branch=master
+   :target: https://travis-ci.com/guilgautier/DPPy
+
+.. |Coverage Status| image:: https://coveralls.io/repos/github/guilgautier/DPPy/badge.svg?branch=master
+  :target: https://coveralls.io/github/guilgautier/DPPy?branch=master
+
+.. |Google Colab| image:: https://badgen.net/badge/Launch/on%20Google%20Colab/blue?icon=terminal
+   :target: https://colab.research.google.com/github/guilgautier/DPPy/blob/master/notebooks/Tuto_DPPy.ipynbs
+
 .. |siren| replace:: 🚨
 .. |fire| replace:: 🔥
 .. |explosion| replace:: 💥
@@ -10,6 +25,7 @@
 .. |tree| replace:: 🌿
 .. |numbers| replace:: 🔢
 .. |histogram| replace:: 📶
+.. |die| replace:: 🎲
 
 Welcome to DPPy's documentation!
 ################################
@@ -20,9 +36,10 @@ Welcome to DPPy's documentation!
 
 As a contraction of **DPPs and Python, DPPy** is an effort to gather:
 
-- all **exact and approximate samplers** for :ref:`finite DPPs <finite_dpps>` |explosion|
-- :ref:`full <full_matrix_models>` and :ref:`banded <banded_matrix_models>` (tri/quindiagonal) matrix models for :math:`\beta`-:ref:`Ensembles <beta_ensembles>` |fire|
-- exact samplers for more :ref:`exotic_dpps` |palm_tree|
+- :ref:`exact <finite_dpps_exact_sampling>` **and** :ref:`approximate <finite_dpps_mcmc_sampling>` **samplers** for :ref:`finite DPPs <finite_dpps>` |explosion|
+- **random matrix models** (:ref:`full <full_matrix_models>` and :ref:`banded <banded_matrix_models>`) for :math:`\beta`-:ref:`Ensembles <beta_ensembles>` |fire|
+- :ref:`multivariate_jacobi_ope` used for **Monte Carlo integration** |die|
+- **exact samplers** for more :ref:`exotic_dpps` |palm_tree|
 
   * :ref:`uniform spanning trees <UST>` |tree|
   * :ref:`descent processes <stationary_1-dependent_process>` |numbers|
@@ -37,12 +54,40 @@ The documentation can thus be read in different ways:
 
 For another entry point to DPPy see the `companion paper <https://arxiv.org/abs/1809.07258>`_ :cite:`GaBaVa18`.
 
-.. image:: _images/original_graph.png
-   :width: 25%
-.. image:: _images/kernel.png
-   :width: 37.5%
-.. image:: _images/sample_Wilson.png
-   :width: 25%
+.. |fig1|  image:: _images/multivariate_jacobi_2D_1000points.png
+    :width: 100%
+    :alt: a sample of a 2D jacobi ensemble
+
+.. |cap1| replace:: 2D :ref:`multivariate_jacobi_ope`
+
+.. |fig2|  image:: _images/LUE.png
+    :width: 100%
+    :alt: histogram of the eigenvalues of the LUE
+
+.. |cap2| replace:: :math:`\beta=2`-:ref:`Laguerre ensemble <laguerre_full_matrix_model>`
+
+.. |fig3|  image:: _images/UST_kernel.png
+    :width: 100%
+    :alt: kernel of the DPP associated to the uniform measure on spanning trees of a graph
+
+.. |cap3| replace:: :math:`\mathbf{K}` kernel of :ref:`Uniform Spanning Tree <UST>`
+
+.. |fig4|  image:: _images/original_graph.png
+    :width: 100%
+    :alt: graph associated to kernel K
+
+.. |cap4| replace:: Graph associated to :math:`\mathbf{K}`
+
+
++---------+---------+
+| |fig1|  | |fig2|  |
++---------+---------+
+| |cap1|  | |cap2|  |
++---------+---------+
+| |fig3|  | |fig4|  |
++---------+---------+
+| |cap3|  | |cap4|  |
++---------+---------+
 
 As an :ref:`exotic <exotic_dpps>` example, the uniform measure on the spanning trees of a connected graph is a DPP!
 
