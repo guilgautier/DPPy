@@ -1,5 +1,5 @@
 # coding: utf8
-""" Implementation of the meta-class :class:`BetaEnsemble` with children:
+""" Implementation of the meta-class :class:`BetaEnsemble` see :math:`\\beta-`:ref:`Ensembles<beta_ensembles>` with children:
 
 - :class:`HermiteEnsemble`
 - :class:`LaguerreEnsemble`

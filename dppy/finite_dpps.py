@@ -1,10 +1,10 @@
 # coding: utf8
 """ Implementation of :py:class:`FiniteDPP` object which has 6 main methods:
 
-- :py:meth:`~FiniteDPP.sample_exact`
-- :py:meth:`~FiniteDPP.sample_exact_k_dpp`
-- :py:meth:`~FiniteDPP.sample_mcmc`
-- :py:meth:`~FiniteDPP.sample_mcmc_k_dpp`
+- :py:meth:`~FiniteDPP.sample_exact`, see also :ref:`sampling DPPs exactly<finite_dpps_exact_sampling>`
+- :py:meth:`~FiniteDPP.sample_exact_k_dpp`, see also :ref:`sampling k-DPPs exactly<finite_dpps_exact_sampling>`
+- :py:meth:`~FiniteDPP.sample_mcmc`, see also :ref:`sampling DPPs with MCMC<finite_dpps_mcmc_sampling>`
+- :py:meth:`~FiniteDPP.sample_mcmc_k_dpps`, see also :ref:`sampling k-DPPs with MCMC<finite_dpps_mcmc_sampling_k_dpps>`
 - :py:meth:`~FiniteDPP.compute_K`, to compute the correlation :math:`K` kernel from initial parametrization
 - :py:meth:`~FiniteDPP.compute_L`, to compute the likelihood :math:`L` kernel from initial parametrization
 

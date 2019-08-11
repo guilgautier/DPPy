@@ -1,5 +1,5 @@
 # coding: utf8
-""" Implementation of the class :class:`MultivariateJacobiOPE` which has 2 main methods:
+""" Implementation of the class :class:`MultivariateJacobiOPE` which has 3 main methods:
 
 - :py:meth:`~dppy.multivariate_jacobi_ope.MultivariateJacobiOPE.sample` to get a sample of
 - :py:meth:`~dppy.multivariate_jacobi_ope.MultivariateJacobiOPE.K` to evaluate the corresponding projection kernel
@@ -62,7 +62,7 @@ class MultivariateJacobiOPE:
 
         - :math:`k \\in \\mathbb{N}^d` is a multi-index ordered according to the ordering :math:`\\mathfrak{b}` (see :py:meth:`compute_ordering_BaHa16`)
 
-        - :math:`P_{k}(x) = \\prod_{i=1}^d P_{k_i}^{a_i, b_i}(x_i)` is the product of orthogonal Jacobi polynomials w.r.t. :math:`\\mu`
+        - :math:`P_{k}(x) = \\prod_{i=1}^d P_{k_i}^{a_i, b_i}(x_i)` is the product of orthogonal Jacobi polynomials w.r.t. :math:`\\mu`, (see :py:meth:`eval_poly_multiD`)
 
             .. math::
 
@@ -277,26 +277,31 @@ class MultivariateJacobiOPE:
 
     def sample_proposal_lev_score(self, nb_trials_max=10000,
                                   random_state=None):
-        """Sample from :math:`\\frac{1}{N} K(x,x) w(x) d x` using rejection sampling with proposal :math:`\\frac{1}{\\pi^d}w_{eq}(x) d x` where :math:`w_{eq}(x) = \\prod_{i=1}^{d} \\frac{1}{\\sqrt{1-(x^i)^2}}`
-
-        First, observe that
+        """Use a rejection sampling mechanism to sample
 
         .. math::
 
-            \\frac{1}{N} K(x,x) w(x)
-            = \\frac{1}{N} \\sum_{\\mathfrak{k}=0}^{N-1} P_k^2(x) w(x).
+            \\frac{1}{N} K(x, x) w(x) dx
+            = \\frac{1}{N} \\sum_{\\mathfrak{k}=0}^{N-1} P_k(x)^2 w(x)
 
-        To get a sample:
+        with proposal distribution
+
+        .. math::
+
+            w_{eq}(x) d x
+            = \\frac{1}{\\pi^d} \\prod_{i=1}^{d} \\frac{1}{\\sqrt{1-(x^i)^2}} d x
+
+        Since the target density is a mixture, we can sample it by
 
         1. Draw a multi-index :math:`k` uniformly at random
-        2. Sample from :math:`P_k^2(x) w(x) dx` with proposal :math:`w_{eq}(x) d x`.
+        2. Sample from :math:`P_k(x)^2 w(x) dx` with proposal :math:`w_{eq}(x) d x`.
 
             The acceptance ratio writes
 
             .. math::
 
-                P_k^2(x) w(x) \\frac{1}{\\frac{w_{\\text{eq}}(x)}{\\pi^d}}
-                = \\prod_{i=1}^{d} \\pi P_{k^i}^2(x) (1-x^i)^{a^i+\\frac{1}{2}} (1+x^i)^{b^i+\\frac{1}{2}}
+                P_k(x)^2 w(x) \\frac{1}{\\frac{w_{\\text{eq}}(x)}{\\pi^d}}
+                = \\prod_{i=1}^{d} \\pi P_{k^i}(x)^2 (1-x^i)^{a^i+\\frac{1}{2}} (1+x^i)^{b^i+\\frac{1}{2}}
 
             which can be bounded using the result of :cite:`Gau09` on Jacobi polynomials.
             It is computed at initialization of the :py:class:`MultivariateJacobiOPE` object with :py:meth:`compute_Gautschi_bounds`
@@ -309,6 +314,7 @@ class MultivariateJacobiOPE:
         .. seealso::
 
             - :py:meth:`compute_Gautschi_bounds`
+            - :py:meth:`sample`
         """
         rng = check_random_state(random_state)
 
@@ -421,9 +427,9 @@ class MultivariateJacobiOPE:
 
         The order in which the points were sampled can be forgotten to obtain a valid sample of the corresponding DPP
 
-        Each conditional density is sampled using rejection sampling with proposal density :math:`\\frac{1}{N} K(x,x) w(x)` (generated with :py:meth:`sample_proposal_lev_score`)
+        Each conditional density is sampled using rejection sampling with proposal density :math:`\\frac{1}{N} K(x,x) w(x)`
 
-        - :math:`x_1 \\sim \\frac{1}{N} K(x,x) w(x)`
+        - :math:`x_1 \\sim \\frac{1}{N} K(x,x) w(x)` using :py:meth:`sample_proposal_lev_score`
 
         - :math:`x_n | Y = x_{1}, \\dots, x_{n-1}`
 
@@ -434,7 +440,7 @@ class MultivariateJacobiOPE:
 
         .. seealso::
 
-            - :ref:`continuous_dpps_sampling`
+            - :ref:`finite_dpps_exact_sampling_projection_dpp_chain_rule`
             - :py:meth:`sample_proposal_lev_score`
         """
 
@@ -771,33 +777,32 @@ def compute_poly1D_square_norms(jacobi_params, deg_max):
 
 
 def compute_Gautschi_bounds(jacobi_params, ordering, log_scale=True):
-    """ Compute the rejection constant to sample from
-    :math:`\\frac{1}{N} K(x, x) w(x) dx` using rejection sampling with proposal distribution :math:`\\frac{1}{\\pi^d}w_{eq}(x) d x` where
+    """ Compute the rejection constants for the acceptance/rejection mechanism used in :py:meth:`sample_proposal_lev_score` to sample
 
     .. math::
 
-        w_{eq}(x)
-            = \\prod_{i=1}^{d} \\frac{1}{\\sqrt{1-(x^i)^2}}
-            = \\prod_{i=1}^{d} [(1-x^i)(1+x^i)]^{-1/2}`
+        \\frac{1}{N} K(x, x) w(x) dx
+        = \\frac{1}{N} \\sum_{\\mathfrak{k}=0}^{N-1} P_k(x)^2 w(x)
 
-    The ratio target/proposal writes
+    with proposal distribution
 
     .. math::
 
-        \\frac{1}{N} K(x,x) w(x)
-            \\frac{1}{\\frac{w_{\\text{eq}}(x)}{\\pi^d}}
-        &= \\frac{\\pi^d}{N} \\frac{K(x,x) w(x)}{w_{\\text{eq}}(x)}\\\\
-        &= \\frac{1}{N}
-            \\sum_{\\mathfrak{b}(k)=0}^{N-1}
-                \\prod_{i=1}^{d}
-                    \\pi
-                    (1 - x^i)^{a_i + \\frac12}
-                    (1 + x^i)^{b_i + \\frac12}
-                    \\frac{P_{k_i}^{(a_i, b_i)}(x^i)^2}
-                         {\\|P_{k_i}^{(a_i, b_i)}\\|^2}\\\\
-        &\\leq \\frac{\\text{Gautschi bound}}{N}
+        w_{eq}(x) d x
+        = \\frac{1}{\\pi^d} \\prod_{i=1}^{d} \\frac{1}{\\sqrt{1-(x^i)^2}} d x
 
-    each term of the product can be bounded using the following receipe
+    To get a sample:
+
+    1. Draw a multi-index :math:`k` uniformly at random
+    2. Sample from :math:`P_k(x)^2 w(x) dx` with proposal :math:`w_{eq}(x) d x`.
+
+        The acceptance ratio writes
+
+        .. math::
+
+            P_k(x)^2 w(x) \\frac{1}{\\frac{w_{\\text{eq}}(x)}{\\pi^d}}
+            = \\prod_{i=1}^{d} \\pi P_{k^i}(x)^2 (1-x^i)^{a^i+\\frac{1}{2}} (1+x^i)^{b^i+\\frac{1}{2}}
+
 
     - For :math:`k_i>0` we use a result on Jacobi polynomials given by, e.g., :cite:`Gau09`
 
@@ -816,7 +821,7 @@ def compute_Gautschi_bounds(jacobi_params, ordering, log_scale=True):
                   {\\Gamma(n+\\min(a,b)+1)},
         \\quad|a|,|b| \\leq \\frac{1}{2}
 
-    - For :math:`k_i=0`, we use less involved properties of `Jacobi polynomials <https://en.wikipedia.org/wiki/Jacobi_polynomials>`_:
+    - For :math:`k_i=0`, we use less involved properties of the `Jacobi polynomials <https://en.wikipedia.org/wiki/Jacobi_polynomials>`_:
 
         - :math:`P_{0}^{(a, b)} = 1`
         - :math:`\\|P_{0}^{(a, b)}\\|^2 = 2^{a+b+1} \\operatorname{B}(a+1,b+1)`
@@ -873,7 +878,7 @@ def compute_Gautschi_bounds(jacobi_params, ordering, log_scale=True):
     .. see also::
 
         - :cite:`Gau09` for the domination when :math:`k_i > 0`
-        -
+        - :py:meth:`compute_poly1D_square_norms`
     """
 
     # Initialize [bounds]_ij on
