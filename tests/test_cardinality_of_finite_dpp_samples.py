@@ -70,7 +70,8 @@ class CardinalityOfFiniteDPPs(unittest.TestCase):
         for mode in ('E'):
 
             dpp.flush_samples()
-            dpp.sample_mcmc(mode, **{'size': self.rank, 'nb_iter': self.nb_samples})
+            dpp.sample_mcmc(mode,
+                            **{'size': self.rank, 'nb_iter': self.nb_samples})
 
             self.check_right_cardinality(dpp, dpp.list_of_samples[0])
 
@@ -94,7 +95,8 @@ class CardinalityOfFiniteDPPs(unittest.TestCase):
         for mode in ('E'):
 
             dpp.flush_samples()
-            dpp.sample_mcmc(mode, **{'size': self.rank, 'nb_iter': self.nb_samples})
+            dpp.sample_mcmc(mode,
+                            **{'size': self.rank, 'nb_iter': self.nb_samples})
 
             self.check_right_cardinality(dpp, dpp.list_of_samples[0])
 
@@ -116,7 +118,8 @@ class CardinalityOfFiniteDPPs(unittest.TestCase):
         for mode in ('zonotope', 'E'):
 
             dpp.flush_samples()
-            dpp.sample_mcmc(mode, **{'size': self.rank, 'nb_iter': self.nb_samples})
+            dpp.sample_mcmc(mode,
+                            **{'size': self.rank, 'nb_iter': self.nb_samples})
 
             self.check_right_cardinality(dpp, dpp.list_of_samples[0])
 
@@ -140,7 +143,8 @@ class CardinalityOfFiniteDPPs(unittest.TestCase):
         for mode in ('AED', 'AD'):
 
             dpp.flush_samples()
-            dpp.sample_mcmc(mode, **{'nb_iter': self.nb_samples})
+            dpp.sample_mcmc(mode,
+                            **{'nb_iter': self.nb_samples})
 
             self.check_right_cardinality(dpp, dpp.list_of_samples[0])
 
@@ -164,7 +168,8 @@ class CardinalityOfFiniteDPPs(unittest.TestCase):
         for mode in ('AED', 'AD'):
 
             dpp.flush_samples()
-            dpp.sample_mcmc(mode, **{'nb_iter': self.nb_samples})
+            dpp.sample_mcmc(mode,
+                            **{'nb_iter': self.nb_samples})
 
             self.check_right_cardinality(dpp, dpp.list_of_samples[0])
 
@@ -189,7 +194,8 @@ class CardinalityOfFiniteDPPs(unittest.TestCase):
         for mode in ('AED', 'AD'):
 
             dpp.flush_samples()
-            dpp.sample_mcmc(mode, **{'nb_iter': self.nb_samples})
+            dpp.sample_mcmc(mode,
+                            **{'nb_iter': self.nb_samples})
 
             self.check_right_cardinality(dpp, dpp.list_of_samples[0])
 
@@ -213,7 +219,8 @@ class CardinalityOfFiniteDPPs(unittest.TestCase):
         for mode in ('AED', 'AD'):
 
             dpp.flush_samples()
-            dpp.sample_mcmc(mode, **{'nb_iter': self.nb_samples})
+            dpp.sample_mcmc(mode,
+                            **{'nb_iter': self.nb_samples})
 
             self.check_right_cardinality(dpp, dpp.list_of_samples[0])
 
@@ -236,9 +243,11 @@ class CardinalityOfFiniteDPPs(unittest.TestCase):
         for mode in ('AED', 'AD'):
 
             dpp.flush_samples()
-            dpp.sample_mcmc(mode, **{'nb_iter': self.nb_samples})
+            dpp.sample_mcmc(mode,
+                            **{'nb_iter': self.nb_samples})
 
             self.check_right_cardinality(dpp, dpp.list_of_samples[0])
+
 
 class CardinalityOfFinitekDPPs(unittest.TestCase):
     """
@@ -277,7 +286,8 @@ class CardinalityOfFinitekDPPs(unittest.TestCase):
             for mode in ('AED', 'AD'):
 
                 dpp.flush_samples()
-                dpp.sample_mcmc_k_dpp(size, **{'nb_iter': self.nb_samples})
+                dpp.sample_mcmc_k_dpp(size,
+                                      **{'nb_iter': self.nb_samples})
 
                 self.check_right_cardinality(dpp, dpp.list_of_samples[0])
 
@@ -303,7 +313,8 @@ class CardinalityOfFinitekDPPs(unittest.TestCase):
             for mode in ('AED', 'AD'):
 
                 dpp.flush_samples()
-                dpp.sample_mcmc_k_dpp(size, **{'nb_iter': self.nb_samples})
+                dpp.sample_mcmc_k_dpp(size,
+                                      **{'nb_iter': self.nb_samples})
 
                 self.check_right_cardinality(dpp, dpp.list_of_samples[0])
 
@@ -330,7 +341,8 @@ class CardinalityOfFinitekDPPs(unittest.TestCase):
             for mode in ('AED', 'AD'):
 
                 dpp.flush_samples()
-                dpp.sample_mcmc_k_dpp(size, **{'nb_iter': self.nb_samples})
+                dpp.sample_mcmc_k_dpp(size,
+                                      **{'nb_iter': self.nb_samples})
 
                 self.check_right_cardinality(dpp, dpp.list_of_samples[0])
 
@@ -356,7 +368,8 @@ class CardinalityOfFinitekDPPs(unittest.TestCase):
             for mode in ('AED', 'AD'):
 
                 dpp.flush_samples()
-                dpp.sample_mcmc_k_dpp(size, **{'nb_iter': self.nb_samples})
+                dpp.sample_mcmc_k_dpp(size,
+                                      **{'nb_iter': self.nb_samples})
 
                 self.check_right_cardinality(dpp, dpp.list_of_samples[0])
 
@@ -381,9 +394,11 @@ class CardinalityOfFinitekDPPs(unittest.TestCase):
             for mode in ('AED', 'AD'):
 
                 dpp.flush_samples()
-                dpp.sample_mcmc_k_dpp(size, **{'nb_iter': self.nb_samples})
+                dpp.sample_mcmc_k_dpp(size,
+                                      **{'nb_iter': self.nb_samples})
 
                 self.check_right_cardinality(dpp, dpp.list_of_samples[0])
+
 
 def main():
 

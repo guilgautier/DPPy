@@ -7,9 +7,6 @@
 import unittest
 
 import numpy as np
-import numpy.random as rndm
-
-from scipy.linalg import qr, eigh
 
 import sys
 sys.path.append('..')

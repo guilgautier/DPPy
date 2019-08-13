@@ -92,7 +92,6 @@ class InclusionProbabilitiesProjectionDPP(unittest.TestCase):
         for _ in range(self.nb_samples):
             dpp.sample_exact(mode='GS')
 
-
         self.assertTrue(self.singleton_adequation(dpp, dpp.list_of_samples))
         self.assertTrue(self.doubleton_adequation(dpp, dpp.list_of_samples))
 
@@ -113,7 +112,6 @@ class InclusionProbabilitiesProjectionDPP(unittest.TestCase):
         for _ in range(self.nb_samples):
             dpp.sample_exact(mode='GS_bis')
 
-
         self.assertTrue(self.singleton_adequation(dpp, dpp.list_of_samples))
         self.assertTrue(self.doubleton_adequation(dpp, dpp.list_of_samples))
 
@@ -132,12 +130,11 @@ class InclusionProbabilitiesProjectionDPP(unittest.TestCase):
         for _ in range(self.nb_samples):
             dpp.sample_exact(mode='KuTa12')
 
-
         self.assertTrue(self.singleton_adequation(dpp, dpp.list_of_samples))
         self.assertTrue(self.doubleton_adequation(dpp, dpp.list_of_samples))
 
     # From kernel
-    def test_proj_dpp_sampler_from_eigdec_mode_Chol(self):
+    def test_proj_dpp_sampler_from_kernel_mode_Chol(self):
         """ Test whether 'Chol' sampling mode generates samples with the right 1 and 2 points inclusion probabilities when DPP defined by orthogonal projection correlation kernel K from its eigendecomposition.
 
         Complexity :math:`\\mathcal{O}(N rank^2)`
@@ -317,7 +314,7 @@ class InclusionProbabilitiesProjectionDPP(unittest.TestCase):
         eig_vecs, _ = qr(rndm.randn(self.N, self.rank), mode='economic')
         dpp = FiniteDPP(kernel_type='likelihood',
                         projection=True,
-                        **{'L': (eig_vecs*eig_vals).dot(eig_vecs.T)})
+                        **{'L': (eig_vecs * eig_vals).dot(eig_vecs.T)})
 
         dpp.flush_samples()
         for _ in range(self.nb_samples):

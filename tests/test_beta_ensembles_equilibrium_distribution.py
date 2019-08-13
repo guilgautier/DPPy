@@ -7,12 +7,9 @@
 import unittest
 
 import numpy as np
-import numpy.random as rndm
 
 from scipy.integrate import quad
 from scipy.stats import chisquare
-
-from itertools import chain  # to flatten list of samples
 
 import sys
 sys.path.append('..')
@@ -44,7 +41,7 @@ class EquilibriumDistributionOfBetaEnsembles(unittest.TestCase):
         bins = np.linspace(-2.0 + tol, 2.0 - tol, 10)
 
         f_theo = [quad(rm.semi_circle_law, a, b)[0]
-                    for a, b in zip(bins[:-1], bins[1:])]
+                  for a, b in zip(bins[:-1], bins[1:])]
 
         for beta in (1, 2, 4):
 
@@ -70,7 +67,7 @@ class EquilibriumDistributionOfBetaEnsembles(unittest.TestCase):
         bins = np.linspace(supp[0] + tol, supp[1] - tol, 10)
 
         f_theo = [quad(rm.semi_circle_law, a, b)[0]
-                    for a, b in zip(bins[:-1], bins[1:])]
+                  for a, b in zip(bins[:-1], bins[1:])]
 
         for beta in (1, 2, 4):
 
@@ -100,7 +97,7 @@ class EquilibriumDistributionOfBetaEnsembles(unittest.TestCase):
         bins = np.linspace(supp[0] + tol, supp[1] - tol, 20)
 
         f_theo = [quad(lambda x: rm.marcenko_pastur_law(x, M, self.N), a, b)[0]
-                    for a, b in zip(bins[:-1], bins[1:])]
+                  for a, b in zip(bins[:-1], bins[1:])]
 
         for beta in (1, 2, 4):
 
@@ -130,7 +127,7 @@ class EquilibriumDistributionOfBetaEnsembles(unittest.TestCase):
         bins = np.linspace(supp[0] + tol, supp[1] - tol, 20)
 
         f_theo = [quad(lambda x: rm.marcenko_pastur_law(x, M, self.N), a, b)[0]
-                    for a, b in zip(bins[:-1], bins[1:])]
+                  for a, b in zip(bins[:-1], bins[1:])]
 
         for beta in (1, 2, 4):
 
@@ -162,7 +159,7 @@ class EquilibriumDistributionOfBetaEnsembles(unittest.TestCase):
         bins = np.linspace(supp[0] + tol, supp[1] - tol, 20)
 
         f_theo = [quad(lambda x: rm.wachter_law(x, M_1, M_2, self.N), a, b)[0]
-                    for a, b in zip(bins[:-1], bins[1:])]
+                  for a, b in zip(bins[:-1], bins[1:])]
 
         for beta in (1, 2, 4):
 
@@ -170,8 +167,8 @@ class EquilibriumDistributionOfBetaEnsembles(unittest.TestCase):
 
             for _ in range(self.nb_samples):
                 je.sample_full_model(size_N=self.N,
-                                       size_M1=M_1,
-                                       size_M2=M_2)
+                                     size_M1=M_1,
+                                     size_M2=M_2)
 
                 vals, _ =\
                     np.histogram(je.list_of_samples[-1],
@@ -195,7 +192,7 @@ class EquilibriumDistributionOfBetaEnsembles(unittest.TestCase):
         bins = np.linspace(supp[0] + tol, supp[1] - tol, 20)
 
         f_theo = [quad(lambda x: rm.wachter_law(x, M_1, M_2, self.N), a, b)[0]
-                    for a, b in zip(bins[:-1], bins[1:])]
+                  for a, b in zip(bins[:-1], bins[1:])]
 
         for beta in (1, 2, 4):
 
@@ -284,7 +281,7 @@ class EquilibriumDistributionOfBetaEnsembles(unittest.TestCase):
         bins = np.linspace(supp[0] + tol, supp[1] - tol, 20)
 
         f_theo = [quad(lambda x: 2 * x, a, b)[0]
-                    for a, b in zip(bins[:-1], bins[1:])]
+                  for a, b in zip(bins[:-1], bins[1:])]
 
         beta = 2
         ge = be.GinibreEnsemble(beta)

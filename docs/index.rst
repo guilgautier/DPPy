@@ -102,7 +102,7 @@ How to cite this work?
 We wrote a companion paper to
 `DPPy <https://github.com/guilgautier/DPPy>`__ which is available on
 
--  `arXiv <http://arxiv.org/abs/1809.07258>`__ (maybe not upto date)
+-  `arXiv <http://arxiv.org/abs/1809.07258>`__ :cite:`GaBaVa18` (maybe not upto date)
 -  `GitHub <https://github.com/guilgautier/DPPy_paper>`__ for the lastest version
 
 If you use this package, please consider citing it with this piece of

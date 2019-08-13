@@ -201,12 +201,11 @@ class TestUtils(unittest.TestCase):
             np.allclose(utils.is_full_row_rank(X),
                         X))
 
-        Y = rndm.randn(N+1, N)
+        Y = rndm.randn(N + 1, N)
         with self.assertRaises(ValueError) as context:
             utils.is_full_row_rank(Y)
 
         self.assertTrue('not full row rank' in str(context.exception))
-
 
         Y = np.vstack([X, rndm.randn(rank).dot(X)])
         with self.assertRaises(ValueError) as context:

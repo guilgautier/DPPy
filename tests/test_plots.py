@@ -31,7 +31,9 @@ class TestPlot(unittest.TestCase):
 
     def test_plot(self):
 
-        test_plot_files = ['/'.join([self.dir_tests, f]) for f in os.listdir(self.dir_tests) if f.endswith('.py')]
+        test_plot_files = ['/'.join([self.dir_tests, f])
+                           for f in os.listdir(self.dir_tests)
+                           if f.endswith('.py')]
 
         for f in test_plot_files:
             print(f)

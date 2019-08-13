@@ -28,9 +28,9 @@ class InstanciationOfFiniteDppWithCorrelationKernel(unittest.TestCase):
     def test_instanciation_from_invalid_key(self):
 
         with self.assertRaises(ValueError) as context:
-            dpp = FiniteDPP(kernel_type='correlation',
-                            projection=False,
-                            **{'random_key': 0})
+            FiniteDPP(kernel_type='correlation',
+                      projection=False,
+                      **{'random_key': 0})
 
         self.assertTrue('Invalid parametrization of correlation kernel' in str(context.exception))
 
@@ -145,9 +145,9 @@ class InstanciationOfFiniteDppWithLikelihoodKernel(unittest.TestCase):
     def test_instanciation_from_invalid_key(self):
 
         with self.assertRaises(ValueError) as context:
-            dpp = FiniteDPP(kernel_type='likelihood',
-                            projection=False,
-                            **{'random_key': 0})
+            FiniteDPP(kernel_type='likelihood',
+                      projection=False,
+                      **{'random_key': 0})
 
         self.assertTrue('Invalid parametrization of likelihood kernel' in str(context.exception))
 
@@ -220,8 +220,8 @@ class InstanciationOfFiniteDppWithLikelihoodKernel(unittest.TestCase):
         self.assertTrue(np.allclose(dpp.L, L))
 
         dpp = FiniteDPP(kernel_type='likelihood',
-                projection=False,
-                **{'L_gram_factor': phi})
+                        projection=False,
+                        **{'L_gram_factor': phi})
 
         dpp.compute_K()
         eig_vals, eig_vecs = eigh(L)
@@ -244,8 +244,8 @@ class InstanciationOfFiniteDppWithLikelihoodKernel(unittest.TestCase):
         self.assertTrue(np.allclose(dpp.L, L))
 
         dpp = FiniteDPP(kernel_type='likelihood',
-                projection=False,
-                **{'L_gram_factor': phi})
+                        projection=False,
+                        **{'L_gram_factor': phi})
 
         dpp.compute_K()
         eig_vals, eig_vecs = eigh(L)
