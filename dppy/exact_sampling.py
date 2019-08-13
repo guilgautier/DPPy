@@ -110,7 +110,7 @@ def proj_dpp_sampler_kernel_Chol(K, size=None, random_state=None):
     for j in range(size):
 
         # Sample from pivot index and permute
-        t = rng.choice(range(j, N), p=d[j:] / (rank - j))
+        t = rng.choice(range(j, N), p=np.abs(d[j:]) / (rank - j))
 
         # Hermitian swap of indices j and t of A (may be written in a function)
         # bottom swap

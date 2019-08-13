@@ -9,14 +9,3 @@ g.add_edges_from(edges)
 
 # Initialize UST object
 ust = UST(g)
-
-# Display original graph
-ust.plot_graph()
-
-# Display some samples
-for _ in range(3):
-    ust.sample()
-    ust.plot()
-
-# Display underlying kernel i.e. transfer current matrix
-ust.plot_kernel()

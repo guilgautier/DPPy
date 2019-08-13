@@ -33,7 +33,7 @@ class TestPlot(unittest.TestCase):
 
         test_plot_files = ['/'.join([self.dir_tests, f])
                            for f in os.listdir(self.dir_tests)
-                           if f.endswith('.py')]
+                           if f.startswith('ex_plot') and f.endswith('.py')]
 
         for f in test_plot_files:
             print(f)

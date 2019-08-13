@@ -18,7 +18,7 @@ sys.path.append('..')
 
 from dppy.utils import det_ST
 from dppy.exotic_dpps import UST
-form dppy.finite_dpps import FiniteDPP
+from dppy.finite_dpps import FiniteDPP
 
 
 class TestUniformityUniformSpanningTreeSampler(unittest.TestCase):
@@ -53,12 +53,7 @@ class TestUniformityUniformSpanningTreeSampler(unittest.TestCase):
 
         self.nb_spanning_trees = len(list_st)
 
-        self.dpp_ust = UST(g)
-        self.dpp_ust.compute_kernel()
-
-        self.dpp_finite = FiniteDPP(kernel_type='correlation',
-                                    projection=True,
-                                    **{'K': dpp.K})
+        self.dpp = UST(g)
 
         self.nb_samples = 1000
 
@@ -73,7 +68,7 @@ class TestUniformityUniformSpanningTreeSampler(unittest.TestCase):
     def uniformity_adequation(self, tol=0.05):
         """Perform chi-square test"""
 
-        counter = Counter(map(self.sample_to_label, self.dpp_ust.list_of_samples))
+        counter = Counter(map(self.sample_to_label, self.dpp.list_of_samples))
 
         freq = np.array(list(counter.values())) / self.nb_samples
         theo = np.ones(self.nb_spanning_trees) / self.nb_spanning_trees
@@ -82,64 +77,51 @@ class TestUniformityUniformSpanningTreeSampler(unittest.TestCase):
 
         return pval > tol
 
-    def test_wilson(self):
-        """ Test whether 'Wilson' procedure generates uniform spanning trees uniformly at random
-        """
-        self.dpp_ust.flush_samples()
-        for _ in range(self.nb_samples):
-            self.dpp_ust.sample(mode='Wilson')
+    def test_dpp_exact_projection_dpp_sampler_markov_chain(self):
 
-        self.assertTrue(self.uniformity_adequation())
+        for mode in self.dpp._sampling_modes['markov-chain']:
 
-    def test_aldous_broder(self):
-        """ Test whether 'Aldous-Broder' procedure generates uniform spanning trees uniformly at random
-        """
-        self.dpp_ust.flush_samples()
-        for _ in range(self.nb_samples):
-            self.dpp_ust.sample(mode='Aldous-Broder')
+            print('mode: {}'.format(mode))
 
-        self.assertTrue(self.uniformity_adequation())
+            self.dpp.flush_samples()
+            for _ in range(self.nb_samples):
+                self.dpp.sample(mode=mode)
 
-    def test_dpp_exact(self):
-        """ Test whether 'DPP_exact' procedure generates uniform spanning trees uniformly at random
-        """
-        self.dpp_ust.flush_samples()
-        for _ in range(self.nb_samples):
-            self.dpp_ust.sample(mode='DPP_exact')
+            self.assertTrue(self.uniformity_adequation())
 
-        self.assertTrue(self.uniformity_adequation())
+    def test_dpp_exact_projection_dpp_sampler_eig_vecs(self):
 
-    def test_dpp_exact_Cholesky_for_projection(self):
-        """ Test whether 'DPP_exact' procedure generates uniform spanning trees uniformly at random
-        """
+        for mode in self.dpp._sampling_modes['spectral-method']:
 
-        self.dpp_finite.flush_samples()
+            print('mode: {}'.format(mode))
 
-        for _ in range(self.nb_samples):
-            self.dpp_finite.sample(mode='Chol')
+            self.dpp.flush_samples()
+            for _ in range(self.nb_samples):
+                self.dpp.sample(mode=mode)
 
+            self.assertTrue(self.uniformity_adequation())
 
+    def test_dpp_exact_projection_dpp_sampler_correlation_kernel(self):
 
-        self.assertTrue(self.uniformity_adequation())
+        for mode in self.dpp._sampling_modes['projection-K-kernel']:
 
-    def test_dpp_exact_Cholesky_generic(self):
-        """ Test whether 'DPP_exact' procedure generates uniform spanning trees uniformly at random
-        """
-        self.dpp_ust.flush_samples()
-        for _ in range(self.nb_samples):
-            self.dpp_ust.sample(mode='DPP_exact')
+            print('mode: {}'.format(mode))
 
-        self.assertTrue(self.uniformity_adequation())
+            self.dpp.flush_samples()
+            for _ in range(self.nb_samples):
+                self.dpp.sample(mode=mode)
+
+            self.assertTrue(self.uniformity_adequation())
 
     def test_projection_kernel_computation(self):
         """UST is a DPP associated to the projection kernel onto the row span of the vertex-edge-incidence matrix
         """
-        inc = incidence_matrix(self.dpp_ust.graph, oriented=True).todense()
+        inc = incidence_matrix(self.dpp.graph, oriented=True).todense()
         expected_kernel = np.linalg.pinv(inc).dot(inc)
 
-        self.dpp_ust.compute_kernel()
+        self.dpp.compute_kernel()
 
-        self.assertTrue(np.allclose(self.dpp_ust.kernel, expected_kernel))
+        self.assertTrue(np.allclose(self.dpp.kernel, expected_kernel))
 
 
 def main():
