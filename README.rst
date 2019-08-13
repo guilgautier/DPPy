@@ -139,7 +139,7 @@ the `MLOSS <http://www.jmlr.org/mloss/>`__ track of JMLR.
 
 The companion paper is available on
 
--  `arXiv <http://arxiv.org/abs/1809.07258>`__ (maybe not upto date)
+-  `arXiv <http://arxiv.org/abs/1809.07258>`__
 -  `GitHub <https://github.com/guilgautier/DPPy_paper>`__ for the lastest version
 
 If you use this package, please consider citing it with this piece of
@@ -147,10 +147,10 @@ BibTeX:
 
 .. code:: bibtex
 
-  @article{GaBaVa18,
+  @article{GPBV18,
     archivePrefix = {arXiv},
     arxivId = {1809.07258},
-    author = {Gautier, Guillaume and Bardenet, R{\'{e}}mi and Valko, Michal},
+    author = {Gautier, Guillaume and Polito, Guillermo and Bardenet, R{\'{e}}mi and Valko, Michal},
     eprint = {1809.07258},
     journal = {ArXiv e-prints},
     title = {{DPPy: Sampling Determinantal Point Processes with Python}},
