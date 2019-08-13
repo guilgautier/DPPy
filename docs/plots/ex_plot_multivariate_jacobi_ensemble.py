@@ -19,8 +19,8 @@ sampl = dpp.sample()
 # the base probability densities
 # the marginal empirical histograms
 dpp.plot(sample=sampl, weighted=False)
-plt.tight_layout(pad=0.3)
+plt.tight_layout()
 
 # Attach a weight 1/K(x,x) to each of the points
 dpp.plot(sample=sampl, weighted=True)
-plt.tight_layout(pad=0.3)
+plt.tight_layout()

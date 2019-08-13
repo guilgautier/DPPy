@@ -527,7 +527,7 @@ class MultivariateJacobiOPE:
 
         if self.dim == 1:
 
-            fig, ax_main = plt.subplots(figsize=(10, 8))
+            fig, ax_main = plt.subplots(figsize=(6, 4))
 
             ax_main.tick_params(axis='both', which='major', labelsize=18)
             ax_main.set_xticks(ticks_pos)
@@ -566,16 +566,16 @@ class MultivariateJacobiOPE:
                              c='orange', ls='-', lw=3,
                              label=r'$a = b = -0.5$')
 
-            ax_main.legend(fontsize=20,
+            ax_main.legend(fontsize=15,
                            loc='center',
-                           bbox_to_anchor=(0.5, -0.1 if weighted else -0.12),
+                           bbox_to_anchor=(0.5, -0.15 if weighted else -0.17),
                            labelspacing=0.1,
                            frameon=False)
 
         elif self.dim == 2:
 
             # Create Fig and gridspec
-            fig = plt.figure(figsize=(8, 8))
+            fig = plt.figure(figsize=(6, 6))
             grid = plt.GridSpec(6, 6, hspace=0., wspace=0.)
 
             ax_main = fig.add_subplot(grid[1:, :-1],
@@ -654,7 +654,7 @@ class MultivariateJacobiOPE:
 
             ax_main.legend(leg_axes,
                            leg_text,
-                           fontsize=20,
+                           fontsize=15,
                            loc='center',
                            bbox_to_anchor=(0.5, -0.14 if weighted else -0.18),
                            labelspacing=0.1,
