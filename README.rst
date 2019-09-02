@@ -28,13 +28,15 @@ a nontrivial matter, and many approaches have been proposed. DPPy is a
 `Python <https://www.python.org/>`__ library that puts together all
 exact and approximate sampling algorithms for DPPs.
 
-Requirements
+Installation
 ------------
 
 DPPy works with `Python 3.4+ <http://docs.python.org/3/>`__.
 
 Dependencies
 ~~~~~~~~~~~~
+
+This project depends on the following libraries, which are automatically downloaded during installation:
 
 -  `NumPy <http://www.numpy.org>`__
 -  `SciPy <http://www.scipy.org/>`__
@@ -54,8 +56,8 @@ Dependencies
 
           sudo apt install -qq gcc g++
 
-Installation
-------------
+Download instructions
+~~~~~~~~~~~~
 
 DPPy is now available on `PyPI <https://pypi.org/project/dppy/>`__
 
@@ -90,6 +92,13 @@ However you may not work with the latest version, so
 
        cd DPPy
        pip install .
+       
+How to use it
+------------
+
+To avoid duplicating the docs, the entire DPPy documentation is in read the docs in the following link http://dppy.readthedocs.io/.
+There are also some interactive tutorials using Jupyter in here https://github.com/guilgautier/DPPy/blob/master/notebooks/.
+For more details, check below.
 
 Tutorials in `Jupyter notebooks <https://github.com/guilgautier/DPPy/blob/master/notebooks/>`_
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -98,7 +107,7 @@ You can read and work on these interactive tutorial `Notebooks <https://github.c
 web browser, without having to download or install Python or anything.
 Just click, wait a little bit, and play with the notebook!
 
-Contribute to the documentation
+Documentation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The
