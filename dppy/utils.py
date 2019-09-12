@@ -221,3 +221,49 @@ def stable_invert_root(eigenvec, eigenval):
     eigenval_thin_inv_root = (1 / np.sqrt(eigenval_thin)).reshape(-1, 1)
 
     return eigenvec_thin, eigenval_thin_inv_root
+
+def get_progress_bar(total=-1, disable=False, **kwargs):
+    """Helper function to get a tqdm progress bar (or a simple fallback otherwise)"""
+    class ProgBar(object):
+        def __init__(self, total=-1, disable=False, **kwargs):
+            self.disable = disable
+            self.t = 0
+            self.total = total
+            self.debug_string = ""
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *args, **kwargs):
+            pass
+
+        def set_postfix(self, **kwargs):
+            self.debug_string = ""
+            for arg in kwargs:
+                self.debug_string += "{}={} ".format(arg, kwargs[arg])
+
+        def update(self):
+            if not self.disable:
+                self.t += 1
+                print_str = "{}".format(self.t)
+
+                if self.total > 0:
+                    print_str += "/{}".format(self.total)
+
+                print_str += ": {}".format(self.debug_string)
+
+                if len(print_str) < 80:
+                    print_str = print_str + " "*(80 - len(print_str))
+
+                print(print_str, end='\r', flush=True)
+
+            if self.t == self.total:
+                print("")
+
+    try:
+        from tqdm import tqdm
+        progress_bar = tqdm(total=total, disable=disable)
+    except ImportError:
+        progress_bar = ProgBar(total=total, disable=disable)
+
+    return progress_bar
