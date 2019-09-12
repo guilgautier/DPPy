@@ -267,3 +267,11 @@ def get_progress_bar(total=-1, disable=False, **kwargs):
         progress_bar = ProgBar(total=total, disable=disable)
 
     return progress_bar
+
+def evaluate_L_diagonal(eval_L, X):
+    diag_eval = getattr(eval_L, "diag", None)
+    if callable(diag_eval):
+        return diag_eval(X)
+    else:
+        # inspired by sklearn.gaussian_process.kernels.PairwiseKernel
+        return np.apply_along_axis(eval_L, 1, X).ravel()
