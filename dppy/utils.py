@@ -200,3 +200,24 @@ def is_full_row_rank(array):
             return array
         else:
             raise ValueError(err_print + 'd(={}) != rank(={})'.format(d, rank))
+
+def stable_invert_root(eigenvec, eigenval):
+    n = eigenvec.shape[0]
+
+    assert eigenvec.shape == (n, n)
+    assert eigenval.shape == (n,)
+
+    # threshold formula taken from pinv2's implementation of numpy/scipy
+    thresh = eigenval.max() * max(eigenval.shape) * np.finfo(eigenval.dtype).eps
+    stable_eig = np.logical_not(np.isclose(eigenval, 0., atol=thresh))
+    m = sum(stable_eig)
+
+    eigenvec_thin = eigenvec[:, stable_eig]
+    eigenval_thin = eigenval[stable_eig]
+
+    assert eigenvec_thin.shape == (n, m)
+    assert eigenval_thin.shape == (m,)
+
+    eigenval_thin_inv_root = (1 / np.sqrt(eigenval_thin)).reshape(-1, 1)
+
+    return eigenvec_thin, eigenval_thin_inv_root
