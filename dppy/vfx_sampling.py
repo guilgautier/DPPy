@@ -56,7 +56,6 @@ def compute_nystrom_dict(X,
     .. todo::
 
         - docstring: continue description of params and return, add types
-        - asserts -> throw
     """
     n, _ = X.shape
 
@@ -72,11 +71,15 @@ def compute_nystrom_dict(X,
     # but even with constant oversampling factor we seem to accept fast
 
     probs = np.minimum(rls_oversample_dppvfx * bless_rls_estimate, 1.0)
-    assert np.all(probs >= 0.0)
+    if not np.all(probs >= 0.0):
+        raise ValueError('Some estimated RLS is negative, this should never happen. Min prob: {}'.format(np.min(probs)))
 
     selected = rng.rand(n) <= probs
     s = selected.sum()
-    assert s > 0
+
+    if not s > 0:
+        raise ValueError('No point selected during RLS sampling step, try to increase qbar. '
+                         'Expected number of points: {:.3f}'.format(probs.sum()))
 
     dict_dppvfx = Dictionary(idx=selected.nonzero()[0],
                              X=X[selected, :],
@@ -160,7 +163,6 @@ def _precompute_constants(X,
     .. todo::
 
         - docstring: description of params and return, add types
-        - asserts -> throw
     """
     diag_L = evaluate_L_diagonal(eval_L, X)
     trace_L = diag_L.sum()
@@ -199,11 +201,16 @@ def _precompute_constants(X,
     # but we must first tune L to obtain a desired s
     # we can use the fact the the non-zero eigenvalues of I + L_hat and I_A_mm are equal
     eigvals, eigvec = np.linalg.eigh(I_A_mm)
-    assert np.all(eigvals >= 0.0), ("Some eigenvalues of L_hat are negative, this should never happen."
-                                   "Minimum eig: {}".format(np.min(eigvals)))
+
+    if not np.all(eigvals >= 0.0):
+        raise ValueError('Some eigenvalues of L_hat are negative, this should never happen. '
+                         'Minimum eig: {}'.format(np.min(eigvals)))
+
     natural_s = trace_L - trace_L_hat + np.sum((eigvals - 1.0) / eigvals)
-    assert natural_s >= 0.0, ("natural_s is negative, this should never happen."
-                             " natural_s: {}".format(natural_s))
+
+    if not natural_s >= 0.0:
+        raise ValueError('natural_s is negative, this should never happen. '
+                         'natural_s: {}'.format(natural_s))
 
     # s might naturally be too large, but we can rescale L to shrink it
     # if we rescale alpha * L by a constant alpha < 1,
@@ -218,22 +225,24 @@ def _precompute_constants(X,
             .. todo::
 
                 - docstring: description of function, params and return, add types
-                - why no return?
             """
-            x * trace_L\
-            - x * trace_L_hat\
-            + np.sum((eigvals - 1.0) / (eigvals - 1.0 + 1.0 / x))\
-            - desired_s
+            return (
+                    x * trace_L
+                    - x * trace_L_hat
+                    + np.sum((eigvals - 1.0) / (eigvals - 1.0 + 1.0 / x))
+                    - desired_s
+                   )
 
         alpha_star, opt_result = brentq(f_opt,
                                         a=10.0 * np.finfo(np.float).eps,
                                         b=1.0,
                                         full_output=True)
 
-        assert opt_result.converged, ("Could not find an appropriate rescaling for desired_s."
-            "(Flag, Iter, Root): {}".format((opt_result.flag,
-                                             opt_result.iterations,
-                                             opt_result.root)))
+        if not opt_result.converged:
+            raise ValueError('Could not find an appropriate rescaling for desired_s.'
+                             '(Flag, Iter, Root): {}'.format((opt_result.flag,
+                                                              opt_result.iterations,
+                                                              opt_result.root)))
 
     # adjust from I + A to I / alpha_star + A
     I_A_mm[np.diag_indices(m)] += 1.0 / alpha_star - 1.0
@@ -244,13 +253,16 @@ def _precompute_constants(X,
                                                diag_L,
                                                diag_L_hat,
                                                alpha_star)
-    assert np.all(rls_estimate >= 0.0), ("Some estimate l_i is negative, this should never happen."
-        " Minimum l_i: {}".format(np.min(rls_estimate)))
+
+    if not np.all(rls_estimate >= 0.0):
+        raise ValueError('Some estimate l_i is negative, this should never happen. '
+                         'Minimum l_i: {}'.format(np.min(rls_estimate)))
 
     # s is simply the sum of l_i
     s = np.sum(rls_estimate)
-    assert s >= 0.0, ("s is negative, this should never happen."
-                     " s: {}".format(s))
+    if not s >= 0.0:
+        raise ValueError('s is negative, this should never happen. '
+                         's: {}'.format(s))
 
     # we need to compute z and logDet(I + L_hat)
     z = np.sum((eigvals - alpha_star) / eigvals)
@@ -258,7 +270,9 @@ def _precompute_constants(X,
     # we need logdet(I + alpha * A) and we have eigvals(I / alpha_star + A) we can adjust using sum of logs
     logdet_I_A = np.sum(np.log(alpha_star * eigvals))
 
-    assert logdet_I_A >= 0
+    if not logdet_I_A >= 0.0:
+        raise ValueError('logdet_I_A is negative, this should never happen. '
+                         's: {}'.format(logdet_I_A))
 
     result = _PrecomputeState(alpha_star=alpha_star,
                               logdet_I_A=logdet_I_A,
@@ -279,7 +293,6 @@ def _sampling_loop(X,
     .. todo::
 
         - docstring: continue description of params and return, add types
-        - asserts -> throw
         - put a maximal number of rejection steps and potentially replace while
     """
     n, d = X.shape
@@ -314,15 +327,15 @@ def _sampling_loop(X,
             # = log(Det(W^2)) + log(Det(W^-2 + L_sigma))
             # = -log(Det(W^-2)) + log(Det(W^-2 + L_sigma))
 
-            W_square_inv =\
-                pc_state.q * pc_state.rls_estimate[sigma] / pc_state.s
+            W_square_inv = pc_state.q * pc_state.rls_estimate[sigma] / pc_state.s
 
-            I_L_sigma =\
-                pc_state.alpha_star * eval_L(X_sigma, X_sigma)
-                + np.diag(W_square_inv)
+            I_L_sigma = (pc_state.alpha_star * eval_L(X_sigma, X_sigma)
+                         + np.diag(W_square_inv))
 
             s_logdet, logdet_I_L_sigma = np.linalg.slogdet(I_L_sigma)
-            assert s_logdet > 0
+            if not s_logdet >= 0.0:
+                raise ValueError('logdet_I_L_sigma is negative, this should never happen. '
+                                 's: {}'.format(s_logdet))
 
             logdet_W_square_inv = np.sum(np.log(W_square_inv))
 
@@ -342,8 +355,8 @@ def _sampling_loop(X,
 
     # Phase 4: use L_tilda to perform exact DPP sampling
     # compute alpha_star * L_tilda = alpha_star * W*L_sigma*W
-    W = np.sqrt(pc_state.s)\
-        / np.sqrt(pc_state.q * pc_state.rls_estimate[sigma]).reshape(-1, 1)
+    W = (np.sqrt(pc_state.s)
+         / np.sqrt(pc_state.q * pc_state.rls_estimate[sigma]).reshape(-1, 1))
 
     L_tilda = pc_state.alpha_star * W.T * eval_L(X_sigma, X_sigma) * W
 
