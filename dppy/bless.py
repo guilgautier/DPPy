@@ -33,7 +33,13 @@ Dictionary = namedtuple('Dictionary', ('idx', 'X', 'probs', 'lam', 'qbar'))
 
 def estimate_rls(D, X, eval_L, lam_new):
     """Given a previosuly computed (eps, lambda)-accurate dictionary, it computes estimates
-    of all RLS using the estimator from Calandriello et al. 2017"""
+    of all RLS using the estimator from Calandriello et al. 2017
+
+    .. todo::
+
+        - asserts -> throw
+        - create bib entry for Calandriello et al. 2017
+    """
 
     diag_norm = evaluate_L_diagonal(eval_L, X)
 
@@ -65,6 +71,12 @@ def estimate_rls(D, X, eval_L, lam_new):
 
 
 def reduce_lambda(X, eval_L, D: Dictionary, lam_new: float, rng, qbar=None):
+    """
+    .. todo::
+
+        - write docstring
+        - asserts -> throw
+    """
     n, d = X.shape
 
     if qbar is None:
@@ -121,25 +133,27 @@ def reduce_lambda(X, eval_L, D: Dictionary, lam_new: float, rng, qbar=None):
 
 
 def bless(X, eval_L, lam_final, qbar, random_state=None, H=None, verbose=True):
-    """
-    Generates dictionary sampled according to RLS. In a nutshell, Rudi et al 2018 shows that
-    uniform sampling is equivalent to RLS sampling with lambda=n. Therefore, we can initialize BLESS's dictionary
-    using uniform sampling, and over H iteration alternate between reducing lambda_h, and re-sampling using the
-    more accurate lambda_h-RLS. When we reach a desired final lambda_H we terminate
+    """ Generates dictionary sampled according to RLS. In a nutshell, Rudi et al 2018 shows that uniform sampling is equivalent to RLS sampling with lambda=n.
+    Therefore, we can initialize BLESS's dictionary using uniform sampling, and over H iteration alternate between reducing lambda_h, and re-sampling using the more accurate lambda_h-RLS.
+    When we reach a desired final lambda_H we terminate
+
     :param X: input data, as an ndarray-like (n x m) object
+
     :param eval_L: likelihood function between points.
-    If L is the associated likelihood matrix, it must satisfy the interface
-    eval_L(X) = $K(X,X)$
-    eval_L(X_1, X_2) = $K(X_1, X_2)$
+    If L is the associated likelihood matrix, it must satisfy the interface eval_L(X) = K(X,X) eval_L(X_1, X_2) = K(X_1, X_2)
+
     :param lam_final: final lambda (i.e. as in (eps, lambda)-accuracy) desired.
-    Roughly, the final dictionary will approximate all eigenvalues larger than lambda,
-    and therefore smaller lambda creates larger, more accurate dictionaries.
-    :param qbar: BLESS generates a dictionary with \tilde{O}(qbar*deff) points, and the qbar >= 1 parameter controls
-    the oversampling. Larger qbar make the algorithm succeed with higher probability and generate larger but more
-    accurate dictionary.
+    Roughly, the final dictionary will approximate all eigenvalues larger than lambda, and therefore smaller lambda creates larger, more accurate dictionaries.
+
+    :param qbar: BLESS generates a dictionary with :math:`\\tilde{O}(qbar*deff)` points, and the qbar >= 1 parameter controls the oversampling.
+    Larger qbar make the algorithm succeed with higher probability and generate larger but more accurate dictionary.
+
     :param random_state:
+
     :param H: number of iterations, defaults to log(n) if None
+
     :param verbose: control debug output
+
     :return: A Dictionary
     """
 
@@ -174,7 +188,7 @@ def bless(X, eval_L, lam_final, qbar, random_state=None, H=None, verbose=True):
             D = reduce_lambda(X, eval_L, D, lam_new, rng)
             t.set_postfix(lam=int(lam_new),
                           m=len(D.probs),
-                          m_expected=int(D.probs.mean()*n),
+                          m_expected=int(D.probs.mean() * n),
                           probs_dist="({:.4}, {:.4}, {:.4})".format(D.probs.mean(), D.probs.max(), D.probs.min()))
             t.update()
 

@@ -202,6 +202,13 @@ def is_full_row_rank(array):
             raise ValueError(err_print + 'd(={}) != rank(={})'.format(d, rank))
 
 def stable_invert_root(eigenvec, eigenval):
+    """
+    .. todo::
+
+        - docstring
+        - asserts -> throw
+        - regroup successive == into one
+    """
     n = eigenvec.shape[0]
 
     assert eigenvec.shape == (n, n)
@@ -253,7 +260,7 @@ def get_progress_bar(total=-1, disable=False, **kwargs):
                 print_str += ": {}".format(self.debug_string)
 
                 if len(print_str) < 80:
-                    print_str = print_str + " "*(80 - len(print_str))
+                    print_str = print_str + " " * (80 - len(print_str))
 
                 print(print_str, end='\r', flush=True)
 
@@ -269,6 +276,11 @@ def get_progress_bar(total=-1, disable=False, **kwargs):
     return progress_bar
 
 def evaluate_L_diagonal(eval_L, X):
+    """
+    .. todo::
+
+        - docstring
+    """
     diag_eval = getattr(eval_L, "diag", None)
     if callable(diag_eval):
         return diag_eval(X)
