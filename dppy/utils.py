@@ -200,3 +200,78 @@ def is_full_row_rank(array):
             return array
         else:
             raise ValueError(err_print + 'd(={}) != rank(={})'.format(d, rank))
+
+def stable_invert_root(eigenvec, eigenval):
+    n = eigenvec.shape[0]
+
+    assert eigenvec.shape == (n, n)
+    assert eigenval.shape == (n,)
+
+    # threshold formula taken from pinv2's implementation of numpy/scipy
+    thresh = eigenval.max() * max(eigenval.shape) * np.finfo(eigenval.dtype).eps
+    stable_eig = np.logical_not(np.isclose(eigenval, 0., atol=thresh))
+    m = sum(stable_eig)
+
+    eigenvec_thin = eigenvec[:, stable_eig]
+    eigenval_thin = eigenval[stable_eig]
+
+    assert eigenvec_thin.shape == (n, m)
+    assert eigenval_thin.shape == (m,)
+
+    eigenval_thin_inv_root = (1 / np.sqrt(eigenval_thin)).reshape(-1, 1)
+
+    return eigenvec_thin, eigenval_thin_inv_root
+
+def get_progress_bar(total=-1, disable=False, **kwargs):
+    """Helper function to get a tqdm progress bar (or a simple fallback otherwise)"""
+    class ProgBar(object):
+        def __init__(self, total=-1, disable=False, **kwargs):
+            self.disable = disable
+            self.t = 0
+            self.total = total
+            self.debug_string = ""
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *args, **kwargs):
+            pass
+
+        def set_postfix(self, **kwargs):
+            self.debug_string = ""
+            for arg in kwargs:
+                self.debug_string += "{}={} ".format(arg, kwargs[arg])
+
+        def update(self):
+            if not self.disable:
+                self.t += 1
+                print_str = "{}".format(self.t)
+
+                if self.total > 0:
+                    print_str += "/{}".format(self.total)
+
+                print_str += ": {}".format(self.debug_string)
+
+                if len(print_str) < 80:
+                    print_str = print_str + " "*(80 - len(print_str))
+
+                print(print_str, end='\r', flush=True)
+
+            if self.t == self.total:
+                print("")
+
+    try:
+        from tqdm import tqdm
+        progress_bar = tqdm(total=total, disable=disable)
+    except ImportError:
+        progress_bar = ProgBar(total=total, disable=disable)
+
+    return progress_bar
+
+def evaluate_L_diagonal(eval_L, X):
+    diag_eval = getattr(eval_L, "diag", None)
+    if callable(diag_eval):
+        return diag_eval(X)
+    else:
+        # inspired by sklearn.gaussian_process.kernels.PairwiseKernel
+        return np.apply_along_axis(eval_L, 1, X).ravel()
