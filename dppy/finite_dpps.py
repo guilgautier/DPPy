@@ -413,7 +413,7 @@ class FiniteDPP:
                     rank = np.round(np.trace(self.K)).astype(int)
 
                 if size != rank:
-                    raise ValueError('size k={} != rank={} for projection correlation K kernel'.format(k, rank))
+                    raise ValueError('size k={} != rank={} for projection correlation K kernel'.format(size, rank))
 
                 if self.K_eig_vals is not None:
                     # K_eig_vals > 0.5 below to get indices where e_vals = 1
