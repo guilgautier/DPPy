@@ -37,7 +37,6 @@ def estimate_rls(D, X, eval_L, lam_new):
 
     .. todo::
 
-        - asserts -> throw
         - create bib entry for Calandriello et al. 2017
     """
 
@@ -64,8 +63,8 @@ def estimate_rls(D, X, eval_L, lam_new):
     # ell-2 norm of the columns of (X'X + lam*S^(-2))^(-1/2)XX'
     tau = (diag_norm - np.square(X_precond, out=X_precond).sum(axis=0)) / lam_new
 
-    assert np.all(tau >= 0.), ("Some estimated RLS is negative, this should never happen."
-                               "Min prob: {}".format(np.min(tau)))
+    if not np.all(tau >= 0.):
+        raise ValueError('Some estimated RLS is negative, this should never happen. Min prob: {}'.format(np.min(tau)))
 
     return tau
 
@@ -75,7 +74,6 @@ def reduce_lambda(X, eval_L, D: Dictionary, lam_new: float, rng, qbar=None):
     .. todo::
 
         - write docstring
-        - asserts -> throw
     """
     n, d = X.shape
 
@@ -84,7 +82,8 @@ def reduce_lambda(X, eval_L, D: Dictionary, lam_new: float, rng, qbar=None):
 
     red_ratio = D.lam / lam_new
 
-    assert red_ratio >= 1.
+    if not red_ratio >= 1.0:
+        raise ValueError(str(red_ratio))
 
     diag = np.asarray(evaluate_L_diagonal(eval_L, X))
 
@@ -95,8 +94,9 @@ def reduce_lambda(X, eval_L, D: Dictionary, lam_new: float, rng, qbar=None):
     U = np.asarray(rng.rand(n)) <= ucb
     u = U.sum()
 
-    assert u > 0, ("No point selected during uniform sampling step, try to increase qbar."
-                   "Expected number of points: {:.3}".format(n * ucb))
+    if not u > 0:
+        raise ValueError('No point selected during uniform sampling step, try to increase qbar. '
+                         'Expected number of points: {:.3f}'.format(n * ucb))
 
     X_U = X[U, :]
 
@@ -104,24 +104,28 @@ def reduce_lambda(X, eval_L, D: Dictionary, lam_new: float, rng, qbar=None):
     tau = estimate_rls(D, X_U, eval_L, lam_new)
 
     # RLS should always be smaller than 1
-    tau = np.minimum(tau, 1.)
+    tau = np.minimum(tau, 1.0)
 
     # same as before, oversample by a qbar factor
     probs = np.minimum(qbar * tau, ucb[U]) / ucb[U]
 
-    assert np.all(probs >= 0.), ("Some estimated probability is negative, this should never happen."
-                                 "Min prob: {}".format(np.min(probs)))
+    if not np.all(probs >= 0.0):
+        raise ValueError('Some estimated probability is negative, this should never happen. '
+                         'Min prob: {}'.format(np.min(probs)))
 
     deff_estimate = probs.sum()/qbar
-    assert qbar*deff_estimate >= 1., ("Estimated deff is smaller than 1, you might want to reconsider your kernel."
-                                      "deff_estimate: {:.3}".format(qbar*deff_estimate))
+
+    if not qbar*deff_estimate >= 1.0:
+        raise ValueError('Estimated deff is smaller than 1, you might want to reconsider your kernel. '
+                         'deff_estimate: {:.3f}'.format(qbar*deff_estimate))
 
     selected = np.asarray(rng.rand(u)) <= probs
 
     s = selected.sum()
 
-    assert s > 0, ("No point selected during RLS sampling step, try to increase qbar. "
-                   "Expected number of points (qbar*deff): {:.3}".format(np.sum(probs)))
+    if not s > 0:
+        raise ValueError('No point selected during RLS sampling step, try to increase qbar. '
+                         'Expected number of points (qbar*deff): {:.3f}'.format(np.sum(probs)))
 
     D_new = Dictionary(idx=U.nonzero()[0][selected.nonzero()[0]],
                        X=X_U[selected, :],
