@@ -40,6 +40,8 @@ from dppy.exact_sampling import (dpp_sampler_generic_kernel,
                                  k_dpp_eig_vecs_selector,
                                  elementary_symmetric_polynomials)
 
+from dppy.vfx_sampling import vfx_sampling_precompute_constants, vfx_sampling_do_sampling_loop
+
 from dppy.mcmc_sampling import dpp_sampler_mcmc, zonotope_sampler
 
 from dppy.utils import (check_random_state,
@@ -164,6 +166,7 @@ class FiniteDPP:
         # L "lazy" likelihood function representation
         # eval_L(X, Y) = L(X, Y)
         self.eval_L, self.X = params.get('L_eval_data', [None, None])
+        self.intermediate_sample_info = None
 
         if self.eval_L and not callable(self.eval_L):
             raise ValueError('eval_L should be a likelihood function between points')
@@ -260,6 +263,7 @@ class FiniteDPP:
                 - ``'GS_bis'``: Slight modification of ``'GS'``
                 - ``'Chol'`` :cite:`Pou19` Algorithm 1
                 - ``'KuTa12'``: Algorithm 1 in :cite:`KuTa12`
+                - ``'vfx'``: dpp-vfx in :cite:`DeCaVa19`
         :type mode:
             string, default ``'GS'``
 
@@ -297,6 +301,24 @@ class FiniteDPP:
             else:
                 sampl, _ = dpp_sampler_generic_kernel(self.K, random_state=rng)
             self.list_of_samples.append(sampl)
+
+        elif self.sampling_mode == 'vfx':
+            if self.intermediate_sample_info is None:
+                self.intermediate_sample_info = vfx_sampling_precompute_constants(
+                    X = self.X,
+                    eval_L=self.eval_L,
+                    rng = rng,
+                    **params
+                )
+
+                q_func = params.get('q_func', lambda s: s * s)
+                self.intermediate_sample_info.q = q_func(self.intermediate_sample_info.s)
+
+            sample, rej_count = vfx_sampling_do_sampling_loop(self.X,
+                                                         self.eval_L,
+                                                         self.intermediate_sample_info,
+                                                         rng)
+            self.list_of_samples.append(sample)
 
         # If eigen decoposition of K, L or L_dual is available USE IT!
         elif self.K_eig_vals is not None:
