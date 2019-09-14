@@ -26,7 +26,6 @@
 from dppy.bless import bless, Dictionary, estimate_rls
 from dppy.utils import stable_invert_root, evaluate_L_diagonal, get_progress_bar, check_random_state
 import numpy as np
-from dppy.finite_dpps import FiniteDPP
 from scipy.optimize import brentq
 from collections import namedtuple
 
@@ -328,6 +327,9 @@ def vfx_sampling_do_sampling_loop(X,
 
     E, U = np.linalg.eigh(L_tilda)
 
+    # this has to be here rather than at the top to avoid circular dependencies
+    # TODO: maybe refactor to avoid this
+    from dppy.finite_dpps import FiniteDPP
     DPP = FiniteDPP(kernel_type='likelihood', L_eig_dec=(E, U))
     DPP.sample_exact(random_state=rng)
 
