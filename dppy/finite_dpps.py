@@ -315,11 +315,11 @@ class FiniteDPP:
                 self.intermediate_sample_info = self.intermediate_sample_info._replace(
                                                                             q=q_func(self.intermediate_sample_info.s))
 
-            sample, rej_count = vfx_sampling_do_sampling_loop(self.X,
+            sampl, rej_count = vfx_sampling_do_sampling_loop(self.X,
                                                          self.eval_L,
                                                          self.intermediate_sample_info,
                                                          rng)
-            self.list_of_samples.append(sample)
+            self.list_of_samples.append(sampl)
 
         # If eigen decoposition of K, L or L_dual is available USE IT!
         elif self.K_eig_vals is not None:
@@ -489,6 +489,30 @@ class FiniteDPP:
                                                     random_state=rng)
 
             self.size_k_dpp = size
+            self.list_of_samples.append(sampl)
+
+        elif self.sampling_mode == 'vfx':
+            if (self.intermediate_sample_info is None
+                    or self.intermediate_sample_info.s != size):
+                self.intermediate_sample_info = vfx_sampling_precompute_constants(
+                    X = self.X,
+                    eval_L=self.eval_L,
+                    desired_s=size,
+                    rng = rng,
+                    **params
+                )
+
+                q_func = params.get('q_func', lambda s: s * s)
+                self.intermediate_sample_info = self.intermediate_sample_info._replace(
+                    q=q_func(self.intermediate_sample_info.s))
+
+            sampl = []
+            while len(sampl) != size:
+                sampl, rej_count = vfx_sampling_do_sampling_loop(self.X,
+                                                                  self.eval_L,
+                                                                  self.intermediate_sample_info,
+                                                                  rng)
+
             self.list_of_samples.append(sampl)
 
         # If eigen decoposition of K, L or L_dual is available USE IT!
