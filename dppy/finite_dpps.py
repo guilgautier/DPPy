@@ -245,7 +245,7 @@ class FiniteDPP:
         self.list_of_samples = []
 
     # Exact sampling
-    def sample_exact(self, mode='GS', random_state=None):
+    def sample_exact(self, mode='GS', random_state=None, **params):
         """ Sample exactly from the corresponding :class:`FiniteDPP <FiniteDPP>` object. The sampling scheme is based on the chain rule with Gram-Schmidt like updates of the conditionals.
 
         :param mode:
@@ -359,7 +359,7 @@ class FiniteDPP:
 
             self.sample_exact(self.sampling_mode, random_state=rng)
 
-    def sample_exact_k_dpp(self, size, mode='GS', random_state=None):
+    def sample_exact_k_dpp(self, size, mode='GS', random_state=None, **params):
         """ Sample exactly from :math:`\\operatorname{k-DPP}`.
         A priori the :class:`FiniteDPP <FiniteDPP>` object was instanciated by its likelihood :math:`\\mathbf{L}` kernel so that
 
