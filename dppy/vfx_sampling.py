@@ -178,10 +178,16 @@ def vfx_sampling_precompute_constants(X,
                          'natural_s: {}'.format(natural_s))
 
     # s might naturally be too large, but we can rescale L to shrink it
-    # if we rescale alpha * L by a constant alpha < 1,
+    # if we rescale alpha * L by a constant alpha,
     # s is now trace(alpha * L - alpha * L_hat + L_hat(L_hat + I / alpha)^-1)
-    if desired_s is None or natural_s <= desired_s:
+    if desired_s is None:
         alpha_star = 1.0
+    elif natural_s <= desired_s:
+        raise ValueError('The expected sample size is smaller than k or the desired sample size.\n'
+                         'This is unusual (i.e. you are trying to select more than the overall amount of diversity '
+                         'in your set.\n'
+                         'Increasing the expected sample size is currently not supported (only decreasing).\n'
+                         'Please consider increasing your k or changing L: natural_s: {}'.format(natural_s))
     else:
         # since this is monotone in alpha, we can simply use Brent's algorithm (bisection + tricks)
         # it is a root finding algorithm so we must create a function with a root in desired_s
@@ -230,7 +236,7 @@ def vfx_sampling_precompute_constants(X,
                          's: {}'.format(s))
 
     # we need to compute z and logDet(I + L_hat)
-    z = np.sum((eigvals - alpha_star) / eigvals)
+    z = np.sum((eigvals - 1/alpha_star) / eigvals)
 
     # we need logdet(I + alpha * A) and we have eigvals(I / alpha_star + A) we can adjust using sum of logs
     logdet_I_A = np.sum(np.log(alpha_star * eigvals))
@@ -334,6 +340,6 @@ def vfx_sampling_do_sampling_loop(X,
     DPP.sample_exact(random_state=rng)
 
     S_tilda = np.array(DPP.list_of_samples)
-    S = sigma[S_tilda].tolist()
+    S = sigma[S_tilda].flatten().tolist()
 
     return S, rej_count
