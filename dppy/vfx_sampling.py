@@ -118,47 +118,13 @@ _PrecomputeState =\
                ['alpha_star', 'logdet_I_A', 'q', 's', 'z', 'rls_estimate'])
 
 
-def dpp_vfx(X,
-            eval_L,
-            rls_oversample_dppvfx=4,
-            rls_oversample_bless=4,
-            random_state=None,
-            return_pc_state=False,
-            desired_s=None,
-            H_bless=None,
-            q_func=lambda s: s * s):
-    """
-    .. todo::
-
-        - docstring: description of params and return, add types
-    """
-    rng = check_random_state(random_state)
-
-    precomputed_state = _precompute_constants(X,
-                                              eval_L,
-                                              rls_oversample_dppvfx,
-                                              rls_oversample_bless,
-                                              rng,
-                                              desired_s,
-                                              H_bless)
-
-    precomputed_state.q = q_func(precomputed_state.s)
-
-    S, rej_count = _sampling_loop(X, eval_L, precomputed_state, rng)
-
-    if return_pc_state:
-        return S, precomputed_state, rej_count
-    else:
-        return S
-
-
-def _precompute_constants(X,
-                          eval_L,
-                          rls_oversample_dppvfx,
-                          rls_oversample_bless,
-                          rng,
-                          desired_s,
-                          H_bless):
+def vfx_sampling_precompute_constants(X,
+                                      eval_L,
+                                      rng,
+                                      desired_s=None,
+                                      rls_oversample_dppvfx=4,
+                                      rls_oversample_bless=4,
+                                      H_bless=None):
     """
     .. todo::
 
@@ -284,11 +250,11 @@ def _precompute_constants(X,
     return result
 
 
-def _sampling_loop(X,
-                   eval_L,
-                   precomputed_state: _PrecomputeState,
-                   rng,
-                   verbose=True):
+def vfx_sampling_do_sampling_loop(X,
+                                  eval_L,
+                                  precomputed_state: _PrecomputeState,
+                                  rng,
+                                  verbose=True):
     """
     .. todo::
 
@@ -366,6 +332,6 @@ def _sampling_loop(X,
     DPP.sample_exact(random_state=rng)
 
     S_tilda = np.array(DPP.list_of_samples)
-    S = sigma[S_tilda]
+    S = sigma[S_tilda].tolist()
 
     return S, rej_count
