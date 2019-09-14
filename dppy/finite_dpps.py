@@ -312,7 +312,8 @@ class FiniteDPP:
                 )
 
                 q_func = params.get('q_func', lambda s: s * s)
-                self.intermediate_sample_info.q = q_func(self.intermediate_sample_info.s)
+                self.intermediate_sample_info = self.intermediate_sample_info._replace(
+                                                                            q=q_func(self.intermediate_sample_info.s))
 
             sample, rej_count = vfx_sampling_do_sampling_loop(self.X,
                                                          self.eval_L,
