@@ -161,6 +161,14 @@ class FiniteDPP:
                     self.L = Phi.T.dot(Phi)
                     print('L = Phi.T Phi was computed: Phi (dxN) with d>=N')
 
+        # L "lazy" likelihood function representation
+        # eval_L(X, Y) = L(X, Y)
+        self.eval_L, self.X = params.get('L_eval_data', [None, None])
+
+        if self.eval_L and not callable(self.eval_L):
+            raise ValueError('eval_L should be a likelihood function between points')
+
+
     def __str__(self):
         str_info = ['DPP defined through {} {} kernel'
                     .format('projection' if self.projection else '',
@@ -180,7 +188,7 @@ class FiniteDPP:
         # kernel_type, projection and params.
 
         K_type, K_params = 'correlation', {'K', 'K_eig_dec', 'A_zono'}
-        L_type, L_params = 'likelihood', {'L', 'L_eig_dec', 'L_gram_factor'}
+        L_type, L_params = 'likelihood', {'L', 'L_eig_dec', 'L_gram_factor', 'L_eval_data'}
 
         if self.kernel_type == K_type:
             if self.params_keys.intersection(K_params):
@@ -206,6 +214,7 @@ class FiniteDPP:
                      '- `L` = L >= 0',
                      '- `L_eig_dec` = (eig_vals, eig_vecs) eig_vals >= 0',
                      '- `L_gram_factor` = Phi (dxN) where L = Phi.T Phi',
+                     '- `L_eval_data` = (eval_L, X)',
                      'Given: {}'.format(self.params_keys)]
                 raise ValueError('\n'.join(err_print))
 
@@ -633,6 +642,12 @@ class FiniteDPP:
             # print(msg)
             pass
 
+        elif self.eval_L is not None:
+            err_print = ['K kernel cannot be computed:',
+                         'no K representation provided, and',
+                         'L is provided in lazy mode and likely would not fit in memory']
+            raise ValueError('\n'.join(err_print))
+
         else:
             if not msg:
                 print('K (correlation) kernel computed via:')
@@ -683,6 +698,11 @@ class FiniteDPP:
         elif (self.kernel_type == 'correlation') and self.projection:
             err_print = ['L = K(I-K)^-1 = kernel cannot be computed:',
                          'K is projection kernel: some eigenvalues equal 1']
+            raise ValueError('\n'.join(err_print))
+
+        elif self.eval_L is not None:
+            err_print = ['L = K(I-K)^-1 = kernel cannot be computed:',
+                         'L is provided in lazy mode and likely would not fit in memory']
             raise ValueError('\n'.join(err_print))
 
         else:
