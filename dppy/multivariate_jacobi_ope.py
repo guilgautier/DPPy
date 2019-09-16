@@ -13,22 +13,9 @@ from scipy import stats
 from scipy.special import beta, betaln, factorial, gamma, gammaln
 from scipy.special import eval_jacobi
 # from scipy.special import logsumexp
+import matplotlib.pyplot as plt
 
 from  dppy.random_matrices import mu_ref_beta_sampler_tridiag as tridiagonal_model
-
-from sys import platform as _platform
-# https://stackoverflow.com/questions/1854/python-what-os-am-i-running-on
-if _platform.startswith('linux'):
-    # linux
-    pass
-elif _platform == "darwin":
-    # MAC OS X
-    # https://markhneedham.com/blog/2018/05/04/python-runtime-error-osx-matplotlib-not-installed-as-framework-mac/
-    # import matplotlib
-    # matplotlib.use('TkAgg')
-    pass
-
-import matplotlib.pyplot as plt
 
 from dppy.utils import check_random_state
 

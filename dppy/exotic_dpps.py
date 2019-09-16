@@ -17,24 +17,11 @@
 
 import abc
 
-from sys import platform as _platform
-# https://stackoverflow.com/questions/1854/python-what-os-am-i-running-on
-if _platform.startswith('linux'):
-    # linux
-    pass
-elif _platform == "darwin":
-    # MAC OS X
-    # https://markhneedham.com/blog/2018/05/04/python-runtime-error-osx-matplotlib-not-installed-as-framework-mac/
-    # import matplotlib
-    # matplotlib.use('TkAgg')
-    pass
+import numpy as np
+from scipy.linalg import qr
 
 import matplotlib.pyplot as plt
 from matplotlib import collections as mc  # see plot_diagram
-
-import numpy as np
-
-from scipy.linalg import qr
 
 # For Uniform Spanning Trees
 import networkx as nx

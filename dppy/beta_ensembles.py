@@ -21,25 +21,13 @@ Such objects have 4 main methods:
 
 import abc
 
-from sys import platform as _platform
-# https://stackoverflow.com/questions/1854/python-what-os-am-i-running-on
-if _platform.startswith('linux'):
-    # linux
-    pass
-elif _platform == "darwin":
-    # MAC OS X
-    # https://markhneedham.com/blog/2018/05/04/python-runtime-error-osx-matplotlib-not-installed-as-framework-mac/
-    # import matplotlib
-    # matplotlib.use('TkAgg')
-    pass
-
-import matplotlib.pyplot as plt
-
 import numpy as np
 
 from scipy.stats import norm as sp_gaussian
 from scipy.stats import gamma as sp_gamma
 from scipy.stats import beta as sp_beta
+
+import matplotlib.pyplot as plt
 
 from re import findall as re_findall  # to convert class names to string
 
