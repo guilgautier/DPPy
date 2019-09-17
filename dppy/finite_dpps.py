@@ -165,7 +165,8 @@ class FiniteDPP:
 
         # L likelihood function representation
         # eval_L(X, Y) = L(X, Y)
-        self.eval_L, self.X = params.get('L_eval_data', [None, None])
+        # eval_L(X) = L(X, X)
+        self.eval_L, self.X_data = params.get('L_eval_X_data', [None, None])
         self.intermediate_sample_info = None
 
         if self.eval_L and not callable(self.eval_L):
