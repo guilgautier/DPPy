@@ -163,7 +163,7 @@ class FiniteDPP:
                     self.L = Phi.T.dot(Phi)
                     print('L = Phi.T Phi was computed: Phi (dxN) with d>=N')
 
-        # L "lazy" likelihood function representation
+        # L likelihood function representation
         # eval_L(X, Y) = L(X, Y)
         self.eval_L, self.X = params.get('L_eval_data', [None, None])
         self.intermediate_sample_info = None
@@ -191,7 +191,7 @@ class FiniteDPP:
         # kernel_type, projection and params.
 
         K_type, K_params = 'correlation', {'K', 'K_eig_dec', 'A_zono'}
-        L_type, L_params = 'likelihood', {'L', 'L_eig_dec', 'L_gram_factor', 'L_eval_data'}
+        L_type, L_params = 'likelihood', {'L', 'L_eig_dec', 'L_gram_factor', 'L_eval_X_data'}
 
         if self.kernel_type == K_type:
             if self.params_keys.intersection(K_params):
@@ -217,7 +217,7 @@ class FiniteDPP:
                      '- `L` = L >= 0',
                      '- `L_eig_dec` = (eig_vals, eig_vecs) eig_vals >= 0',
                      '- `L_gram_factor` = Phi (dxN) where L = Phi.T Phi',
-                     '- `L_eval_data` = (eval_L, X)',
+                     '- `L_eval_X_data` = (eval_L, X_data)',
                      'Given: {}'.format(self.params_keys)]
                 raise ValueError('\n'.join(err_print))
 
@@ -305,7 +305,7 @@ class FiniteDPP:
         elif self.sampling_mode == 'vfx':
             if self.intermediate_sample_info is None:
                 self.intermediate_sample_info = vfx_sampling_precompute_constants(
-                    X = self.X,
+                    X = self.X_data,
                     eval_L=self.eval_L,
                     rng = rng,
                     **params
@@ -315,7 +315,7 @@ class FiniteDPP:
                 self.intermediate_sample_info = self.intermediate_sample_info._replace(
                                                                             q=q_func(self.intermediate_sample_info.s))
 
-            sampl, rej_count = vfx_sampling_do_sampling_loop(self.X,
+            sampl, rej_count = vfx_sampling_do_sampling_loop(self.X_data,
                                                          self.eval_L,
                                                          self.intermediate_sample_info,
                                                          rng)
