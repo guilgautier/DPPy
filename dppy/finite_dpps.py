@@ -303,6 +303,9 @@ class FiniteDPP:
             self.list_of_samples.append(sampl)
 
         elif self.sampling_mode == 'vfx':
+            if self.eval_L is None or self.X_data is None:
+                raise ValueError("The vfx sampler is currently only available for the 'L_eval_X_data' representation.")
+
             if self.intermediate_sample_info is None:
                 self.intermediate_sample_info = vfx_sampling_precompute_constants(
                     X = self.X_data,
@@ -690,9 +693,8 @@ class FiniteDPP:
             pass
 
         elif self.eval_L is not None:
-            err_print = ['K kernel cannot be computed:',
-                         'no K representation provided, and',
-                         'L is provided in lazy mode and likely would not fit in memory']
+            err_print = ['Computing the K kernel is currently not supported when using a likelihood function.'
+                         'Please re-instantiate the FiniteDPP object using the likelihood matrix eval_L(X_data).']
             raise ValueError('\n'.join(err_print))
 
         else:
@@ -748,8 +750,8 @@ class FiniteDPP:
             raise ValueError('\n'.join(err_print))
 
         elif self.eval_L is not None:
-            err_print = ['L = K(I-K)^-1 = kernel cannot be computed:',
-                         'L is provided in lazy mode and likely would not fit in memory']
+            err_print = ['Computing the L kernel is currently not supported when using a likelihood function.'
+                         'Please re-instantiate the FiniteDPP object using the likelihood matrix eval_L(X_data).']
             raise ValueError('\n'.join(err_print))
 
         else:
