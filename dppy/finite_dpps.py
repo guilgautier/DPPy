@@ -320,9 +320,10 @@ class FiniteDPP:
                                                                             q=q_func(self.intermediate_sample_info.s))
 
             sampl, rej_count = vfx_sampling_do_sampling_loop(self.X_data,
-                                                         self.eval_L,
-                                                         self.intermediate_sample_info,
-                                                         rng)
+                                                             self.eval_L,
+                                                             self.intermediate_sample_info,
+                                                             rng,
+                                                             **params)
             self.list_of_samples.append(sampl)
 
         # If eigen decoposition of K, L or L_dual is available USE IT!
@@ -459,12 +460,20 @@ class FiniteDPP:
                 self.intermediate_sample_info = self.intermediate_sample_info._replace(
                     q=q_func(self.intermediate_sample_info.s))
 
-            sampl = []
-            while len(sampl) != size:
+            max_iter_size_rejection = params.get('max_iter_size_rejection', 100)
+            for size_rejection_iter in range(max_iter_size_rejection):
                 sampl, rej_count = vfx_sampling_do_sampling_loop(self.X_data,
                                                                  self.eval_L,
                                                                  self.intermediate_sample_info,
-                                                                 rng)
+                                                                 rng,
+                                                                 **params)
+                if len(sampl) == size:
+                    break
+            else:
+                raise ValueError('The vfx sampler reached the maximum number of rejections allowed '
+                                 'for the k-DPP size rejection ({}), try to increase the q factor '
+                                 '(see q_func parameter) or the Nystrom approximation accuracy '
+                                 'see rls_oversample_* parameters).'.format(max_iter_size_rejection))
 
             self.list_of_samples.append(sampl)
 

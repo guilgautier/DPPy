@@ -259,7 +259,8 @@ def vfx_sampling_do_sampling_loop(X,
                                   eval_L,
                                   precomputed_state: _PrecomputeState,
                                   rng,
-                                  verbose=True):
+                                  verbose=True,
+                                  max_iter=1000):
     """
     .. todo::
 
@@ -271,15 +272,9 @@ def vfx_sampling_do_sampling_loop(X,
     pc_state = precomputed_state
 
     # Phase 3: rejection sampling loop
-    accept = False
-
-    # count how many times we reject for debug purpose
-    rej_count = 0
 
     with get_progress_bar(disable=not verbose) as prog_bar:
-        while not accept:
-            rej_count = rej_count + 1
-
+        for rej_iter in range(max_iter):
             # sample t
             lam = np.ceil(pc_state.q * np.exp(pc_state.s / pc_state.q))
             t = rng.poisson(lam=lam.astype('int'))
@@ -321,8 +316,16 @@ def vfx_sampling_do_sampling_loop(X,
             prog_bar.set_postfix(acc_thresh=acc_thresh,
                                  e_acc_thresh=np.exp(acc_thresh),
                                  t=t,
-                                 rej_count=rej_count)
+                                 rej_count=rej_iter)
             prog_bar.update()
+
+            if accept:
+                break
+        else:
+            raise ValueError('The vfx sampler reached the maximum number of rejections allowed '
+                             'for the intermediate sample selection ({}), try to increase the q factor '
+                             '(see q_func parameter) or the Nystrom approximation accuracy '
+                             'see rls_oversample_* parameters).'.format(max_iter))
 
     # Phase 4: use L_tilda to perform exact DPP sampling
     # compute alpha_star * L_tilda = alpha_star * W*L_sigma*W
@@ -342,4 +345,4 @@ def vfx_sampling_do_sampling_loop(X,
     S_tilda = np.array(DPP.list_of_samples)
     S = sigma[S_tilda].ravel().tolist()
 
-    return S, rej_count
+    return S, rej_iter
