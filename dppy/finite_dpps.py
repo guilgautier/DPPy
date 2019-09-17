@@ -385,6 +385,10 @@ class FiniteDPP:
             self.eig_vecs, _ = la.qr(self.A_zono.T, mode='economic')
 
             self.sample_exact(self.sampling_mode, random_state=rng)
+        else:
+            raise ValueError('None of the available samplers could be used based on the current DPP representation.'
+                             ' This should never happen, please consider rasing an issue on github'
+                             ' at https://github.com/guilgautier/DPPy/issues')
 
     def sample_exact_k_dpp(self, size, mode='GS', random_state=None, **params):
         """ Sample exactly from :math:`\\operatorname{k-DPP}`.
@@ -572,6 +576,10 @@ class FiniteDPP:
             self.L_eig_vals, self.eig_vecs = la.eigh(self.L)
             self.sample_exact_k_dpp(size, self.sampling_mode,
                                     random_state=rng)
+        else:
+            raise ValueError('None of the available samplers could be used based on the current DPP representation.'
+                             ' This should never happen, please consider rasing an issue on github'
+                             ' at https://github.com/guilgautier/DPPy/issues')
 
     # Approximate sampling
     def sample_mcmc(self, mode, **params):
