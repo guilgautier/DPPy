@@ -340,6 +340,6 @@ def vfx_sampling_do_sampling_loop(X,
     DPP.sample_exact(random_state=rng)
 
     S_tilda = np.array(DPP.list_of_samples)
-    S = sigma[S_tilda].flatten().tolist()
+    S = sigma[S_tilda].ravel().tolist()
 
     return S, rej_count
