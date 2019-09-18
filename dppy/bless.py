@@ -32,8 +32,15 @@ CentersDictionary = namedtuple('CentersDictionary', ('idx', 'X', 'probs', 'lam',
 
 
 def estimate_rls_bless(D, X, eval_L, lam_new):
-    """Given a previosuly computed (eps, lambda)-accurate dictionary, it computes estimates
+    """Given a previously computed (eps, lambda)-accurate dictionary, it computes estimates
     of all RLS using the estimator from :cite:`CaLaVa17`
+    :param CentersDictionary D: an (eps, lambda) accurate dictionary, see :ref:`bless`
+    :param array_like X: samples whose RLS we must approximate
+    :param callable eval_L: likelihood function
+    :param float lam_new: lambda regularization to use for the RLSs
+    :return: array of estimated RLS
+    :rtype:
+        array_like
     """
 
     diag_norm = evaluate_L_diagonal(eval_L, X)
@@ -66,8 +73,17 @@ def estimate_rls_bless(D, X, eval_L, lam_new):
 
 
 def reduce_lambda(X, eval_L, D: CentersDictionary, lam_new: float, rng, qbar=None):
-    """Given a previosuly computed (eps, lambda)-accurate dictionary and a lambda' < lambda parameter,
+    """Given a previously computed (eps, lambda)-accurate dictionary and a lambda' < lambda parameter,
      it constructs an (eps, lambda')-accurate dictionary using approximate RLS sampling.
+    :param array_like X: dataset that we must approximate
+    :param callable eval_L: likelihood function
+    :param CentersDictionary D: an (eps, lambda) accurate dictionary, see :ref:`bless`
+    :param float lam_new: lambda regularization for the new dictionary
+    :param RandomState rng: rng for sampling
+    :param qbar: Oversampling parameter to increase success probability, see :ref:`bless`
+    :return: An (eps, lam_new)-accurate dictionary with high probability
+    :rtype:
+        CentersDictionary
      """
 
     n, d = X.shape
@@ -144,21 +160,51 @@ def bless(X, eval_L, lam_final, qbar, random_state=None, H=None, verbose=True):
     :param array_like X: input data, as an ndarray-like (n x m) object
 
     :param callable eval_L: likelihood function between points.
-    If L is the associated likelihood matrix, it must satisfy the interface eval_L(X) = K(X,X) eval_L(X_1, X_2) = K(X_1, X_2)
+        If L is the associated likelihood matrix, it must satisfy the interface
+        eval_L(X_1) = K(X_1, X_1)
+        eval_L(X_1, X_2) = K(X_1, X_2)
+        This interface is inspired by scikit-learn's implementation of kernel functions in Gaussian Processes.
+        Any of the kernels provided by sklearn (e.g. sklearn.gaussian_process.kernels.RBF or
+        sklearn.gaussian_process.kernels.PairwiseKernel) should work out of the box.
 
     :param float lam_final: final lambda (i.e. as in (eps, lambda)-accuracy) desired.
-    Roughly, the final dictionary will approximate all eigenvalues larger than lambda, and therefore smaller lambda creates larger, more accurate dictionaries.
+        Roughly, the final dictionary will approximate all principal components with a singular value
+        larger than lam_final, and therefore smaller lam_final creates larger, more accurate dictionaries.
 
-    :param int qbar: BLESS generates a dictionary with :math:`\\tilde{O}(qbar*deff)` points, and the qbar >= 1 parameter controls the oversampling.
-    Larger qbar make the algorithm succeed with higher probability and generate larger but more accurate dictionary.
+    :param int qbar: Oversampling parameter used during BLESS's step of random RLS sampling.
+        The qbar >= 1 parameter is used to increase the sampling probabilities and sample size by a qbar factor.
+        This linearly increases the size of the output dictionary, making the algorithm less memory and time efficient,
+        but reduces variance and the negative effects of randomness on the accuracy of the algorithm.
+        Empirically, a small factor qbar = [2,10] seems to work. It is suggested to start with a small number and
+        increase if the algorithm fails to terminate or is not accurate.
 
-    :param random_state:
+    :param random_state: Random number generator (RNG) used for the algorithm.
+        By default, if random_state is not provided or is None, a numpy's RandomState with default seeding is used.
+        If a numpy's RandomState is passed, it is used as RNG. If an int is passed, it is used to seed a RandomState
+    :type random_state:
+        np.random.RandomState or int or None, default None
 
     :param H: number of iterations, defaults to log(n) if None
+    :type H:
+        int or None, default None
 
-    :param verbose: control debug output
+    :param bool verbose: Controls verbosity of debug output, including progress bars.
+        The progress bar reports:
+        - lam: lambda value of the current iteration
+        - m: current size of the dictionary (number of centers contained)
+        - m_expected: expected size of the dictionary before sampling
+        - probs_dist: (mean, max, min) of the approximate RLSs at the current iteration
 
-    :return: An (eps, lambda) accurate CentersDictionary with high probability
+    :return: An (eps, lambda)-accurate dictionary centers_dict (with high probability).
+        If centers_dict contains m entries then the output fields are as follow
+
+        centers_dict.idx`: the indices of the m selected samples in the input dataset `X`
+        centers_dict.X': the (m x d) numpy.ndarray containing the selected samples
+        centers_dict.probs: the probabilities (i.e. approximate RLSs) used to sample the dictionary
+        lam: the final lambda accuracy
+        qbar: the qbar used to sample the dictionary, as a proxy for the `eps`-accuracy
+    :rtype:
+        CentersDictionary
     """
 
     n, d = X.shape
