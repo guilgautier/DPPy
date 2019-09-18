@@ -28,16 +28,12 @@ import numpy as np
 from collections import namedtuple
 from .utils import check_random_state, stable_invert_root, get_progress_bar, evaluate_L_diagonal
 
-Dictionary = namedtuple('Dictionary', ('idx', 'X', 'probs', 'lam', 'qbar'))
+CentersDictionary = namedtuple('CentersDictionary', ('idx', 'X', 'probs', 'lam', 'qbar'))
 
 
-def estimate_rls(D, X, eval_L, lam_new):
+def estimate_rls_bless(D, X, eval_L, lam_new):
     """Given a previosuly computed (eps, lambda)-accurate dictionary, it computes estimates
-    of all RLS using the estimator from Calandriello et al. 2017
-
-    .. todo::
-
-        - create bib entry for Calandriello et al. 2017
+    of all RLS using the estimator from :cite:`CaLaVa17`
     """
 
     diag_norm = evaluate_L_diagonal(eval_L, X)
@@ -69,12 +65,11 @@ def estimate_rls(D, X, eval_L, lam_new):
     return tau
 
 
-def reduce_lambda(X, eval_L, D: Dictionary, lam_new: float, rng, qbar=None):
-    """
-    .. todo::
+def reduce_lambda(X, eval_L, D: CentersDictionary, lam_new: float, rng, qbar=None):
+    """Given a previosuly computed (eps, lambda)-accurate dictionary and a lambda' < lambda parameter,
+     it constructs an (eps, lambda')-accurate dictionary using approximate RLS sampling.
+     """
 
-        - write docstring
-    """
     n, d = X.shape
 
     if qbar is None:
@@ -101,7 +96,7 @@ def reduce_lambda(X, eval_L, D: Dictionary, lam_new: float, rng, qbar=None):
     X_U = X[U, :]
 
     # taus are RLS
-    tau = estimate_rls(D, X_U, eval_L, lam_new)
+    tau = estimate_rls_bless(D, X_U, eval_L, lam_new)
 
     # RLS should always be smaller than 1
     tau = np.minimum(tau, 1.0)
@@ -127,29 +122,34 @@ def reduce_lambda(X, eval_L, D: Dictionary, lam_new: float, rng, qbar=None):
         raise ValueError('No point selected during RLS sampling step, try to increase qbar. '
                          'Expected number of points (qbar*deff): {:.3f}'.format(np.sum(probs)))
 
-    D_new = Dictionary(idx=U.nonzero()[0][selected.nonzero()[0]],
-                       X=X_U[selected, :],
-                       probs=probs[selected],
-                       lam=lam_new,
-                       qbar=qbar)
+    D_new = CentersDictionary(idx=U.nonzero()[0][selected.nonzero()[0]],
+                              X=X_U[selected, :],
+                              probs=probs[selected],
+                              lam=lam_new,
+                              qbar=qbar)
 
     return D_new
 
 
 def bless(X, eval_L, lam_final, qbar, random_state=None, H=None, verbose=True):
-    """ Generates dictionary sampled according to RLS. In a nutshell, Rudi et al 2018 shows that uniform sampling is equivalent to RLS sampling with lambda=n.
-    Therefore, we can initialize BLESS's dictionary using uniform sampling, and over H iteration alternate between reducing lambda_h, and re-sampling using the more accurate lambda_h-RLS.
-    When we reach a desired final lambda_H we terminate
+    """Returns a (eps, lambda)-accurate dictionary of Nystrom centers sampled according to approximate RLS.
 
-    :param X: input data, as an ndarray-like (n x m) object
+    Given data X, a similarity function, and its related similarity matrix similarity_function(X, X),
+    an (eps, lambda)-accurate dictionary approximates all principal components of the similarity matrix
+    with a singular value larger than lambda, up to a (1+eps) multiplicative error.
 
-    :param eval_L: likelihood function between points.
+    The algorithm is introduced and analyzed in :cite:`RuCaCaRo18`, for a more formal
+    definition of (eps, lambda)-accuracy and other potential uses see :cite:`CaLaVa17`.
+
+    :param array_like X: input data, as an ndarray-like (n x m) object
+
+    :param callable eval_L: likelihood function between points.
     If L is the associated likelihood matrix, it must satisfy the interface eval_L(X) = K(X,X) eval_L(X_1, X_2) = K(X_1, X_2)
 
-    :param lam_final: final lambda (i.e. as in (eps, lambda)-accuracy) desired.
+    :param float lam_final: final lambda (i.e. as in (eps, lambda)-accuracy) desired.
     Roughly, the final dictionary will approximate all eigenvalues larger than lambda, and therefore smaller lambda creates larger, more accurate dictionaries.
 
-    :param qbar: BLESS generates a dictionary with :math:`\\tilde{O}(qbar*deff)` points, and the qbar >= 1 parameter controls the oversampling.
+    :param int qbar: BLESS generates a dictionary with :math:`\\tilde{O}(qbar*deff)` points, and the qbar >= 1 parameter controls the oversampling.
     Larger qbar make the algorithm succeed with higher probability and generate larger but more accurate dictionary.
 
     :param random_state:
@@ -158,7 +158,7 @@ def bless(X, eval_L, lam_final, qbar, random_state=None, H=None, verbose=True):
 
     :param verbose: control debug output
 
-    :return: A Dictionary
+    :return: An (eps, lambda) accurate CentersDictionary with high probability
     """
 
     n, d = X.shape
@@ -175,11 +175,11 @@ def bless(X, eval_L, lam_final, qbar, random_state=None, H=None, verbose=True):
     # force at least one sample to be selected
     selected_init[0] = 1
 
-    D = Dictionary(idx=selected_init.nonzero(),
-                   X=X[selected_init, :],
-                   probs=np.ones(np.sum(selected_init)) * ucb_init[selected_init],
-                   lam=n,
-                   qbar=qbar)
+    D = CentersDictionary(idx=selected_init.nonzero(),
+                          X=X[selected_init, :],
+                          probs=np.ones(np.sum(selected_init)) * ucb_init[selected_init],
+                          lam=n,
+                          qbar=qbar)
 
     lam_sequence = list(np.geomspace(lam_final, n, H))
 

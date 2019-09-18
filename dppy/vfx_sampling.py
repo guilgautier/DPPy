@@ -23,7 +23,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from dppy.bless import bless, Dictionary, estimate_rls
+from dppy.bless import bless, CentersDictionary, estimate_rls_bless
 from dppy.utils import stable_invert_root, evaluate_L_diagonal, get_progress_bar, check_random_state
 import numpy as np
 from scipy.optimize import brentq
@@ -38,23 +38,20 @@ def compute_nystrom_dict(X,
                          H_bless=None):
     """ Computes the initial dictionary necessary for the algorithm. Internally invoke BLESS.
 
-    :param X: points
+    :param array_like X: dataset that we must approximate
 
-    :param eval_L: likelihood function
+    :param callable eval_L: likelihood function
 
-    :param rls_oversample_bless: qbar for BLESS, should be >= log(n)^2, empirically works well even as a constant
+    :param float rls_oversample_bless: see :ref:`vfx_sampling_precompute_constants`
 
-    :param rls_oversample_dppvfx: qbar for dpp-fx, should be >= deff^2, empirically works well even as a constant
+    :param float rls_oversample_dppvfx: see :ref:`vfx_sampling_precompute_constants`
 
-    :param rng:
+    :param rng: see :ref:`vfx_sampling_precompute_constants`
 
-    :param H_bless:  iterations for BLESS, if None it is set to log(n)
+    :param int H_bless:  iterations for BLESS, if None it is set to log(n)
 
     :return:
 
-    .. todo::
-
-        - docstring: continue description of params and return, add types
     """
     n, _ = X.shape
 
@@ -63,7 +60,7 @@ def compute_nystrom_dict(X,
 
     dict_bless = bless(X, eval_L, 1.0, rls_oversample_bless, rng, H=H_bless)
 
-    bless_rls_estimate = estimate_rls(dict_bless, X, eval_L, 1)
+    bless_rls_estimate = estimate_rls_bless(dict_bless, X, eval_L, 1.0)
 
     # Phase 2: use estimate RLS to sample the dict_dppvfx dictionary, i.e. the one used to construct A
     # here theory says that to have high acceptance probability we need the oversampling factor to be ~deff^2
@@ -80,11 +77,11 @@ def compute_nystrom_dict(X,
         raise ValueError('No point selected during RLS sampling step, try to increase qbar. '
                          'Expected number of points: {:.3f}'.format(probs.sum()))
 
-    dict_dppvfx = Dictionary(idx=selected.nonzero()[0],
-                             X=X[selected, :],
-                             probs=probs[selected],
-                             lam=1,
-                             qbar=rls_oversample_dppvfx)
+    dict_dppvfx = CentersDictionary(idx=selected.nonzero()[0],
+                                    X=X[selected, :],
+                                    probs=probs[selected],
+                                    lam=1,
+                                    qbar=rls_oversample_dppvfx)
 
     return dict_dppvfx
 
@@ -92,10 +89,18 @@ def compute_nystrom_dict(X,
 def estimate_rls_with_embedding(eigvec, eigvals,
                                 B_bar_T, diag_L, diag_L_hat, alpha_star):
     """ Given embedded points, and a decomposition of embedded covariance matrix, estimate RLS.
-    Note that this is a different estimator than the one used in BLESS (i.e. estimate_rls), which we use here for efficiency because we can recycle already embedded points and eigendecomp.
-    .. todo::
+    Note that this is a different estimator than the one used in BLESS (i.e. :ref:`estimate_rls_bless`),
+    which we use here for efficiency because we can recycle already embedded points and eigen-decomposition.
 
-        - docstring: description of params and return, add types
+
+
+        :param array_like eigvec:
+        :param array_like eigvals:
+        :param array_like B_bar_T: (m x n) transposed matrix of n points embedded using a dictionary with m centers
+        :param array_like diag_L:
+        :param array_like diag_L_hat:
+        :param float alpha_star:
+        :return:
     """
 
     U_DD, S_root_inv_DD = stable_invert_root(eigvec, np.maximum(eigvals, 0))
