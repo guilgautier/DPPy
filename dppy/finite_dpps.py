@@ -57,16 +57,14 @@ from dppy.utils import (check_random_state,
 class FiniteDPP:
     """ Finite DPP object parametrized by
 
-    :param kernel_type:
+    :param string kernel_type:
 
         - ``'correlation'`` :math:`\\mathbf{K}` kernel
         - ``'likelihood'`` :math:`\\mathbf{L}` kernel
 
-    :type kernel_type:
-        string
-
     :param projection:
-        Indicate whether the provided kernel is of projection type. This may be useful when the :class:`FiniteDPP` object is defined through its correlation kernel :math:`\\mathbf{K}`.
+        Indicate whether the provided kernel is of projection type. This may be useful when the
+        :class:`FiniteDPP` object is defined through its correlation kernel :math:`\\mathbf{K}`.
 
     :type projection:
         bool, default ``False``
@@ -85,13 +83,17 @@ class FiniteDPP:
             - ``{'L': L}``, with :math:`\\mathbf{L}\\succeq 0`
             - ``{'L_eig_dec': (eig_vals, eig_vecs)}``, with :math:`eigvals \\geq 0`
             - ``{'L_gram_factor': Phi}``, with :math:`\\mathbf{L} = \\Phi^{ \\top} \\Phi`
+            - ``{'L_eval_X_data': (eval_L, X_data)}``, with :math:`\mathbf{X}_{data}(N \\times d)` and
+              :math:`eval \_ L` a likelihood function such that
+              :math:`\mathbf{L} = eval \_ L(\mathbf{X}_{data}, \mathbf{X}_{data})`
+
 
     :type params:
         dict
 
     .. caution::
 
-        For now we only consider real valued matrices :math:`\\mathbf{K}, \\mathbf{L}, A, \\Phi`.
+        For now we only consider real valued matrices :math:`\\mathbf{K}, \\mathbf{L}, A, \\Phi, \mathbf{X}_{data}`.
 
     .. seealso::
 
@@ -171,6 +173,9 @@ class FiniteDPP:
 
         if self.eval_L and not callable(self.eval_L):
             raise ValueError('eval_L should be a likelihood function between points')
+        if self.X_data and (self.X_data.size == 0 or self.X_data.ndims != 2):
+            raise ValueError('The provided data matrix seems empty or with the wrong shape.'
+                             ' For data with n elements and d features, X_data should be an (n x m) ndarray.')
 
 
     def __str__(self):
@@ -400,10 +405,8 @@ class FiniteDPP:
             \\mathbb{P}_{\\operatorname{k-DPP}}(\\mathcal{X} = S)
                 \\propto \\det \\mathbf{L}_S ~ 1_{|S|=k}
 
-        :param size:
+        :param int size:
             size :math:`k` of the :math:`\\operatorname{k-DPP}`
-        :type size:
-            int
 
         :param mode:
             - ``projection=True``:
@@ -594,17 +597,14 @@ class FiniteDPP:
     def sample_mcmc(self, mode, **params):
         """ Run a MCMC with stationary distribution the corresponding :class:`FiniteDPP <FiniteDPP>` object.
 
-        :param mode:
+        :param string mode:
 
             - ``'AED'`` Add-Exchange-Delete
             - ``'AD'`` Add-Delete
             - ``'E'`` Exchange
             - ``'zonotope'`` Zonotope sampling
 
-        :type mode:
-            string
-
-        :param params:
+        :param dict params:
             Dictionary containing the parameters for MCMC samplers with keys
 
             ``'random_state'`` (default None)
@@ -624,9 +624,6 @@ class FiniteDPP:
                 + ``'x_0'`` initial point in zonotope (default A*u, u~U[0,1]^n)
                 + ``'nb_iter'`` (default 10) Number of iterations of the chain
                 + ``'T_max'`` (default None) Time horizon
-
-        :type params:
-            dict
 
         :return:
             A sample from the corresponding :class:`FiniteDPP <FiniteDPP>` object.
