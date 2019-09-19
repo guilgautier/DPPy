@@ -28,7 +28,7 @@ import numpy as np
 from collections import namedtuple
 from .utils import check_random_state, stable_invert_root, get_progress_bar, evaluate_L_diagonal
 
-CentersDictionary = namedtuple('CentersDictionary', ('idx', 'X', 'probs', 'lam', 'qbar'))
+CentersDictionary = namedtuple('CentersDictionary', ('idx', 'X', 'probs', 'lam', 'rls_oversample'))
 
 
 def estimate_rls_bless(D, X, eval_L, lam_new):
@@ -72,7 +72,7 @@ def estimate_rls_bless(D, X, eval_L, lam_new):
     return tau
 
 
-def reduce_lambda(X, eval_L, D: CentersDictionary, lam_new: float, rng, qbar=None):
+def reduce_lambda(X, eval_L, D: CentersDictionary, lam_new: float, rng, rls_oversample=None):
     """Given a previously computed (eps, lambda)-accurate dictionary and a lambda' < lambda parameter,
      it constructs an (eps, lambda')-accurate dictionary using approximate RLS sampling.
     :param array_like X: dataset that we must approximate
@@ -80,7 +80,7 @@ def reduce_lambda(X, eval_L, D: CentersDictionary, lam_new: float, rng, qbar=Non
     :param CentersDictionary D: an (eps, lambda) accurate dictionary, see :ref:`bless`
     :param float lam_new: lambda regularization for the new dictionary
     :param RandomState rng: rng for sampling
-    :param qbar: Oversampling parameter to increase success probability, see :ref:`bless`
+    :param rls_oversample: Oversampling parameter to increase success probability, see :ref:`bless`
     :return: An (eps, lam_new)-accurate dictionary with high probability
     :rtype:
         CentersDictionary
@@ -88,8 +88,8 @@ def reduce_lambda(X, eval_L, D: CentersDictionary, lam_new: float, rng, qbar=Non
 
     n, d = X.shape
 
-    if qbar is None:
-        qbar = D.qbar
+    if rls_oversample is None:
+        rls_oversample = D.rls_oversample
 
     red_ratio = D.lam / lam_new
 
@@ -98,15 +98,15 @@ def reduce_lambda(X, eval_L, D: CentersDictionary, lam_new: float, rng, qbar=Non
 
     diag = np.asarray(evaluate_L_diagonal(eval_L, X))
 
-    # compute upper confidence bound on RLS of each sample, overestimate (oversample) by a qbar factor
+    # compute upper confidence bound on RLS of each sample, overestimate (oversample) by a rls_oversample factor
     # to boost success probability at the expenses of a larger sample (dictionary)
-    ucb = np.minimum(qbar * diag / (diag + lam_new), 1.)
+    ucb = np.minimum(rls_oversample * diag / (diag + lam_new), 1.)
 
     U = np.asarray(rng.rand(n)) <= ucb
     u = U.sum()
 
     if not u > 0:
-        raise ValueError('No point selected during uniform sampling step, try to increase qbar. '
+        raise ValueError('No point selected during uniform sampling step, try to increase rls_oversample_bless. '
                          'Expected number of points: {:.3f}'.format(n * ucb))
 
     X_U = X[U, :]
@@ -117,37 +117,37 @@ def reduce_lambda(X, eval_L, D: CentersDictionary, lam_new: float, rng, qbar=Non
     # RLS should always be smaller than 1
     tau = np.minimum(tau, 1.0)
 
-    # same as before, oversample by a qbar factor
-    probs = np.minimum(qbar * tau, ucb[U]) / ucb[U]
+    # same as before, oversample by a rls_oversample factor
+    probs = np.minimum(rls_oversample * tau, ucb[U]) / ucb[U]
 
     if not np.all(probs >= 0.0):
         raise ValueError('Some estimated probability is negative, this should never happen. '
                          'Min prob: {}'.format(np.min(probs)))
 
-    deff_estimate = probs.sum()/qbar
+    deff_estimate = probs.sum()/rls_oversample
 
-    if not qbar*deff_estimate >= 1.0:
+    if not rls_oversample*deff_estimate >= 1.0:
         raise ValueError('Estimated deff is smaller than 1, you might want to reconsider your kernel. '
-                         'deff_estimate: {:.3f}'.format(qbar*deff_estimate))
+                         'deff_estimate: {:.3f}'.format(rls_oversample*deff_estimate))
 
     selected = np.asarray(rng.rand(u)) <= probs
 
     s = selected.sum()
 
     if not s > 0:
-        raise ValueError('No point selected during RLS sampling step, try to increase qbar. '
-                         'Expected number of points (qbar*deff): {:.3f}'.format(np.sum(probs)))
+        raise ValueError('No point selected during RLS sampling step, try to increase rls_oversample_bless. '
+                         'Expected number of points (rls_oversample_bless*deff): {:.3f}'.format(np.sum(probs)))
 
     D_new = CentersDictionary(idx=U.nonzero()[0][selected.nonzero()[0]],
                               X=X_U[selected, :],
                               probs=probs[selected],
                               lam=lam_new,
-                              qbar=qbar)
+                              rls_oversample=rls_oversample)
 
     return D_new
 
 
-def bless(X, eval_L, lam_final, qbar, random_state=None, H=None, verbose=True):
+def bless(X, eval_L, lam_final, rls_oversample, random_state=None, H=None, verbose=True):
     """Returns a (eps, lambda)-accurate dictionary of Nystrom centers sampled according to approximate RLS.
 
     Given data X, a similarity function, and its related similarity matrix similarity_function(X, X),
@@ -171,12 +171,12 @@ def bless(X, eval_L, lam_final, qbar, random_state=None, H=None, verbose=True):
         Roughly, the final dictionary will approximate all principal components with a singular value
         larger than lam_final, and therefore smaller lam_final creates larger, more accurate dictionaries.
 
-    :param int qbar: Oversampling parameter used during BLESS's step of random RLS sampling.
-        The qbar >= 1 parameter is used to increase the sampling probabilities and sample size by a qbar factor.
-        This linearly increases the size of the output dictionary, making the algorithm less memory and time efficient,
-        but reduces variance and the negative effects of randomness on the accuracy of the algorithm.
-        Empirically, a small factor qbar = [2,10] seems to work. It is suggested to start with a small number and
-        increase if the algorithm fails to terminate or is not accurate.
+    :param int rls_oversample: Oversampling parameter used during BLESS's step of random RLS sampling.
+        The rls_oversample >= 1 parameter is used to increase the sampling probabilities and sample size by a
+        rls_oversample factor. This linearly increases the size of the output dictionary, making the algorithm
+        less memory and time efficient, but reduces variance and the negative effects of randomness on the accuracy
+        of the algorithm. Empirically, a small factor rls_oversample = [2,10] seems to work.
+        It is suggested to start with a small number and increase if the algorithm fails to terminate or is inaccurate.
 
     :param random_state: Random number generator (RNG) used for the algorithm.
         By default, if random_state is not provided or is None, a numpy's RandomState with default seeding is used.
@@ -202,7 +202,7 @@ def bless(X, eval_L, lam_final, qbar, random_state=None, H=None, verbose=True):
         centers_dict.X': the (m x d) numpy.ndarray containing the selected samples
         centers_dict.probs: the probabilities (i.e. approximate RLSs) used to sample the dictionary
         lam: the final lambda accuracy
-        qbar: the qbar used to sample the dictionary, as a proxy for the `eps`-accuracy
+        rls_oversample: the rls_oversample used to sample the dictionary, as a proxy for the `eps`-accuracy
     :rtype:
         CentersDictionary
     """
@@ -212,7 +212,7 @@ def bless(X, eval_L, lam_final, qbar, random_state=None, H=None, verbose=True):
     H = H if H is not None else np.ceil(np.log(n)).astype('int')
 
     diag_norm = np.asarray(evaluate_L_diagonal(eval_L, X))
-    ucb_init = qbar * diag_norm / n
+    ucb_init = rls_oversample * diag_norm / n
 
     rng = check_random_state(random_state)
 
@@ -225,7 +225,7 @@ def bless(X, eval_L, lam_final, qbar, random_state=None, H=None, verbose=True):
                           X=X[selected_init, :],
                           probs=np.ones(np.sum(selected_init)) * ucb_init[selected_init],
                           lam=n,
-                          qbar=qbar)
+                          rls_oversample=rls_oversample)
 
     lam_sequence = list(np.geomspace(lam_final, n, H))
 
