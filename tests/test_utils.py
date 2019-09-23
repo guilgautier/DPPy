@@ -21,21 +21,29 @@ from dppy import utils
 class TestUtils(unittest.TestCase):
     """ Test
     """
-    def test_inner_products_and_square_norms(self):
+    def test_inner1D_to_compute_inner_product_and_square_norms(self):
 
-        X = rndm.rand(10, 20, 30, 40)
-        Y = rndm.rand(*X.shape)
+        shape = (10, 20, 30, 40)
+        X = rndm.rand(*shape)
+        Y = rndm.rand(*shape)
 
-        for ax in range(X.ndim):
+        for ax in range(len(shape)):
+            with self.subTest(axis=ax):
 
-            # inner product
-            self.assertTrue(
-                np.allclose(utils.inner1d(X, Y, axis=ax),
-                            (X * Y).sum(axis=ax)))
-            # square norm
-            self.assertTrue(
-                np.allclose(utils.inner1d(X, axis=ax),
-                            (X**2).sum(axis=ax)))
+                for test_inner1D in ['inner_prod', 'sq_norm']:
+                    with self.subTest(test_inner1D=test_inner1D):
+
+                        if test_inner1D == 'inner_prod':
+
+                            self.assertTrue(
+                                np.allclose(utils.inner1d(X, Y, axis=ax),
+                                            (X * Y).sum(axis=ax)))
+
+                        if test_inner1D == 'sq_norm':
+
+                            self.assertTrue(
+                                np.allclose(utils.inner1d(X, axis=ax),
+                                            (X**2).sum(axis=ax)))
 
     def test_det_ST(self):
         """Test determinant
@@ -47,171 +55,210 @@ class TestUtils(unittest.TestCase):
         nb_minors = 10
 
         for sh in shapes:
+            with self.subTest(axis=sh):
 
-            arr = rndm.rand(sh, sh)
-            size_minors = sh // 3
+                arr = rndm.rand(sh, sh)
+                size_minors = sh // 3
 
-            for _ in range(nb_minors):
-                S, T = rndm.choice(sh, size=(2, size_minors))
+                for idx in range(nb_minors):
+                    with self.subTest(idx=idx):
 
-                self.assertTrue(
-                    np.allclose(utils.det_ST(arr, S),
-                                la.det(arr[np.ix_(S, S)])))
+                        S, T = rndm.choice(sh,
+                                           size=(2, size_minors),
+                                           replace=False)
 
-                self.assertTrue(
-                    np.allclose(utils.det_ST(arr, S, T),
-                                la.det(arr[np.ix_(S, T)])))
+                        for test_det_ST in ['SS', 'ST']:
+                            with self.subTest(test_det_ST=test_det_ST):
+
+                                if test_det_ST == 'SS':
+
+                                    self.assertTrue(
+                                        np.allclose(utils.det_ST(arr, S),
+                                                    la.det(arr[np.ix_(S, S)])))
+
+                                if test_det_ST == 'ST':
+
+                                    self.assertTrue(
+                                        np.allclose(utils.det_ST(arr, S, T),
+                                                    la.det(arr[np.ix_(S, T)])))
 
     def test_symmetric(self):
 
-        self.assertIsNone(utils.is_symmetric(None))
+        N = 20
+        X = rndm.randn(N, N)
 
-        X = rndm.randn(20, 20)
-        sym_part = 0.5 * (X + X.T)
-        self.assertTrue(
-            np.allclose(utils.is_symmetric(sym_part),
-                        sym_part))
+        list_of_inputs = [(True, None),
+                          (False, X),
+                          (True, X.T + X),
+                          (True, X.T.dot(X))]
 
-        with self.assertRaises(ValueError) as context:
-            utils.is_symmetric(X)
+        for idx, (flag, _input) in enumerate(list_of_inputs):
+            with self.subTest(index=idx, is_symmetric=flag):
 
-        self.assertTrue('M.T != M' in str(context.exception))
+                if flag:
+                    self.assertTrue(
+                        utils.is_symmetric(_input) is _input)
+                else:
+                    with self.assertRaises(ValueError) as context:
+                        utils.is_symmetric(_input)
 
-        Y = rndm.randn(20, 30)
-        cov = Y.T.dot(Y)
-        self.assertTrue(
-            np.allclose(utils.is_symmetric(cov),
-                        cov))
-
-        with self.assertRaises(ValueError) as context:
-            utils.is_symmetric(Y)
-
-        self.assertTrue('M.T != M' in str(context.exception))
+                    self.assertIn('M.T != M', str(context.exception))
 
     def test_is_projection(self):
 
-        self.assertIsNone(utils.is_projection(None))
+        N, rank = 30, 10
+
+        X = rndm.randn(N, rank)
+        e_vecs, _ = qr(X, mode='economic')
+
+        list_of_inputs = [(True, None),
+                          (False, X.dot(X.T)),
+                          (True, X.dot(la.inv(X.T.dot(X)).dot(X.T))),
+                          (True, e_vecs.dot(e_vecs.T))]
+
+        for idx, (flag, _input) in enumerate(list_of_inputs):
+            with self.subTest(index=idx, is_projection=flag):
+
+                if flag:
+                    self.assertTrue(
+                        utils.is_projection(_input) is _input)
+                else:
+                    with self.assertRaises(ValueError) as context:
+                        utils.is_projection(_input)
+
+                    self.assertIn('M^2 != M', str(context.exception))
+
+    def test_is_orthonormal_columns(self):
 
         N, rank = 30, 10
 
         X = rndm.randn(N, rank)
-        K_proj_1 = X.dot(la.inv(X.T.dot(X)).dot(X.T))
+        e_vecs, _ = qr(X, mode='economic')
 
-        self.assertTrue(
-            np.allclose(utils.is_projection(K_proj_1),
-                        K_proj_1))
+        list_of_inputs = [(True, None),
+                          (False, X),
+                          (True, e_vecs)]
 
-        with self.assertRaises(ValueError) as context:
-            utils.is_projection(X.dot(X.T))
+        for idx, (flag, _input) in enumerate(list_of_inputs):
+            with self.subTest(index=idx, is_orthonormal_columns=flag):
 
-        self.assertTrue('M^2 != M' in str(context.exception))
+                if flag:
+                    self.assertTrue(
+                        utils.is_orthonormal_columns(_input) is _input)
+                else:
+                    with self.assertRaises(ValueError) as context:
+                        utils.is_orthonormal_columns(_input)
 
-        Y = rndm.randn(N, rank)
-        eig_vecs, _ = qr(Y, mode='economic')
-        K_proj_2 = eig_vecs.dot(eig_vecs.T)
-
-        self.assertTrue(
-            np.allclose(utils.is_projection(K_proj_2),
-                        K_proj_2))
-
-        with self.assertRaises(ValueError) as context:
-            utils.is_projection(Y.dot(Y.T))
-
-        self.assertTrue('M^2 != M' in str(context.exception))
-
-    def test_is_orthonormal(self):
-
-        self.assertIsNone(utils.is_orthonormal(None))
-
-        N, rank = 30, 10
-        X = rndm.randn(N, rank)
-        eig_vecs, _ = qr(X, mode='economic')
-
-        self.assertTrue(
-            np.allclose(utils.is_orthonormal(eig_vecs),
-                        eig_vecs))
-
-        with self.assertRaises(ValueError) as context:
-            utils.is_orthonormal(X)
-
-        self.assertTrue('M.T M != I' in str(context.exception))
+                    self.assertIn('M.T M != I', str(context.exception))
 
     def test_is_equal_to_O_or_1(self):
 
-        self.assertIsNone(utils.is_equal_to_O_or_1(None))
+        N, tol = 100, 1e-8
 
-        N, p = 100, 0.5
+        list_of_inputs = [(True, None),
+                          (True, np.ones(N)),
+                          (True, np.zeros(N)),
+                          (True, -tol * np.ones(N)),
+                          (True, tol + np.ones(N)),
+                          (False, -2 * tol * np.ones(N)),
+                          (False, np.ones(N) + 2 * tol),
+                          (False, rndm.rand(N)),
+                          (False, rndm.rand(N, N)),
+                          (False, 1 - rndm.rand(N)),
+                          (False, 1 + rndm.rand(N)),
+                          (False, -tol + rndm.rand(N))]
 
-        bernoullis = rndm.rand(N) < p
-        self.assertTrue(
-            np.allclose(utils.is_equal_to_O_or_1(bernoullis),
-                        bernoullis))
+        for idx, (flag, _input) in enumerate(list_of_inputs):
+            with self.subTest(index=idx, is_equal_to_O_or_1=flag):
 
-        gaussian = rndm.randn(N)
-        gaussian[:N // 2] = bernoullis[:N // 2]
-        with self.assertRaises(ValueError) as context:
-            utils.is_equal_to_O_or_1(gaussian)
+                if flag:
+                    self.assertTrue(
+                        utils.is_equal_to_O_or_1(_input, tol) is _input)
+                else:
+                    with self.assertRaises(ValueError) as context:
+                        utils.is_equal_to_O_or_1(_input, tol)
 
-        self.assertTrue('not all in {0,1}' in str(context.exception))
+                    self.assertIn('not all in {0,1}', str(context.exception))
 
     def test_is_in_01(self):
 
-        self.assertIsNone(utils.is_in_01(None))
+        N, tol = 100, 1e-8
 
-        N = 100
+        list_of_inputs = [(True, None),
+                          (True, np.ones(N)),
+                          (True, np.zeros(N)),
+                          (True, -tol * np.ones(N)),
+                          (True, tol + np.ones(N)),
+                          (False, -2 * tol * np.ones(N)),
+                          (False, np.ones(N) + 2 * tol),
+                          (True, rndm.rand(N)),
+                          (True, rndm.rand(N, N)),
+                          (True, 1 - rndm.rand(N)),
+                          (False, 1 + rndm.rand(N)),
+                          (True, -tol + rndm.rand(N)),
+                          (True, rndm.rand(N, N))]
 
-        unif = rndm.rand(N)
-        self.assertTrue(
-            np.allclose(utils.is_in_01(unif),
-                        unif))
+        for idx, (flag, _input) in enumerate(list_of_inputs):
+            with self.subTest(index=idx, is_in_01=flag):
 
-        gaussian = 5 * rndm.randn(N)
-        gaussian[:N // 2] = unif[:N // 2]
-        with self.assertRaises(ValueError) as context:
-            utils.is_in_01(gaussian)
+                if flag:
+                    self.assertTrue(utils.is_in_01(_input, tol) is _input)
+                else:
+                    with self.assertRaises(ValueError) as context:
+                        utils.is_in_01(_input, tol)
 
-        self.assertTrue('not all in [0,1]' in str(context.exception))
+                    self.assertIn('not all in [0,1]', str(context.exception))
 
     def test_is_geq_0(self):
 
-        self.assertIsNone(utils.is_geq_0(None))
-
         N, lam = 100, 4
+        tol = 1e-8
 
         poisson = rndm.poisson(lam=lam, size=N)
-        self.assertTrue(
-            np.allclose(utils.is_geq_0(poisson),
-                        poisson))
 
-        gaussian = 5 * rndm.randn(N)
-        gaussian[:N // 2] = poisson[:N // 2]
-        with self.assertRaises(ValueError) as context:
-            utils.is_geq_0(gaussian)
+        pm_poisson = poisson.copy()
+        pm_poisson[:N // 2] *= -1
 
-        self.assertTrue('not all >= 0' in str(context.exception))
+        list_of_inputs = [(True, None),
+                          (True, np.zeros(N)),
+                          (True, np.ones(N)),
+                          (False, -np.ones(N)),
+                          (True, - tol * np.ones(N)),
+                          (False, - 2 * tol * np.ones(N)),
+                          (True, poisson),
+                          (False, pm_poisson)]
+
+        for idx, (flag, _input) in enumerate(list_of_inputs):
+            with self.subTest(index=idx, is_geq_0=flag):
+
+                if flag:
+                    self.assertTrue(utils.is_geq_0(_input, tol) is _input)
+                else:
+                    with self.assertRaises(ValueError) as context:
+                        utils.is_geq_0(_input, tol)
+
+                    self.assertIn('not all >= 0', str(context.exception))
 
     def test_is_full_row_rank(self):
 
-        self.assertIsNone(utils.is_full_row_rank(None))
-
         N, rank = 30, 10
-        X = rndm.randn(rank, N)
 
-        self.assertTrue(
-            np.allclose(utils.is_full_row_rank(X),
-                        X))
+        list_of_inputs = [(True, None),
+                          (True, rndm.randn(rank, N)),
+                          (False, rndm.randn(N + 1, N)),
+                          (False, np.zeros((rank, N))),
+                          (False, np.ones((rank, N)))]
 
-        Y = rndm.randn(N + 1, N)
-        with self.assertRaises(ValueError) as context:
-            utils.is_full_row_rank(Y)
+        for idx, (flag, _input) in enumerate(list_of_inputs):
+            with self.subTest(index=idx, is_full_row_rank=flag):
 
-        self.assertTrue('not full row rank' in str(context.exception))
+                if flag:
+                    self.assertTrue(utils.is_full_row_rank(_input) is _input)
+                else:
+                    with self.assertRaises(ValueError) as context:
+                        utils.is_full_row_rank(_input)
 
-        Y = np.vstack([X, rndm.randn(rank).dot(X)])
-        with self.assertRaises(ValueError) as context:
-            utils.is_full_row_rank(Y)
-
-        self.assertTrue('not full row rank' in str(context.exception))
+                    self.assertIn('not full row rank', str(context.exception))
 
 
 def main():
