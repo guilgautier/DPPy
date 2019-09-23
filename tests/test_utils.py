@@ -4,7 +4,6 @@
 - :class:`TestUtils`
 """
 
-
 import unittest
 
 import numpy as np
