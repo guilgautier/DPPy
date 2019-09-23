@@ -29,7 +29,7 @@ def proj_dpp_sampler_kernel(kernel, mode='GS', size=None, random_state=None):
     rng = check_random_state(random_state)
 
     if size:
-        rank = int(np.round(np.trace(kernel)))
+        rank = np.rint(np.trace(kernel)).astype(int)
         if size > rank:
             raise ValueError('size k={} > rank={}'. format(size, rank))
 
@@ -48,7 +48,7 @@ def proj_dpp_sampler_kernel(kernel, mode='GS', size=None, random_state=None):
                     '- "GS (default)',
                     '- "Chol"',
                     '- "Schur"',
-                    'Given {}'.format(mode)]
+                    'Given "{}"'.format(mode)]
         raise ValueError('\n'.join(str_list))
 
     return sampl
@@ -97,7 +97,7 @@ def proj_dpp_sampler_kernel_Chol(K, size=None, random_state=None):
 
     hermitian = True if K.dtype.kind == 'c' else False
 
-    N, rank = len(K), np.round(np.trace(K)).astype(int)
+    N, rank = len(K), np.rint(np.trace(K)).astype(int)
     if size is None:  # full projection DPP
         size = rank
     # else: k-DPP with k = size
@@ -185,7 +185,7 @@ def proj_dpp_sampler_kernel_GS(K, size=None, random_state=None):
 
     # Initialization
     # ground set size / rank(K) = Tr(K)
-    N, rank = len(K), np.round(np.trace(K)).astype(int)
+    N, rank = len(K), np.rint(np.trace(K)).astype(int)
     if size is None:  # full projection DPP
         size = rank
     # else: k-DPP with k = size
@@ -249,7 +249,7 @@ def proj_dpp_sampler_kernel_Schur(K, size=None, random_state=None):
 
     # Initialization
     # ground set size / rank(K) = Tr(K)
-    N, rank = len(K), np.round(np.trace(K)).astype(int)
+    N, rank = len(K), np.rint(np.trace(K)).astype(int)
     if size is None:  # full projection DPP
         size = rank
     # else: k-DPP with k = size
@@ -345,14 +345,15 @@ def dpp_sampler_generic_kernel(K, random_state=None):
         else:
             A[j, j] -= 1
 
-        A[j+1:, j] /= A[j, j]
-        A[j+1:, j+1:] -= np.outer(A[j+1:, j], A[j, j+1:])
-#         A[j+1:, j+1:] -=  np.einsum('i,j', A[j+1:, j], A[j, j+1:])
+        A[j + 1:, j] /= A[j, j]
+        A[j + 1:, j + 1:] -= np.outer(A[j + 1:, j], A[j, j + 1:])
+        # A[j+1:, j+1:] -=  np.einsum('i,j', A[j+1:, j], A[j, j+1:])
 
     return sample, A
 
 # From spectral decomposition
 #############################
+
 
 # Phase 1: subsample eigenvectors by drawing independent Bernoulli variables with parameter the eigenvalues of the correlation kernel K.
 def dpp_eig_vecs_selector(ber_params, eig_vecs,
@@ -432,6 +433,7 @@ def dpp_eig_vecs_selector_L_dual(eig_vals, eig_vecs, gram_factor,
 
     return gram_factor.T.dot(eig_vecs[:, ind_sel] / np.sqrt(eig_vals[ind_sel]))
 
+
 # Phase 2:
 # Sample projection kernel VV.T where V are the eigvecs selected in Phase 1.
 def proj_dpp_sampler_eig(eig_vecs, mode='GS', size=None,
@@ -471,7 +473,7 @@ def proj_dpp_sampler_eig(eig_vecs, mode='GS', size=None,
                         '- "GS" (default)',
                         '- "GS_bis"',
                         '- "KuTa12"',
-                        'Given {}'.format(mode)]
+                        'Given "{}"'.format(mode)]
             raise ValueError('\n'.join(str_list))
     else:
         sampl = []
@@ -528,7 +530,7 @@ def proj_dpp_sampler_eig_GS(eig_vecs, size=None,
     for it in range(size):
         # Pick an item \propto this squred distance
         j = rng.choice(ground_set[avail],
-                             p=np.abs(norms_2[avail]) / (rank - it))
+                       p=np.abs(norms_2[avail]) / (rank - it))
         sampl[it] = j
         if it == size - 1:
             break
@@ -595,7 +597,7 @@ def proj_dpp_sampler_eig_GS_bis(eig_vecs, size=None, random_state=None):
         # Pick an item proportionally to the residual norm^2
         # ||P_{V_Y}^{orthog} V_j||^2
         j = rng.choice(ground_set[avail],
-                             p=np.abs(norms_2[avail]) / (rank - it))
+                       p=np.abs(norms_2[avail]) / (rank - it))
         sampl[it] = j
         if it == size - 1:
             break
@@ -758,7 +760,7 @@ def k_dpp_eig_vecs_selector(eig_vals, eig_vecs, size,
     ind_selected = np.zeros(k, dtype=int)
     for n in range(eig_vals.size, 0, -1):
 
-        if rng.rand() < eig_vals[n-1] * E_poly[k-1, n-1] / E_poly[k, n]:
+        if rng.rand() < eig_vals[n - 1] * E_poly[k - 1, n - 1] / E_poly[k, n]:
             k -= 1
             ind_selected[k] = n - 1
             if k == 0:

@@ -32,7 +32,7 @@ from dppy.mcmc_sampling import dpp_sampler_mcmc, zonotope_sampler
 from dppy.utils import (check_random_state,
                         is_symmetric,
                         is_projection,
-                        is_orthonormal,
+                        is_orthonormal_columns,
                         is_full_row_rank,
                         is_in_01,
                         is_geq_0,
@@ -82,6 +82,10 @@ class FiniteDPP:
 
         - :ref:`finite_dpps_definition`
         - :ref:`finite_dpps_exact_sampling`
+
+    .. todo::
+
+        add ``.kernel_rank`` attribute
     """
 
     ###############
@@ -99,7 +103,7 @@ class FiniteDPP:
         self.list_of_samples = []
 
         # when using .sample_k_dpp_*
-        self.size_k_dpp = None
+        self.size_k_dpp = 0
         self.E_poly = None  # evaluation of the
 
         # Attributes relative to K correlation kernel:
@@ -113,7 +117,7 @@ class FiniteDPP:
             self.K_eig_vals = is_equal_to_O_or_1(e_vals)
         else:
             self.K_eig_vals = is_in_01(e_vals)
-        self.eig_vecs = is_orthonormal(e_vecs)
+        self.eig_vecs = is_orthonormal_columns(e_vecs)
 
         self.A_zono = is_full_row_rank(params.get('A_zono', None))
 
@@ -129,7 +133,7 @@ class FiniteDPP:
         else:
             self.L_eig_vals = is_geq_0(e_vals)
         if self.eig_vecs is None:  # K_eig_vecs = L_eig_vecs
-            self.eig_vecs = is_orthonormal(e_vecs)
+            self.eig_vecs = is_orthonormal_columns(e_vecs)
 
         # L' "dual" likelihood kernel, L' = Phi Phi.T, Phi = L_gram_factor
         self.L_gram_factor = params.get('L_gram_factor', None)
@@ -166,6 +170,11 @@ class FiniteDPP:
         # Check coherence of initialization parameters of the DPP:
         # kernel_type, projection and params.
 
+        if not isinstance(self.projection, bool):
+            err_print = ['`projection` argument is not boolean',
+                         'Given: {}'.format(self.is_projection)]
+            raise ValueError('\n'.join(err_print))
+
         K_type, K_params = 'correlation', {'K', 'K_eig_dec', 'A_zono'}
         L_type, L_params = 'likelihood', {'L', 'L_eig_dec', 'L_gram_factor'}
 
@@ -186,7 +195,7 @@ class FiniteDPP:
         elif self.kernel_type == L_type:
             if self.params_keys.intersection(L_params):
                 if self.projection:
-                    warn('weird setting: defining a DPP via a projection likelihood L kernel is unusual. Make sure you do not want to use a projection CORRELATION K kernel instead')
+                    warn('Weird setting: defining a DPP via a projection likelihood L kernel is unusual. Make sure you do not want to use a projection CORRELATION K kernel instead')
             else:
                 err_print =\
                     ['Invalid parametrization of likelihood kernel, choose:',
@@ -221,6 +230,7 @@ class FiniteDPP:
             - :py:meth:`~FiniteDPP.sample_mcmc`
         """
         self.list_of_samples = []
+        self.size_k_dpp = 0
 
     # Exact sampling
     def sample_exact(self, mode='GS', random_state=None):
@@ -267,9 +277,21 @@ class FiniteDPP:
 
         self.sampling_mode = mode
 
-        if self.sampling_mode == 'Chol':
+        if self.sampling_mode == 'Schur':
+            if self.kernel_type=='correlation' and self.projection:
+                self.compute_K()
+                sampl = proj_dpp_sampler_kernel(self.K, self.sampling_mode,
+                                                random_state=rng)
+                self.list_of_samples.append(sampl)
+            else:
+                err_print =\
+                    ['`Schur` sampling mode is only available for projection DPPs, i.e., `kernel_type="correlation"` and `projection=True`',
+                     'Given: {}'.format((self.kernel_type, self.projection))]
+                raise ValueError('\n'.join(err_print))
+
+        elif self.sampling_mode == 'Chol':
             self.compute_K()
-            if self.projection:
+            if self.kernel_type=='correlation' and self.projection:
                 sampl = proj_dpp_sampler_kernel(self.K, self.sampling_mode,
                                                 random_state=rng)
             else:
@@ -393,11 +415,11 @@ class FiniteDPP:
             if self.kernel_type == 'correlation':
 
                 if self.K_eig_vals is not None:
-                    rank = np.round(np.sum(self.K_eig_vals)).astype(int)
+                    rank = np.rint(np.sum(self.K_eig_vals)).astype(int)
                 elif self.A_zono is not None:
                     rank = self.A_zono.shape[0]
                 else: # self.K is not None
-                    rank = np.round(np.trace(self.K)).astype(int)
+                    rank = np.rint(np.trace(self.K)).astype(int)
 
                 if size != rank:
                     raise ValueError('size k={} != rank={} for projection correlation K kernel'.format(k, rank))
@@ -469,8 +491,8 @@ class FiniteDPP:
             # There is
             self.L_eig_vals = self.L_dual_eig_vals
             self.eig_vecs =\
-                self.L_gram_factor.T.dot(self.L_dual_eig_vecs\
-                                        / np.sqrt(self.L_dual_eig_vals))
+                self.L_gram_factor.T.dot(
+                    self.L_dual_eig_vecs / np.sqrt(self.L_dual_eig_vals))
             self.sample_exact_k_dpp(size, self.sampling_mode,
                                     random_state=rng)
 
@@ -553,7 +575,7 @@ class FiniteDPP:
             if self.A_zono is not None:
                 chain = zonotope_sampler(self.A_zono, **params)
             else:
-                err_print = ['Invalid `mode=zonotope` parameter.',
+                err_print = ['Invalid `mode=zonotope` parameter',
                              'DPP must be defined via `A_zono`',
                              'Given: {}'.format(self.params_keys)]
                 raise ValueError(' '.join(err_print))
@@ -562,7 +584,7 @@ class FiniteDPP:
             if (self.kernel_type == 'correlation') and self.projection:
                 self.compute_K()
                 size = params.get('size', None)
-                rank = np.round(np.trace(self.K)).astype(int)
+                rank = np.rint(np.trace(self.K)).astype(int)
                 # |sample| = Tr(K) = rank(K) a.s. for projection DPP(K)
                 if size == rank:
                     chain = dpp_sampler_mcmc(self.K,
@@ -589,7 +611,7 @@ class FiniteDPP:
 
         self.list_of_samples.append(chain)
 
-    def sample_mcmc_k_dpp(self, size, **params):
+    def sample_mcmc_k_dpp(self, size, mode='E', **params):
         """ Calls :py:meth:`~sample_mcmc` with ``mode='E'`` and ``params['size'] = size``
 
         .. seealso::
@@ -696,8 +718,8 @@ class FiniteDPP:
                 except FloatingPointError:
                     err_print = ['Eigenvalues of L kernel cannot be computed',
                                  'eig_L = eig_K/(1-eig_K)',
-                                 'K kernel has some eig_K very close to 1.',
-                                 'Hint: `K` kernel might be a projection.']
+                                 'K kernel has some eig_K very close to 1',
+                                 'Hint: `K` kernel might be a projection']
                     raise FloatingPointError('\n'.join(err_print))
 
             elif self.K is not None:
