@@ -144,13 +144,13 @@ class MultivariateJacobiOPE:
         """
         if jac_params is None:
             return np.prod((1.0 - X)**(self.jacobi_params[:, 0])
-                         * (1.0 + X)**(self.jacobi_params[:, 1]),
-                            axis=-1)
+                           * (1.0 + X)**(self.jacobi_params[:, 1]),
+                           axis=-1)
         else:
             if np.all(jac_params > -1):
                 return np.prod((1.0 - X)**(jac_params[:, 0])
-                             * (1.0 + X)**(jac_params[:, 1]),
-                                axis=-1)
+                               * (1.0 + X)**(jac_params[:, 1]),
+                               axis=-1)
             else:
                 raise ValueError('Invalid Jacobi parameters, must be all > -1')
 
@@ -231,7 +231,6 @@ class MultivariateJacobiOPE:
                             axis=2),
                         axis=1)
 
-
         else:
 
             lenX = X.size // self.dim  # X.shape[0] if X.ndim > 1 else 1
@@ -252,7 +251,7 @@ class MultivariateJacobiOPE:
                             axis=2),
                         axis=1)
 
-            else:  # if lenX < lenY:
+            else:  # if lenX <= lenY:
 
                 polys_X_Y[lenX:] *= polys_X_Y[:lenX] / self.poly_1D_square_norms
 
@@ -291,7 +290,7 @@ class MultivariateJacobiOPE:
                 = \\prod_{i=1}^{d} \\pi P_{k^i}(x)^2 (1-x^i)^{a^i+\\frac{1}{2}} (1+x^i)^{b^i+\\frac{1}{2}}
 
             which can be bounded using the result of :cite:`Gau09` on Jacobi polynomials.
-            It is computed at initialization of the :py:class:`MultivariateJacobiOPE` object with :py:meth:`compute_Gautschi_bounds`
+            The  is computed at initialization of the :py:class:`MultivariateJacobiOPE` object with :py:meth:`compute_Gautschi_bounds`
 
         :return:
             A sample :math:`x\\in[-1,1]^d` with probability distribution :math:`\\frac{1}{N} K(x,x) w(x)`
@@ -308,25 +307,31 @@ class MultivariateJacobiOPE:
         ind = rng.randint(self.N)
         k_multi_ind = self.ordering[ind]
         square_norm = self.poly_multiD_square_norms[ind]
-        Gautschi_bound = self.Gautschi_bounds[ind]
+        rejection_bound = self.Gautschi_bounds[ind]
 
         for trial in range(nb_trials_max):
 
             # Propose x ~ arcsine = \prod_{i=1}^{d} 1/pi 1/sqrt(1-(x^i)^2)
             x = 1.0 - 2.0 * rng.beta(0.5, 0.5, size=self.dim)
 
+            # Compute (P_k(x)/||P_k||)^2
             Pk2_x = np.prod(eval_jacobi(k_multi_ind,
                                         self.jacobi_params[:, 0],
                                         self.jacobi_params[:, 1],
                                         x))**2
             Pk2_x /= square_norm
 
+            # Compute w(x) / proposal(x)
+            # = \prod_{i=1}^{d}
+            #   (1-x_i)^{a_i} (1+x_i)^{b_i}
+            #   / (1/pi * ((1-x_i)*(1+x_i))^{-1/2})
+            # = prod_{i=1}^d pi * (1-x_i)^{a_i+1/2} (1+x_i)^{b_i+1/2}
             ratio_w_proposal =\
                 self._pi_power_dim\
                 * np.prod((1.0 - x)**(self._jacobi_params_plus_05[:, 0])
-                        * (1.0 + x)**(self._jacobi_params_plus_05[:, 1]))
+                          * (1.0 + x)**(self._jacobi_params_plus_05[:, 1]))
 
-            if rng.rand() * Gautschi_bound < Pk2_x * ratio_w_proposal:
+            if rng.rand() * rejection_bound < Pk2_x * ratio_w_proposal:
                 break
         else:
             print('proposal not enough trials')
@@ -358,39 +363,22 @@ class MultivariateJacobiOPE:
             - evaluation of the kernel :py:meth:`~dppy.multivariate_jacobi_ope.MultivariateJacobiOPE.K`
         """
 
-        if X.size == self.dim:
-            poly_1D_jacobi = eval_jacobi(self.poly_1D_degrees,
-                                         self.jacobi_params[:, 0],
-                                         self.jacobi_params[:, 1],
-                                         X)
+        flag_1D = X.size == self.dim
 
-            if normalize == 'square_norm':
-                poly_1D_jacobi /= self.poly_1D_square_norms
+        poly_1D_jacobi = eval_jacobi(self.poly_1D_degrees,
+                                     self.jacobi_params[:, 0],
+                                     self.jacobi_params[:, 1],
+                                     X if flag_1D else X[:, None])
 
-            elif normalize == 'norm':
-                poly_1D_jacobi /= np.sqrt(self.poly_1D_square_norms)
+        if normalize == 'square_norm':
+            poly_1D_jacobi /= self.poly_1D_square_norms
+        elif normalize == 'norm':
+            poly_1D_jacobi /= np.sqrt(self.poly_1D_square_norms)
 
-            # else:
-            #     pass
-
+        if flag_1D:
             return np.prod(poly_1D_jacobi[self.ordering, range(self.dim)],
                            axis=1)
-
         else:
-            poly_1D_jacobi = eval_jacobi(self.poly_1D_degrees,
-                                         self.jacobi_params[:, 0],
-                                         self.jacobi_params[:, 1],
-                                         X[:, None])
-
-            if normalize == 'square_norm':
-                poly_1D_jacobi /= self.poly_1D_square_norms
-
-            elif normalize == 'norm':
-                poly_1D_jacobi /= np.sqrt(self.poly_1D_square_norms)
-
-            # else:
-            #     pass
-
             return np.prod(poly_1D_jacobi[:, self.ordering, range(self.dim)],
                            axis=2)
 
@@ -679,7 +667,8 @@ def compute_ordering_BaHa16(N, d):
     layer_max = np.floor(N**(1.0 / d)).astype(np.int16)
 
     ordering = itt.chain.from_iterable(
-                filter(lambda x: m in x, itt.product(range(m + 1), repeat=d))
+                filter(lambda x: m in x,
+                       itt.product(range(m + 1), repeat=d))
                 for m in range(layer_max + 1))
 
     return list(ordering)[:N]
@@ -743,23 +732,15 @@ def compute_poly1D_square_norms(jacobi_params, deg_max):
         a = jacobi_params[non_arcsine, 0]
         b = jacobi_params[non_arcsine, 1]
 
-        square_norms[0, non_arcsine] =\
-            2**(a + b + 1) * beta(a + 1, b + 1)
+        square_norms[0, non_arcsine] = 2**(a + b + 1) * beta(a + 1, b + 1)
 
-        square_norms[1:, non_arcsine] =\
-            np.exp(
-                (a + b + 1) * np.log(2)
-                + gammaln(n + 1 + a)
-                + gammaln(n + 1 + b)
-                - gammaln(n + 1)
-                - np.log(2 * n + 1 + a + b)
-                - gammaln(n + 1 + a + b)
-                )
+        square_norms[1:, non_arcsine] = np.exp((a + b + 1) * np.log(2)
+                                               + gammaln(n + 1 + a)
+                                               + gammaln(n + 1 + b)
+                                               - gammaln(n + 1)
+                                               - np.log(2 * n + 1 + a + b)
+                                               - gammaln(n + 1 + a + b))
 
-            # 2**(a + b + 1) * gamma(n + 1 + a) * gamma(n + 1 + b)\
-            # /(factorial(n) * (2 * n + 1 + a + b)  * gamma(n + 1 + a + b))
-
-    # |P_alpha|^2 = \prod_{i=1}^d |P_{alpha_i}^{a_i,b_i}|^2
     return square_norms
 
 

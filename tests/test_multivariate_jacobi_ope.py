@@ -39,7 +39,9 @@ class TestMultivariateJacobiOPE(unittest.TestCase):
                       (0, 0, 1), (0, 1, 0), (0, 1, 1), (1, 0, 0), (1, 0, 1), (1, 1, 0), (1, 1, 1),
                       (0, 0, 2), (0, 1, 2), (0, 2, 0), (0, 2, 1), (0, 2, 2), (1, 0, 2), (1, 1, 2), (1, 2, 0), (1, 2, 1), (1, 2, 2), (2, 0, 0), (2, 0, 1), (2, 0, 2), (2, 1, 0), (2, 1, 1), (2, 1, 2), (2, 2, 0), (2, 2, 1), (2, 2, 2)]
 
-        for ord_to_check in (ord_d2_N16, ord_d3_N27):
+        orderings = [ord_d2_N16, ord_d3_N27]
+
+        for idx, ord_to_check in enumerate(orderings):
 
             N, d = len(ord_to_check), len(ord_to_check[0])
 
@@ -101,6 +103,7 @@ class TestMultivariateJacobiOPE(unittest.TestCase):
             K(x) == K(x, x)
             K(x, y) == K(y, x)
             K(x, Y) == K(Y, x) = [K(x, y) for y in Y]
+            K(X) == [K(x, x) for x in X]
             K(X, Y) == [K(x, y) for x, y in zip(X, Y)]
         """
         N = 100
@@ -143,7 +146,8 @@ class TestMultivariateJacobiOPE(unittest.TestCase):
         """
             K(x) == phi_x.dot(phi_x)
             K(x, y) == phi_x.dot(phi_y)
-            K(x, Y) == K(Y, x) = phi_x.dot(phi_y)
+            K(x, Y) == K(Y, x) = [phi_x.dot(phi_y) for y in Y]
+            K(X) == [phi_x.dot(phi_x) for x in X]
             K(X, Y) == [phi_x.dot(phi_y) for x, y in zip(X, Y)]
         """
         N = 100
