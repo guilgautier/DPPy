@@ -11,23 +11,35 @@ import runpy
 
 import matplotlib.pyplot as plt
 
+import sys
+sys.path.append('..')  # make sure dppy is available when run plot files
 
 class TestPlot(unittest.TestCase):
 
-    dir_tests = os.path.dirname(os.path.realpath(__file__))
-    dir_tests = dir_tests.replace('tests', 'docs/plots')
+    dir_of_this_test = os.path.dirname(os.path.realpath(__file__))
+    dir_plots_to_test = dir_of_this_test.replace('tests', 'docs/plots')
 
     def test_plot(self):
 
-        test_plot_files = ['/'.join([self.dir_tests, f])
-                           for f in os.listdir(self.dir_tests)
+        list_plot_files = ['/'.join([self.dir_plots_to_test, f])
+                           for f in os.listdir(self.dir_plots_to_test)
                            if f.startswith('ex_plot') and f.endswith('.py')]
 
-        for f in test_plot_files:
-            print(f)
+        for path in list_plot_files:
+            with self.subTest(path_to_plot_example=path):
 
-            nb_fig_before = plt.gcf().number
-            runpy.run_path(f)
-            nb_fig_after = plt.gcf().number
+                plt.close()
+                nb_fig_before = plt.gcf().number
+                runpy.run_path(path)
+                nb_fig_after = plt.gcf().number
 
-            self.assertTrue(nb_fig_after > nb_fig_before)
+                self.assertTrue(nb_fig_after > nb_fig_before)
+
+
+def main():
+
+    unittest.main()
+
+
+if __name__ == '__main__':
+    main()
