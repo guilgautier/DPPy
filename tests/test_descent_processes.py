@@ -20,14 +20,17 @@ class TestDescentProcesses(unittest.TestCase):
 
     size = 10000
     tol = 1e-2
+    seed = 0
 
     def marginal_adequation(self, process):
 
-        process.sample(size=self.size)
+        process.sample(size=self.size, random_state=self.seed)
 
-        estim = len(process.list_of_samples[-1]) / self.size
+        p_hat = len(process.list_of_samples[-1]) / self.size
+        p_th = process._bernoulli_param
 
-        self.assertTrue(np.abs(estim - process._bernoulli_param) < self.tol)
+        self.assertTrue(np.abs(p_hat - p_th) / p_th < self.tol,
+                        'p_hat={}, p_th={}'.format(p_hat, p_th))
 
     def test_carries_process(self):
         process = CarriesProcess(base=10)

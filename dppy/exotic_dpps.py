@@ -15,11 +15,10 @@
     `Documentation on ReadTheDocs <https://dppy.readthedocs.io/en/latest/exotic_dpps/index.html>`_
 """
 
-import abc
+from abc import ABCMeta, abstractmethod
 
 import numpy as np
 from scipy.linalg import qr
-
 import matplotlib.pyplot as plt
 from matplotlib import collections as mc  # see plot_diagram
 
@@ -29,7 +28,7 @@ from dppy.exotic_dpps_core import ust_sampler_wilson, ust_sampler_aldous_broder
 from dppy.exact_sampling import proj_dpp_sampler_eig, proj_dpp_sampler_kernel
 
 # For DescentProcess
-import re  # to convert class names to string in
+from re import findall  # to convert class names to string in
 # from dppy.exotic_dpps_core import wrapper_plot_descent
 
 # For Poissonized Plancherel measure
@@ -44,24 +43,23 @@ from dppy.utils import check_random_state
 #####################
 # Descent Processes #
 #####################
-class Descent(metaclass=abc.ABCMeta):
+class Descent(metaclass=ABCMeta):
 
     def __init__(self):
 
-        self.name =\
-            ' '.join(re.findall('[A-Z][^A-Z]*', self.__class__.__name__))
+        self.name = ' '.join(findall('[A-Z][^A-Z]*', self.__class__.__name__))
         self.list_of_samples = []
         self.size = 100
 
     @property
-    @abc.abstractmethod
+    @abstractmethod
     def _bernoulli_param(self):
         """Parameter of the corresponding process formed by i.i.d. Bernoulli variables.
         This parameter corresponds to the probability that a descent occurs any index"""
 
         return 0.5
 
-    @abc.abstractmethod
+    @abstractmethod
     def sample(self, random_state=None):
         """Sample from corresponding process"""
 
@@ -211,8 +209,7 @@ class DescentProcess(Descent):
         rng = check_random_state(random_state)
 
         self.size = size
-        sigma = uniform_permutation(self.size,
-                                    random_state=rng)
+        sigma = uniform_permutation(self.size, random_state=rng)
 
         descent = 1 + np.where(sigma[:-1] > sigma[1:])[0]
 
@@ -268,16 +265,15 @@ class VirtualDescentProcess(Descent):
         rng = check_random_state(random_state)
 
         self.size = size
-        sigma = uniform_permutation(self.size + 1,
-                                    random_state=rng)
+        sigma = uniform_permutation(self.size + 1, random_state=rng)
 
         X = sigma[:-1] > sigma[1:]  # Record the descents in permutation
 
         Y = rng.binomial(n=2, p=self.x_0, size=self.size + 1) != 1
 
         descent = [i for i in range(self.size)
-                   if (~Y[i] and Y[i + 1])
-                   or (~Y[i] and ~Y[i + 1] and X[i])]
+                   if (~Y[i] and Y[i + 1]) or (~Y[i] and ~Y[i + 1] and X[i])]
+        # ~ symbol is equivalent to not on boolean numpy array
 
         self.list_of_samples.append(descent)
 
@@ -490,7 +486,7 @@ class UST:
 
         self.sampling_mode = 'Wilson'  # Default (avoid eig_vecs computation)
         self._sampling_modes = {'markov-chain': ['Wilson', 'Aldous-Broder'],
-                                'spectral-method': ['GS', 'GS_bis', 'KuTa12'],
+                                'spectral-method': ['GS'],
                                 'projection-K-kernel': ['Schur', 'Chol']}
         self.list_of_samples = []
 
@@ -587,7 +583,7 @@ class UST:
         else:
             err_print = '\n'.join(
                 'Invalid sampling mode',
-                'Chose from: {}'.format(self._sampling_modes),
+                'Chose from: {}'.format(self._sampling_modes.values()),
                 'Given {}'.format(mode))
             raise ValueError()
 
