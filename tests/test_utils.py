@@ -259,6 +259,15 @@ class TestUtils(unittest.TestCase):
 
                     self.assertIn('not full row rank', str(context.exception))
 
+    def test_evaluate_L_diagonal(self):
+        """
+        .. todo::
+
+            write the test to check
+            np.diag(dpp.L) = utils.evaluate_L_diagonal(eval_L, X_data)
+        """
+        pass
+
 
 def main():
 
