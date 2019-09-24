@@ -254,7 +254,7 @@ class FiniteDPP:
         self.list_of_samples = []
 
     # Exact sampling
-    def sample_exact(self, mode='GS', random_state=None, **params):
+    def sample_exact(self, mode='GS', **params):
         """ Sample exactly from the corresponding :class:`FiniteDPP <FiniteDPP>` object. The sampling scheme is based on the chain rule with Gram-Schmidt like updates of the conditionals.
 
         :param mode:
@@ -272,6 +272,11 @@ class FiniteDPP:
                 - ``'vfx'``: dpp-vfx in :cite:`DeCaVa19`
         :type mode:
             string, default ``'GS'``
+
+        :param dict params:
+            Dictionary containing the parameters for exact samplers with keys
+
+            ``'random_state'`` (default None)
 
         :return:
             A sample from the corresponding :class:`FiniteDPP <FiniteDPP>` object.
@@ -295,7 +300,7 @@ class FiniteDPP:
             - :py:meth:`~FiniteDPP.sample_mcmc`
         """
 
-        rng = check_random_state(random_state)
+        rng = check_random_state(params.get('random_state', None))
 
         self.sampling_mode = mode
 
@@ -396,7 +401,7 @@ class FiniteDPP:
                              ' This should never happen, please consider rasing an issue on github'
                              ' at https://github.com/guilgautier/DPPy/issues')
 
-    def sample_exact_k_dpp(self, size, mode='GS', random_state=None, **params):
+    def sample_exact_k_dpp(self, size, mode='GS', **params):
         """ Sample exactly from :math:`\\operatorname{k-DPP}`.
         A priori the :class:`FiniteDPP <FiniteDPP>` object was instanciated by its likelihood :math:`\\mathbf{L}` kernel so that
 
@@ -420,6 +425,11 @@ class FiniteDPP:
         :type mode:
             string, default ``'GS'``
 
+        :param dict params:
+            Dictionary containing the parameters for exact samplers with keys
+
+            ``'random_state'`` (default None)
+
         :return:
             A sample from the corresponding :math:`\\operatorname{k-DPP}`
         :rtype:
@@ -441,7 +451,7 @@ class FiniteDPP:
             - :py:meth:`~FiniteDPP.sample_mcmc_k_dpp`
         """
 
-        rng = check_random_state(random_state)
+        rng = check_random_state(params.get('random_state', None))
 
         self.sampling_mode = mode
 
