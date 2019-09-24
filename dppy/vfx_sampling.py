@@ -239,7 +239,8 @@ def vfx_sampling_precompute_constants(X,
     if desired_s is None:
         alpha_star = 1.0
     elif natural_s <= desired_s:
-        raise ValueError('The expected sample size is smaller than k or the desired sample size.\n'
+        raise ValueError('The expected sample size is smaller than the desired sample size or k (if sampling from'
+                         'a k-DPP).\n'
                          'This is unusual (i.e. you are trying to select more than the overall amount of diversity '
                          'in your set.\n'
                          'Increasing the expected sample size is currently not supported (only decreasing).\n'
