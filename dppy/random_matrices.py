@@ -22,11 +22,8 @@ from dppy.utils import check_random_state
 ###########
 # Hermite #
 ###########
-# Hermite, full matrix model
 def hermite_sampler_full(N, beta=2,
                          random_state=None):
-
-    # size_sym_mat = int(N * (N-1) / 2)
 
     rng = check_random_state(random_state)
 
@@ -43,35 +40,13 @@ def hermite_sampler_full(N, beta=2,
         A = np.block([[X, Y], [-Y.conj(), X.conj()]])
 
     else:
-        err_print = ('`beta` parameter must be 1, 2 or 4.\
-                     Given: {}'.format(beta))
-        raise ValueError(err_print)
+        err_print = ('`beta` parameter must be 1, 2 or 4.',
+                     'Given: {}'.format(beta))
+        raise ValueError('\n'.join(err_print))
 
-    # return la.eigvalsh(A+A.conj().T)
     return la.eigvalsh(A + A.conj().T) / np.sqrt(2.0)
 
 
-# Hermite tridiag
-# def hermite_sampler_tridiag(N, beta=2,
-#                             random_state=None):
-#     """
-#     .. seealso::
-
-#         :cite:`DuEd02` II-C
-#     """
-
-#     rng = check_random_state(random_state)
-
-#     if not (beta > 0):
-#         raise ValueError('`beta` must be positive. Given: {}'.format(beta))
-
-#     alpha_coef = np.sqrt(2) * rng.randn(N)
-#     beta_coef = rng.chisquare(beta * np.arange(N - 1, 0, step=-1))
-
-#     return la.eigvalsh_tridiagonal(alpha_coef, np.sqrt(beta_coef))
-
-
-# Semi-circle law
 def semi_circle_law(x, R=2.0):
     """
     .. seealso::
@@ -83,10 +58,15 @@ def semi_circle_law(x, R=2.0):
     return 2 / (np.pi * R**2) * np.sqrt(R**2 - x**2)
 
 
-# mu_ref = normal
 def mu_ref_normal_sampler_tridiag(loc=0.0, scale=1.0, beta=2, size=10,
-                                 random_state=None):
-    """
+                                  random_state=None):
+    """Implementation of the tridiagonal model to sample from
+
+    .. math::
+
+        \\Delta(x_{1}, \\dots, x_{N})^{\\beta}
+        \\prod_{n=1}^{N} \\exp(-\\frac{(x_i-\\mu)^2}{2\\sigma^2} ) dx_i
+
     .. seealso::
 
         :cite:`DuEd02` II-C
@@ -109,7 +89,6 @@ def mu_ref_normal_sampler_tridiag(loc=0.0, scale=1.0, beta=2, size=10,
 ############
 # Laguerre #
 ############
-# Laguerre, full matrix model
 def laguerre_sampler_full(M, N, beta=2,
                           random_state=None):
 
@@ -127,45 +106,13 @@ def laguerre_sampler_full(M, N, beta=2,
         A = np.block([[X, Y], [-Y.conj(), X.conj()]])
 
     else:
-        err_print = ('`beta` parameter must be 1, 2 or 4.\
-                     Given: {}'.format(beta))
-        raise ValueError(err_print)
+        err_print = ('`beta` parameter must be 1, 2 or 4.',
+                     'Given: {}'.format(beta))
+        raise ValueError('\n'.join(err_print))
 
     return la.eigvalsh(A.dot(A.conj().T))
 
 
-# Laguerre, tridiagonal model
-# def laguerre_sampler_tridiag(M, N, beta=2,
-#                              random_state=None):
-#     """
-#     .. seealso::
-
-#         :cite:`DuEd02` III-B
-#     """
-
-#     rng = check_random_state(random_state)
-
-#     if not (beta > 0):
-#         raise ValueError('`beta` must be positive. Given: {}'.format(beta))
-#     # M=>N
-
-#     # xi_odd = xi_1, ... , xi_2N-1
-#     xi_odd = rng.chisquare(beta * np.arange(M, M - N, step=-1))
-
-#     # xi_even = xi_0=0, xi_2, ... ,xi_2N-2
-#     xi_even = np.zeros(N)
-#     xi_even[1:] = rng.chisquare(beta * np.arange(N - 1, 0, step=-1))
-
-#     # alpha_i = xi_2i-2 + xi_2i-1
-#     # alpha_1 = xi_0 + xi_1 = xi_1
-#     alpha_coef = xi_even + xi_odd
-#     # beta_i+1 = xi_2i-1 * xi_2i
-#     beta_coef = xi_odd[:-1] * xi_even[1:]
-
-#     return la.eigvalsh_tridiagonal(alpha_coef, np.sqrt(beta_coef))
-
-
-# Marcenko Pastur law
 def marcenko_pastur_law(x, M, N, sigma=1.0):
     """ M >= N
 
@@ -181,7 +128,6 @@ def marcenko_pastur_law(x, M, N, sigma=1.0):
     return np.sqrt(np.maximum((Lp-x)*(x-Lm),0)) / (c*x) / (2*np.pi*sigma**2)
 
 
-# mu_ref = Gamma
 def mu_ref_gamma_sampler_tridiag(shape=1.0, scale=1.0, beta=2, size=10,
                                  random_state=None):
     """
@@ -216,7 +162,6 @@ def mu_ref_gamma_sampler_tridiag(shape=1.0, scale=1.0, beta=2, size=10,
 ##########
 # Jacobi #
 ##########
-# Jacobi, full matrix model
 def jacobi_sampler_full(M_1, M_2, N, beta=2,
                         random_state=None):
 
@@ -241,9 +186,9 @@ def jacobi_sampler_full(M_1, M_2, N, beta=2,
         Y = np.block([[Y_1, Y_2], [-Y_2.conj(), Y_1.conj()]])
 
     else:
-        err_print = ('`beta` parameter must be 1, 2 or 4.\
-                     Given: {}'.format(beta))
-        raise ValueError(err_print)
+        err_print = ('`beta` parameter must be 1, 2 or 4.',
+                     'Given: {}'.format(beta))
+        raise ValueError('\n'.join(err_print))
 
     X_tmp = X.dot(X.conj().T)
     Y_tmp = Y.dot(Y.conj().T)
@@ -251,48 +196,6 @@ def jacobi_sampler_full(M_1, M_2, N, beta=2,
     return la.eigvals(X_tmp.dot(la.inv(X_tmp + Y_tmp))).real
 
 
-# Jacobi, tridiagonal model
-# def jacobi_sampler_tridiag(M_1, M_2, N, beta=2,
-#                            random_state=None):
-#     """
-#     .. seealso::
-
-#         :cite:`KiNe04` Theorem 2
-#     """
-
-#     rng = check_random_state(random_state)
-
-#     if not (beta > 0):
-#         raise ValueError('`beta` must be positive. Given: {}'.format(beta))
-
-#     # c_odd = c_1, c_2, ..., c_2N-1
-#     c_odd = rng.beta(a=0.5 * beta * np.arange(M_1, M_1 - N, step=-1),
-#                            b=0.5 * beta * np.arange(M_2, M_2 - N, step=-1))
-
-#     # c_even = c_0, c_2, c_2N-2
-#     c_even = np.zeros(N)
-#     c_even[1:] = rng.beta(a=0.5 * beta * np.arange(N - 1, 0, step=-1),
-#                           b=0.5 * beta * np.arange(M_1 + M_2 - N,
-#                                                    M_1 + M_2 - 2 * N + 1,
-#                                                    step=-1))
-
-#     # xi_odd = xi_2i-1 = (1-c_2i-2) c_2i-1
-#     xi_odd = (1 - c_even) * c_odd
-
-#     # xi_even = xi_0=0, xi_2, xi_2N-2
-#     # xi_2i = (1-c_2i-1)*c_2i
-#     xi_even = np.zeros(N)
-#     xi_even[1:] = (1 - c_odd[:-1]) * c_even[1:]
-
-#     # alpha_i = xi_2i-2 + xi_2i-1, xi_0 = 0
-#     alpha_coef = xi_even + xi_odd
-#     # beta_i+1 = xi_2i-1 * xi_2i
-#     beta_coef = xi_odd[:-1] * xi_even[1:]
-
-#     return la.eigvalsh_tridiagonal(alpha_coef, np.sqrt(beta_coef))
-
-
-# Wachter law
 def wachter_law(x, M_1, M_2, N):
     """ M_1, M_2>=N
 
@@ -308,14 +211,14 @@ def wachter_law(x, M_1, M_2, N):
     return (a+b)/(2*np.pi) * 1/(x*(1-x)) * np.sqrt(np.maximum((Lp-x)*(x-Lm),0))
 
 
-# mu-ref = Beta
 def mu_ref_beta_sampler_tridiag(a, b, beta=2, size=10,
                                 random_state=None):
     """ Implementation of the tridiagonal model given by Theorem 2 of :cite:`KiNe04` to sample from
 
     .. math::
 
-        \\Delta(x_{1}, \\dots, x_{N})^2 \\prod_{n=1}^{N} x^{a-1} (1-x)^{b-1} dx
+        \\Delta(x_{1}, \\dots, x_{N})^{\\beta}
+        \\prod_{n=1}^{N} x^{a-1} (1-x)^{b-1} dx
 
     .. seealso::
 
@@ -357,7 +260,6 @@ def mu_ref_beta_sampler_tridiag(a, b, beta=2, size=10,
 #####################
 # Circular ensemble #
 #####################
-# Full matrix model
 def circular_sampler_full(N, beta=2, haar_mode='QR',
                           random_state=None):
     """
@@ -384,9 +286,9 @@ def circular_sampler_full(N, beta=2, haar_mode='QR',
             A = np.block([[X, Y], [-Y.conj(), X.conj()]])
 
         else:
-            err_print = ('For `haar_mode="hermite"`, `beta` = 1, 2 or 4.\
-                         Given: {}'.format(beta))
-            raise ValueError(err_print)
+            err_print = ('For `haar_mode="hermite"`, `beta` = 1, 2 or 4.',
+                         'Given: {}'.format(beta))
+            raise ValueError('\n'.join(err_print))
 
         _, U = la.eigh(A + A.conj().T)
 
@@ -400,9 +302,9 @@ def circular_sampler_full(N, beta=2, haar_mode='QR',
 
         # elif beta==4:
         else:
-            err_print = ('With `haar_mode="QR", `beta` = 1 or 2.\
-                         Given: {}'.format(beta))
-            raise ValueError(err_print)
+            err_print = ('With `haar_mode="QR", `beta` = 1 or 2.',
+                         'Given: {}'.format(beta))
+            raise ValueError('\n'.join(err_print))
 
         # U, _ = la.qr(A)
         Q, R = la.qr(A)
@@ -410,15 +312,14 @@ def circular_sampler_full(N, beta=2, haar_mode='QR',
         U = np.multiply(Q, d / np.abs(d), Q)
 
     else:
-        err_print = ('Invalid `haar_mode`.\
-                     Choose from `haar_mode="Hermite" or "QR".\
-                     Given: {}'.format(haar_mode))
-        raise ValueError(err_print)
+        err_print = ('Invalid `haar_mode`.',
+                     'Choose from `haar_mode="Hermite" or "QR".',
+                     'Given: {}'.format(haar_mode))
+        raise ValueError('\n'.join(err_print))
 
     return la.eigvals(U)
 
 
-# Quindiagonal model
 def mu_ref_unif_unit_circle_sampler_quindiag(beta=2, size=10,
                                              random_state=None):
     """

@@ -157,44 +157,6 @@ def uniform_permutation(N, random_state=None):
     return sigma
 
 
-# def wrapper_plot_descent(func):
-#     """ Figure settings, ticks mostly
-#     """
-#     @functools.wraps(func)
-#     def wrapper(*args, **kwargs):
-
-#         ax, size = func(*args, **kwargs)
-
-#         # Spine options
-#         ax.spines['bottom'].set_position('center')
-#         ax.spines['left'].set_visible(False)
-#         ax.spines['top'].set_visible(False)
-#         ax.spines['right'].set_visible(False)
-
-#         # Ticks options
-#         minor_ticks = np.arange(0, size + 1)
-#         major_ticks = np.arange(0, size + 1, 10)
-#         ax.set_xticks(major_ticks)
-#         ax.set_xticks(minor_ticks, minor=True)
-#         ax.set_xticklabels(major_ticks, fontsize=15)
-#         ax.xaxis.set_ticks_position('bottom')
-
-#         ax.tick_params(
-#             axis='y',           # changes apply to the y-axis
-#             which='both',       # both major and minor ticks are affected
-#             left=False,         # ticks along the left edge are off
-#             right=False,        # ticks along the right edge are off
-#             labelleft=False)    # labels along the left edge are off
-
-#         ax.xaxis.grid(True)
-#         ax.set_xlim([-1, size + 1])
-#         ax.legend(bbox_to_anchor=(0, 0.85),
-#                   frameon=False,
-#                   prop={'size': 15})
-
-#     return wrapper
-
-
 def RSK(sequence):
     """Apply Robinson-Schensted-Knuth correspondence on a sequence of reals, e.g. a permutation, and return the corresponding insertion and recording tableaux.
 
