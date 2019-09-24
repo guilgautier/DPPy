@@ -27,9 +27,11 @@ from dppy.exact_sampling import (dpp_sampler_generic_kernel,
                                  k_dpp_eig_vecs_selector,
                                  elementary_symmetric_polynomials)
 
-from dppy.vfx_sampling import vfx_sampling_precompute_constants, vfx_sampling_do_sampling_loop
+from dppy.vfx_sampling import (vfx_sampling_precompute_constants,
+                               vfx_sampling_do_sampling_loop)
 
-from dppy.mcmc_sampling import dpp_sampler_mcmc, zonotope_sampler
+from dppy.mcmc_sampling import (dpp_sampler_mcmc,
+                                zonotope_sampler)
 
 from dppy.utils import (check_random_state,
                         is_symmetric,
@@ -69,18 +71,15 @@ class FiniteDPP:
 
             - ``{'L': L}``, with :math:`\\mathbf{L}\\succeq 0`
             - ``{'L_eig_dec': (eig_vals, eig_vecs)}``, with :math:`eigvals \\geq 0`
-            - ``{'L_gram_factor': Phi}``, with :math:`\\mathbf{L} = \\Phi^{ \\top} \\Phi`
-            - ``{'L_eval_X_data': (eval_L, X_data)}``, with :math:`\mathbf{X}_{data}(N \\times d)` and
-              :math:`eval \_ L` a likelihood function such that
-              :math:`\mathbf{L} = eval \_ L(\mathbf{X}_{data}, \mathbf{X}_{data})`
-
+            - ``{'L_gram_factor': Phi}``, with :math:`\\Phi(d \\times N)` so that :math:`\\mathbf{L} = \\Phi^{ \\top} \\Phi \\succeq 0_N`
+            - ``{'L_eval_X_data': (eval_L, X_data)}``, with ``X_data`` is :math:`(N \\times d)` and :math:`eval \\_ L` a positive semi-definite kernel function so that :math:`\\mathbf{L} = eval \\_ L(X_{data}, X_{data}) \\succeq 0_N`
 
     :type params:
         dict
 
     .. caution::
 
-        For now we only consider real valued matrices :math:`\\mathbf{K}, \\mathbf{L}, A, \\Phi, \mathbf{X}_{data}`.
+        For now we only consider real valued matrices :math:`\\mathbf{K}, \\mathbf{L}, A, \\Phi, \\mathbf{X}_{data}`.
 
     .. seealso::
 
@@ -162,12 +161,13 @@ class FiniteDPP:
         self.eval_L, self.X_data = params.get('L_eval_X_data', [None, None])
         self.intermediate_sample_info = None
 
-        if self.eval_L and not callable(self.eval_L):
+        if self.eval_L is not None and not callable(self.eval_L):
             raise ValueError('eval_L should be a likelihood function between points')
-        if self.X_data and (self.X_data.size == 0 or self.X_data.ndims != 2):
-            raise ValueError('The provided data matrix seems empty or with the wrong shape.'
-                             ' For data with n elements and d features, X_data should be an (n x m) ndarray.')
-
+        if self.X_data is not None:
+            if not self.X_data.size or self.X_data.ndim != 2:
+                err_print = ['Wrong shape = {}'.format(self.X_data.shape),
+                             'X_data should be a non empty (N x d) ndarray']
+                raise ValueError('\n'.join(err_print))
 
     def __str__(self):
         str_info = ['DPP defined through {} {} kernel'
@@ -301,12 +301,12 @@ class FiniteDPP:
                 self.compute_K()
                 sampl = proj_dpp_sampler_kernel(self.K, self.sampling_mode,
                                                 random_state=rng)
-                self.list_of_samples.append(sampl)
             else:
                 err_print =\
                     ['`Schur` sampling mode is only available for projection DPPs, i.e., `kernel_type="correlation"` and `projection=True`',
                      'Given: {}'.format((self.kernel_type, self.projection))]
                 raise ValueError('\n'.join(err_print))
+            self.list_of_samples.append(sampl)
 
         elif self.sampling_mode == 'Chol':
             self.compute_K()
@@ -319,25 +319,25 @@ class FiniteDPP:
 
         elif self.sampling_mode == 'vfx':
             if self.eval_L is None or self.X_data is None:
-                raise ValueError("The vfx sampler is currently only available for the 'L_eval_X_data' representation.")
+                raise ValueError('The vfx sampler is currently only available with {"L_eval_X_data": (L_eval, X_data)} representation.')
 
             if self.intermediate_sample_info is None:
-                self.intermediate_sample_info = vfx_sampling_precompute_constants(
-                    X = self.X_data,
-                    eval_L=self.eval_L,
-                    rng = rng,
-                    **params
-                )
+                self.intermediate_sample_info = vfx_sampling_precompute_constants(X=self.X_data,
+                                                      eval_L=self.eval_L,
+                                                      rng=rng,
+                                                      **params)
 
                 q_func = params.get('q_func', lambda s: s * s)
-                self.intermediate_sample_info = self.intermediate_sample_info._replace(
-                                                                            q=q_func(self.intermediate_sample_info.s))
+                self.intermediate_sample_info =\
+                    self.intermediate_sample_info._replace(
+                        q=q_func(self.intermediate_sample_info.s))
 
-            sampl, rej_count = vfx_sampling_do_sampling_loop(self.X_data,
-                                                             self.eval_L,
-                                                             self.intermediate_sample_info,
-                                                             rng,
-                                                             **params)
+            sampl, rej_count =\
+                vfx_sampling_do_sampling_loop(self.X_data,
+                                              self.eval_L,
+                                              self.intermediate_sample_info,
+                                              rng,
+                                              **params)
             self.list_of_samples.append(sampl)
 
         # If eigen decoposition of K, L or L_dual is available USE IT!
@@ -356,10 +356,6 @@ class FiniteDPP:
                 sampl = np.array([])
             self.list_of_samples.append(sampl)
 
-        elif self.L_eig_vals is not None:
-            self.K_eig_vals = self.L_eig_vals / (1.0 + self.L_eig_vals)
-            self.sample_exact(mode=self.sampling_mode, random_state=rng)
-
         elif self.L_dual_eig_vals is not None:
             # Phase 1
             V = dpp_eig_vecs_selector_L_dual(self.L_dual_eig_vals,
@@ -371,9 +367,13 @@ class FiniteDPP:
                                          random_state=rng)
             self.list_of_samples.append(sampl)
 
+        elif self.L_eig_vals is not None:
+            self.K_eig_vals = self.L_eig_vals / (1.0 + self.L_eig_vals)
+            self.sample_exact(mode=self.sampling_mode, random_state=rng)
+
         # If DPP defined via projection correlation kernel K
         # no eigendecomposition required
-        elif (self.K is not None) and self.projection:
+        elif self.K is not None and self.projection:
             sampl = proj_dpp_sampler_kernel(self.K, self.sampling_mode,
                                             random_state=rng)
             self.list_of_samples.append(sampl)
@@ -459,26 +459,31 @@ class FiniteDPP:
                 raise ValueError("The vfx sampler is currently only available for the 'L_eval_X_data' representation.")
 
             if (self.intermediate_sample_info is None
-                    or self.intermediate_sample_info.s != size):
-                self.intermediate_sample_info = vfx_sampling_precompute_constants(
-                    X=self.X_data,
-                    eval_L=self.eval_L,
-                    desired_s=size,
-                    rng=rng,
-                    **params
-                )
+                or self.intermediate_sample_info.s != size):
+                self.intermediate_sample_info =\
+                    vfx_sampling_precompute_constants(X=self.X_data,
+                                                      eval_L=self.eval_L,
+                                                      desired_s=size,
+                                                      rng=rng,
+                                                      **params)
 
                 q_func = params.get('q_func', lambda s: s * s)
-                self.intermediate_sample_info = self.intermediate_sample_info._replace(
-                    q=q_func(self.intermediate_sample_info.s))
+                self.intermediate_sample_info =\
+                    self.intermediate_sample_info._replace(
+                        q=q_func(self.intermediate_sample_info.s))
 
-            max_iter_size_rejection = params.get('max_iter_size_rejection', 100)
+            max_iter_size_rejection =\
+                params.get('max_iter_size_rejection', 100)
+
             for size_rejection_iter in range(max_iter_size_rejection):
-                sampl, rej_count = vfx_sampling_do_sampling_loop(self.X_data,
-                                                                 self.eval_L,
-                                                                 self.intermediate_sample_info,
-                                                                 rng,
-                                                                 **params)
+                sampl, rej_count =\
+                    vfx_sampling_do_sampling_loop(
+                        self.X_data,
+                        self.eval_L,
+                        self.intermediate_sample_info,
+                        rng,
+                        **params)
+
                 if len(sampl) == size:
                     break
             else:
@@ -486,7 +491,6 @@ class FiniteDPP:
                                  'for the k-DPP size rejection ({}), try to increase the q factor '
                                  '(see q_func parameter) or the Nystrom approximation accuracy '
                                  'see rls_oversample_* parameters).'.format(max_iter_size_rejection))
-
             self.list_of_samples.append(sampl)
 
         # If DPP defined via projection kernel
@@ -544,7 +548,6 @@ class FiniteDPP:
                                                     size=size,
                                                     random_state=rng)
 
-            self.size_k_dpp = size
             self.list_of_samples.append(sampl)
 
         # If eigen decoposition of K, L or L_dual is available USE IT!
@@ -601,6 +604,8 @@ class FiniteDPP:
             raise ValueError('None of the available samplers could be used based on the current DPP representation.'
                              ' This should never happen, please consider rasing an issue on github'
                              ' at https://github.com/guilgautier/DPPy/issues')
+
+        self.size_k_dpp = size
 
     # Approximate sampling
     def sample_mcmc(self, mode, **params):
@@ -719,11 +724,6 @@ class FiniteDPP:
             # print(msg)
             pass
 
-        elif self.eval_L is not None:
-            err_print = ['Computing the K kernel is currently not supported when using a likelihood function.'
-                         'Please re-instantiate the FiniteDPP object using the likelihood matrix eval_L(X_data).']
-            raise ValueError('\n'.join(err_print))
-
         else:
             if not msg:
                 print('K (correlation) kernel computed via:')
@@ -754,6 +754,12 @@ class FiniteDPP:
                 self.L_eig_vals, self.eig_vecs = la.eigh(self.L)
                 self.compute_K(msg=True)
 
+            elif self.eval_L is not None:
+                msg = '- eval_L(X_data, X_data)'
+                print(msg)
+                self.L = self.eval_L(self.X_data)
+                self.compute_K(msg=True)
+
             else:
                 self.compute_L(msg=True)
                 self.compute_K(msg=True)
@@ -776,16 +782,16 @@ class FiniteDPP:
                          'K is projection kernel: some eigenvalues equal 1']
             raise ValueError('\n'.join(err_print))
 
-        elif self.eval_L is not None:
-            err_print = ['Computing the L kernel is currently not supported when using a likelihood function.'
-                         'Please re-instantiate the FiniteDPP object using the likelihood matrix eval_L(X_data).']
-            raise ValueError('\n'.join(err_print))
-
         else:
             if not msg:
                 print('L (likelihood) kernel computed via:')
 
-            if self.L_eig_vals is not None:
+            if self.eval_L is not None:
+                msg = '- eval_L(X_data, X_data)'
+                print(msg)
+                self.L = self.eval_L(self.X_data)
+
+            elif self.L_eig_vals is not None:
                 msg = '- U diag(eig_L) U.T'
                 print(msg)
                 self.L = (self.eig_vecs * self.L_eig_vals).dot(self.eig_vecs.T)
