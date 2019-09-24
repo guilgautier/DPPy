@@ -7,6 +7,11 @@
 check that, in various settings, the instanciation of FiniteDPP works well, the computation of the correlation/likelihood kernels is correct
 """
 
+import matplotlib
+import warnings
+matplotlib.use('agg')
+warnings.filterwarnings("ignore", category=FutureWarning)
+
 import unittest
 import warnings
 
@@ -137,6 +142,27 @@ class FiniteDppWithLikelihoodKernel(unittest.TestCase):
 
     phi = rndm.randn(rank, N)
 
+    def eval_L_linear(X, Y=None):
+        if Y is None:
+            return X.dot(X.T)
+        else:
+            return X.dot(Y.T)
+
+    def eval_L_min(X, Y=None):
+
+        assert X.shape[1] == 1 and np.all(np.abs(X) < 1)
+
+        if Y is None:
+            Y = X
+        elif X:
+            assert Y.shape[1] == 1 and np.all(np.abs(Y) < 1)
+
+        return np.minimum(np.repeat(X, Y.size, axis=1),
+                          np.repeat(Y.T, X.size, axis=0))
+
+    X_data_randn = rndm.rand(rank, N)
+    X_data_abs_lt_1 = 2 * rndm.rand(N, 1) - 1
+
     list_of_valid_params =\
         [[True, {'L': (e_vecs * e_vals_eq_01).dot(e_vecs.T)}],
          [True, {'L_eig_dec': (e_vals_eq_01, e_vecs)}],
@@ -145,7 +171,9 @@ class FiniteDppWithLikelihoodKernel(unittest.TestCase):
          [False, {'L': (e_vecs * e_vals_geq_0).dot(e_vecs.T)}],
          [False, {'L_eig_dec': (e_vals_geq_0, e_vecs)}],
          [False, {'L_gram_factor': phi}],
-         [False, {'L_gram_factor': phi.T}]]
+         [False, {'L_gram_factor': phi.T}],
+         [False, {'L_eval_X_data': (eval_L_linear, X_data_randn)}],
+         [False, {'L_eval_X_data': (eval_L_min, X_data_abs_lt_1)}]]
 
     def test_instanciation_from_valid_parameters(self):
 
@@ -193,6 +221,9 @@ class FiniteDppWithLikelihoodKernel(unittest.TestCase):
                     L = (e_vecs * e_vals).dot(e_vecs.T)
                 elif 'L_gram_factor' in param:
                     L = param['L_gram_factor'].T.dot(param['L_gram_factor'])
+                elif 'L_eval_X_data' in param:
+                    eval_L, X_data = param['L_eval_X_data']
+                    L = eval_L(X_data)
 
                 self.assertTrue(np.allclose(dpp.L, L))
 
@@ -211,6 +242,10 @@ class FiniteDppWithLikelihoodKernel(unittest.TestCase):
                     e_vals, e_vecs = param['L_eig_dec']
                 elif 'L_gram_factor' in param:
                     L = param['L_gram_factor'].T.dot(param['L_gram_factor'])
+                    e_vals, e_vecs = la.eigh(L)
+                elif 'L_eval_X_data' in param:
+                    eval_L, X_data = param['L_eval_X_data']
+                    L = eval_L(X_data)
                     e_vals, e_vecs = la.eigh(L)
 
                 K = (e_vecs * (e_vals / (1.0 + e_vals))).dot(e_vecs.T)
