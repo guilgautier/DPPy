@@ -86,7 +86,7 @@ class FiniteDPP:
             - ``{'L_eval_X_data': (eval_L, X_data)}``, with :math:`\mathbf{X}_{data}(N \\times d)` and
               :math:`eval \_ L` a likelihood function such that
               :math:`\mathbf{L} = eval \_ L(\mathbf{X}_{data}, \mathbf{X}_{data})`. For a full description of the
-              requirements imposed on `eval_L`'s interface, see the documentation :ref:`something`.
+              requirements imposed on `eval_L`'s interface, see the documentation :func:`dppy.vfx_sampling.vfx_sampling_precompute_constants`.
               For an example, see the implementation of any of the kernels provided by scikit-learn
               (e.g. sklearn.gaussian_process.kernels.PairwiseKernel).
 

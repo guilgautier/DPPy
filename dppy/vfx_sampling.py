@@ -35,8 +35,8 @@ def compute_nystrom_dict(X, eval_L, rls_oversample_bless, rls_oversample_dppvfx,
 
     :param array_like X: dataset that we must approximate
     :param callable eval_L: likelihood function
-    :param float rls_oversample_bless: see :ref:`vfx_sampling_precompute_constants`
-    :param float rls_oversample_dppvfx: see :ref:`vfx_sampling_precompute_constants`
+    :param float rls_oversample_bless: see :func:`vfx_sampling_precompute_constants`
+    :param float rls_oversample_dppvfx: see :func:`vfx_sampling_precompute_constants`
     :param RandomState rng: random source used for sampling
     :param int H_bless:  iterations for BLESS, if None it is set to log(n)
     :param bool verbose: controls verbosity of debug output, including progress bars.
@@ -86,11 +86,11 @@ def compute_nystrom_dict(X, eval_L, rls_oversample_bless, rls_oversample_dppvfx,
 def estimate_rls_with_embedding(eigvec, eigvals,
                                 B_bar_T, diag_L, diag_L_hat, alpha_star):
     """ Given embedded points, and a decomposition of embedded covariance matrix, estimate RLS.
-    Note that this is a different estimator than the one used in BLESS (i.e. :ref:`estimate_rls_bless`),
+    Note that this is a different estimator than the one used in BLESS (i.e. :func:`dppy.bless.estimate_rls_bless`),
     which we use here for efficiency because we can recycle already embedded points and eigen-decomposition.
 
-    :param array_like eigvec: eigenvectors of I_A_mm = B_bar_T*B_bar_T.T + lam I, see :ref:`vfx_sampling_precompute_constants`
-    :param array_like eigvals: eigenvalues of I_A_mm = B_bar_T*B_bar_T.T + lam I, see :ref:`vfx_sampling_precompute_constants`
+    :param array_like eigvec: eigenvectors of I_A_mm = B_bar_T*B_bar_T.T + lam I, see :func:`vfx_sampling_precompute_constants`
+    :param array_like eigvals: eigenvalues of I_A_mm = B_bar_T*B_bar_T.T + lam I, see :func:`vfx_sampling_precompute_constants`
     :param array_like B_bar_T: (m x n) transposed matrix of n points embedded using a dictionary with m centers
     :param array_like diag_L: diagonal of L
     :param array_like diag_L_hat: diagonal of L_hat, the Nystrom approximation of L
@@ -131,7 +131,11 @@ def vfx_sampling_precompute_constants(X,
     and the RLS of all elements in L.
 
         :param array_like X: dataset such that L = eval_L(X), out of which we are sampling objects according to a DPP
-        :param callable eval_L: likelihood function
+        :param callable eval_L: likelihood function. Given two sets of n points X and m points Y, eval_L(X, Y) should
+        compute the (n x m) matrix containing the likelihood between points. The function should also
+        accept a single argument X and return eval_L(X) = eval_L(X, X).
+        As an example, see the implementation of any of the kernels provided by scikit-learn
+        (e.g. sklearn.gaussian_process.kernels.PairwiseKernel).
         :param RandomState rng: random source used for sampling
         :param desired_s: desired expected sample size for the DPP. If None, use the natural DPP expected sample size.
         The vfx sampling algorithm can adjust the expected sample size of the DPP by rescaling the L matrix with a
@@ -150,7 +154,7 @@ def vfx_sampling_precompute_constants(X,
         :type rls_oversample_dppvfx:
             float, default 4.0
         :param rls_oversample_bless: Oversampling parameter used during bless's internal Nystrom approximation.
-        Note that this is a different Nystrom approximation than the one related to :ref:`rls_oversample_dppvfx`,
+        Note that this is a different Nystrom approximation than the one related to :func:`rls_oversample_dppvfx`,
         and can be tuned separately.
         The rls_oversample_bless >= 1 parameter is used to increase the rank of the approximation by
         a rls_oversample_bless factor. This makes the one-time pre-processing slower and more memory intensive,
@@ -305,9 +309,13 @@ def vfx_sampling_precompute_constants(X,
 def vfx_sampling_do_sampling_loop(X, eval_L, intermediate_sample_info, rng, max_iter=1000, verbose=True):
     """Given pre-computed information, run a rejection sampling loop to generate DPP samples.
         :param array_like X: dataset such that L = eval_L(X), out of which we are sampling objects according to a DPP
-        :param callable eval_L: likelihood function
+        :param callable eval_L: likelihood function. Given two sets of n points X and m points Y, eval_L(X, Y) should
+        compute the (n x m) matrix containing the likelihood between points. The function should also
+        accept a single argument X and return eval_L(X) = eval_L(X, X).
+        As an example, see the implementation of any of the kernels provided by scikit-learn
+        (e.g. sklearn.gaussian_process.kernels.PairwiseKernel).
         :param _IntermediateSampleInfo: Pre-computed information necessary for the vfx rejection sampling loop,
-        as returned by :ref:`vfx_sampling_precompute_constants`
+        as returned by :func:`vfx_sampling_precompute_constants`
         :param RandomState rng: random source used for sampling
 
         - result.alpha_star: appropriate rescaling such that the expected sample size of DPP(alpha_star * L) is equal
