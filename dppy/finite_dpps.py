@@ -85,7 +85,11 @@ class FiniteDPP:
             - ``{'L_gram_factor': Phi}``, with :math:`\\mathbf{L} = \\Phi^{ \\top} \\Phi`
             - ``{'L_eval_X_data': (eval_L, X_data)}``, with :math:`\mathbf{X}_{data}(N \\times d)` and
               :math:`eval \_ L` a likelihood function such that
-              :math:`\mathbf{L} = eval \_ L(\mathbf{X}_{data}, \mathbf{X}_{data})`
+              :math:`\mathbf{L} = eval \_ L(\mathbf{X}_{data}, \mathbf{X}_{data})`. For a full description of the
+              requirements imposed on `eval_L`'s interface, see the documentation :ref:`something`.
+              For an example, see the implementation of any of the kernels provided by scikit-learn
+              (e.g. sklearn.gaussian_process.kernels.PairwiseKernel).
+
 
 
     :type params:
@@ -269,7 +273,7 @@ class FiniteDPP:
                 - ``'GS_bis'``: Slight modification of ``'GS'``
                 - ``'Chol'`` :cite:`Pou19` Algorithm 1
                 - ``'KuTa12'``: Algorithm 1 in :cite:`KuTa12`
-                - ``'vfx'``: dpp-vfx in :cite:`DeCaVa19`
+                - ``'vfx'``: the dpp-vfx rejection sampler in :cite:`DeCaVa19`
         :type mode:
             string, default ``'GS'``
 
@@ -277,6 +281,17 @@ class FiniteDPP:
             Dictionary containing the parameters for exact samplers with keys
 
             ``'random_state'`` (default None)
+            - If ``mode='vfx'
+                See :ref:`someref` for a full list of all parameters accepted by 'vfx' sampling. We report here the most
+                impactful
+
+                + ``'rls_oversample_dppvfx'`` (default 4.0) Oversampling parameter used to construct dppvfx's internal Nystrom approximation.
+                This makes each rejection round slower and more memory intensive, but reduces variance and the number of rounds of rejections.
+                + ``'rls_oversample_bless'`` (default 4.0) Oversampling parameter used during bless's internal Nystrom approximation.
+                This makes the one-time pre-processing slower and more memory intensive, but reduces variance and the number of rounds of rejections
+
+                Empirically, a small factor [2,10] seems to work for both parameters. It is suggested to start with
+                a small number and increase if the algorithm fails to terminate.
 
         :return:
             A sample from the corresponding :class:`FiniteDPP <FiniteDPP>` object.
@@ -422,6 +437,8 @@ class FiniteDPP:
                 - ``'GS'`` (default): Gram-Schmidt on the rows of the eigenvectors of :math:`\\mathbf{K}` selected in Phase 1.
                 - ``'GS_bis'``: Slight modification of ``'GS'``
                 - ``'KuTa12'``: Algorithm 1 in :cite:`KuTa12`
+                - ``'vfx'``: the dpp-vfx rejection sampler in :cite:`DeCaVa19`
+
         :type mode:
             string, default ``'GS'``
 
@@ -429,6 +446,18 @@ class FiniteDPP:
             Dictionary containing the parameters for exact samplers with keys
 
             ``'random_state'`` (default None)
+
+            - If ``mode='vfx'
+                See :ref:`someref` for a full list of all parameters accepted by 'vfx' sampling. We report here the most
+                impactful
+
+                + ``'rls_oversample_dppvfx'`` (default 4.0) Oversampling parameter used to construct dppvfx's internal Nystrom approximation.
+                This makes each rejection round slower and more memory intensive, but reduces variance and the number of rounds of rejections.
+                + ``'rls_oversample_bless'`` (default 4.0) Oversampling parameter used during bless's internal Nystrom approximation.
+                This makes the one-time pre-processing slower and more memory intensive, but reduces variance and the number of rounds of rejections
+
+                Empirically, a small factor [2,10] seems to work for both parameters. It is suggested to start with
+                a small number and increase if the algorithm fails to terminate.
 
         :return:
             A sample from the corresponding :math:`\\operatorname{k-DPP}`
