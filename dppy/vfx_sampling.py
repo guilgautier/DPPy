@@ -348,6 +348,7 @@ def vfx_sampling_do_sampling_loop(X, eval_L, intermediate_sample_info, rng, max_
             t = rng.poisson(lam=lam.astype('int'))
 
             # sample sigma subset
+            # TO CHECK is replacement=False or True ?!
             sigma = rng.choice(n, size=t, p=pc_state.rls_estimate / pc_state.s)
             X_sigma = X[sigma, :]
 
@@ -407,7 +408,7 @@ def vfx_sampling_do_sampling_loop(X, eval_L, intermediate_sample_info, rng, max_
     DPP = FiniteDPP(kernel_type='likelihood', L_eig_dec=(E, U))
     DPP.sample_exact(random_state=rng)
 
-    S_tilda = np.array(DPP.list_of_samples)
+    S_tilda = np.array(DPP.list_of_samples[-1], dtype=int)
     S = sigma[S_tilda].ravel().tolist()
 
     return S, rej_iter

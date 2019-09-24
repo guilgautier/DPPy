@@ -4,6 +4,11 @@
 - :class:`TestFiniteDppSamplers`
 """
 
+import matplotlib
+import warnings
+matplotlib.use('agg')
+warnings.filterwarnings("ignore", category=FutureWarning)
+
 import unittest
 
 from itertools import chain  # to flatten list of samples
@@ -127,149 +132,6 @@ class TestAdequationOfFiniteDppSamplers(unittest.TestCase):
         elif typ == 'doubleton':
             return self.doubleton_adequation(dpp, samples)
 
-    def test_adequation_of_projection_dpp_K_zonotope_sampler(self):
-
-        kernel_type = 'correlation'
-        # projection, param
-        list_of_dpp_params = [(True, {'A_zono': self.A_zono})]
-
-        dict_sampler_mode_param = {'mcmc_dpp': {'zonotope': {}}}
-
-        adequation_to_check = ('cardinality', 'singleton', 'doubleton')
-
-        self.run_adequation_tests(kernel_type,
-                                  list_of_dpp_params,
-                                  dict_sampler_mode_param,
-                                  adequation_to_check)
-
-    def test_dpp_adequation_with_projection_correlation_kernel(self):
-
-        kernel_type = 'correlation'
-        # projection, param
-        list_of_dpp_params =\
-            [(True,
-                {'K': (self.e_vecs*self.e_vals_eq_01).dot(self.e_vecs.T)}),
-             (True,
-                {'K_eig_dec': (self.e_vals_eq_01, self.e_vecs)}),
-             (True,
-                {'A_zono': self.A_zono})]
-
-        k = self.rank
-        dict_sampler_mode_param =\
-            {'exact_dpp': {'GS': {},
-                           'Chol': {},
-                           'Schur': {}},
-             'exact_k_dpp': {'GS': {'size': k}},
-             'mcmc_dpp': {'E': {'size': k,
-                                'nb_iter': self.nb_iter_mcmc}},
-             'mcmc_k_dpp': {'E': {'size': k,
-                                  'nb_iter': self.nb_iter_mcmc}}}
-
-        adequation_to_check = ('cardinality', 'singleton', 'doubleton')
-
-        self.run_adequation_tests(kernel_type,
-                                  list_of_dpp_params,
-                                  dict_sampler_mode_param,
-                                  adequation_to_check)
-
-    def test_dpp_adequation_with_non_projection_correlation_kernel(self):
-
-        kernel_type = 'correlation'
-        # projection, param
-        list_of_dpp_params =\
-            [(False,
-                {'K': (self.e_vecs * self.e_vals_in_01).dot(self.e_vecs.T)}),
-             (False,
-                {'K_eig_dec': (self.e_vals_in_01, self.e_vecs)})]
-
-        k = self.rank // 2
-
-        dict_sampler_mode_param =\
-            {'exact_dpp': {'GS': {},
-                           'GS_bis': {},
-                           'Chol': {},
-                           'KuTa12': {}},
-             'exact_k_dpp': {'GS': {'size': k},
-                             'GS_bis': {'size': k},
-                             'KuTa12': {'size': k}},
-             'mcmc_dpp': {'AD': {'nb_iter': self.nb_iter_mcmc},
-                          'AED': {'nb_iter': self.nb_iter_mcmc}},
-             'mcmc_k_dpp': {'E': {'size': k,
-                                  'nb_iter': self.nb_iter_mcmc}}}
-
-        adequation_to_check = ('cardinality', 'singleton', 'doubleton')
-
-        self.run_adequation_tests(kernel_type,
-                                  list_of_dpp_params,
-                                  dict_sampler_mode_param,
-                                  adequation_to_check)
-
-    def test_dpp_adequation_with_projection_likelihood_kernel(self):
-
-        kernel_type = 'likelihood'
-        # projection, param
-        list_of_dpp_params =\
-            [(True,
-                {'L': (self.e_vecs * self.e_vals_eq_01).dot(self.e_vecs.T)}),
-             (True,
-                {'L_eig_dec': (self.e_vals_eq_01, self.e_vecs)})]
-
-        k = self.rank
-        dict_sampler_mode_param =\
-            {'exact_dpp': {'GS': {},
-                           'GS_bis': {},
-                           'Chol': {},
-                           'KuTa12': {}},
-             'exact_k_dpp': {'GS': {'size': k}},
-             'mcmc_dpp': {'AD': {'nb_iter': self.nb_iter_mcmc},
-                          'AED': {'nb_iter': self.nb_iter_mcmc}},
-             'mcmc_k_dpp': {'E': {'size': k,
-                                  'nb_iter': self.nb_iter_mcmc}}}
-
-        adequation_to_check = ('cardinality', 'singleton', 'doubleton')
-
-        self.run_adequation_tests(kernel_type,
-                                  list_of_dpp_params,
-                                  dict_sampler_mode_param,
-                                  adequation_to_check)
-
-    def test_dpp_adequation_with_non_projection_likelihood_kernel(self):
-
-        kernel_type = 'likelihood'
-        # projection, param
-        list_of_dpp_params =\
-            [(False,
-                {'L': (self.e_vecs * self.e_vals_eq_01).dot(self.e_vecs.T)}),
-             (False,
-                {'L_eig_dec': (self.e_vals_eq_01, self.e_vecs)}),
-             (False,
-                {'L': (self.e_vecs * self.e_vals_geq_0).dot(self.e_vecs.T)}),
-             (False,
-                {'L_eig_dec': (self.e_vals_geq_0, self.e_vecs)}),
-             (False,
-                {'L_gram_factor': self.phi})]
-
-        k = self.rank // 2
-
-        dict_sampler_mode_param =\
-            {'exact_dpp': {'GS': {},
-                           'GS_bis': {},
-                           'KuTa12': {}},
-             'exact_k_dpp': {'GS': {'size': k},
-                             'GS_bis': {'size': k},
-                             'KuTa12': {'size': k}},
-             'mcmc_dpp': {'AD': {'nb_iter': self.nb_iter_mcmc},
-                          'AED': {'nb_iter': self.nb_iter_mcmc}},
-             'mcmc_k_dpp': {'E': {'size': k,
-                                  'nb_iter': self.nb_iter_mcmc}}}
-
-        adequation_to_check = ('cardinality', 'singleton', 'doubleton')
-
-        self.run_adequation_tests(kernel_type,
-                                  list_of_dpp_params,
-                                  dict_sampler_mode_param,
-                                  adequation_to_check)
-
     def run_adequation_tests(self,
                              kernel_type,
                              list_dpp_params,
@@ -319,6 +181,192 @@ class TestAdequationOfFiniteDppSamplers(unittest.TestCase):
             else:
                 raise ValueError(sampler)
             return dpp.list_of_samples[-1]
+
+    # def test_adequation_of_projection_dpp_K_zonotope_sampler(self):
+
+    #     kernel_type = 'correlation'
+    #     # projection, param
+    #     list_dpp_params = [(True, {'A_zono': self.A_zono})]
+
+    #     dict_sampler_mode_param = {'mcmc_dpp': {'zonotope': {}}}
+
+    #     adequation_to_check = ('cardinality', 'singleton', 'doubleton')
+
+    #     self.run_adequation_tests(kernel_type,
+    #                               list_dpp_params,
+    #                               dict_sampler_mode_param,
+    #                               adequation_to_check)
+
+    # def test_dpp_adequation_with_projection_correlation_kernel(self):
+
+    #     kernel_type = 'correlation'
+    #     # projection, param
+    #     list_dpp_params =\
+    #         [(True,
+    #             {'K': (self.e_vecs*self.e_vals_eq_01).dot(self.e_vecs.T)}),
+    #          (True,
+    #             {'K_eig_dec': (self.e_vals_eq_01, self.e_vecs)}),
+    #          (True,
+    #             {'A_zono': self.A_zono})]
+
+    #     k = self.rank
+    #     dict_sampler_mode_param =\
+    #         {'exact_dpp': {'GS': {},
+    #                        'Chol': {},
+    #                        'Schur': {}},
+    #          'exact_k_dpp': {'GS': {'size': k}},
+    #          'mcmc_dpp': {'E': {'size': k,
+    #                             'nb_iter': self.nb_iter_mcmc}},
+    #          'mcmc_k_dpp': {'E': {'size': k,
+    #                               'nb_iter': self.nb_iter_mcmc}}}
+
+    #     adequation_to_check = ('cardinality', 'singleton', 'doubleton')
+
+    #     self.run_adequation_tests(kernel_type,
+    #                               list_dpp_params,
+    #                               dict_sampler_mode_param,
+    #                               adequation_to_check)
+
+    # def test_dpp_adequation_with_non_projection_correlation_kernel(self):
+
+    #     kernel_type = 'correlation'
+    #     # projection, param
+    #     list_dpp_params =\
+    #         [(False,
+    #             {'K': (self.e_vecs * self.e_vals_in_01).dot(self.e_vecs.T)}),
+    #          (False,
+    #             {'K_eig_dec': (self.e_vals_in_01, self.e_vecs)})]
+
+    #     k = self.rank // 2
+
+    #     dict_sampler_mode_param =\
+    #         {'exact_dpp': {'GS': {},
+    #                        'GS_bis': {},
+    #                        'Chol': {},
+    #                        'KuTa12': {}},
+    #          'exact_k_dpp': {'GS': {'size': k},
+    #                          'GS_bis': {'size': k},
+    #                          'KuTa12': {'size': k}},
+    #          'mcmc_dpp': {'AD': {'nb_iter': self.nb_iter_mcmc},
+    #                       'AED': {'nb_iter': self.nb_iter_mcmc}},
+    #          'mcmc_k_dpp': {'E': {'size': k,
+    #                               'nb_iter': self.nb_iter_mcmc}}}
+
+    #     adequation_to_check = ('cardinality', 'singleton', 'doubleton')
+
+    #     self.run_adequation_tests(kernel_type,
+    #                               list_dpp_params,
+    #                               dict_sampler_mode_param,
+    #                               adequation_to_check)
+
+    # def test_dpp_adequation_with_projection_likelihood_kernel(self):
+
+    #     kernel_type = 'likelihood'
+    #     # projection, param
+    #     list_dpp_params =\
+    #         [(True,
+    #             {'L': (self.e_vecs * self.e_vals_eq_01).dot(self.e_vecs.T)}),
+    #          (True,
+    #             {'L_eig_dec': (self.e_vals_eq_01, self.e_vecs)})]
+
+    #     k = self.rank
+    #     dict_sampler_mode_param =\
+    #         {'exact_dpp': {'GS': {},
+    #                        'GS_bis': {},
+    #                        'Chol': {},
+    #                        'KuTa12': {}},
+    #          'exact_k_dpp': {'GS': {'size': k}},
+    #          'mcmc_dpp': {'AD': {'nb_iter': self.nb_iter_mcmc},
+    #                       'AED': {'nb_iter': self.nb_iter_mcmc}},
+    #          'mcmc_k_dpp': {'E': {'size': k,
+    #                               'nb_iter': self.nb_iter_mcmc}}}
+
+    #     adequation_to_check = ('cardinality', 'singleton', 'doubleton')
+
+    #     self.run_adequation_tests(kernel_type,
+    #                               list_dpp_params,
+    #                               dict_sampler_mode_param,
+    #                               adequation_to_check)
+
+    # def test_dpp_adequation_with_non_projection_likelihood_kernel(self):
+
+    #     kernel_type = 'likelihood'
+    #     # projection, param
+    #     list_dpp_params =\
+    #         [(False,
+    #             {'L': (self.e_vecs * self.e_vals_eq_01).dot(self.e_vecs.T)}),
+    #          (False,
+    #             {'L_eig_dec': (self.e_vals_eq_01, self.e_vecs)}),
+    #          (False,
+    #             {'L': (self.e_vecs * self.e_vals_geq_0).dot(self.e_vecs.T)}),
+    #          (False,
+    #             {'L_eig_dec': (self.e_vals_geq_0, self.e_vecs)}),
+    #          (False,
+    #             {'L_gram_factor': self.phi})]
+
+    #     k = self.rank // 2
+
+    #     dict_sampler_mode_param =\
+    #         {'exact_dpp': {'GS': {},
+    #                        'GS_bis': {},
+    #                        'KuTa12': {}},
+    #          'exact_k_dpp': {'GS': {'size': k},
+    #                          'GS_bis': {'size': k},
+    #                          'KuTa12': {'size': k}},
+    #          'mcmc_dpp': {'AD': {'nb_iter': self.nb_iter_mcmc},
+    #                       'AED': {'nb_iter': self.nb_iter_mcmc}},
+    #          'mcmc_k_dpp': {'E': {'size': k,
+    #                               'nb_iter': self.nb_iter_mcmc}}}
+
+    #     adequation_to_check = ('cardinality', 'singleton', 'doubleton')
+
+    #     self.run_adequation_tests(kernel_type,
+    #                               list_dpp_params,
+    #                               dict_sampler_mode_param,
+    #                               adequation_to_check)
+
+    def test_adequation_vfx_sampler(self):
+
+        kernel_type = 'likelihood'
+
+        def eval_L_linear(X, Y=None):
+            if Y is None:
+                return X.dot(X.T)
+            else:
+                return X.dot(Y.T)
+
+        def eval_L_min(X, Y=None):
+
+            assert X.shape[1] == 1 and np.all(np.abs(X) < 1)
+
+            if Y is None:
+                Y = X
+            elif X:
+                assert Y.shape[1] == 1 and np.all(np.abs(Y) < 1)
+
+            return np.minimum(np.repeat(X, Y.size, axis=1),
+                              np.repeat(Y.T, X.size, axis=0))
+
+        X_data_randn = rndm.rand(self.rank, self.N)
+        X_data_abs_lt_1 = 2 * rndm.rand(self.N, 1) - 1
+
+        print(X_data_abs_lt_1.shape)
+        list_dpp_params =\
+          [[False, {'L_eval_X_data': (eval_L_linear, X_data_randn)}],
+           [False, {'L_eval_X_data': (eval_L_min, X_data_abs_lt_1)}]]
+
+        k = self.rank // 2
+
+        dict_sampler_mode_param =\
+            {'exact_dpp': {'vfx': {}},
+             'exact_k_dpp': {'vfx': {'size': k}}}
+
+        adequation_to_check = ('cardinality', 'singleton', 'doubleton')
+
+        self.run_adequation_tests(kernel_type,
+                                  list_dpp_params,
+                                  dict_sampler_mode_param,
+                                  adequation_to_check)
 
 
 def main():
