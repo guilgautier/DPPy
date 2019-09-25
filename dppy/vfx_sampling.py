@@ -244,7 +244,8 @@ def vfx_sampling_precompute_constants(X,
                          'This is unusual (i.e. you are trying to select more than the overall amount of diversity '
                          'in your set.\n'
                          'Increasing the expected sample size is currently not supported (only decreasing).\n'
-                         'Please consider increasing your k or changing L: natural_s: {}'.format(natural_s))
+                         'Please consider decreasing your k={} or changing L: estimated mean cardinality: {}'.format(desired_s,
+                                                                    natural_s))
     else:
         # since this is monotone in alpha, we can simply use Brent's algorithm (bisection + tricks)
         # it is a root finding algorithm so we must create a function with a root in desired_s
@@ -357,6 +358,7 @@ def vfx_sampling_do_sampling_loop(X, eval_L, intermediate_sample_info, rng, max_
             t = rng.poisson(lam=lam.astype('int'))
 
             # sample sigma subset
+            # TO CHECK is replacement=False or True ?!
             sigma = rng.choice(n, size=t, p=pc_state.rls_estimate / pc_state.s)
             X_sigma = X[sigma, :]
 
@@ -416,7 +418,7 @@ def vfx_sampling_do_sampling_loop(X, eval_L, intermediate_sample_info, rng, max_
     DPP = FiniteDPP(kernel_type='likelihood', L_eig_dec=(E, U))
     DPP.sample_exact(random_state=rng)
 
-    S_tilda = np.array(DPP.list_of_samples)
+    S_tilda = np.array(DPP.list_of_samples[-1], dtype=int)
     S = sigma[S_tilda].ravel().tolist()
 
     return S, rej_iter

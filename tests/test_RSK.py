@@ -37,9 +37,9 @@ class TestRSKCorrespondence(unittest.TestCase):
 
     def test_RSK_output(self):
 
-        for seq, tab in zip(self.sequences, self.PQ_tableaux):
-
-            self.assertTrue(RSK(seq) == tab)
+        for i, (seq, tab) in enumerate(zip(self.sequences, self.PQ_tableaux)):
+            with self.subTest(index=i, seq=seq):
+                self.assertTrue(RSK(seq) == tab)
 
 
 def main():

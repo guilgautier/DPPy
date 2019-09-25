@@ -1,7 +1,7 @@
 # coding: utf8
 """ Tests:
 
-- :class:`MarginalProbaDescentProcesses` check that the marginal probability of selecting any integer is indeed given by the ``_bernoulli_param`` attribute
+- :class:`TestDescentProcesses` check that the marginal probability of selecting any integer is indeed given by the ``_bernoulli_param`` attribute
 """
 
 import unittest
@@ -14,39 +14,35 @@ sys.path.append('..')
 from dppy.exotic_dpps import CarriesProcess, DescentProcess, VirtualDescentProcess
 
 
-class MarginalProbaDescentProcesses(unittest.TestCase):
+class TestDescentProcesses(unittest.TestCase):
     """ Check that the marginal probability of selecting any integer is indeed given by the ``_bernoulli_param`` attribute
     """
 
     size = 10000
     tol = 1e-2
+    seed = 0
+
+    def marginal_adequation(self, process):
+
+        process.sample(size=self.size, random_state=self.seed)
+
+        p_hat = len(process.list_of_samples[-1]) / self.size
+        p_th = process._bernoulli_param
+
+        self.assertTrue(np.abs(p_hat - p_th) / p_th < self.tol,
+                        'p_hat={}, p_th={}'.format(p_hat, p_th))
 
     def test_carries_process(self):
-
-        cp = CarriesProcess(base=10)
-        cp.sample(size=self.size)
-
-        estim = len(cp.list_of_samples[-1]) / self.size
-
-        self.assertTrue(np.abs(estim - cp._bernoulli_param) < self.tol)
+        process = CarriesProcess(base=10)
+        self.marginal_adequation(process)
 
     def test_descent_process(self):
-
-        dp = DescentProcess()
-        dp.sample(size=self.size)
-
-        estim = len(dp.list_of_samples[-1]) / self.size
-
-        self.assertTrue(np.abs(estim - dp._bernoulli_param) < self.tol)
+        process = DescentProcess()
+        self.marginal_adequation(process)
 
     def test_virtual_descent_process(self):
-
-        vdp = VirtualDescentProcess(x_0=0.5)
-        vdp.sample(size=self.size)
-
-        estim = len(vdp.list_of_samples[-1]) / self.size
-
-        self.assertTrue(np.abs(estim - vdp._bernoulli_param) < self.tol)
+        process = VirtualDescentProcess(x_0=0.5)
+        self.marginal_adequation(process)
 
 
 def main():

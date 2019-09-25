@@ -15,19 +15,6 @@
 
 import numpy as np
 import scipy.linalg as la
-
-from sys import platform as _platform
-# https://stackoverflow.com/questions/1854/python-what-os-am-i-running-on
-if _platform.startswith('linux'):
-    # linux
-    pass
-elif _platform == "darwin":
-    # MAC OS X
-    # https://markhneedham.com/blog/2018/05/04/python-runtime-error-osx-matplotlib-not-installed-as-framework-mac/
-    # import matplotlib
-    # matplotlib.use('TkAgg')
-    pass
-
 import matplotlib.pyplot as plt
 
 from warnings import warn
@@ -40,14 +27,16 @@ from dppy.exact_sampling import (dpp_sampler_generic_kernel,
                                  k_dpp_eig_vecs_selector,
                                  elementary_symmetric_polynomials)
 
-from dppy.vfx_sampling import vfx_sampling_precompute_constants, vfx_sampling_do_sampling_loop
+from dppy.vfx_sampling import (vfx_sampling_precompute_constants,
+                               vfx_sampling_do_sampling_loop)
 
-from dppy.mcmc_sampling import dpp_sampler_mcmc, zonotope_sampler
+from dppy.mcmc_sampling import (dpp_sampler_mcmc,
+                                zonotope_sampler)
 
 from dppy.utils import (check_random_state,
                         is_symmetric,
                         is_projection,
-                        is_orthonormal,
+                        is_orthonormal_columns,
                         is_full_row_rank,
                         is_in_01,
                         is_geq_0,
@@ -97,12 +86,16 @@ class FiniteDPP:
 
     .. caution::
 
-        For now we only consider real valued matrices :math:`\\mathbf{K}, \\mathbf{L}, A, \\Phi, \mathbf{X}_{data}`.
+        For now we only consider real valued matrices :math:`\\mathbf{K}, \\mathbf{L}, A, \\Phi, \\mathbf{X}_{data}`.
 
     .. seealso::
 
         - :ref:`finite_dpps_definition`
         - :ref:`finite_dpps_exact_sampling`
+
+    .. todo::
+
+        add ``.kernel_rank`` attribute
     """
 
     ###############
@@ -120,7 +113,7 @@ class FiniteDPP:
         self.list_of_samples = []
 
         # when using .sample_k_dpp_*
-        self.size_k_dpp = None
+        self.size_k_dpp = 0
         self.E_poly = None  # evaluation of the
 
         # Attributes relative to K correlation kernel:
@@ -134,7 +127,7 @@ class FiniteDPP:
             self.K_eig_vals = is_equal_to_O_or_1(e_vals)
         else:
             self.K_eig_vals = is_in_01(e_vals)
-        self.eig_vecs = is_orthonormal(e_vecs)
+        self.eig_vecs = is_orthonormal_columns(e_vecs)
 
         self.A_zono = is_full_row_rank(params.get('A_zono', None))
 
@@ -150,7 +143,7 @@ class FiniteDPP:
         else:
             self.L_eig_vals = is_geq_0(e_vals)
         if self.eig_vecs is None:  # K_eig_vecs = L_eig_vecs
-            self.eig_vecs = is_orthonormal(e_vecs)
+            self.eig_vecs = is_orthonormal_columns(e_vecs)
 
         # L' "dual" likelihood kernel, L' = Phi Phi.T, Phi = L_gram_factor
         self.L_gram_factor = params.get('L_gram_factor', None)
@@ -175,12 +168,14 @@ class FiniteDPP:
         self.eval_L, self.X_data = params.get('L_eval_X_data', [None, None])
         self.intermediate_sample_info = None
 
-        if self.eval_L and not callable(self.eval_L):
-            raise ValueError('eval_L should be a likelihood function between points')
-        if self.X_data and (self.X_data.size == 0 or self.X_data.ndims != 2):
-            raise ValueError('The provided data matrix seems empty or with the wrong shape.'
-                             ' For data with n elements and d features, X_data should be an (n x m) ndarray.')
-
+        if self.eval_L is not None:
+            if not callable(self.eval_L):
+                raise ValueError('eval_L should be a positive semi-definite kernel function')
+        if self.X_data is not None:
+            if not (self.X_data.size and self.X_data.ndim == 2):
+                err_print = ['Wrong shape = {}'.format(self.X_data.shape),
+                             'X_data should be a non empty (N x d) ndarray']
+                raise ValueError('\n'.join(err_print))
 
     def __str__(self):
         str_info = ['DPP defined through {} {} kernel'
@@ -200,34 +195,43 @@ class FiniteDPP:
         # Check coherence of initialization parameters of the DPP:
         # kernel_type, projection and params.
 
+        if not isinstance(self.projection, bool):
+            err_print = ['`projection` argument is not boolean',
+                         'Given: {}'.format(self.is_projection)]
+            raise ValueError('\n'.join(err_print))
+
         K_type, K_params = 'correlation', {'K', 'K_eig_dec', 'A_zono'}
         L_type, L_params = 'likelihood', {'L', 'L_eig_dec', 'L_gram_factor', 'L_eval_X_data'}
 
         if self.kernel_type == K_type:
             if self.params_keys.intersection(K_params):
                 if 'A_zono' in self.params_keys and not self.projection:
-                    warn('Weird setting: correlation kernel defined via `A_zono` but `projection`=False. `projection` switched to True')
+                    warn_print = ['Weird setting:',
+                                  'FiniteDPP(kernel_type={}, projection={}, **{"A_zono": A}) with projection=False',
+                                  'When defined through "A_zono" we expect a projection DPP with correlation kernel K = A.T (AA.T)^-1 A`.',
+                                  'projection` switched to `True`']
+                    warn('\n'.join(warn_print))
                     self.projection = True
             else:
                 err_print =\
                     ['Invalid parametrization of correlation kernel, choose:',
-                     '- `K` = 0 <= K <= I',
-                     '- `K_eig_dec` = (eig_vals, eig_vecs) 0 <= eig_vals <= 1',
-                     '- `A_zono` = A is dxN matrix, K = A.T (AA.T)^-1 A',
+                     '- {"K": K} 0 <= K <= I',
+                     '- {"K_eig_dec": (e_vals, e_vecs)} 0 <= e_vals <= 1',
+                     '- {"A_zono": A} A (dxN) s.t. K = A.T (AA.T)^-1 A',
                      'Given: {}'.format(self.params_keys)]
                 raise ValueError('\n'.join(err_print))
 
         elif self.kernel_type == L_type:
             if self.params_keys.intersection(L_params):
                 if self.projection:
-                    warn('weird setting: defining a DPP via a projection likelihood L kernel is unusual. Make sure you do not want to use a projection CORRELATION K kernel instead')
+                    warn('Weird setting: defining a DPP via a projection likelihood L kernel is unusual. Make sure you do not want to use a projection CORRELATION K kernel instead')
             else:
                 err_print =\
                     ['Invalid parametrization of likelihood kernel, choose:',
-                     '- `L` = L >= 0',
-                     '- `L_eig_dec` = (eig_vals, eig_vecs) eig_vals >= 0',
-                     '- `L_gram_factor` = Phi (dxN) where L = Phi.T Phi',
-                     '- `L_eval_X_data` = (eval_L, X_data)',
+                     '- {"L": L} L >= 0',
+                     '- {"L_eig_dec": (e_vals, e_vecs)} e_vals >= 0',
+                     '- {"L_gram_factor": Phi}, Phi (dxN) s.t. L = Phi.TPhi',
+                     '- {"L_eval_X_data": (eval_L, X_data)} X_data (dxN) and `eval_L` callable positive semi-definite kernel',
                      'Given: {}'.format(self.params_keys)]
                 raise ValueError('\n'.join(err_print))
 
@@ -256,6 +260,7 @@ class FiniteDPP:
             - :py:meth:`~FiniteDPP.sample_mcmc`
         """
         self.list_of_samples = []
+        self.size_k_dpp = 0
 
     # Exact sampling
     def sample_exact(self, mode='GS', **params):
@@ -319,9 +324,21 @@ class FiniteDPP:
 
         self.sampling_mode = mode
 
-        if self.sampling_mode == 'Chol':
+        if self.sampling_mode == 'Schur':
+            if self.kernel_type=='correlation' and self.projection:
+                self.compute_K()
+                sampl = proj_dpp_sampler_kernel(self.K, self.sampling_mode,
+                                                random_state=rng)
+            else:
+                err_print =\
+                    ['`Schur` sampling mode is only available for projection DPPs, i.e., `kernel_type="correlation"` and `projection=True`',
+                     'Given: {}'.format((self.kernel_type, self.projection))]
+                raise ValueError('\n'.join(err_print))
+            self.list_of_samples.append(sampl)
+
+        elif self.sampling_mode == 'Chol':
             self.compute_K()
-            if self.projection:
+            if self.kernel_type=='correlation' and self.projection:
                 sampl = proj_dpp_sampler_kernel(self.K, self.sampling_mode,
                                                 random_state=rng)
             else:
@@ -330,25 +347,25 @@ class FiniteDPP:
 
         elif self.sampling_mode == 'vfx':
             if self.eval_L is None or self.X_data is None:
-                raise ValueError("The vfx sampler is currently only available for the 'L_eval_X_data' representation.")
+                raise ValueError('The vfx sampler is currently only available with {"L_eval_X_data": (L_eval, X_data)} representation.')
 
             if self.intermediate_sample_info is None:
-                self.intermediate_sample_info = vfx_sampling_precompute_constants(
-                    X = self.X_data,
-                    eval_L=self.eval_L,
-                    rng = rng,
-                    **params
-                )
+                self.intermediate_sample_info = vfx_sampling_precompute_constants(X=self.X_data,
+                                                      eval_L=self.eval_L,
+                                                      rng=rng,
+                                                      **params)
 
                 q_func = params.get('q_func', lambda s: s * s)
-                self.intermediate_sample_info = self.intermediate_sample_info._replace(
-                                                                            q=q_func(self.intermediate_sample_info.s))
+                self.intermediate_sample_info =\
+                    self.intermediate_sample_info._replace(
+                        q=q_func(self.intermediate_sample_info.s))
 
-            sampl, rej_count = vfx_sampling_do_sampling_loop(self.X_data,
-                                                             self.eval_L,
-                                                             self.intermediate_sample_info,
-                                                             rng,
-                                                             **params)
+            sampl, rej_count =\
+                vfx_sampling_do_sampling_loop(self.X_data,
+                                              self.eval_L,
+                                              self.intermediate_sample_info,
+                                              rng,
+                                              **params)
             self.list_of_samples.append(sampl)
 
         # If eigen decoposition of K, L or L_dual is available USE IT!
@@ -367,10 +384,6 @@ class FiniteDPP:
                 sampl = np.array([])
             self.list_of_samples.append(sampl)
 
-        elif self.L_eig_vals is not None:
-            self.K_eig_vals = self.L_eig_vals / (1.0 + self.L_eig_vals)
-            self.sample_exact(mode=self.sampling_mode, random_state=rng)
-
         elif self.L_dual_eig_vals is not None:
             # Phase 1
             V = dpp_eig_vecs_selector_L_dual(self.L_dual_eig_vals,
@@ -382,9 +395,13 @@ class FiniteDPP:
                                          random_state=rng)
             self.list_of_samples.append(sampl)
 
+        elif self.L_eig_vals is not None:
+            self.K_eig_vals = self.L_eig_vals / (1.0 + self.L_eig_vals)
+            self.sample_exact(mode=self.sampling_mode, random_state=rng)
+
         # If DPP defined via projection correlation kernel K
         # no eigendecomposition required
-        elif (self.K is not None) and self.projection:
+        elif self.K is not None and self.projection:
             sampl = proj_dpp_sampler_kernel(self.K, self.sampling_mode,
                                             random_state=rng)
             self.list_of_samples.append(sampl)
@@ -392,14 +409,17 @@ class FiniteDPP:
         elif self.L_dual is not None:
             self.L_dual_eig_vals, self.L_dual_eig_vecs =\
                 la.eigh(self.L_dual)
+            self.L_dual_eig_vals = is_geq_0(self.L_dual_eig_vals)
             self.sample_exact(mode=self.sampling_mode, random_state=rng)
 
         elif self.K is not None:
             self.K_eig_vals, self.eig_vecs = la.eigh(self.K)
+            self.K_eig_vals = is_in_01(self.K_eig_vals)
             self.sample_exact(mode=self.sampling_mode, random_state=rng)
 
         elif self.L is not None:
             self.L_eig_vals, self.eig_vecs = la.eigh(self.L)
+            self.L_eig_vals = is_geq_0(self.L_eig_vals)
             self.sample_exact(mode=self.sampling_mode, random_state=rng)
 
         # If DPP defined through correlation kernel with parameter 'A_zono'
@@ -409,8 +429,12 @@ class FiniteDPP:
 
             self.K_eig_vals = np.ones(self.A_zono.shape[0])
             self.eig_vecs, _ = la.qr(self.A_zono.T, mode='economic')
-
             self.sample_exact(self.sampling_mode, random_state=rng)
+
+        elif self.eval_L is not None and self.X_data is not None:
+            self.compute_L()
+            self.sample_exact(self.sampling_mode, random_state=rng)
+
         else:
             raise ValueError('None of the available samplers could be used based on the current DPP representation.'
                              ' This should never happen, please consider rasing an issue on github'
@@ -489,26 +513,31 @@ class FiniteDPP:
                 raise ValueError("The vfx sampler is currently only available for the 'L_eval_X_data' representation.")
 
             if (self.intermediate_sample_info is None
-                    or self.intermediate_sample_info.s != size):
-                self.intermediate_sample_info = vfx_sampling_precompute_constants(
-                    X=self.X_data,
-                    eval_L=self.eval_L,
-                    desired_s=size,
-                    rng=rng,
-                    **params
-                )
+                or self.intermediate_sample_info.s != size):
+                self.intermediate_sample_info =\
+                    vfx_sampling_precompute_constants(X=self.X_data,
+                                                      eval_L=self.eval_L,
+                                                      desired_s=size,
+                                                      rng=rng,
+                                                      **params)
 
                 q_func = params.get('q_func', lambda s: s * s)
-                self.intermediate_sample_info = self.intermediate_sample_info._replace(
-                    q=q_func(self.intermediate_sample_info.s))
+                self.intermediate_sample_info =\
+                    self.intermediate_sample_info._replace(
+                        q=q_func(self.intermediate_sample_info.s))
 
-            max_iter_size_rejection = params.get('max_iter_size_rejection', 100)
+            max_iter_size_rejection =\
+                params.get('max_iter_size_rejection', 100)
+
             for size_rejection_iter in range(max_iter_size_rejection):
-                sampl, rej_count = vfx_sampling_do_sampling_loop(self.X_data,
-                                                                 self.eval_L,
-                                                                 self.intermediate_sample_info,
-                                                                 rng,
-                                                                 **params)
+                sampl, rej_count =\
+                    vfx_sampling_do_sampling_loop(
+                        self.X_data,
+                        self.eval_L,
+                        self.intermediate_sample_info,
+                        rng,
+                        **params)
+
                 if len(sampl) == size:
                     break
             else:
@@ -516,7 +545,6 @@ class FiniteDPP:
                                  'for the k-DPP size rejection ({}), try to increase the q factor '
                                  '(see q_func parameter) or the Nystrom approximation accuracy '
                                  'see rls_oversample_* parameters).'.format(max_iter_size_rejection))
-
             self.list_of_samples.append(sampl)
 
         # If DPP defined via projection kernel
@@ -524,11 +552,11 @@ class FiniteDPP:
             if self.kernel_type == 'correlation':
 
                 if self.K_eig_vals is not None:
-                    rank = np.round(np.sum(self.K_eig_vals)).astype(int)
+                    rank = np.rint(np.sum(self.K_eig_vals)).astype(int)
                 elif self.A_zono is not None:
                     rank = self.A_zono.shape[0]
                 else: # self.K is not None
-                    rank = np.round(np.trace(self.K)).astype(int)
+                    rank = np.rint(np.trace(self.K)).astype(int)
 
                 if size != rank:
                     raise ValueError('size k={} != rank={} for projection correlation K kernel'.format(size, rank))
@@ -574,7 +602,6 @@ class FiniteDPP:
                                                     size=size,
                                                     random_state=rng)
 
-            self.size_k_dpp = size
             self.list_of_samples.append(sampl)
 
         # If eigen decoposition of K, L or L_dual is available USE IT!
@@ -600,8 +627,8 @@ class FiniteDPP:
             # There is
             self.L_eig_vals = self.L_dual_eig_vals
             self.eig_vecs =\
-                self.L_gram_factor.T.dot(self.L_dual_eig_vecs\
-                                        / np.sqrt(self.L_dual_eig_vals))
+                self.L_gram_factor.T.dot(
+                    self.L_dual_eig_vecs / np.sqrt(self.L_dual_eig_vals))
             self.sample_exact_k_dpp(size, self.sampling_mode,
                                     random_state=rng)
 
@@ -615,22 +642,34 @@ class FiniteDPP:
         elif self.L_dual is not None:
             self.L_dual_eig_vals, self.L_dual_eig_vecs =\
                 la.eigh(self.L_dual)
+            self.L_dual_eig_vals = is_geq_0(self.L_dual_eig_vals)
             self.sample_exact_k_dpp(size, self.sampling_mode,
                                     random_state=rng)
 
         elif self.K is not None:
             self.K_eig_vals, self.eig_vecs = la.eigh(self.K)
+            self.K_eig_vals = is_in_01(self.K_eig_vals)
             self.sample_exact_k_dpp(size, self.sampling_mode,
                                     random_state=rng)
 
         elif self.L is not None:
             self.L_eig_vals, self.eig_vecs = la.eigh(self.L)
+            self.L_eig_vals = is_geq_0(self.L_eig_vals)
             self.sample_exact_k_dpp(size, self.sampling_mode,
                                     random_state=rng)
+
+        elif self.eval_L is not None and self.X_data is not None:
+            # In case mode!='vfx'
+            self.compute_L()
+            self.sample_exact_k_dpp(size, self.sampling_mode,
+                                    random_state=rng)
+
         else:
             raise ValueError('None of the available samplers could be used based on the current DPP representation.'
                              ' This should never happen, please consider rasing an issue on github'
                              ' at https://github.com/guilgautier/DPPy/issues')
+
+        self.size_k_dpp = size
 
     # Approximate sampling
     def sample_mcmc(self, mode, **params):
@@ -682,7 +721,7 @@ class FiniteDPP:
             if self.A_zono is not None:
                 chain = zonotope_sampler(self.A_zono, **params)
             else:
-                err_print = ['Invalid `mode=zonotope` parameter.',
+                err_print = ['Invalid `mode=zonotope` parameter',
                              'DPP must be defined via `A_zono`',
                              'Given: {}'.format(self.params_keys)]
                 raise ValueError(' '.join(err_print))
@@ -691,7 +730,7 @@ class FiniteDPP:
             if (self.kernel_type == 'correlation') and self.projection:
                 self.compute_K()
                 size = params.get('size', None)
-                rank = np.round(np.trace(self.K)).astype(int)
+                rank = np.rint(np.trace(self.K)).astype(int)
                 # |sample| = Tr(K) = rank(K) a.s. for projection DPP(K)
                 if size == rank:
                     chain = dpp_sampler_mcmc(self.K,
@@ -718,7 +757,7 @@ class FiniteDPP:
 
         self.list_of_samples.append(chain)
 
-    def sample_mcmc_k_dpp(self, size, **params):
+    def sample_mcmc_k_dpp(self, size, mode='E', **params):
         """ Calls :py:meth:`~sample_mcmc` with ``mode='E'`` and ``params['size'] = size``
 
         .. seealso::
@@ -749,11 +788,6 @@ class FiniteDPP:
             # print(msg)
             pass
 
-        elif self.eval_L is not None:
-            err_print = ['Computing the K kernel is currently not supported when using a likelihood function.'
-                         'Please re-instantiate the FiniteDPP object using the likelihood matrix eval_L(X_data).']
-            raise ValueError('\n'.join(err_print))
-
         else:
             if not msg:
                 print('K (correlation) kernel computed via:')
@@ -782,6 +816,7 @@ class FiniteDPP:
                 msg = '- eigendecomposition of L'
                 print(msg)
                 self.L_eig_vals, self.eig_vecs = la.eigh(self.L)
+                self.L_eig_vals = is_geq_0(self.L_eig_vals)
                 self.compute_K(msg=True)
 
             else:
@@ -806,16 +841,16 @@ class FiniteDPP:
                          'K is projection kernel: some eigenvalues equal 1']
             raise ValueError('\n'.join(err_print))
 
-        elif self.eval_L is not None:
-            err_print = ['Computing the L kernel is currently not supported when using a likelihood function.'
-                         'Please re-instantiate the FiniteDPP object using the likelihood matrix eval_L(X_data).']
-            raise ValueError('\n'.join(err_print))
-
         else:
             if not msg:
                 print('L (likelihood) kernel computed via:')
 
-            if self.L_eig_vals is not None:
+            if self.eval_L is not None:
+                msg = '- eval_L(X_data, X_data)'
+                print(msg)
+                self.L = self.eval_L(self.X_data)
+
+            elif self.L_eig_vals is not None:
                 msg = '- U diag(eig_L) U.T'
                 print(msg)
                 self.L = (self.eig_vecs * self.L_eig_vals).dot(self.eig_vecs.T)
@@ -835,14 +870,27 @@ class FiniteDPP:
                 except FloatingPointError:
                     err_print = ['Eigenvalues of L kernel cannot be computed',
                                  'eig_L = eig_K/(1-eig_K)',
-                                 'K kernel has some eig_K very close to 1.',
-                                 'Hint: `K` kernel might be a projection.']
+                                 'K kernel has some eig_K very close to 1',
+                                 'Hint: `K` kernel might be a projection']
                     raise FloatingPointError('\n'.join(err_print))
 
             elif self.K is not None:
                 msg = '- eigendecomposition of K'
                 print(msg)
                 self.K_eig_vals, self.eig_vecs = la.eigh(self.K)
+                self.K_eig_vals = is_in_01(self.K_eig_vals)
+                self.compute_L(msg=True)
+
+            elif self.eval_L is not None:
+                warn_print = ['Weird setting:',
+                'FiniteDPP(.., **{"L_eval_X_data": (eval_L, X_data)})',
+                'When using "L_eval_X_data", you are a priori working with a big `X_data` and not willing to compute the full likelihood kernel L',
+                'Right now, the computation of L=eval_L(X_data) is performed but might be very expensive, this is at your own risk!',
+                'You might also use FiniteDPP(.., **{"L": eval_L(X_data)})']
+                warn('\n'.join(warn_print))
+                msg = '- L = eval_L(X_data, X_data)'
+                print(msg)
+                self.L = self.eval_L(self.X_data)
                 self.compute_L(msg=True)
 
             else:

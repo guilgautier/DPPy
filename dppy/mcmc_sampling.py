@@ -18,7 +18,7 @@ import scipy.linalg as la
 # For zonotope sampler
 from cvxopt import matrix, spmatrix, solvers
 solvers.options['show_progress'] = False
-solvers.options['glpk'] = {'msg_lev':'GLP_MSG_OFF'}
+solvers.options['glpk'] = {'msg_lev': 'GLP_MSG_OFF'}
 
 from dppy.utils import det_ST, check_random_state
 
@@ -44,7 +44,7 @@ def dpp_sampler_mcmc(kernel, mode='AED', **params):
     s_init = params.get('s_init', None)
     nb_iter = params.get('nb_iter', 10)
     T_max = params.get('T_max', None)
-    size = params.get('size', None)  # For projection correlation kernel = Tr(K)
+    size = params.get('size', None)  # = Tr(K) for projection correlation K
 
     if mode == 'AED':  # Add-Exchange-Delete S'=S+t, S-t+u, S-t
         if s_init is None:
@@ -184,7 +184,7 @@ def add_exchange_delete_sampler(kernel, s_init=None, nb_iter=10, T_max=None,
 
         S1 = S0.copy()  # S1 = S0
         # Pick one element s in S_0 by index uniformly at random
-        s_ind = rng.choice(size_S0 if size_S0 else N) #, size=1)[0]
+        s_ind = rng.choice(size_S0 if size_S0 else N)  # , size=1)[0]
         # Unif t in [N]-S0
         t = rng.choice(np.delete(ground_set, S0))
 
@@ -218,7 +218,7 @@ def add_exchange_delete_sampler(kernel, s_init=None, nb_iter=10, T_max=None,
 
         # Delete: S1 = S0 - s
         elif (0.5 * (1 - ratio) <= U) & (U < 0.5 * (ratio**2 + (1 - ratio))):
-            del S1[s_ind] # S0 - s
+            del S1[s_ind]  # S0 - s
             # Accept_reject the move
             det_S1 = det_ST(kernel, S1)  # det K_S1
             if rng.rand() < det_S1 / det_S0 * size_S0 / (N - (size_S0 - 1)):

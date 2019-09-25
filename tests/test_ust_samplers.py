@@ -18,15 +18,13 @@ sys.path.append('..')
 
 from dppy.utils import det_ST
 from dppy.exotic_dpps import UST
-from dppy.finite_dpps import FiniteDPP
 
 
-class TestUniformityUniformSpanningTreeSampler(unittest.TestCase):
+class UniformityOfSamplerForUniformSpanningTree(unittest.TestCase):
     """ Test uniformity the sampling procedures for sampling spanning trees of a graph uniformly at random on an Erdos-Renyi graph :math:`G(n,p)`
     """
-
     def __init__(self, *args, **kwargs):
-        super(TestUniformityUniformSpanningTreeSampler,
+        super(UniformityOfSamplerForUniformSpanningTree,
               self).__init__(*args, **kwargs)
 
         # Sample a connected Erdos-Renyi graph
@@ -53,9 +51,19 @@ class TestUniformityUniformSpanningTreeSampler(unittest.TestCase):
 
         self.nb_spanning_trees = len(list_st)
 
-        self.dpp = UST(g)
+        self.ust = UST(g)
 
         self.nb_samples = 1000
+
+    def test_projection_kernel_computation(self):
+        """UST is a DPP associated to the projection kernel onto the row span of the vertex-edge-incidence matrix
+        """
+        inc = incidence_matrix(self.ust.graph, oriented=True).todense()
+        expected_kernel = np.linalg.pinv(inc).dot(inc)
+
+        self.ust.compute_kernel()
+
+        self.assertTrue(np.allclose(self.ust.kernel, expected_kernel))
 
     @staticmethod
     def sample_to_label(graph):
@@ -65,10 +73,21 @@ class TestUniformityUniformSpanningTreeSampler(unittest.TestCase):
         """
         return ''.join(map(str, sorted(map(sorted, graph.edges()))))
 
-    def uniformity_adequation(self, tol=0.05):
-        """Perform chi-square test"""
+    def test_uniformity_adequation(self):
 
-        counter = Counter(map(self.sample_to_label, self.dpp.list_of_samples))
+        for sampler, sampler_modes in self.ust._sampling_modes.items():
+            for mode in sampler_modes:
+                with self.subTest(sampler=(sampler, mode)):
+                    self.ust.flush_samples()
+                    for _ in range(self.nb_samples):
+                        self.ust.sample(mode=mode)
+
+                    self.assertTrue(self.uniformity_adequation())
+
+    def uniformity_adequation(self, tol=0.05):
+        """Perform chi-square test to check that the different spanning trees sampled have a uniform distribution"""
+        counter = Counter(map(self.sample_to_label,
+                              self.ust.list_of_samples))
 
         freq = np.array(list(counter.values())) / self.nb_samples
         theo = np.ones(self.nb_spanning_trees) / self.nb_spanning_trees
@@ -76,52 +95,6 @@ class TestUniformityUniformSpanningTreeSampler(unittest.TestCase):
         _, pval = chisquare(f_obs=freq, f_exp=theo)
 
         return pval > tol
-
-    def test_dpp_exact_projection_dpp_sampler_markov_chain(self):
-
-        for mode in self.dpp._sampling_modes['markov-chain']:
-
-            print('mode: {}'.format(mode))
-
-            self.dpp.flush_samples()
-            for _ in range(self.nb_samples):
-                self.dpp.sample(mode=mode)
-
-            self.assertTrue(self.uniformity_adequation())
-
-    def test_dpp_exact_projection_dpp_sampler_eig_vecs(self):
-
-        for mode in self.dpp._sampling_modes['spectral-method']:
-
-            print('mode: {}'.format(mode))
-
-            self.dpp.flush_samples()
-            for _ in range(self.nb_samples):
-                self.dpp.sample(mode=mode)
-
-            self.assertTrue(self.uniformity_adequation())
-
-    def test_dpp_exact_projection_dpp_sampler_correlation_kernel(self):
-
-        for mode in self.dpp._sampling_modes['projection-K-kernel']:
-
-            print('mode: {}'.format(mode))
-
-            self.dpp.flush_samples()
-            for _ in range(self.nb_samples):
-                self.dpp.sample(mode=mode)
-
-            self.assertTrue(self.uniformity_adequation())
-
-    def test_projection_kernel_computation(self):
-        """UST is a DPP associated to the projection kernel onto the row span of the vertex-edge-incidence matrix
-        """
-        inc = incidence_matrix(self.dpp.graph, oriented=True).todense()
-        expected_kernel = np.linalg.pinv(inc).dot(inc)
-
-        self.dpp.compute_kernel()
-
-        self.assertTrue(np.allclose(self.dpp.kernel, expected_kernel))
 
 
 def main():

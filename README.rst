@@ -1,19 +1,22 @@
 DPPy: Sampling Determinantal Point Processes with Python
 ========================================================
 
-|Documentation Status| |Build Status| |Coverage Status|
+|Documentation Status| |Build Status| |Coverage Status| |PyPI package|
 
 .. |Documentation Status| image:: https://readthedocs.org/projects/dppy/badge/?version=latest
-   :target: https://dppy.readthedocs.io/en/latest/?badge=latest
+  :target: https://dppy.readthedocs.io/en/latest/?badge=latest
 
 .. |Build Status| image:: https://travis-ci.com/guilgautier/DPPy.svg?branch=master
-   :target: https://travis-ci.com/guilgautier/DPPy
+  :target: https://travis-ci.com/guilgautier/DPPy
 
 .. |Coverage Status| image:: https://coveralls.io/repos/github/guilgautier/DPPy/badge.svg?branch=master
   :target: https://coveralls.io/github/guilgautier/DPPy?branch=master
 
+.. |PyPI package| image:: https://badge.fury.io/py/dppy.svg
+    :target: https://badge.fury.io/py/dppy
+
 .. |Google Colab| image:: https://badgen.net/badge/Launch/on%20Google%20Colab/blue?icon=terminal
-   :target: https://colab.research.google.com/github/guilgautier/DPPy/blob/master/notebooks/Tuto_DPPy.ipynb
+  :target: https://colab.research.google.com/github/guilgautier/DPPy/blob/master/notebooks/Tuto_DPPy.ipynb
 
 *"Anything that can go wrong, will go wrong"* − `Murphy's Law <http://phdcomics.com/comics/archive.php?comicid=1867>`_
 
@@ -59,7 +62,7 @@ This project depends on the following libraries, which are automatically downloa
 Download instructions
 ~~~~~~~~~~~~
 
-DPPy is now available on `PyPI <https://pypi.org/project/dppy/>`__
+DPPy is now available on `PyPI <https://pypi.org/project/dppy/>`__ |PyPI package|
 
 .. code:: bash
 
@@ -92,7 +95,7 @@ However you may not work with the latest version, so
 
        cd DPPy
        pip install .
-       
+
 How to use it
 ------------
 

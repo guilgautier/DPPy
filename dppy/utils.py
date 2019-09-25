@@ -26,6 +26,7 @@ def check_random_state(seed):
     raise ValueError('%r cannot be used to seed a numpy.random.RandomState'
                      ' instance' % seed)
 
+
 def inner1d(arr1, arr2=None, axis=0):
     """ Efficient equivalent to ``(arr1**2).sum(axis)`` or ``(arr1*arr2).sum(axis)`` for ``arr1.shape == arr2.shape``.
     Expected to be used with arrays of same shape and mainly with 1D or 2D arrays but works for upto 26D arrays...
@@ -100,29 +101,47 @@ def det_ST(array, S, T=None):
         return det(array[np.ix_(S, T)])
 
 
+def is_square(array):
+
+    if array is None:
+        return None
+
+    shape = array.shape
+    if  len(shape) == 2 and len(set(shape)) == 1:
+        return array
+    else:
+        raise ValueError('array not 2D square: shape={}'.format(shape))
+
+
 def is_symmetric(array):
     # Cheap test to check symmetry M^T = M
 
     if array is None:
         return None
 
-    indx = np.arange(min(20, array.shape[0]))
-    M = array[np.ix_(indx, indx)]
+    array = is_square(array)
+
+    idx = np.arange(min(20, array.shape[0]))
+    M = array[np.ix_(idx, idx)]
     if np.allclose(M.T, M):
         return array
     else:
         raise ValueError('array not symmetric: M.T != M')
 
 
-def is_projection(array):
+def is_projection(array, col_idx=None):
     # Cheap test to check reproducing property: M^2 = M
 
     if array is None:
         return None
 
-    indx = np.arange(min(5, array.shape[0]))
-    M_j = array[:, indx]
-    Mjj = array[indx, indx]
+    array = is_square(array)
+
+    if col_idx is None:
+        col_idx =  np.arange(min(20, array.shape[0]))
+
+    M_j = array[:, col_idx]
+    Mjj = array[col_idx, col_idx]
 
     if np.allclose(inner1d(M_j), Mjj):
         return array
@@ -130,16 +149,18 @@ def is_projection(array):
         raise ValueError('array not seem to be a projection: M^2 != M')
 
 
-def is_orthonormal(array):
-    # Cheap test for checking orthonormality array columns: M.T M = I
+def is_orthonormal_columns(array, col_idx=None):
+    # Cheap test for checking orthonormality of columns of array: M.T M = I
 
     if array is None:
         return None
 
-    indx = np.arange(np.min([5, array.shape[1]]))
-    U = array[:, indx]
+    if col_idx is None:
+        col_idx =  np.arange(np.min([5, array.shape[1]]))
 
-    if np.allclose(U.T.dot(U), np.eye(indx.size)):
+    U = array[:, col_idx]
+
+    if np.allclose(U.T.dot(U), np.eye(len(col_idx))):
         return array
     else:
         raise ValueError('array does not seem orthonormal: M.T M != I')
