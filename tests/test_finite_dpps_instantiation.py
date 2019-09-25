@@ -229,6 +229,27 @@ class FiniteDppWithLikelihoodKernel(unittest.TestCase):
 
                 self.assertTrue(np.allclose(dpp.L, L))
 
+    def test_computation_of_likehood_kernel_should_raise_warning_with_L_eval(self):
+
+        def eval_L_linear(X, Y=None):
+            if Y is None:
+                return X.dot(X.T)
+            else:
+                return X.dot(Y.T)
+
+        X_data = rndm.rand(100, 6)
+
+        dpp = FiniteDPP(kernel_type='likelihood',
+                        projection=False,
+                        **{'L_eval_X_data': (eval_L_linear, X_data)})
+
+        # raise warning when projection not set to True
+        # https://docs.python.org/3/library/warnings.html
+        with warnings.catch_warnings(record=True) as w:
+            dpp.compute_L()
+
+        self.assertIn('Weird setting', str(w[-1].message))
+
     def test_computation_of_correlation_kernel_from_valid_parameters(self):
         kernel_type = 'likelihood'
 
