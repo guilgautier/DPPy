@@ -803,12 +803,7 @@ class FiniteDPP:
             if not msg:
                 print('L (likelihood) kernel computed via:')
 
-            if self.eval_L is not None:
-                msg = '- eval_L(X_data, X_data)'
-                print(msg)
-                self.L = self.eval_L(self.X_data)
-
-            elif self.L_eig_vals is not None:
+            if self.L_eig_vals is not None:
                 msg = '- U diag(eig_L) U.T'
                 print(msg)
                 self.L = (self.eig_vecs * self.L_eig_vals).dot(self.eig_vecs.T)
@@ -817,6 +812,17 @@ class FiniteDPP:
                 msg = '- L = Phi.T Phi, where Phi = L_gram_factor'
                 print(msg)
                 self.L = self.L_gram_factor.T.dot(self.L_gram_factor)
+
+            elif self.eval_L is not None:
+                warn_print = ['Weird setting:',
+                'FiniteDPP(.., **{"L_eval_X_data": (eval_L, X_data)})',
+                'When using "L_eval_X_data", you are a priori working with a big `X_data` and not willing to compute the full likelihood kernel L',
+                'Right now, the computation of L=eval_L(X_data) is performed but might be very expensive, this is at your own risk!',
+                'You might also use FiniteDPP(.., **{"L": eval_L(X_data)})']
+                warn('\n'.join(warn_print))
+                msg = '- L = eval_L(X_data, X_data)'
+                print(msg)
+                self.L = self.eval_L(self.X_data)
 
             elif self.K_eig_vals is not None:
                 try:  # to compute eigenvalues of kernel L = K(I-K)^-1
@@ -837,18 +843,6 @@ class FiniteDPP:
                 print(msg)
                 self.K_eig_vals, self.eig_vecs = la.eigh(self.K)
                 self.K_eig_vals = is_in_01(self.K_eig_vals)
-                self.compute_L(msg=True)
-
-            elif self.eval_L is not None:
-                warn_print = ['Weird setting:',
-                'FiniteDPP(.., **{"L_eval_X_data": (eval_L, X_data)})',
-                'When using "L_eval_X_data", you are a priori working with a big `X_data` and not willing to compute the full likelihood kernel L',
-                'Right now, the computation of L=eval_L(X_data) is performed but might be very expensive, this is at your own risk!',
-                'You might also use FiniteDPP(.., **{"L": eval_L(X_data)})']
-                warn('\n'.join(warn_print))
-                msg = '- L = eval_L(X_data, X_data)'
-                print(msg)
-                self.L = self.eval_L(self.X_data)
                 self.compute_L(msg=True)
 
             else:
