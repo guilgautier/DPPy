@@ -150,18 +150,20 @@ class FiniteDppWithLikelihoodKernel(unittest.TestCase):
 
     def eval_L_min(X, Y=None):
 
-        assert X.shape[1] == 1 and np.all(np.abs(X) < 1)
+        X = np.atleast_2d(X)
+        assert X.shape[1] == 1 and np.all((0<= X) & (X<= 1))
 
         if Y is None:
             Y = X
-        elif X:
-            assert Y.shape[1] == 1 and np.all(np.abs(Y) < 1)
+        else:
+            Y = np.atleast_2d(Y)
+            assert Y.shape[1] == 1 and np.all((0<= Y) & (Y<= 1))
 
         return np.minimum(np.repeat(X, Y.size, axis=1),
                           np.repeat(Y.T, X.size, axis=0))
 
-    X_data_randn = rndm.rand(rank, N)
-    X_data_abs_lt_1 = 2 * rndm.rand(N, 1) - 1
+    X_data_randn = rndm.rand(N, rank)
+    X_data_in_01 = rndm.rand(N, 1)
 
     list_of_valid_params =\
         [[True, {'L': (e_vecs * e_vals_eq_01).dot(e_vecs.T)}],
@@ -173,7 +175,7 @@ class FiniteDppWithLikelihoodKernel(unittest.TestCase):
          [False, {'L_gram_factor': phi}],
          [False, {'L_gram_factor': phi.T}],
          [False, {'L_eval_X_data': (eval_L_linear, X_data_randn)}],
-         [False, {'L_eval_X_data': (eval_L_min, X_data_abs_lt_1)}]]
+         [False, {'L_eval_X_data': (eval_L_min, X_data_in_01)}]]
 
     def test_instanciation_from_valid_parameters(self):
 

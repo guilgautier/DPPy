@@ -615,6 +615,13 @@ class FiniteDPP:
             self.L_eig_vals = is_geq_0(self.L_eig_vals)
             self.sample_exact_k_dpp(size, self.sampling_mode,
                                     random_state=rng)
+
+        elif self.eval_L is not None and self.X_data is not None:
+            # In case mode!='vfx'
+            self.compute_L()
+            self.sample_exact_k_dpp(size, self.sampling_mode,
+                                    random_state=rng)
+
         else:
             raise ValueError('None of the available samplers could be used based on the current DPP representation.'
                              ' This should never happen, please consider rasing an issue on github'
@@ -833,10 +840,16 @@ class FiniteDPP:
                 self.compute_L(msg=True)
 
             elif self.eval_L is not None:
-                msg = '- eval_L(X_data, X_data)'
+                warn_print = ['Weird setting:',
+                'FiniteDPP(.., **{"L_eval_X_data": (eval_L, X_data)})',
+                'When using "L_eval_X_data", you are a priori working with a big `X_data` and not willing to compute the full likelihood kernel L',
+                'Right now, the computation of L=eval_L(X_data) is performed but might be very expensive, this is at your own risk!',
+                'You might also use FiniteDPP(.., **{"L": eval_L(X_data)})']
+                warn('\n'.join(warn_print))
+                msg = '- L = eval_L(X_data, X_data)'
                 print(msg)
                 self.L = self.eval_L(self.X_data)
-                self.compute_K(msg=True)
+                self.compute_L(msg=True)
 
             else:
                 self.compute_K(msg=True)

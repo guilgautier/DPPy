@@ -325,7 +325,7 @@ class TestAdequationOfFiniteDppSamplers(unittest.TestCase):
     #                               dict_sampler_mode_param,
     #                               adequation_to_check)
 
-    def test_adequation_vfx_sampler(self):
+    def test_adequation_vfx_sampler_linear_kernel(self):
 
         kernel_type = 'likelihood'
 
@@ -335,31 +335,23 @@ class TestAdequationOfFiniteDppSamplers(unittest.TestCase):
             else:
                 return X.dot(Y.T)
 
-        def eval_L_min(X, Y=None):
+        X_data_randn = rndm.rand(100, 6)
 
-            assert X.shape[1] == 1 and np.all(np.abs(X) < 1)
-
-            if Y is None:
-                Y = X
-            elif X:
-                assert Y.shape[1] == 1 and np.all(np.abs(Y) < 1)
-
-            return np.minimum(np.repeat(X, Y.size, axis=1),
-                              np.repeat(Y.T, X.size, axis=0))
-
-        X_data_randn = rndm.rand(self.rank, self.N)
-        X_data_abs_lt_1 = 2 * rndm.rand(self.N, 1) - 1
-
-        print(X_data_abs_lt_1.shape)
         list_dpp_params =\
-          [[False, {'L_eval_X_data': (eval_L_linear, X_data_randn)}],
-           [False, {'L_eval_X_data': (eval_L_min, X_data_abs_lt_1)}]]
+          [[False, {'L_eval_X_data': (eval_L_linear, X_data_randn)}]]
 
-        k = self.rank // 2
+        L_lin = eval_L_linear(X_data_randn)
+        I_L_lin = L_lin + np.eye(*L_lin.shape)
+        exp_card = np.sum(np.diag(L_lin.dot(np.linalg.inv(I_L_lin))))
+        k = np.floor(exp_card).astype(int) // 2
+
+        print('E[|X|]={}, k={}'.format(exp_card, k))
 
         dict_sampler_mode_param =\
-            {'exact_dpp': {'vfx': {}},
-             'exact_k_dpp': {'vfx': {'size': k}}}
+            {'exact_dpp': {'vfx': {'verbose': False},
+                           'GS': {}},
+             'exact_k_dpp': {'vfx': {'size': k, 'verbose': False},
+                             'GS': {'size': k}}}
 
         adequation_to_check = ('cardinality', 'singleton', 'doubleton')
 
@@ -368,6 +360,48 @@ class TestAdequationOfFiniteDppSamplers(unittest.TestCase):
                                   dict_sampler_mode_param,
                                   adequation_to_check)
 
+    def test_adequation_vfx_sampler_min_kernel(self):
+
+        kernel_type = 'likelihood'
+
+        def eval_L_min(X, Y=None):
+
+            X = np.atleast_2d(X)
+            assert X.shape[1] == 1 and np.all((0<= X) & (X<= 1))
+
+            if Y is None:
+                Y = X
+            else:
+                Y = np.atleast_2d(Y)
+                assert Y.shape[1] == 1 and np.all((0<= Y) & (Y<= 1))
+
+            return np.minimum(np.repeat(X, Y.size, axis=1),
+                              np.repeat(Y.T, X.size, axis=0))
+
+        X_data_in_01 = rndm.rand(100, 1)
+
+        list_dpp_params =\
+          [[False, {'L_eval_X_data': (eval_L_min, X_data_in_01)}]]
+
+        L_min = eval_L_min(X_data_in_01)
+        I_L_min = L_min + np.eye(*L_min.shape)
+        exp_card = np.sum(np.diag(L_min.dot(np.linalg.inv(I_L_min))))
+        k = np.floor(exp_card).astype(int) // 2
+
+        print('E[|X|]={}, k={}'.format(exp_card, k))
+
+        dict_sampler_mode_param =\
+            {'exact_dpp': {'vfx': {'verbose': False},
+                           'GS': {}},
+             'exact_k_dpp': {'vfx': {'size': k, 'verbose': False},
+                             'GS': {'size': k}}}
+
+        adequation_to_check = ('cardinality', 'singleton', 'doubleton')
+
+        self.run_adequation_tests(kernel_type,
+                                  list_dpp_params,
+                                  dict_sampler_mode_param,
+                                  adequation_to_check)
 
 def main():
 

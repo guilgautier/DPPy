@@ -239,7 +239,8 @@ def vfx_sampling_precompute_constants(X,
                          'This is unusual (i.e. you are trying to select more than the overall amount of diversity '
                          'in your set.\n'
                          'Increasing the expected sample size is currently not supported (only decreasing).\n'
-                         'Please consider increasing your k or changing L: natural_s: {}'.format(natural_s))
+                         'Please consider decreasing your k={} or changing L: estimated mean cardinality: {}'.format(desired_s,
+                                                                    natural_s))
     else:
         # since this is monotone in alpha, we can simply use Brent's algorithm (bisection + tricks)
         # it is a root finding algorithm so we must create a function with a root in desired_s
