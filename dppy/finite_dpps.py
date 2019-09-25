@@ -161,10 +161,11 @@ class FiniteDPP:
         self.eval_L, self.X_data = params.get('L_eval_X_data', [None, None])
         self.intermediate_sample_info = None
 
-        if self.eval_L is not None and not callable(self.eval_L):
-            raise ValueError('eval_L should be a likelihood function between points')
+        if self.eval_L is not None:
+            if not callable(self.eval_L):
+                raise ValueError('eval_L should be a positive semi-definite kernel function')
         if self.X_data is not None:
-            if not self.X_data.size or self.X_data.ndim != 2:
+            if not (self.X_data.size and self.X_data.ndim == 2):
                 err_print = ['Wrong shape = {}'.format(self.X_data.shape),
                              'X_data should be a non empty (N x d) ndarray']
                 raise ValueError('\n'.join(err_print))
@@ -198,14 +199,18 @@ class FiniteDPP:
         if self.kernel_type == K_type:
             if self.params_keys.intersection(K_params):
                 if 'A_zono' in self.params_keys and not self.projection:
-                    warn('Weird setting: correlation kernel defined via `A_zono` but `projection`=False. `projection` switched to True')
+                    warn_print = ['Weird setting:',
+                                  'FiniteDPP(kernel_type={}, projection={}, **{"A_zono": A}) with projection=False',
+                                  'When defined through "A_zono" we expect a projection DPP with correlation kernel K = A.T (AA.T)^-1 A`.',
+                                  'projection` switched to `True`']
+                    warn('\n'.join(warn_print))
                     self.projection = True
             else:
                 err_print =\
                     ['Invalid parametrization of correlation kernel, choose:',
-                     '- `K` = 0 <= K <= I',
-                     '- `K_eig_dec` = (eig_vals, eig_vecs) 0 <= eig_vals <= 1',
-                     '- `A_zono` = A is dxN matrix, K = A.T (AA.T)^-1 A',
+                     '- {"K": K} 0 <= K <= I',
+                     '- {"K_eig_dec": (e_vals, e_vecs)} 0 <= e_vals <= 1',
+                     '- {"A_zono": A} A (dxN) s.t. K = A.T (AA.T)^-1 A',
                      'Given: {}'.format(self.params_keys)]
                 raise ValueError('\n'.join(err_print))
 
@@ -216,10 +221,10 @@ class FiniteDPP:
             else:
                 err_print =\
                     ['Invalid parametrization of likelihood kernel, choose:',
-                     '- `L` = L >= 0',
-                     '- `L_eig_dec` = (eig_vals, eig_vecs) eig_vals >= 0',
-                     '- `L_gram_factor` = Phi (dxN) where L = Phi.T Phi',
-                     '- `L_eval_X_data` = (eval_L, X_data)',
+                     '- {"L": L} L >= 0',
+                     '- {"L_eig_dec": (e_vals, e_vecs)} e_vals >= 0',
+                     '- {"L_gram_factor": Phi}, Phi (dxN) s.t. L = Phi.TPhi',
+                     '- {"L_eval_X_data": (eval_L, X_data)} X_data (dxN) and `eval_L` callable positive semi-definite kernel',
                      'Given: {}'.format(self.params_keys)]
                 raise ValueError('\n'.join(err_print))
 
@@ -381,14 +386,17 @@ class FiniteDPP:
         elif self.L_dual is not None:
             self.L_dual_eig_vals, self.L_dual_eig_vecs =\
                 la.eigh(self.L_dual)
+            self.L_dual_eig_vals = is_geq_0(self.L_dual_eig_vals)
             self.sample_exact(mode=self.sampling_mode, random_state=rng)
 
         elif self.K is not None:
             self.K_eig_vals, self.eig_vecs = la.eigh(self.K)
+            self.K_eig_vals = is_in_01(self.K_eig_vals)
             self.sample_exact(mode=self.sampling_mode, random_state=rng)
 
         elif self.L is not None:
             self.L_eig_vals, self.eig_vecs = la.eigh(self.L)
+            self.L_eig_vals = is_geq_0(self.L_eig_vals)
             self.sample_exact(mode=self.sampling_mode, random_state=rng)
 
         # If DPP defined through correlation kernel with parameter 'A_zono'
@@ -398,8 +406,12 @@ class FiniteDPP:
 
             self.K_eig_vals = np.ones(self.A_zono.shape[0])
             self.eig_vecs, _ = la.qr(self.A_zono.T, mode='economic')
-
             self.sample_exact(self.sampling_mode, random_state=rng)
+
+        elif self.eval_L is not None and self.X_data is not None:
+            self.compute_L()
+            self.sample_exact(self.sampling_mode, random_state=rng)
+
         else:
             raise ValueError('None of the available samplers could be used based on the current DPP representation.'
                              ' This should never happen, please consider rasing an issue on github'
@@ -588,16 +600,19 @@ class FiniteDPP:
         elif self.L_dual is not None:
             self.L_dual_eig_vals, self.L_dual_eig_vecs =\
                 la.eigh(self.L_dual)
+            self.L_dual_eig_vals = is_geq_0(self.L_dual_eig_vals)
             self.sample_exact_k_dpp(size, self.sampling_mode,
                                     random_state=rng)
 
         elif self.K is not None:
             self.K_eig_vals, self.eig_vecs = la.eigh(self.K)
+            self.K_eig_vals = is_in_01(self.K_eig_vals)
             self.sample_exact_k_dpp(size, self.sampling_mode,
                                     random_state=rng)
 
         elif self.L is not None:
             self.L_eig_vals, self.eig_vecs = la.eigh(self.L)
+            self.L_eig_vals = is_geq_0(self.L_eig_vals)
             self.sample_exact_k_dpp(size, self.sampling_mode,
                                     random_state=rng)
         else:
@@ -752,12 +767,7 @@ class FiniteDPP:
                 msg = '- eigendecomposition of L'
                 print(msg)
                 self.L_eig_vals, self.eig_vecs = la.eigh(self.L)
-                self.compute_K(msg=True)
-
-            elif self.eval_L is not None:
-                msg = '- eval_L(X_data, X_data)'
-                print(msg)
-                self.L = self.eval_L(self.X_data)
+                self.L_eig_vals = is_geq_0(self.L_eig_vals)
                 self.compute_K(msg=True)
 
             else:
@@ -819,7 +829,14 @@ class FiniteDPP:
                 msg = '- eigendecomposition of K'
                 print(msg)
                 self.K_eig_vals, self.eig_vecs = la.eigh(self.K)
+                self.K_eig_vals = is_in_01(self.K_eig_vals)
                 self.compute_L(msg=True)
+
+            elif self.eval_L is not None:
+                msg = '- eval_L(X_data, X_data)'
+                print(msg)
+                self.L = self.eval_L(self.X_data)
+                self.compute_K(msg=True)
 
             else:
                 self.compute_K(msg=True)
