@@ -71,8 +71,15 @@ class FiniteDPP:
 
             - ``{'L': L}``, with :math:`\\mathbf{L}\\succeq 0`
             - ``{'L_eig_dec': (eig_vals, eig_vecs)}``, with :math:`eigvals \\geq 0`
-            - ``{'L_gram_factor': Phi}``, with :math:`\\Phi(d \\times N)` so that :math:`\\mathbf{L} = \\Phi^{ \\top} \\Phi \\succeq 0_N`
-            - ``{'L_eval_X_data': (eval_L, X_data)}``, with ``X_data`` is :math:`(N \\times d)` and :math:`eval \\_ L` a positive semi-definite kernel function so that :math:`\\mathbf{L} = eval \\_ L(X_{data}, X_{data}) \\succeq 0_N`
+            - ``{'L_gram_factor': Phi}``, with :math:`\\mathbf{L} = \\Phi^{ \\top} \\Phi`
+            - ``{'L_eval_X_data': (eval_L, X_data)}``, with :math:`\mathbf{X}_{data}(N \\times d)` and
+              :math:`eval \_ L` a likelihood function such that
+              :math:`\mathbf{L} = eval \_ L(\mathbf{X}_{data}, \mathbf{X}_{data})`. For a full description of the
+              requirements imposed on `eval_L`'s interface, see the documentation :func:`dppy.vfx_sampling.vfx_sampling_precompute_constants`.
+              For an example, see the implementation of any of the kernels provided by scikit-learn
+              (e.g. sklearn.gaussian_process.kernels.PairwiseKernel).
+
+
 
     :type params:
         dict
@@ -256,7 +263,7 @@ class FiniteDPP:
         self.size_k_dpp = 0
 
     # Exact sampling
-    def sample_exact(self, mode='GS', random_state=None, **params):
+    def sample_exact(self, mode='GS', **params):
         """ Sample exactly from the corresponding :class:`FiniteDPP <FiniteDPP>` object. The sampling scheme is based on the chain rule with Gram-Schmidt like updates of the conditionals.
 
         :param mode:
@@ -271,9 +278,25 @@ class FiniteDPP:
                 - ``'GS_bis'``: Slight modification of ``'GS'``
                 - ``'Chol'`` :cite:`Pou19` Algorithm 1
                 - ``'KuTa12'``: Algorithm 1 in :cite:`KuTa12`
-                - ``'vfx'``: dpp-vfx in :cite:`DeCaVa19`
+                - ``'vfx'``: the dpp-vfx rejection sampler in :cite:`DeCaVa19`
         :type mode:
             string, default ``'GS'``
+
+        :param dict params:
+            Dictionary containing the parameters for exact samplers with keys
+
+            ``'random_state'`` (default None)
+            - If ``mode='vfx'
+                See :ref:`someref` for a full list of all parameters accepted by 'vfx' sampling. We report here the most
+                impactful
+
+                + ``'rls_oversample_dppvfx'`` (default 4.0) Oversampling parameter used to construct dppvfx's internal Nystrom approximation.
+                This makes each rejection round slower and more memory intensive, but reduces variance and the number of rounds of rejections.
+                + ``'rls_oversample_bless'`` (default 4.0) Oversampling parameter used during bless's internal Nystrom approximation.
+                This makes the one-time pre-processing slower and more memory intensive, but reduces variance and the number of rounds of rejections
+
+                Empirically, a small factor [2,10] seems to work for both parameters. It is suggested to start with
+                a small number and increase if the algorithm fails to terminate.
 
         :return:
             A sample from the corresponding :class:`FiniteDPP <FiniteDPP>` object.
@@ -297,7 +320,7 @@ class FiniteDPP:
             - :py:meth:`~FiniteDPP.sample_mcmc`
         """
 
-        rng = check_random_state(random_state)
+        rng = check_random_state(params.get('random_state', None))
 
         self.sampling_mode = mode
 
@@ -417,7 +440,7 @@ class FiniteDPP:
                              ' This should never happen, please consider rasing an issue on github'
                              ' at https://github.com/guilgautier/DPPy/issues')
 
-    def sample_exact_k_dpp(self, size, mode='GS', random_state=None, **params):
+    def sample_exact_k_dpp(self, size, mode='GS', **params):
         """ Sample exactly from :math:`\\operatorname{k-DPP}`.
         A priori the :class:`FiniteDPP <FiniteDPP>` object was instanciated by its likelihood :math:`\\mathbf{L}` kernel so that
 
@@ -438,8 +461,27 @@ class FiniteDPP:
                 - ``'GS'`` (default): Gram-Schmidt on the rows of the eigenvectors of :math:`\\mathbf{K}` selected in Phase 1.
                 - ``'GS_bis'``: Slight modification of ``'GS'``
                 - ``'KuTa12'``: Algorithm 1 in :cite:`KuTa12`
+                - ``'vfx'``: the dpp-vfx rejection sampler in :cite:`DeCaVa19`
+
         :type mode:
             string, default ``'GS'``
+
+        :param dict params:
+            Dictionary containing the parameters for exact samplers with keys
+
+            ``'random_state'`` (default None)
+
+            - If ``mode='vfx'
+                See :ref:`someref` for a full list of all parameters accepted by 'vfx' sampling. We report here the most
+                impactful
+
+                + ``'rls_oversample_dppvfx'`` (default 4.0) Oversampling parameter used to construct dppvfx's internal Nystrom approximation.
+                This makes each rejection round slower and more memory intensive, but reduces variance and the number of rounds of rejections.
+                + ``'rls_oversample_bless'`` (default 4.0) Oversampling parameter used during bless's internal Nystrom approximation.
+                This makes the one-time pre-processing slower and more memory intensive, but reduces variance and the number of rounds of rejections
+
+                Empirically, a small factor [2,10] seems to work for both parameters. It is suggested to start with
+                a small number and increase if the algorithm fails to terminate.
 
         :return:
             A sample from the corresponding :math:`\\operatorname{k-DPP}`
@@ -462,7 +504,7 @@ class FiniteDPP:
             - :py:meth:`~FiniteDPP.sample_mcmc_k_dpp`
         """
 
-        rng = check_random_state(random_state)
+        rng = check_random_state(params.get('random_state', None))
 
         self.sampling_mode = mode
 
