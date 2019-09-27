@@ -707,10 +707,10 @@ def proj_dpp_sampler_eig_KuTa12(eig_vecs, size=None, random_state=None):
 
 def dpp_vfx_sampler(intermediate_sample_info, X_data, eval_L, rng, **params):
     if intermediate_sample_info is None:
-        intermediate_sample_info = vfx_sampling_precompute_constants(X=X_data,
-                                                                          eval_L=eval_L,
-                                                                          rng=rng,
-                                                                          **params)
+        intermediate_sample_info = vfx_sampling_precompute_constants(X_data=X_data,
+                                                                     eval_L=eval_L,
+                                                                     rng=rng,
+                                                                     **params)
 
         q_func = params.get('q_func', lambda s: s * s)
         intermediate_sample_info = intermediate_sample_info._replace(q=q_func(intermediate_sample_info.s))
@@ -727,9 +727,9 @@ def dpp_vfx_sampler(intermediate_sample_info, X_data, eval_L, rng, **params):
 def k_dpp_vfx_sampler(size, intermediate_sample_info, X_data, eval_L, rng, **params):
     if (intermediate_sample_info is None
             or intermediate_sample_info.s != size):
-        intermediate_sample_info = vfx_sampling_precompute_constants(X=X_data,
+        intermediate_sample_info = vfx_sampling_precompute_constants(X_data=X_data,
                                                                      eval_L=eval_L,
-                                                                     desired_s=size,
+                                                                     desired_expected_size=size,
                                                                      rng=rng,
                                                                      **params)
 
