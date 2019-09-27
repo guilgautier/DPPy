@@ -12,6 +12,8 @@
 import numpy as np
 import scipy.linalg as la
 from dppy.utils import inner1d, check_random_state
+from dppy.vfx_sampling import (vfx_sampling_precompute_constants,
+                               vfx_sampling_do_sampling_loop)
 
 
 #####################
@@ -703,10 +705,53 @@ def proj_dpp_sampler_eig_KuTa12(eig_vecs, size=None, random_state=None):
 
     return sampl
 
+def dpp_vfx_sampler(intermediate_sample_info, X_data, eval_L, rng, **params):
+    if intermediate_sample_info is None:
+        intermediate_sample_info = vfx_sampling_precompute_constants(X=X_data,
+                                                                          eval_L=eval_L,
+                                                                          rng=rng,
+                                                                          **params)
+
+        q_func = params.get('q_func', lambda s: s * s)
+        intermediate_sample_info = intermediate_sample_info._replace(q=q_func(intermediate_sample_info.s))
+
+    sampl, rej_count = vfx_sampling_do_sampling_loop(X_data, eval_L, intermediate_sample_info, rng, **params)
+
+    return sampl, intermediate_sample_info
+
 
 ##########
 # k-DPPs #
 ##########
+
+def k_dpp_vfx_sampler(size, intermediate_sample_info, X_data, eval_L, rng, **params):
+    if (intermediate_sample_info is None
+            or intermediate_sample_info.s != size):
+        intermediate_sample_info = vfx_sampling_precompute_constants(X=X_data,
+                                                                     eval_L=eval_L,
+                                                                     desired_s=size,
+                                                                     rng=rng,
+                                                                     **params)
+
+        q_func = params.get('q_func', lambda s: s * s)
+
+        intermediate_sample_info = intermediate_sample_info._replace(q=q_func(intermediate_sample_info.s))
+
+    max_iter_size_rejection = params.get('max_iter_size_rejection', 100)
+
+    for size_rejection_iter in range(max_iter_size_rejection):
+        sampl, rej_count = vfx_sampling_do_sampling_loop(X_data, eval_L, intermediate_sample_info, rng, **params)
+
+        if len(sampl) == size:
+            break
+    else:
+        raise ValueError('The vfx sampler reached the maximum number of rejections allowed '
+                         'for the k-DPP size rejection ({}), try to increase the q factor '
+                         '(see q_func parameter) or the Nystrom approximation accuracy '
+                         'see rls_oversample_* parameters).'.format(max_iter_size_rejection))
+
+    return sampl, intermediate_sample_info
+
 
 def k_dpp_eig_vecs_selector(eig_vals, eig_vecs, size,
                             E_poly=None, random_state=None):
@@ -767,7 +812,6 @@ def k_dpp_eig_vecs_selector(eig_vals, eig_vecs, size,
                 break
 
     return eig_vecs[:, ind_selected]
-
 
 # Evaluate the elementary symmetric polynomials
 def elementary_symmetric_polynomials(eig_vals, size):
