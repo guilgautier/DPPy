@@ -260,12 +260,36 @@ class TestUtils(unittest.TestCase):
                     self.assertIn('not full row rank', str(context.exception))
 
     def test_evaluate_L_diagonal(self):
+        """ checking np.diag(dpp.L) = utils.evaluate_L_diagonal(eval_L, X_data)
         """
-        .. todo::
 
-            write the test to check
-            np.diag(dpp.L) = utils.evaluate_L_diagonal(eval_L, X_data)
-        """
+        def _eval_L_linear(X, Y=None):
+            if Y is None:
+                return X.dot(X.T)
+            else:
+                return X.dot(Y.T)
+
+        def _eval_L_min(X, Y=None):
+            X = np.atleast_2d(X)
+            assert X.shape[1] == 1 and np.all((0 <= X) & (X <= 1))
+
+            if Y is None:
+                Y = X
+            else:
+                Y = np.atleast_2d(Y)
+                assert Y.shape[1] == 1 and np.all((0 <= Y) & (Y <= 1))
+
+            return np.minimum(np.repeat(X, Y.size, axis=1),
+                              np.repeat(Y.T, X.size, axis=0))
+
+        X = rndm.randn(100, 20)
+
+        np.testing.assert_almost_equal(np.diag(_eval_L_linear(X)), utils.evaluate_L_diagonal(_eval_L_linear, X))
+
+        X = rndm.rand(100, 1)
+
+        np.testing.assert_almost_equal(np.diag(_eval_L_min(X)), utils.evaluate_L_diagonal(_eval_L_min, X))
+
         pass
 
 
