@@ -307,3 +307,32 @@ def evaluate_L_diagonal(eval_L, X):
     else:
         # inspired by sklearn.gaussian_process.kernels.PairwiseKernel
         return np.apply_along_axis(eval_L, 1, X).ravel()
+
+
+def example_eval_L_linear(X, Y=None):
+    if Y is None:
+        return X.dot(X.T)
+    else:
+        return X.dot(Y.T)
+
+def example_eval_L_polynomial(X, Y=None, p=2):
+    if Y is None:
+        ret = X.dot(X.T)
+        return np.power(ret, p, out=ret)
+    else:
+        ret = X.dot(Y.T)
+        return np.power(ret, p, out=ret)
+
+def example_eval_L_min_kern(X, Y=None):
+
+    X = np.atleast_2d(X)
+    assert X.shape[1] == 1 and np.all((0<= X) & (X<= 1))
+
+    if Y is None:
+        Y = X
+    else:
+        Y = np.atleast_2d(Y)
+        assert Y.shape[1] == 1 and np.all((0<= Y) & (Y<= 1))
+
+    return np.minimum(np.repeat(X, Y.size, axis=1),
+                      np.repeat(Y.T, X.size, axis=0))

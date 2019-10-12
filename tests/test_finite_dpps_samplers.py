@@ -23,7 +23,9 @@ import sys
 sys.path.append('..')
 
 from dppy.finite_dpps import FiniteDPP
-from dppy.utils import det_ST
+from dppy.utils import (det_ST,
+                        example_eval_L_linear,
+                        example_eval_L_min_kern)
 
 
 class TestAdequationOfFiniteDppSamplers(unittest.TestCase):
@@ -329,18 +331,11 @@ class TestAdequationOfFiniteDppSamplers(unittest.TestCase):
 
         kernel_type = 'likelihood'
 
-        def eval_L_linear(X, Y=None):
-            if Y is None:
-                return X.dot(X.T)
-            else:
-                return X.dot(Y.T)
-
         X_data_randn = rndm.rand(100, 6)
 
-        list_dpp_params =\
-          [[False, {'L_eval_X_data': (eval_L_linear, X_data_randn)}]]
+        list_dpp_params = [[False, {'L_eval_X_data': (example_eval_L_linear, X_data_randn)}]]
 
-        L_lin = eval_L_linear(X_data_randn)
+        L_lin = example_eval_L_linear(X_data_randn)
         I_L_lin = L_lin + np.eye(*L_lin.shape)
         exp_card = np.sum(np.diag(L_lin.dot(np.linalg.inv(I_L_lin))))
         k = np.floor(exp_card).astype(int) // 2
@@ -364,26 +359,11 @@ class TestAdequationOfFiniteDppSamplers(unittest.TestCase):
 
         kernel_type = 'likelihood'
 
-        def eval_L_min(X, Y=None):
-
-            X = np.atleast_2d(X)
-            assert X.shape[1] == 1 and np.all((0<= X) & (X<= 1))
-
-            if Y is None:
-                Y = X
-            else:
-                Y = np.atleast_2d(Y)
-                assert Y.shape[1] == 1 and np.all((0<= Y) & (Y<= 1))
-
-            return np.minimum(np.repeat(X, Y.size, axis=1),
-                              np.repeat(Y.T, X.size, axis=0))
-
         X_data_in_01 = rndm.rand(100, 1)
 
-        list_dpp_params =\
-          [[False, {'L_eval_X_data': (eval_L_min, X_data_in_01)}]]
+        list_dpp_params = [[False, {'L_eval_X_data': (example_eval_L_min_kern, X_data_in_01)}]]
 
-        L_min = eval_L_min(X_data_in_01)
+        L_min = example_eval_L_min_kern(X_data_in_01)
         I_L_min = L_min + np.eye(*L_min.shape)
         exp_card = np.sum(np.diag(L_min.dot(np.linalg.inv(I_L_min))))
         k = np.floor(exp_card).astype(int) // 2
