@@ -310,18 +310,22 @@ def evaluate_L_diagonal(eval_L, X):
 
 
 def example_eval_L_linear(X, Y=None):
+    X = np.atleast_2d(X)
     if Y is None:
         return X.dot(X.T)
     else:
+        Y = np.atleast_2d(Y)
         return X.dot(Y.T)
 
 def example_eval_L_polynomial(X, Y=None, p=2):
     if Y is None:
-        ret = X.dot(X.T)
-        return np.power(ret, p, out=ret)
+        ret = example_eval_L_linear(X)
+        np.power(ret, p, out=ret)
+        return ret
     else:
-        ret = X.dot(Y.T)
-        return np.power(ret, p, out=ret)
+        ret = example_eval_L_linear(X, Y)
+        np.power(ret, p, out=ret)
+        return ret
 
 def example_eval_L_min_kern(X, Y=None):
 
