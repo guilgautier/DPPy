@@ -11,6 +11,17 @@ url = {http://proceedings.mlr.press/v31/affandi13a},
 volume = {31},
 year = {2013}
 }
+@inproceedings{AlMa15,
+ author = {Alaoui, Ahmed El and Mahoney, Michael W.},
+ title = {Fast Randomized Kernel Ridge Regression with Statistical Guarantees},
+ booktitle = {Proceedings of the 28th International Conference on Neural Information Processing Systems},
+ year = {2015},
+ month = {December},
+ address = {Montreal, Canada},
+ pages = {775--783},
+ numpages = {9},
+ acmid = {2969326},
+}
 @article{Ald90,
 abstract = {A random walk on a finite graph can be used to construct a uniform random spanning tree. We show how random walk techniques can be applied to the study of several properties of the uniform random spanning tree: the proportion of leaves, the distribution of degrees, and the diameter.},
 annote = {NULL},
@@ -151,6 +162,22 @@ title = {{Perfect Simulation of Determinantal Point Processes}},
 url = {http://arxiv.org/abs/1311.1027},
 year = {2013}
 }
+@InProceedings{Dere19,
+  title = 	 {Fast determinantal point processes via distortion-free intermediate sampling},
+  author = 	 {Derezi{\'n}ski, Micha{\l}},
+  booktitle = 	 {Proceedings of the Thirty-Second Conference on Learning Theory},
+  pages = 	 {1029--1049},
+  year = 	 {2019},
+  editor = 	 {Beygelzimer, Alina and Hsu, Daniel},
+  volume = 	 {99},
+  series = 	 {Proceedings of Machine Learning Research},
+  address = 	 {Phoenix, USA},
+  month = 	 {25--28 Jun},
+  publisher = 	 {PMLR},
+  pdf = 	 {http://proceedings.mlr.press/v99/derezinski19a/derezinski19a.pdf},
+  url = 	 {http://proceedings.mlr.press/v99/derezinski19a.html},
+  abstract = 	 { Given a fixed $n\times d$ matrix $\mathbf{X}$, where $n\gg d$, we study the complexity of sampling from a  distribution over all subsets of rows where the probability of a subset is proportional to the squared volume of the parallelepiped spanned by the rows (a.k.a. a determinantal point process). In this task, it is important to minimize the preprocessing cost of the procedure (performed once) as well as the  sampling cost (performed repeatedly). To that end, we propose a new determinantal point process algorithm which has the following two properties, both of which are novel: (1) a preprocessing step which runs in time $O\big(\text{number-of-non-zeros}(\mathbf{X})\cdot\log n\big)+\text{poly}(d)$, and (2) a sampling step which runs in $\text{poly}(d)$ time, independent of the number of rows $n$. We achieve this by introducing a new \textit{regularized} determinantal point process (R-DPP), which serves as an intermediate distribution in the sampling procedure by reducing the number of rows from $n$ to $\text{poly}(d)$. Crucially, this intermediate distribution does not distort the probabilities of the target sample. Our key novelty in defining the R-DPP  is the use of a Poisson random variable for controlling the probabilities of different subset sizes, leading to new determinantal formulas such as the normalization constant for this distribution. Our algorithm has applications in many diverse areas where determinantal point processes have been used, such as  machine learning, stochastic optimization, data summarization and low-rank matrix reconstruction.}
+}
 @inproceedings{DeCaVa19,
 abstract = {We study the complexity of sampling from a distribution over all index subsets of the set {\{}1, ..., n{\}} with the probability of a subset S proportional to the determinant of the submatrix L S of some n × n p.s.d. matrix L, where L S corresponds to the entries of L indexed by S. Known as a de-terminantal point process (DPP), this distribution is widely used in machine learning to induce diversity in subset selection. In practice, we often wish to sample multiple subsets S with small expected size k = E[|S|] n from a very large matrix L, so it is important to minimize the pre-processing cost of the procedure (performed once) as well as the sampling cost (performed repeatedly). To that end, we propose a new algorithm which, given access to L, samples exactly from a DPP while satisfying the following two properties: (1) its preprocessing cost is n {\textperiodcentered} poly(k) (sublinear in the size of L) and (2) its sampling cost is poly(k) (independent of the size of L). Prior to this work, state-of-the-art exact samplers required O(n 3) preprocessing time and sampling time linear in n or dependent on L's spectrum.},
 archivePrefix = {arXiv},
@@ -162,6 +189,16 @@ file = {:Users/ggautier/Documents/Mendeley Desktop/Derez{\'{i}}, Calandriello, V
 title = {{Exact sampling of determinantal point processes with sublinear time preprocessing}},
 url = {https://negative-dependence-in-ml-workshop.lids.mit.edu/wp-content/uploads/sites/29/2019/06/icml.pdf},
 year = {2019}
+}
+@incollection{DeWaHs18,
+title = {Leveraged volume sampling for linear regression},
+author = {Derezinski, Michal and Warmuth, Manfred K and Hsu, Daniel J},
+booktitle = {Advances in Neural Information Processing Systems 31},
+editor = {S. Bengio and H. Wallach and H. Larochelle and K. Grauman and N. Cesa-Bianchi and R. Garnett},
+pages = {2505--2514},
+year = {2018},
+publisher = {Curran Associates, Inc.},
+url = {http://papers.nips.cc/paper/7517-leveraged-volume-sampling-for-linear-regression.pdf}
 }
 @article{DuEd15,
 abstract = {The four major asymptotic level density laws of random matrix theory may all be showcased though their Jacobi parameter representation as having a bordered Toeplitz form. We compare and contrast these laws, completing and exploring their representations in one place. Inspired by the bordered Toeplitz form, we propose an algorithm for the finite moment problem by proposing a solution whose density has a bordered Toeplitz form.},
@@ -663,12 +700,12 @@ title = {{Gaussian processes for machine learning}},
 url = {http://www.gaussianprocess.org/gpml/},
 year = {2006}
 }
-@inproceedings{RuCaCaRo18,
-  title={On fast leverage score sampling and optimal learning},
-  author={Rudi, Alessandro and Calandriello, Daniele and Carratino, Luigi and Rosasco, Lorenzo},
-  booktitle={Advances in Neural Information Processing Systems},
-  pages={5672--5682},
-  year={2018}
+@incollection{RuCaCaRo18,
+title = {On Fast Leverage Score Sampling and Optimal Learning},
+author = {Rudi, Alessandro and Calandriello, Daniele and Carratino, Luigi and Rosasco, Lorenzo},
+booktitle = {Advances in Neural Information Processing Systems 31},
+pages = {5672--5682},
+year = {2018},
 }
 @article{Sos00,
 abstract = {The paper contains an exposition of recent as well as old enough results on determinantal random point fields. We start with some general theorems including the proofs of the necessary and sufficient condition for the existence of the determinantal random point field with Hermitian kernel and a criterion for the weak convergence of its distribution. In the second section we proceed with the examples of the determinantal random point fields from Quantum Mechanics, Statistical Mechanics, Random Matrix Theory, Probability Theory, Representation Theory and Ergodic Theory. In connection with the Theory of Renewal Processes we characterize all determinantal random point fields in R{\^{}}1 and Z{\^{}}1 with independent identically distributed spacings. In the third section we study the translation invariant determinantal random point fields and prove the mixing property of any multiplicity and the absolute continuity of the spectra. In the fourth (and the last) section we discuss the proofs of the Central Limit Theorem for the number of particles in the growing box and the Functional Central Limit Theorem for the empirical distribution function of spacings.},
