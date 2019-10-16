@@ -278,24 +278,24 @@ class FiniteDPP:
                 - ``'Chol'`` :cite:`Pou19` Algorithm 1
                 - ``'KuTa12'``: Algorithm 1 in :cite:`KuTa12`
                 - ``'vfx'``: the dpp-vfx rejection sampler in :cite:`DeCaVa19`
+
         :type mode:
             string, default ``'GS'``
 
         :param dict params:
             Dictionary containing the parameters for exact samplers with keys
 
-            ``'random_state'`` (default None)
-            - If ``mode='vfx'
-                See :ref:`someref` for a full list of all parameters accepted by 'vfx' sampling. We report here the most
-                impactful
+            - ``'random_state'`` (default None)
+            - If ``mode='vfx'``
 
-                + ``'rls_oversample_dppvfx'`` (default 4.0) Oversampling parameter used to construct dppvfx's internal Nystrom approximation.
-                This makes each rejection round slower and more memory intensive, but reduces variance and the number of rounds of rejections.
-                + ``'rls_oversample_bless'`` (default 4.0) Oversampling parameter used during bless's internal Nystrom approximation.
-                This makes the one-time pre-processing slower and more memory intensive, but reduces variance and the number of rounds of rejections
+                .. todo::
 
-                Empirically, a small factor [2,10] seems to work for both parameters. It is suggested to start with
-                a small number and increase if the algorithm fails to terminate.
+                    See SOMEREF for a full list of all parameters accepted by 'vfx' sampling. We report here the most impactful
+
+                + ``'rls_oversample_dppvfx'`` (default 4.0) Oversampling parameter used to construct dppvfx's internal Nystrom approximation. This makes each rejection round slower and more memory intensive, but reduces variance and the number of rounds of rejections.
+                + ``'rls_oversample_bless'`` (default 4.0) Oversampling parameter used during bless's internal Nystrom approximation. This makes the one-time pre-processing slower and more memory intensive, but reduces variance and the number of rounds of rejections
+
+                Empirically, a small factor [2,10] seems to work for both parameters. It is suggested to start with a small number and increase if the algorithm fails to terminate.
 
         :return:
             A sample from the corresponding :class:`FiniteDPP <FiniteDPP>` object.
@@ -459,14 +459,14 @@ class FiniteDPP:
 
             ``'random_state'`` (default None)
 
-            - If ``mode='vfx'
-                See :ref:`someref` for a full list of all parameters accepted by 'vfx' sampling. We report here the most
-                impactful
+            - If ``mode='vfx'``
 
-                + ``'rls_oversample_dppvfx'`` (default 4.0) Oversampling parameter used to construct dppvfx's internal Nystrom approximation.
-                This makes each rejection round slower and more memory intensive, but reduces variance and the number of rounds of rejections.
-                + ``'rls_oversample_bless'`` (default 4.0) Oversampling parameter used during bless's internal Nystrom approximation.
-                This makes the one-time pre-processing slower and more memory intensive, but reduces variance and the number of rounds of rejections
+                .. todo::
+
+                    See SOMEREF for a full list of all parameters accepted by 'vfx' sampling. We report here the most impactful
+
+                + ``'rls_oversample_dppvfx'`` (default 4.0) Oversampling parameter used to construct dppvfx's internal Nystrom approximation. This makes each rejection round slower and more memory intensive, but reduces variance and the number of rounds of rejections.
+                + ``'rls_oversample_bless'`` (default 4.0) Oversampling parameter used during bless's internal Nystrom approximation. This makes the one-time pre-processing slower and more memory intensive, but reduces variance and the number of rounds of rejections
 
                 Empirically, a small factor [2,10] seems to work for both parameters. It is suggested to start with
                 a small number and increase if the algorithm fails to terminate.

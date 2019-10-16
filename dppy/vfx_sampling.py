@@ -259,10 +259,10 @@ def vfx_sampling_precompute_constants(X_data,
                     - desired_expected_size
                    )
 
-        alpha_star, opt_result = brentq(f_opt,
-                                        a=10.0 * np.finfo(np.float).eps,
-                                        b=1.0,
-                                        full_output=True)
+        alpha_star, opt_result = brentq(temp_func_with_root_in_desired_expected_size,
+            a=10.0 * np.finfo(np.float).eps,
+            b=1.0,
+            full_output=True)
 
         if not opt_result.converged:
             raise ValueError('Could not find an appropriate rescaling for desired_expected_size.'

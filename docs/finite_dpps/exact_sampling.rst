@@ -552,19 +552,45 @@ This method is based on the concept of a **distortion-free intermediate sample**
 
 	\mathbb{P}[i \in \mathcal{X}] = \big[\mathbf{L}(I + \mathbf{L})^{-1}\big]_{ii}=\tau_i,\quad i\text{th 1-ridge leverage score}.
 
-Suppose that we draw a sample of :math:`t` points i.i.d. proportional to ridge leverage scores, i.e., :math:`\sigma=(\sigma_1, \sigma_2,...,\sigma_t)` such that :math:`\mathbb{P}[\sigma_j=i]\propto\tau_i`. Intuitively, this sample is similar fo :math:`\mathcal{X}\sim \operatorname{DPP}(\mathbf{L})` except that it "ignores" all the dependencies between the points. However, if we sample sufficiently many points i.i.d. according to RLS, then a proper sample :math:`\mathcal{X}` will likely be contained within it. This can be formally shown for :math:`t = O(\mathbb{E}[|\mathcal{X}|]^2)`. When :math:`\mathbb{E}[|\mathcal{X}|]^2\ll N`, then this allows us to reduce the size of the DPP kernel from :math:`N\times N` to a much smaller size :math:`t\times t`. Making this sampling exact requires considerably more care, because even with a large :math:`t` there is always a small probability that the i.i.d. sample :math:`\sigma` is not sufficiently diverse. We guard against this possibility by rejection sampling.
+Suppose that we draw a sample of :math:`t` points i.i.d. proportional to ridge leverage scores, i.e., :math:`\sigma=(\sigma_1, \sigma_2,...,\sigma_t)` such that :math:`\mathbb{P}[\sigma_j=i]\propto\tau_i`. Intuitively, this sample is similar fo :math:`\mathcal{X}\sim \operatorname{DPP}(\mathbf{L})` except that it "ignores" all the dependencies between the points. However, if we sample sufficiently many points i.i.d. according to RLS, then a proper sample :math:`\mathcal{X}` will likely be contained within it. This can be formally shown for :math:`t = O(\mathbb{E}[|\mathcal{X}|]^2)`. When :math:`\mathbb{E}[|\mathcal{X}|]^2\ll N`, then this allows us to reduce the size of the DPP kernel :math:`\mathbf{L}` from :math:`N\times N` to a much smaller size :math:`\mathbf{\tilde{L}}` :math:`t\times t`. Making this sampling exact requires considerably more care, because even with a large :math:`t` there is always a small probability that the i.i.d. sample :math:`\sigma` is not sufficiently diverse. We guard against this possibility by rejection sampling.
 
 .. important::
    Use this method for sampling  :math:`\mathcal{X} \sim \operatorname{DPP}(\mathbf{L})` when :math:`\mathbb{E}\left[|\mathcal{X}|\right]\ll\sqrt{N}`.
-   
+
    - Preprocessing costs :math:`\mathcal{O}\big(N\cdot \text{poly}(\mathbb{E}\left[|\mathcal{X}|\right])\, \text{polylog}(N)\big)`.
    - Each sample costs :math:`\mathcal{O}\big(\mathbb{E}[|\mathcal{X}|]^6\big)`.
 
-
-
-
 In practice
 ===========
+
+.. todo::
+
+	Put some test code in the same spirit as the other techniques
+
+	# .. testcode::
+
+		from numpy.random import RandomState
+		from scipy.linalg import qr
+		from dppy.finite_dpps import FiniteDPP
+
+		rng = RandomState(1)
+
+		r, N = 4, 10
+		eig_vals = rng.rand(r)  # For projection DPP
+		eig_vecs, _ = qr(rng.randn(N, r), mode='economic')
+
+		DPP = FiniteDPP(kernel_type='correlation',
+						projection=False,
+						**{'K': (eig_vecs*eig_vals).dot(eig_vecs.T)})
+
+		for _ in range(10):
+			DPP.sample_exact(mode='Chol', random_state=rng)
+
+		print(list(map(list, DPP.list_of_samples)))
+
+	# .. testoutput::
+
+		[[2, 9], [0], [2], [6], [4, 9], [2, 7, 9], [0], [1, 9], [0, 1, 2], [2]]
 
 Given, the RLS :math:`\tau_1,\dots,\tau_N`, the normalization constant :math:`\det(I+\tilde{\mathbf L}_\sigma)` and access to the likelihood kernel :math:`\tilde{\mathbf L}_\sigma`, the intermediate sampling method proceeds as follows:
 
@@ -579,7 +605,7 @@ Given, the RLS :math:`\tau_1,\dots,\tau_N`, the normalization constant :math:`\d
 
 
 It can be shown that :math:`\mathcal{X}` is distributed exactly according to :math:`\operatorname{DPP}(\mathbf{L})` and the expected number of rejections is a small constant. The intermediate likelihood kernel :math:`\tilde{\mathbf L}_\sigma` forms a :math:`t\times t` DPP subproblem that can be solved using any other DPP sampler.
-   
+
    - Since the size of the intermediate sample is :math:`t=\mathcal{O}(\mathbb{E}[\mathcal{X}]^2)`, the primary cost of the sampling is computing :math:`\det(I+\tilde{\mathbf L}_\sigma)` which takes :math:`\mathcal{O}(t^3)=\mathcal{O}(\mathbb{E}[\mathcal{X}]^6)` time. This is also the expected cost of sampling from :math:`\operatorname{DPP}(\tilde{\mathbf{L}}_{\sigma})` if we use, for example, the spectral method.
    - The algorithm requires precomputing the RLS :math:`\tau_1,\dots,\tau_n` and :math:`\det(I+\mathbf L)`. Computing them exactly takes :math:`\mathcal{O}(N^3)`, however, surprisingly, if we use sufficiently accurate approximations then the exactness of the sampling can be retained (details in :cite:`DeCaVa19`). Efficient methods for approximating leverage scores (see :cite:`RuCaCaRo18`) bring the precomputing cost down to :math:`\mathcal{O}(N \text{poly}(\mathbb{E}\left[|\mathcal{X}|\right]) \text{polylog}(N))`.
    - When :math:`\mathbb{E}[|\mathcal{X}|]` is sufficiently small, the entire sampling procedure only looks at a small fraction of the entries of :math:`\mathbf{L}`. This makes the method useful when we want to avoid constructing the entire likelihood kernel.
@@ -590,7 +616,7 @@ It can be shown that :math:`\mathcal{X}` is distributed exactly according to :ma
 .. seealso::
 
 	- :cite:`DeCaVa19` (Likelihood kernel)
-	- :cite:`Dere19` (Dual formulation)	  
+	- :cite:`Dere19` (Dual formulation)
 	- :cite:`DeWaHs18` (Projection DPP)
 
 
@@ -832,7 +858,7 @@ where the last equality is a simple computation of the `elementary symmetric pol
 
 .. important::
 
-	This shows that, when :math:`\mathbf{L}` is an orthogonal projection matrix, the order the items :math:`s_1, \dots, s_r` we selected by the chain rule :eq:`eq:chain_rule_caution_vector` can be forgotten, so that :math:`\{s_1, \dots, s_r\}` can be considered as valid sample of :math:`k\!\operatorname{-DPP}(\mathbf{L})`.
+	This shows that, when :math:`\mathbf{L}` is an orthogonal projection matrix, the order the items :math:`s_1, \dots, s_r` were selected by the chain rule :eq:`eq:chain_rule_caution_vector` can be forgotten, so that :math:`\{s_1, \dots, s_r\}` can be considered as valid sample of :math:`k\!\operatorname{-DPP}(\mathbf{L})`.
 
 .. code-block:: python
 
