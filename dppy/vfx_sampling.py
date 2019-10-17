@@ -55,7 +55,7 @@ def compute_nystrom_dict(X_data, eval_L, rls_oversample_bless, rls_oversample_dp
     # Phase 1: compute initial dictionary D_bless with small rls_oversample_bless
     # D_bless is used only to estimate all RLS
 
-    dict_bless = bless(X_data, eval_L, 1.0, rls_oversample_bless, rng, nb_iter_bless=nb_iter_bless)
+    dict_bless = bless(X_data, eval_L, 1.0, rls_oversample_bless, rng, nb_iter_bless=nb_iter_bless, verbose=verbose)
 
     bless_rls_estimate = estimate_rls_bless(dict_bless, X_data, eval_L, 1.0)
 
@@ -259,7 +259,7 @@ def vfx_sampling_precompute_constants(X_data,
                     - desired_expected_size
                    )
 
-        alpha_star, opt_result = brentq(f_opt,
+        alpha_star, opt_result = brentq(temp_func_with_root_in_desired_expected_size,
                                         a=10.0 * np.finfo(np.float).eps,
                                         b=1.0,
                                         full_output=True)
