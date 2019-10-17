@@ -311,7 +311,7 @@ def vfx_sampling_precompute_constants(X_data,
     return result
 
 
-def vfx_sampling_do_sampling_loop(X_data, eval_L, intermediate_sample_info, rng, max_iter=1000, verbose=True):
+def vfx_sampling_do_sampling_loop(X_data, eval_L, intermediate_sample_info, rng, max_iter=1000, verbose=True, **kwargs):
     """Given pre-computed information, run a rejection sampling loop to generate DPP samples.
         :param array_like X_data: dataset such that L = eval_L(X_data), out of which we are sampling objects
         according to a DPP
@@ -323,20 +323,6 @@ def vfx_sampling_do_sampling_loop(X_data, eval_L, intermediate_sample_info, rng,
         :param _IntermediateSampleInfo: Pre-computed information necessary for the vfx rejection sampling loop,
         as returned by :func:`vfx_sampling_precompute_constants`
         :param RandomState rng: random source used for sampling
-
-        - result.alpha_star: appropriate rescaling such that the expected sample size of DPP(alpha_star * L) is equal
-        to a user-indicated constant desired_expected_size, or 1.0 if no such constant was specified by the user.
-        - result.logdet_I_A: log determinant of the Nystrom approximation of L + I
-        - result.q: placeholder q constant used for vfx sampling, to be replaced by the user before the sampling loop
-        - result.s and result.z: approximations of the expected sample size of DPP(alpha_star * L) to be used in
-        the sampling loop. For more details see [DeCaVa19]
-        - result.rls_estimate: approximations of the RLS of all elements in X (i.e. in L)
-        :rtype: _IntermediateSampleInfo
-
-        :param array_like X: dataset such that L = eval_L(X), out of which we are sampling objects according to a DPP
-        :param callable eval_L: likelihood function
-        :param intermediate_sample_info:
-        :param RandomState rng: random source used for sampling
         :param max_iter:
         :type max_iter:
             int, default 1000
@@ -346,8 +332,15 @@ def vfx_sampling_do_sampling_loop(X_data, eval_L, intermediate_sample_info, rng,
             - rej_iter: iteration of the rejection sampling loop (i.e. rejections so far)
         :type verbose:
             bool, default True
-        :return:
+        :param dict kwargs: we add a unused catch all kwargs argument to make sure that the user can pass the
+        same set of parameters to both vfx_sampling_precompute_constants and vfx_sampling_do_sampling_loop. This
+        way if there is any spurious non-shared parameter (e.g. rls_oversample_bless) we simply ignore it.
+        :return: Sample from a DPP (as a list) and number of rejections as int
+        :rtype: tuple(list, int)
     """
+    #TODO: taking as input a catch-all kwargs can be misleading for the user. e.g. if there is a typo in a paremater
+    # it will silently ignore it and use the default instead
+
     n, d = X_data.shape
 
     # rename it to pre-computed state for shortness
