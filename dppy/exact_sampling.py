@@ -23,6 +23,7 @@ from dppy.vfx_sampling import (vfx_sampling_precompute_constants,
 def proj_dpp_sampler_kernel(kernel, mode='GS', size=None, random_state=None):
     """
     .. seealso::
+
         - :func:`proj_dpp_sampler_kernel_GS <proj_dpp_sampler_kernel_GS>`
         - :func:`proj_dpp_sampler_kernel_Schur <proj_dpp_sampler_kernel_Schur>`
         - :func:`proj_dpp_sampler_kernel_Chol <proj_dpp_sampler_kernel_Chol>`

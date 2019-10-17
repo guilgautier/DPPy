@@ -151,13 +151,13 @@ class FiniteDppWithLikelihoodKernel(unittest.TestCase):
     def eval_L_min(X, Y=None):
 
         X = np.atleast_2d(X)
-        assert X.shape[1] == 1 and np.all((0<= X) & (X<= 1))
+        assert X.shape[1] == 1 and np.all((0 <= X) & (X <= 1))
 
         if Y is None:
             Y = X
         else:
             Y = np.atleast_2d(Y)
-            assert Y.shape[1] == 1 and np.all((0<= Y) & (Y<= 1))
+            assert Y.shape[1] == 1 and np.all((0 <= Y) & (Y <= 1))
 
         return np.minimum(np.repeat(X, Y.size, axis=1),
                           np.repeat(Y.T, X.size, axis=0))

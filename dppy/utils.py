@@ -107,7 +107,7 @@ def is_square(array):
         return None
 
     shape = array.shape
-    if  len(shape) == 2 and len(set(shape)) == 1:
+    if len(shape) == 2 and len(set(shape)) == 1:
         return array
     else:
         raise ValueError('array not 2D square: shape={}'.format(shape))
@@ -138,7 +138,7 @@ def is_projection(array, col_idx=None):
     array = is_square(array)
 
     if col_idx is None:
-        col_idx =  np.arange(min(20, array.shape[0]))
+        col_idx = np.arange(min(20, array.shape[0]))
 
     M_j = array[:, col_idx]
     Mjj = array[col_idx, col_idx]
@@ -156,7 +156,7 @@ def is_orthonormal_columns(array, col_idx=None):
         return None
 
     if col_idx is None:
-        col_idx =  np.arange(np.min([5, array.shape[1]]))
+        col_idx = np.arange(np.min([5, array.shape[1]]))
 
     U = array[:, col_idx]
 
@@ -222,6 +222,7 @@ def is_full_row_rank(array):
         else:
             raise ValueError(err_print + 'd(={}) != rank(={})'.format(d, rank))
 
+
 def stable_invert_root(eigenvec, eigenval):
     """ Given eigendecomposition of a PSD matrix, compute a representation of the pseudo-inverse square root
     of the matrix using numerically stable operations. In particular, eigenvalues which are near-zero
@@ -230,8 +231,7 @@ def stable_invert_root(eigenvec, eigenval):
     n = eigenvec.shape[0]
 
     if eigenvec.shape != (n, n) or eigenval.shape != (n,):
-        raise ValueError('array sizes of {} eigenvectors and {} eigenvalues do not match'.format(eigenvec.shape,
-                                                                                                 eigenval.shape))
+        raise ValueError('array sizes of {} eigenvectors and {} eigenvalues do not match'.format(eigenvec.shape, eigenval.shape))
 
     # threshold formula taken from pinv2's implementation of numpy/scipy
     thresh = eigenval.max() * max(eigenval.shape) * np.finfo(eigenval.dtype).eps
@@ -242,12 +242,12 @@ def stable_invert_root(eigenvec, eigenval):
     eigenval_thin = eigenval[stable_eig]
 
     if eigenvec_thin.shape != (n, m) or eigenval_thin.shape != (m,):
-        raise ValueError('array sizes of {} eigenvectors and {} eigenvalues do not match'.format(eigenvec.shape,
-                                                                                                 eigenval.shape))
+        raise ValueError('array sizes of {} eigenvectors and {} eigenvalues do not match'.format(eigenvec.shape, eigenval.shape))
 
     eigenval_thin_inv_root = (1 / np.sqrt(eigenval_thin)).reshape(-1, 1)
 
     return eigenvec_thin, eigenval_thin_inv_root
+
 
 def get_progress_bar(total=-1, disable=False, **kwargs):
     """Helper function to get a tqdm progress bar (or a simple fallback otherwise)"""
@@ -295,6 +295,7 @@ def get_progress_bar(total=-1, disable=False, **kwargs):
 
     return progress_bar
 
+
 def evaluate_L_diagonal(eval_L, X):
     """
     .. todo::
@@ -317,6 +318,7 @@ def example_eval_L_linear(X, Y=None):
         Y = np.atleast_2d(Y)
         return X.dot(Y.T)
 
+
 def example_eval_L_polynomial(X, Y=None, p=2):
     if Y is None:
         ret = example_eval_L_linear(X)
@@ -327,16 +329,17 @@ def example_eval_L_polynomial(X, Y=None, p=2):
         np.power(ret, p, out=ret)
         return ret
 
+
 def example_eval_L_min_kern(X, Y=None):
 
     X = np.atleast_2d(X)
-    assert X.shape[1] == 1 and np.all((0<= X) & (X<= 1))
+    assert X.shape[1] == 1 and np.all((0 <= X) & (X <= 1))
 
     if Y is None:
         Y = X
     else:
         Y = np.atleast_2d(Y)
-        assert Y.shape[1] == 1 and np.all((0<= Y) & (Y<= 1))
+        assert Y.shape[1] == 1 and np.all((0 <= Y) & (Y <= 1))
 
     return np.minimum(np.repeat(X, Y.size, axis=1),
                       np.repeat(Y.T, X.size, axis=0))
