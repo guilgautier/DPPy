@@ -33,7 +33,7 @@ class TestBless(unittest.TestCase):
 
     def __create_lambda_acc_dictionary(self, X_data, eval_L, lam, rng):
         n = X_data.shape[0]
-        rls_oversample = 4
+        rls_oversample = 5
         diag_norm = np.asarray(evaluate_L_diagonal(eval_L, X_data))
         init_rls_estimate = diag_norm / (diag_norm + lam)
 
@@ -54,7 +54,7 @@ class TestBless(unittest.TestCase):
         lam = 11
         lam_new = 10
         rng = check_random_state(self.seed)
-        X_data = np.random.randn(N, d)
+        X_data = rng.randn(N, d)
         L_data = example_eval_L_polynomial(X_data)
 
         rls_exact = np.linalg.solve(L_data + lam_new*np.eye(N), L_data).diagonal()
@@ -74,7 +74,7 @@ class TestBless(unittest.TestCase):
         lam = 11
         lam_new = 10
         rng = check_random_state(self.seed)
-        X_data = np.random.randn(N, d)
+        X_data = rng.randn(N, d)
         L_data = example_eval_L_polynomial(X_data)
 
         rls_exact = np.linalg.solve(L_data + lam*np.eye(N), L_data).diagonal()
@@ -93,7 +93,7 @@ class TestBless(unittest.TestCase):
         N, d = 100, 5
         lam = 11
         rng = check_random_state(self.seed)
-        X_data = np.random.randn(N, d)
+        X_data = rng.randn(N, d)
         L_data = example_eval_L_polynomial(X_data)
 
         rls_exact = np.linalg.solve(L_data + lam*np.eye(N), L_data).diagonal()
