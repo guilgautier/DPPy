@@ -371,9 +371,11 @@ class TestAdequationOfFiniteDppSamplers(unittest.TestCase):
         print('E[|X|]={}, k={}'.format(exp_card, k))
 
         dict_sampler_mode_param =\
-            {'exact_dpp': {'vfx': {'verbose': False},
+            {'exact_dpp': {'vfx': {'verbose': False,
+                                   'rls_oversample_bless': 10},
                            'GS': {}},
-             'exact_k_dpp': {'vfx': {'size': k, 'verbose': False},
+             'exact_k_dpp': {'vfx': {'size': k, 'verbose': False,
+                                     'rls_oversample_bless': 10},
                              'GS': {'size': k}}}
 
         adequation_to_check = ('cardinality', 'singleton', 'doubleton')
