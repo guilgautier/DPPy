@@ -126,7 +126,7 @@ class MultivariateJacobiOPE:
         """Evaluate :math:`w(x) = \\prod_{i=1}^{d} (1-x^i)^{a_i} (1+x^i)^{b_i}` which corresponds to the density of the base measure :math:`\\mu` if ``jac_params`` is ``None``.
 
         :param X:
-            Array of points :math:`\\in [-1, 1]^d`, with size :math:`n\\times d` where :math:`n` is the number of points
+            Array of points :math:`\\in [-1, 1]^d`, with size :math:`N\\times d` where :math:`N` is the number of points
         :type X:
             array_like
 
@@ -177,12 +177,12 @@ class MultivariateJacobiOPE:
                 \\propto \\delta_{k\\ell}
 
         :param X:
-            Array of points :math:`\\in [-1, 1]^d`, with size :math:`n\\times d` where :math:`n` is the number of points
+            Array of points :math:`\\in [-1, 1]^d`, with size :math:`N\\times d` where :math:`N` is the number of points
         :type X:
             array_like
 
         :param Y:
-            Array of points :math:`\\in [-1, 1]^d`, with size :math:`n\\times d` where :math:`n` is the number of points
+            Array of points :math:`\\in [-1, 1]^d`, with size :math:`N\\times d` where :math:`N` is the number of points
         :type Y:
             array_like (default None)
 
@@ -342,7 +342,7 @@ class MultivariateJacobiOPE:
         """Evaluate (and potentially normalize) multivariate Jacobi polynomials :math:`P_{k}(x) = \\prod_{i=1}^d P_{k_i}^{a_i, b_i}(x_i)`
 
         :param X:
-            Array of points :math:`\\in [-1, 1]^d`, with size :math:`n\\times d` where :math:`n` is the number of points
+            Array of points :math:`\\in [-1, 1]^d`, with size :math:`N\\times d` where :math:`N` is the number of points
         :type X:
             array_like
 
