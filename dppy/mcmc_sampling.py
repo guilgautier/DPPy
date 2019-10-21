@@ -601,4 +601,4 @@ def zonotope_sampler(A_zono, **params):
             if time.time() - t_start < T_max:
                 break
 
-    return chain
+    return chain.tolist()

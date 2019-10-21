@@ -214,7 +214,7 @@ def proj_dpp_sampler_kernel_GS(K, size=None, random_state=None):
 
         norm_2[avail] -= c[avail, it]**2
 
-    return sampl
+    return sampl.tolist()
 
 
 def proj_dpp_sampler_kernel_Schur(K, size=None, random_state=None):
@@ -308,7 +308,7 @@ def proj_dpp_sampler_kernel_Schur(K, size=None, random_state=None):
         schur_comp[avail] = K[avail, avail]\
                         - inner1d(K_iY.dot(K_inv[:it+1, :it+1]), K_iY, axis=1)
 
-    return sampl
+    return sampl.tolist()
 
 
 ##################
@@ -545,7 +545,7 @@ def proj_dpp_sampler_eig_GS(eig_vecs, size=None,
 
         norms_2[avail] -= c[avail, it]**2  # update residual norm^2
 
-    return sampl
+    return sampl.tolist()
 
 
 # Slight modif of Gram-Schmidt above
@@ -639,7 +639,7 @@ def proj_dpp_sampler_eig_GS_bis(eig_vecs, size=None, random_state=None):
         #                                   |P_{V_Y}^{orthog} V_j|^2
         norms_2[avail] -= contrib[avail, it]**2 / norms_2[j]
 
-    return sampl
+    return sampl.tolist()
 
 
 def proj_dpp_sampler_eig_KuTa12(eig_vecs, size=None, random_state=None):
@@ -704,14 +704,15 @@ def proj_dpp_sampler_eig_KuTa12(eig_vecs, size=None, random_state=None):
 
         norms_2 = inner1d(V, axis=1)  # ||V_i:||^2
 
-    return sampl
+    return sampl.tolist()
 
 def dpp_vfx_sampler(intermediate_sample_info, X_data, eval_L, rng, **params):
     if intermediate_sample_info is None:
-        intermediate_sample_info = vfx_sampling_precompute_constants(X_data=X_data,
-                                                                     eval_L=eval_L,
-                                                                     rng=rng,
-                                                                     **params)
+        intermediate_sample_info = vfx_sampling_precompute_constants(
+                                    X_data=X_data,
+                                    eval_L=eval_L,
+                                    rng=rng,
+                                    **params)
 
         q_func = params.get('q_func', lambda s: s * s)
         intermediate_sample_info = intermediate_sample_info._replace(q=q_func(intermediate_sample_info.s))
@@ -727,12 +728,13 @@ def dpp_vfx_sampler(intermediate_sample_info, X_data, eval_L, rng, **params):
 
 def k_dpp_vfx_sampler(size, intermediate_sample_info, X_data, eval_L, rng, **params):
     if (intermediate_sample_info is None
-            or intermediate_sample_info.s != size):
-        intermediate_sample_info = vfx_sampling_precompute_constants(X_data=X_data,
-                                                                     eval_L=eval_L,
-                                                                     desired_expected_size=size,
-                                                                     rng=rng,
-                                                                     **params)
+        or intermediate_sample_info.s != size):
+        intermediate_sample_info = vfx_sampling_precompute_constants(
+                                    X_data=X_data,
+                                    eval_L=eval_L,
+                                    desired_expected_size=size,
+                                    rng=rng,
+                                    **params)
 
         q_func = params.get('q_func', lambda s: s * s)
 

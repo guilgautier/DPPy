@@ -199,7 +199,7 @@ The cost of getting one sample from a **projection** DPP is of order :math:`\mat
 		        DPP.sample_exact(mode=mode, random_state=rng)
 
 		    print(DPP.sampling_mode)
-		    print(list(map(list, DPP.list_of_samples)))
+		    print(DPP.list_of_samples)
 
 	.. testoutput::
 
@@ -241,7 +241,7 @@ The cost of getting one sample from a **projection** DPP is of order :math:`\mat
 			# mode='GS': Gram-Schmidt (default)
 			DPP.sample_exact(mode='GS', random_state=rng)
 
-		print(list(map(list, DPP.list_of_samples)))
+		print(DPP.list_of_samples)
 
 	.. testoutput::
 
@@ -324,7 +324,7 @@ In practice
 			# mode='GS': Gram-Schmidt (default)
 			DPP.sample_exact(mode='GS', random_state=rng)
 
-		print(list(map(list, DPP.list_of_samples)))
+		print(DPP.list_of_samples)
 
 	.. testoutput::
 
@@ -362,7 +362,7 @@ In practice
 			# mode='GS': Gram-Schmidt (default)
 			DPP.sample_exact(mode='GS', random_state=rng)
 
-		print(list(map(list, DPP.list_of_samples)))
+		print(DPP.list_of_samples)
 
 	.. testoutput::
 
@@ -409,7 +409,7 @@ In practice
 			# mode='GS': Gram-Schmidt (default)
 			DPP.sample_exact(mode='GS', random_state=rng)
 
-		print(list(map(list, DPP.list_of_samples)))
+		print(DPP.list_of_samples)
 
 	.. testoutput::
 
@@ -527,7 +527,7 @@ In practice
 	for _ in range(10):
 		DPP.sample_exact(mode='Chol', random_state=rng)
 
-	print(list(map(list, DPP.list_of_samples)))
+	print(DPP.list_of_samples)
 
 .. testoutput::
 
@@ -586,7 +586,7 @@ In practice
 		for _ in range(10):
 			DPP.sample_exact(mode='Chol', random_state=rng)
 
-		print(list(map(list, DPP.list_of_samples)))
+		print(DPP.list_of_samples)
 
 	# .. testoutput::
 
@@ -687,7 +687,7 @@ Sampling :math:`k\!\operatorname{-DPP}(\mathbf{L})` from :math:`\mathbf{L} \succ
 	for _ in range(10):
 	    DPP.sample_exact_k_dpp(size=k, random_state=rng)
 
-	print(list(map(list, DPP.list_of_samples)))
+	print(DPP.list_of_samples)
 
 .. testoutput::
 
