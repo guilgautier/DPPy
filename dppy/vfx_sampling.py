@@ -357,7 +357,7 @@ def vfx_sampling_do_sampling_loop(X_data, eval_L, intermediate_sample_info, rng,
             # sample sigma subset
             sigma = rng.choice(n, size=t, p=pc_state.rls_estimate / pc_state.s, replace=True)
             sigma_uniq, sigma_uniq_count = np.unique(sigma, return_counts=True)
-            X_sigma = X_data[sigma_uniq, :]
+            X_sigma_uniq = X_data[sigma_uniq, :]
 
             # compute log(Det(I + \tilda{L}_sigma)) = log(Det(I + W*L_sigma*W))
             # with W_ii = ( s / (q * l_i) )^1/2
@@ -371,7 +371,7 @@ def vfx_sampling_do_sampling_loop(X_data, eval_L, intermediate_sample_info, rng,
 
             W_square_inv = pc_state.q * pc_state.rls_estimate[sigma_uniq] * sigma_uniq_count / pc_state.s
 
-            I_L_sigma = (pc_state.alpha_star * eval_L(X_sigma, X_sigma)
+            I_L_sigma = (pc_state.alpha_star * eval_L(X_sigma_uniq, X_sigma_uniq)
                          + np.diag(W_square_inv))
 
             s_logdet, logdet_I_L_sigma = np.linalg.slogdet(I_L_sigma)
@@ -405,7 +405,7 @@ def vfx_sampling_do_sampling_loop(X_data, eval_L, intermediate_sample_info, rng,
     W = (np.sqrt(pc_state.s)
          / np.sqrt(pc_state.q * pc_state.rls_estimate[sigma_uniq] * sigma_uniq_count).reshape(-1, 1))
 
-    L_tilda = pc_state.alpha_star * W.T * eval_L(X_sigma, X_sigma) * W
+    L_tilda = pc_state.alpha_star * W.T * eval_L(X_sigma_uniq, X_sigma_uniq) * W
 
     E, U = np.linalg.eigh(L_tilda)
 
