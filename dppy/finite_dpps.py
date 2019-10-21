@@ -352,7 +352,7 @@ class FiniteDPP:
                                                 self.intermediate_sample_info,
                                                 self.X_data,
                                                 self.eval_L,
-                                                rng,
+                                                random_state=rng,
                                                 **params)
 
         # If eigen decoposition of K, L or L_dual is available USE IT!
