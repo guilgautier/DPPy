@@ -262,7 +262,7 @@ class FiniteDPP:
         self.size_k_dpp = 0
 
     # Exact sampling
-    def sample_exact(self, mode='GS', return_sample=False, **params):
+    def sample_exact(self, mode='GS', **params):
         """ Sample exactly from the corresponding :class:`FiniteDPP <FiniteDPP>` object.
 
         :param mode:
@@ -282,15 +282,6 @@ class FiniteDPP:
         :type mode:
             string, default ``'GS'``
 
-        :param return_sample:
-
-            - If ``True``, the sample sample is returned.
-
-            In any case, the sample is appended to the :py:attr:`~FiniteDPP.list_of_samples` attribute as a list.
-
-        :type return_sample:
-            bool, default False
-
         :param dict params:
             Dictionary containing the parameters for exact samplers with keys
 
@@ -307,9 +298,7 @@ class FiniteDPP:
                 Empirically, a small factor [2,10] seems to work for both parameters. It is suggested to start with a small number and increase if the algorithm fails to terminate.
 
         :return:
-            If ``return_sample=True``, a sample from the corresponding A sample from the corresponding :class:`FiniteDPP <FiniteDPP>` object is returned.
-
-            In any case, the sample is appended to the :py:attr:`~FiniteDPP.list_of_samples` attribute as a list.
+            Returns a sample from the corresponding :class:`FiniteDPP <FiniteDPP>` object. In any case, the sample is appended to the :py:attr:`~FiniteDPP.list_of_samples` attribute as a list.
 
         :rtype:
             list
@@ -346,9 +335,6 @@ class FiniteDPP:
                      'Given: {}'.format((self.kernel_type, self.projection))]
                 raise ValueError('\n'.join(err_print))
 
-            self.list_of_samples.append(sampl)
-            if return_sample: return sampl
-
         elif self.sampling_mode == 'Chol':
             self.compute_K()
             if self.kernel_type=='correlation' and self.projection:
@@ -356,9 +342,6 @@ class FiniteDPP:
                                                 random_state=rng)
             else:
                 sampl, _ = dpp_sampler_generic_kernel(self.K, random_state=rng)
-
-            self.list_of_samples.append(sampl)
-            if return_sample: return sampl
 
         elif self.sampling_mode == 'vfx':
             if self.eval_L is None or self.X_data is None:
@@ -372,9 +355,6 @@ class FiniteDPP:
                                                 rng,
                                                 **params)
 
-            self.list_of_samples.append(sampl)
-            if return_sample: return sampl
-
         # If eigen decoposition of K, L or L_dual is available USE IT!
         elif self.K_eig_vals is not None:
             # Phase 1
@@ -384,16 +364,8 @@ class FiniteDPP:
                 V = dpp_eig_vecs_selector(self.K_eig_vals, self.eig_vecs,
                                           random_state=rng)
             # Phase 2
-            if V.shape[1]:
-                sampl = proj_dpp_sampler_eig(V, self.sampling_mode,
-                                             random_state=rng)
-            else:
-                sampl = np.array([])
-
-            self.list_of_samples.append(sampl)
-            if return_sample:
-                print(return_sample, sampl)
-                return sampl
+            sampl = proj_dpp_sampler_eig(V, self.sampling_mode,
+                                         random_state=rng)
 
         elif self.L_dual_eig_vals is not None:
             # Phase 1
@@ -405,44 +377,35 @@ class FiniteDPP:
             sampl = proj_dpp_sampler_eig(V, self.sampling_mode,
                                          random_state=rng)
 
-            self.list_of_samples.append(sampl)
-            if return_sample: return sampl
-
         elif self.L_eig_vals is not None:
             self.K_eig_vals = self.L_eig_vals / (1.0 + self.L_eig_vals)
-            self.sample_exact(mode=self.sampling_mode,
-                              return_sample=return_sample,
-                              random_state=rng)
+            return self.sample_exact(mode=self.sampling_mode,
+                                     random_state=rng)
 
         # If DPP defined via projection correlation kernel K
         # no eigendecomposition required
         elif self.K is not None and self.projection:
             sampl = proj_dpp_sampler_kernel(self.K, self.sampling_mode,
                                             random_state=rng)
-            self.list_of_samples.append(sampl)
-            if return_sample: return sampl
 
         elif self.L_dual is not None:
             self.L_dual_eig_vals, self.L_dual_eig_vecs =\
                 la.eigh(self.L_dual)
             self.L_dual_eig_vals = is_geq_0(self.L_dual_eig_vals)
-            self.sample_exact(mode=self.sampling_mode,
-                              return_sample=return_sample,
-                              random_state=rng)
+            return self.sample_exact(mode=self.sampling_mode,
+                                     random_state=rng)
 
         elif self.K is not None:
             self.K_eig_vals, self.eig_vecs = la.eigh(self.K)
             self.K_eig_vals = is_in_01(self.K_eig_vals)
-            self.sample_exact(mode=self.sampling_mode,
-                              return_sample=return_sample,
-                              random_state=rng)
+            return self.sample_exact(mode=self.sampling_mode,
+                                     random_state=rng)
 
         elif self.L is not None:
             self.L_eig_vals, self.eig_vecs = la.eigh(self.L)
             self.L_eig_vals = is_geq_0(self.L_eig_vals)
-            self.sample_exact(mode=self.sampling_mode,
-                              return_sample=return_sample,
-                              random_state=rng)
+            return self.sample_exact(mode=self.sampling_mode,
+                                     random_state=rng)
 
         # If DPP defined through correlation kernel with parameter 'A_zono'
         # a priori you wish to use the zonotope approximate sampler
@@ -451,22 +414,23 @@ class FiniteDPP:
 
             self.K_eig_vals = np.ones(self.A_zono.shape[0])
             self.eig_vecs, _ = la.qr(self.A_zono.T, mode='economic')
-            self.sample_exact(mode=self.sampling_mode,
-                              return_sample=return_sample,
-                              random_state=rng)
+            return self.sample_exact(mode=self.sampling_mode,
+                                     random_state=rng)
 
         elif self.eval_L is not None and self.X_data is not None:
             self.compute_L()
-            self.sample_exact(mode=self.sampling_mode,
-                              return_sample=return_sample,
-                              random_state=rng)
+            return self.sample_exact(mode=self.sampling_mode,
+                                     random_state=rng)
 
         else:
             raise ValueError('None of the available samplers could be used based on the current DPP representation.'
                              ' This should never happen, please consider rasing an issue on github'
                              ' at https://github.com/guilgautier/DPPy/issues')
 
-    def sample_exact_k_dpp(self, size, mode='GS', return_sample=False, **params):
+        self.list_of_samples.append(sampl)
+        return sampl
+
+    def sample_exact_k_dpp(self, size, mode='GS', **params):
         """ Sample exactly from :math:`\\operatorname{k-DPP}`. A priori the :class:`FiniteDPP <FiniteDPP>` object was instanciated by its likelihood :math:`\\mathbf{L}` kernel so that
 
         .. math::
@@ -494,15 +458,6 @@ class FiniteDPP:
         :type mode:
             string, default ``'GS'``
 
-        :param return_sample:
-
-            - If ``True``, the sample is returned.
-
-            In any case, the sample is appended to the :py:attr:`~FiniteDPP.list_of_samples` attribute as a list.
-
-        :type return_sample:
-            bool, default False
-
         :param dict params:
             Dictionary containing the parameters for exact samplers with keys
 
@@ -521,7 +476,7 @@ class FiniteDPP:
                 a small number and increase if the algorithm fails to terminate.
 
         :return:
-            If ``return_sample=True``, a sample from the corresponding :math:`\\operatorname{k-DPP}` is returned.
+            A sample from the corresponding :math:`\\operatorname{k-DPP}`.
 
             In any case, the sample is appended to the :py:attr:`~FiniteDPP.list_of_samples` attribute as a list.
 
@@ -560,8 +515,6 @@ class FiniteDPP:
                                                 self.eval_L,
                                                 rng,
                                                 **params)
-            self.list_of_samples.append(sampl)
-            if return_sample: return sampl
 
         # If DPP defined via projection kernel
         elif self.projection:
@@ -618,9 +571,6 @@ class FiniteDPP:
                                                     size=size,
                                                     random_state=rng)
 
-            self.list_of_samples.append(sampl)
-            if return_sample: return sampl
-
         # If eigen decoposition of K, L or L_dual is available USE IT!
         elif self.L_eig_vals is not None:
 
@@ -639,63 +589,57 @@ class FiniteDPP:
             sampl = proj_dpp_sampler_eig(V, self.sampling_mode,
                                          random_state=rng)
 
-            self.list_of_samples.append(sampl)
-            if return_sample: return sampl
-
         elif self.L_dual_eig_vals is not None:
             # There is
             self.L_eig_vals = self.L_dual_eig_vals
             self.eig_vecs =\
                 self.L_gram_factor.T.dot(
                     self.L_dual_eig_vecs / np.sqrt(self.L_dual_eig_vals))
-            self.sample_exact_k_dpp(size, self.sampling_mode,
-                                    return_sample=return_sample,
-                                    random_state=rng)
+            return self.sample_exact_k_dpp(size, self.sampling_mode,
+                                           random_state=rng)
 
         elif self.K_eig_vals is not None:
             np.seterr(divide='raise')
             self.L_eig_vals = self.K_eig_vals / (1.0 - self.K_eig_vals)
-            self.sample_exact_k_dpp(size, self.sampling_mode,
-                                    return_sample=return_sample,
-                                    random_state=rng)
+            return self.sample_exact_k_dpp(size, self.sampling_mode,
+                                           random_state=rng)
 
         # Otherwise eigendecomposition is necessary
         elif self.L_dual is not None:
             self.L_dual_eig_vals, self.L_dual_eig_vecs =\
                 la.eigh(self.L_dual)
             self.L_dual_eig_vals = is_geq_0(self.L_dual_eig_vals)
-            self.sample_exact_k_dpp(size, self.sampling_mode,
-                                    return_sample=return_sample,
-                                    random_state=rng)
+            return self.sample_exact_k_dpp(size, self.sampling_mode,
+                                           random_state=rng)
 
         elif self.K is not None:
             self.K_eig_vals, self.eig_vecs = la.eigh(self.K)
             self.K_eig_vals = is_in_01(self.K_eig_vals)
-            self.sample_exact_k_dpp(size, self.sampling_mode,
-                                    return_sample=return_sample,
-                                    random_state=rng)
+            return self.sample_exact_k_dpp(size, self.sampling_mode,
+                                           random_state=rng)
 
         elif self.L is not None:
             self.L_eig_vals, self.eig_vecs = la.eigh(self.L)
             self.L_eig_vals = is_geq_0(self.L_eig_vals)
-            self.sample_exact_k_dpp(size, self.sampling_mode,
-                                    return_sample=return_sample,
-                                    random_state=rng)
+            return self.sample_exact_k_dpp(size, self.sampling_mode,
+                                           random_state=rng)
 
         elif self.eval_L is not None and self.X_data is not None:
             # In case mode!='vfx'
             self.compute_L()
-            self.sample_exact_k_dpp(size, self.sampling_mode,
-                                    return_sample=return_sample,
-                                    random_state=rng)
+            return self.sample_exact_k_dpp(size, self.sampling_mode,
+                                           random_state=rng)
 
         else:
             raise ValueError('None of the available samplers could be used based on the current DPP representation.'
                              ' This should never happen, please consider rasing an issue on github'
                              ' at https://github.com/guilgautier/DPPy/issues')
 
+        self.list_of_samples.append(sampl)
+        return sampl
+
     # Approximate sampling
-    def sample_mcmc(self, mode, return_sample=False, **params):
+    def sample_mcmc(self, mode, **params):
         """ Run a MCMC with stationary distribution the corresponding :class:`FiniteDPP <FiniteDPP>` object.
 
         :param string mode:
@@ -704,15 +648,6 @@ class FiniteDPP:
             - ``'AD'`` Add-Delete
             - ``'E'`` Exchange
             - ``'zonotope'`` Zonotope sampling
-
-        :param return_sample:
-
-            - If ``True``, the last sample of the trajectory is returned.
-
-            In any case, the full trajectory of the Markov chain, made of ``params['nb_iter']`` samples, is appended to the :py:attr:`~FiniteDPP.list_of_samples` attribute as a list of lists.
-
-        :type return_sample:
-            bool, default False
 
         :param dict params:
             Dictionary containing the parameters for MCMC samplers with keys
@@ -736,7 +671,7 @@ class FiniteDPP:
                 + ``'T_max'`` (default None) Time horizon
 
         :return:
-            If ``return_sample=True``, the last sample of the trajectory is returned.
+            The last sample of the trajectory of Markov chain.
 
             In any case, the full trajectory of the Markov chain, made of ``params['nb_iter']`` samples, is appended to the :py:attr:`~FiniteDPP.list_of_samples` attribute as a list of lists.
 
@@ -797,8 +732,7 @@ class FiniteDPP:
             raise ValueError('\n'.join(err_print))
 
         self.list_of_samples.append(chain)
-        if return_sample:
-            return chain[-1]
+        return chain[-1]
 
     def sample_mcmc_k_dpp(self, size, mode='E', **params):
         """ Calls :py:meth:`~sample_mcmc` with ``mode='E'`` and ``params['size'] = size``
@@ -820,6 +754,8 @@ class FiniteDPP:
 
     def compute_K(self, msg=False):
         """ Compute the correlation kernel :math:`\\mathbf{K}` from the original parametrization of the :class:`FiniteDPP` object.
+
+        The kernel is stored in the :py:attr:`~FiniteDPP.K` attribute.
 
         .. seealso::
 
@@ -868,6 +804,8 @@ class FiniteDPP:
 
     def compute_L(self, msg=False):
         """ Compute the likelihood kernel :math:`\\mathbf{L}` from the original parametrization of the :class:`FiniteDPP` object.
+
+        The kernel is stored in the :py:attr:`~FiniteDPP.L` attribute.
 
         .. seealso::
 

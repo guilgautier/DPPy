@@ -74,7 +74,7 @@ Mix of exchange and add-delete moves
   DPP = FiniteDPP('likelihood', **{'L': L})
 
   DPP.sample_mcmc('AED', random_state=rng)  # AED, AD, E
-  print(DPP.list_of_samples)
+  print(DPP.list_of_samples)  # list of trajectories, here there's only one
 
 .. testoutput::
 
@@ -131,7 +131,7 @@ To recover the finite DPP samples one needs to identify the tile in which the su
   DPP = FiniteDPP('correlation', projection=True, **{'A_zono': A})
 
   DPP.sample_mcmc('zonotope', random_state=rng)
-  print(DPP.list_of_samples)
+  print(DPP.list_of_samples)  # list of trajectories, here there's only one
 
 .. testoutput::
 
@@ -175,7 +175,7 @@ To preserve the size :math:`k` of the samples of :math:`k\!\operatorname{-DPP}(\
 
   k = 3
   DPP.sample_mcmc_k_dpp(size=k, random_state=rng)
-  print(DPP.list_of_samples)
+  print(DPP.list_of_samples)  # list of trajectories, here there's only one
 
 .. testoutput::
 
