@@ -369,7 +369,7 @@ def vfx_sampling_do_sampling_loop(X_data, eval_L, intermediate_sample_info, rng,
             # = log(Det(W^2)) + log(Det(W^-2 + L_sigma))
             # = -log(Det(W^-2)) + log(Det(W^-2 + L_sigma))
 
-            W_square_inv = pc_state.q * pc_state.rls_estimate[sigma_uniq] * sigma_uniq_count / pc_state.s
+            W_square_inv = pc_state.q * pc_state.rls_estimate[sigma_uniq] / (pc_state.s * sigma_uniq_count)
 
             I_L_sigma = (pc_state.alpha_star * eval_L(X_sigma_uniq, X_sigma_uniq)
                          + np.diag(W_square_inv))
@@ -402,8 +402,8 @@ def vfx_sampling_do_sampling_loop(X_data, eval_L, intermediate_sample_info, rng,
 
     # Phase 4: use L_tilda to perform exact DPP sampling
     # compute alpha_star * L_tilda = alpha_star * W*L_sigma*W
-    W = (np.sqrt(pc_state.s)
-         / np.sqrt(pc_state.q * pc_state.rls_estimate[sigma_uniq] * sigma_uniq_count).reshape(-1, 1))
+    W = (np.sqrt(pc_state.s * sigma_uniq_count)
+         / np.sqrt(pc_state.q * pc_state.rls_estimate[sigma_uniq]).reshape(-1, 1))
 
     L_tilda = pc_state.alpha_star * W.T * eval_L(X_sigma_uniq, X_sigma_uniq) * W
 

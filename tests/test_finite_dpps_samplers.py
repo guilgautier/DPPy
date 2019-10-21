@@ -331,7 +331,7 @@ class TestAdequationOfFiniteDppSamplers(unittest.TestCase):
 
         kernel_type = 'likelihood'
 
-        X_data_randn = rndm.rand(100, 40)
+        X_data_randn = rndm.rand(100, 6)
 
         list_dpp_params = [[False, {'L_eval_X_data': (example_eval_L_linear, X_data_randn)}]]
 
@@ -344,10 +344,10 @@ class TestAdequationOfFiniteDppSamplers(unittest.TestCase):
 
         dict_sampler_mode_param =\
             {'exact_dpp': {'vfx': {'verbose': False,
-                                   'rls_oversample_bless': 20},
+                                   'rls_oversample_bless': 5},
                            'GS': {}},
              'exact_k_dpp': {'vfx': {'size': k, 'verbose': False,
-                                     'rls_oversample_bless': 20},
+                                     'rls_oversample_bless': 5},
                              'GS': {'size': k}}}
 
         adequation_to_check = ('cardinality', 'singleton', 'doubleton')
