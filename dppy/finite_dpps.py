@@ -348,6 +348,7 @@ class FiniteDPP:
                 raise ValueError('The vfx sampler is currently only available with '
                                  '{"L_eval_X_data": (L_eval, X_data)} representation.')
 
+            params.pop("random_state",None)
             sampl, self.intermediate_sample_info = dpp_vfx_sampler(
                                                 self.intermediate_sample_info,
                                                 self.X_data,
@@ -508,12 +509,13 @@ class FiniteDPP:
             if self.eval_L is None or self.X_data is None:
                 raise ValueError("The vfx sampler is currently only available for the 'L_eval_X_data' representation.")
 
+            params.pop("random_state",None)
             sampl, self.intermediate_sample_info = k_dpp_vfx_sampler(
                                                 size,
                                                 self.intermediate_sample_info,
                                                 self.X_data,
                                                 self.eval_L,
-                                                rng,
+                                                random_state=rng,
                                                 **params)
 
         # If DPP defined via projection kernel
