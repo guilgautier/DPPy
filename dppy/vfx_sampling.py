@@ -413,9 +413,8 @@ def vfx_sampling_do_sampling_loop(X_data, eval_L, intermediate_sample_info, rng,
     # TODO: maybe refactor to avoid this
     from dppy.finite_dpps import FiniteDPP
     DPP = FiniteDPP(kernel_type='likelihood', L_eig_dec=(E, U))
-    DPP.sample_exact(random_state=rng)
+    S_tilda = np.array(DPP.sample_exact(random_state=rng), dtype=int)
 
-    S_tilda = np.array(DPP.list_of_samples[-1], dtype=int)
-    S = sigma[S_tilda].ravel().tolist()
+    S = sigma_uniq[S_tilda].ravel().tolist()
 
     return S, rej_iter
