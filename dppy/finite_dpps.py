@@ -464,9 +464,7 @@ class FiniteDPP:
 
             - If ``mode='vfx'``
 
-                .. todo::
-
-                    See SOMEREF for a full list of all parameters accepted by 'vfx' sampling. We report here the most impactful
+                See :py:meth:`~dppy.exact_sampling.k_dpp_vfx_sampler` for a full list of all parameters accepted by 'vfx' sampling. We report here the most impactful
 
                 + ``'rls_oversample_dppvfx'`` (default 4.0) Oversampling parameter used to construct dppvfx's internal Nystrom approximation. This makes each rejection round slower and more memory intensive, but reduces variance and the number of rounds of rejections.
                 + ``'rls_oversample_bless'`` (default 4.0) Oversampling parameter used during bless's internal Nystrom approximation. This makes the one-time pre-processing slower and more memory intensive, but reduces variance and the number of rounds of rejections

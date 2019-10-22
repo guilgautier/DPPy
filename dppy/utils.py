@@ -297,11 +297,7 @@ def get_progress_bar(total=-1, disable=False, **kwargs):
 
 
 def evaluate_L_diagonal(eval_L, X):
-    """
-    .. todo::
-
-        - docstring
-    """
+    """Helper function to evaluate a likelihood function on a set of points (i.e. compute the diagonal of the L matrix)"""
     diag_eval = getattr(eval_L, "diag", None)
     if callable(diag_eval):
         return diag_eval(X)
