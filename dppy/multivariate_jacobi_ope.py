@@ -1,7 +1,9 @@
 # coding: utf8
-""" Implementation of the class :class:`MultivariateJacobiOPE` which has 3 main methods:
+""" Implementation of the class :class:`MultivariateJacobiOPE` used in :cite:`GaBaVa19` for Monte Carlo with Determinantal Point Processes
 
-- :py:meth:`~dppy.multivariate_jacobi_ope.MultivariateJacobiOPE.sample` to get a sample of
+It has 3 main methods:
+
+- :py:meth:`~dppy.multivariate_jacobi_ope.MultivariateJacobiOPE.sample` to generate samples
 - :py:meth:`~dppy.multivariate_jacobi_ope.MultivariateJacobiOPE.K` to evaluate the corresponding projection kernel
 - :py:meth:`~dppy.multivariate_jacobi_ope.MultivariateJacobiOPE.plot` to display 1D or 2D samples
 """
@@ -15,7 +17,7 @@ from scipy.special import eval_jacobi
 # from scipy.special import logsumexp
 import matplotlib.pyplot as plt
 
-from  dppy.random_matrices import mu_ref_beta_sampler_tridiag as tridiagonal_model
+from dppy.random_matrices import mu_ref_beta_sampler_tridiag as tridiagonal_model
 
 from dppy.utils import check_random_state
 
@@ -43,7 +45,7 @@ class MultivariateJacobiOPE:
 
         - :math:`k \\in \\mathbb{N}^d` is a multi-index ordered according to the ordering :math:`\\mathfrak{b}` (see :py:meth:`compute_ordering_BaHa16`)
 
-        - :math:`P_{k}(x) = \\prod_{i=1}^d P_{k_i}^{a_i, b_i}(x_i)` is the product of orthogonal Jacobi polynomials w.r.t. :math:`\\mu`, (see :py:meth:`eval_poly_multiD`)
+        - :math:`P_{k}(x) = \\prod_{i=1}^d P_{k_i}^{(a_i, b_i)}(x_i)` is the product of orthogonal Jacobi polynomials w.r.t. :math:`\\mu`, (see :py:meth:`eval_poly_multiD`)
 
             .. math::
 
@@ -53,21 +55,23 @@ class MultivariateJacobiOPE:
                 \\propto \\delta_{k\\ell}
 
     :param N:
-        Number of points :math:`N \\geq 2`
+        Number of points :math:`N \\geq 1`
     :type N:
         int
 
     :param jacobi_params:
-        Jacobi parameters :math:`[(a_i, b_i)]_{i=1}^d \\in [-\\frac{1}{2}, \\frac{1}{2}]^{d \\times 2}`.
-        The number of rows :math:`d` prescribes the ambient dimension of the points i.e. :math:`x_{1}, \\dots, x_{N} \\in [-1, 1]^d`
+        Jacobi parameters :math:`[(a_i, b_i)]_{i=1}^d`
+        The number of rows :math:`d` prescribes the ambient dimension of the points i.e. :math:`x_{1}, \\dots, x_{N} \\in [-1, 1]^d`.
+        - when :math:`d=1`, :math:`a_1, b_1 > -1`
+        - when :math:`d \\geq 2`, :math:`|a_i|, |b_i| \\leq \\frac{1}{2}`
     :type jacobi_params:
         array_like
 
     .. seealso::
 
         - :ref:`multivariate_jacobi_ope`
-        - Univariate :ref:`jacobi_banded_matrix_model` sampled with the tridiagonal model of :cite:`KiNe04`
-        - :cite:`BaHa16` initiated the use of the multivariate Jacobi ensemble for Monte Carlo integration. In particular, they proved a fast CLT with variance decay of order :math:`N^{1+1/d}`
+        - when :math:`d=1`, the :ref:`univariate Jacobi ensemble <jacobi_banded_matrix_model>` is sampled by computing the eigenvalues of a properly randomized :ref:`tridiagonal matrix <jacobi_banded_matrix_model>` of :cite:`KiNe04`
+        - :cite:`BaHa16` initiated the use of the multivariate Jacobi ensemble for Monte Carlo integration. In particular, they proved CLT with variance decay of order :math:`N^{-(1+1/d)}` which is faster that the :math:`N^{-1}` rate of vanilla Monte Carlo where the points are drawn i.i.d. from the base measure.
     """
 
     def __init__(self, N, jacobi_params):
@@ -100,24 +104,25 @@ class MultivariateJacobiOPE:
     def _check_params(self, N, jacobi_params):
         """ Check that:
 
-        - The number of points :math:`N \\geq 2`
-        - Jacobi parameters :math:`[(a_i, b_i)]_{i=1}^d \\in [-0.5, 0.5]^{d\\times 2}`.
+        - The number of points :math:`N \\geq 1`
+        - Jacobi parameters
+            - when :math:`d=1` we must have :math:`a_1, b_1 > -1`
+            - when :math:`d \\geq 2` we must have :math:`|a_i|, |b_i| \\leq \\frac{1}{2}`.
         """
         if type(N) is not int or N < 1:
-            return TypeError('Number of points N={} is not an integer or < 2'.format(N))
+            raise ValueError('Number of points N={} < 1'.format(N))
 
         dim = jacobi_params.size // 2
-        # if dim == 1:
-        #     war = 'In dimension {}, the tridiagonal model is used'.format(dim)
-        #     warnings.warn(war)
 
-        if np.all(np.abs(jacobi_params) <= 0.5):
-            return N, jacobi_params, dim
-        else:
-            raise ValueError('Jacobi parameters not in [-0.5, 0.5]^d, we have no guaranty')
+        if dim == 1 and not np.all(jacobi_params > -1):
+            raise ValueError('d=1, Jacobi parameters must be > -1')
+        elif dim >= 2 and not np.all(np.abs(jacobi_params) <= 0.5):
+            raise ValueError('d={}, Jacobi parameters be in [-0.5, 0.5]^d'.format(dim))
+
+        return N, jacobi_params, dim
 
     def eval_w(self, X, jac_params=None):
-        """Evaluate :math:`w(x) = \\prod_{i=1}^{d} (1-x^i)^{a_i} (1+x^i)^{b_i}` which corresponds to the density of the base measure :math:`\\mu` if ``jac_params`` is ``None``.
+        """Evaluate :math:`w(x) = \\prod_{i=1}^{d} (1-x_i)^{a_i} (1+x_i)^{b_i}` which corresponds to the density of the base measure :math:`\\mu` if ``jac_params`` is ``None``.
 
         :param X:
             Array of points :math:`\\in [-1, 1]^d`, with size :math:`N\\times d` where :math:`N` is the number of points
@@ -132,7 +137,7 @@ class MultivariateJacobiOPE:
 
         :return:
             - if ``jac_params`` is ``None``, evaluation of :math:`w(x)` the density of the base measure
-            - else ``jac_params`` :math:`= [(a_i, b_i)]_{i=1}^d` evaluation of :math:`w(x) = \\prod_{i=1}^{d} (1-x^i)^{a_i} (1+x^i)^{b_i}`
+            - else ``jac_params`` :math:`= [(a_i, b_i)]_{i=1}^d` evaluation of :math:`w(x) = \\prod_{i=1}^{d} (1-x_i)^{a_i} (1+x_i)^{b_i}`
         :rtype:
             array_like
         """
@@ -161,7 +166,7 @@ class MultivariateJacobiOPE:
 
         - :math:`k \\in \\mathbb{N}^d` is a multi-index ordered according to the ordering :math:`\\mathfrak{b}`, :py:meth:`compute_ordering_BaHa16`
 
-        - :math:`P_{k}(x) = \\prod_{i=1}^d P_{k_i}^{a_i, b_i}(x^i)` is the product of orthogonal Jacobi polynomials w.r.t. :math:`\\mu(dx) = \\prod_{i=1}^{d} (1-x^i)^{a_i} (1+x^i)^{b_i} d x^i`
+        - :math:`P_{k}(x) = \\prod_{i=1}^d P_{k_i}^{(a_i, b_i)}(x_i)` is the product of orthogonal Jacobi polynomials w.r.t. :math:`\\mu(dx) = \\prod_{i=1}^{d} (1-x_i)^{a_i} (1+x_i)^{b_i} d x_i`
 
             .. math::
 
@@ -262,29 +267,48 @@ class MultivariateJacobiOPE:
         .. math::
 
             \\frac{1}{N} K(x, x) w(x) dx
-            = \\frac{1}{N} \\sum_{\\mathfrak{b}(k)=0}^{N-1} P_k(x)^2 w(x)
+            = \\frac{1}{N}
+                \\sum_{\\mathfrak{b}(k)=0}^{N-1}
+                \\left( \\frac{P_k(x)}{\\left\\| P_k \\right\\|} \\right)^2
+                w(x)
 
         with proposal distribution
 
         .. math::
 
             w_{eq}(x) d x
-            = \\frac{1}{\\pi^d} \\prod_{i=1}^{d} \\frac{1}{\\sqrt{1-(x^i)^2}} d x
+                = \\prod_{i=1}^{d}
+                    \\frac{1}{\\pi\\sqrt{1-(x_i)^2}}
+                    d x_i
 
-        Since the target density is a mixture, we can sample it by
+        Since the target density is a mixture, we can sample from it by
 
-        1. Draw a multi-index :math:`k` uniformly at random
-        2. Sample from :math:`P_k(x)^2 w(x) dx` with proposal :math:`w_{eq}(x) d x`.
+        1. Select a multi-index :math:`k` uniformly at random in :math:`\\left\\{ \\mathfrak{b}^{-1}(0), \\dots, \\mathfrak{b}^{-1}(N-1) \\right\\}`
+        2. Sample from :math:`\\left( \\frac{P_k(x)}{\\left\\| P_k \\right\\|} \\right)^2 w(x) dx` with proposal :math:`w_{eq}(x) d x`.
 
             The acceptance ratio writes
 
             .. math::
 
-                P_k(x)^2 w(x) \\frac{1}{\\frac{w_{\\text{eq}}(x)}{\\pi^d}}
-                = \\prod_{i=1}^{d} \\pi P_{k^i}(x)^2 (1-x^i)^{a^i+\\frac{1}{2}} (1+x^i)^{b^i+\\frac{1}{2}}
+                \\frac{
+                    \\left( \\frac{P_k(x)}{\\left\\| P_k \\right\\|} \\right)^2
+                        w(x)}
+                    {w_{eq}(x)}
+                = \\prod_{i=1}^{d}
+                    \\pi
+                    \\left(
+                        \\frac{P_{k_i}^{(a_i, b_i)}(x)}
+                               {\\left\\| P_{k_i}^{(a_i, b_i)} \\right\\|}
+                    \\right)^2
+                    (1-x_i)^{a_i+\\frac{1}{2}}
+                    (1+x_i)^{b_i+\\frac{1}{2}}
+                \\leq C_{k}
 
             which can be bounded using the result of :cite:`Gau09` on Jacobi polynomials.
-            The  is computed at initialization of the :py:class:`MultivariateJacobiOPE` object with :py:meth:`compute_Gautschi_bounds`
+
+            .. note::
+
+                Each of the rejection constant :math:`C_{k}` is computed at initialization of the :py:class:`MultivariateJacobiOPE` object using :py:meth:`compute_Gautschi_bounds`
 
         :return:
             A sample :math:`x\\in[-1,1]^d` with probability distribution :math:`\\frac{1}{N} K(x,x) w(x)`
@@ -305,7 +329,7 @@ class MultivariateJacobiOPE:
 
         for trial in range(nb_trials_max):
 
-            # Propose x ~ arcsine = \prod_{i=1}^{d} 1/pi 1/sqrt(1-(x^i)^2)
+            # Propose x ~ arcsine = \prod_{i=1}^{d} 1/pi 1/sqrt(1-(x_i)^2)
             x = 1.0 - 2.0 * rng.beta(0.5, 0.5, size=self.dim)
 
             # Compute (P_k(x)/||P_k||)^2
@@ -328,12 +352,12 @@ class MultivariateJacobiOPE:
             if rng.rand() * rejection_bound < Pk2_x * ratio_w_proposal:
                 break
         else:
-            print('proposal not enough trials')
+            print('marginal distribution 1/N K(x,x), rejection fails after {} proposals'.format(trial))
 
         return x, self.K(x, None)
 
     def eval_poly_multiD(self, X, normalize='norm'):
-        """Evaluate (and potentially normalize) multivariate Jacobi polynomials :math:`P_{k}(x) = \\prod_{i=1}^d P_{k_i}^{a_i, b_i}(x_i)`
+        """Evaluate (and potentially normalize) multivariate Jacobi polynomials :math:`P_{k}(x) = \\prod_{i=1}^d P_{k_i}^{(a_i, b_i)}(x_i)`
 
         :param X:
             Array of points :math:`\\in [-1, 1]^d`, with size :math:`N\\times d` where :math:`N` is the number of points
@@ -376,7 +400,7 @@ class MultivariateJacobiOPE:
             return np.prod(poly_1D_jacobi[:, self.ordering, range(self.dim)],
                            axis=2)
 
-    def sample(self, nb_trials_max=10000, random_state=None):
+    def sample(self, nb_trials_max=10000, random_state=None, tridiag_1D=True):
         """Use the chain rule :cite:`HKPV06` (Algorithm 18) to sample :math:`\\left(x_{1}, \\dots, x_{N} \\right)` with density
 
         .. math::
@@ -415,7 +439,7 @@ class MultivariateJacobiOPE:
 
         rng = check_random_state(random_state)
 
-        if self.dim == 1:
+        if self.dim == 1 and tridiag_1D:
             sample = tridiagonal_model(a=self.jacobi_params[0, 0] + 1,
                                        b=self.jacobi_params[0, 1] + 1,
                                        size=self.N,
@@ -428,64 +452,63 @@ class MultivariateJacobiOPE:
         # schur = K(x, x) - K(x, Y) K(Y, Y)^-1 K(Y, x)
         #
         # K(x, x) = K_xx above
+
         sample[0], K_xx = self.sample_proposal_lev_score(random_state=rng)
         # K_YY^-1 = K(Y, Y)^-1
         K_Y_inv = np.zeros((self.N - 1, self.N - 1))
         K_Y_inv[0, 0] = 1.0 / K_xx
-        # K_Yx = Phi_Y.dot(Phi_x) = Phi_Yx[:it].dot(Phi_Yx[it])
+        # K_Yx = Phi_Y.dot(Phi_x) = Phi_Yx[:n].dot(Phi_Yx[n])
         K_Yx = np.zeros(self.N - 1)
         Phi_Yx = np.zeros((self.N, self.N))
         Phi_Yx[0] = self.eval_poly_multiD(sample[0], normalize='square_norm')
         temp = np.zeros(self.N - 1)
 
-        for it in range(1, self.N):
+        for n in range(1, self.N):
 
             for trial in range(nb_trials_max):
 
                 # Propose a point from 1/N K(x,x) w(x) i.e. leverage score
-                sample[it], K_xx =\
+                sample[n], K_xx =\
                     self.sample_proposal_lev_score(random_state=rng)
 
                 # Compute Schur cmplmt = K(x, x) - K(x, Y) K(Y, Y)^-1 K(Y, x)
                 #
                 # K_Yx = Phi_Y.dot(Phi_x)
-                Phi_Yx[it] = self.eval_poly_multiD(sample[it], normalize='')
-                K_Yx[:it] = Phi_Yx[:it].dot(Phi_Yx[it])
+                Phi_Yx[n] = self.eval_poly_multiD(sample[n], normalize='')
+                K_Yx[:n] = Phi_Yx[:n].dot(Phi_Yx[n])
                 # Schur complement
-                schur = K_xx - K_Yx[:it].dot(K_Y_inv[:it, :it]).dot(K_Yx[:it])
+                schur = K_xx - K_Yx[:n].dot(K_Y_inv[:n, :n]).dot(K_Yx[:n])
 
                 if rng.rand() < schur / K_xx:
                     break
             else:
-                print('chain rule iteration {} not enough trials'.format(it))
+                print('conditional x_{} | x_1,...,x_{}, rejection fails after {} proposals'.format(n + 1, n, trial))
 
-            if it < self.N - 1:
+            if n < self.N - 1:
                 # Normalize Phi_x with square norm
-                Phi_Yx[it] /= self.poly_multiD_square_norms
+                Phi_Yx[n] /= self.poly_multiD_square_norms
                 # Update [K_Y]^-1
                 # K_{Y+x}^-1 =
                 # [[K_Y^-1 + (K_Y^-1 K_Yx K_xY K_Y^-1)/schur(x),
                 #   -K_Y^-1 K_Yx / schur(x)],
                 # [-K_xY K_Y^-1/ schur(x),
                 #   1/schur(x)]]
-                temp[:it] = K_Y_inv[:it, :it].dot(K_Yx[:it])
+                temp[:n] = K_Y_inv[:n, :n].dot(K_Yx[:n])
 
-                K_Y_inv[:it, :it] += np.outer(temp[:it], temp[:it] / schur)
-                K_Y_inv[:it, it] = - temp[:it] / schur
-                K_Y_inv[it, :it] = K_Y_inv[:it, it]
+                K_Y_inv[:n, :n] += np.outer(temp[:n], temp[:n] / schur)
+                K_Y_inv[:n, n] = - temp[:n] / schur
+                K_Y_inv[n, :n] = K_Y_inv[:n, n]
 
-                K_Y_inv[it, it] = 1.0 / schur
+                K_Y_inv[n, n] = 1.0 / schur
 
         return sample
 
     def plot(self, sample=None, weighted=False):
 
         if self.dim >= 3:
-            raise NotImplementedError(
-                'Visualizations in dimension >= 3 are not implemented')
+            raise NotImplementedError('Visualizations in d>=3 not implemented')
 
-        tols = np.zeros_like(self.jacobi_params)
-        tols[tols < 0] = 5e-2
+        tols = 5e-2 * np.ones_like(self.jacobi_params)
 
         if sample is None:
             sample = self.sample()
@@ -745,72 +768,86 @@ def compute_Gautschi_bounds(jacobi_params, ordering, log_scale=True):
     .. math::
 
         \\frac{1}{N} K(x, x) w(x) dx
-        = \\frac{1}{N} \\sum_{\\mathfrak{b}(k)=0}^{N-1} P_k(x)^2 w(x)
+        = \\frac{1}{N}
+        \\sum_{\\mathfrak{b}(k)=0}^{N-1}
+        \\left( \\frac{P_k(x)}{\\left\\| P_k \\right\\|} \\right)^2
+        w(x)
 
     with proposal distribution
 
     .. math::
 
         w_{eq}(x) d x
-        = \\frac{1}{\\pi^d} \\prod_{i=1}^{d} \\frac{1}{\\sqrt{1-(x^i)^2}} d x
+        = \\prod_{i=1}^{d} \\frac{1}{\\pi\\sqrt{1-(x_i)^2}} d x_i
 
     To get a sample:
 
-    1. Draw a multi-index :math:`k` uniformly at random
+    1. Draw a multi-index :math:`k` uniformly at random in :math:`\\left\\{ \\mathfrak{b}^{-1}(0), \\dots, \\mathfrak{b}^{-1}(N-1) \\right\\}`
     2. Sample from :math:`P_k(x)^2 w(x) dx` with proposal :math:`w_{eq}(x) d x`.
 
         The acceptance ratio writes
 
         .. math::
 
-            P_k(x)^2 w(x) \\frac{1}{\\frac{w_{\\text{eq}}(x)}{\\pi^d}}
-            = \\prod_{i=1}^{d} \\pi P_{k^i}(x)^2 (1-x^i)^{a^i+\\frac{1}{2}} (1+x^i)^{b^i+\\frac{1}{2}}
+            \\frac{\\left( \\frac{P_k(x)}{\\left\\| P_k \\right\\|} \\right)^2
+                   w(x)}
+                  {w_{eq}(x)}
+            = \\prod_{i=1}^{d}
+                \\pi
+                \\left(
+                    \\frac{P_{k_i}^{(a_i, b_i)}(x)}
+                          {\\left\\| P_{k_i}^{(a_i, b_i)} \\right\\|}
+                \\right)^2
+                (1-x_i)^{a_i+\\frac{1}{2}}
+                (1+x_i)^{b_i+\\frac{1}{2}}
+            \\leq C_k
 
+        - For :math:`k_i>0` we use a result on Jacobi polynomials given by, e.g., :cite:`Gau09`, for :math:`\\quad|a|,|b| \\leq \\frac{1}{2}`
 
-    - For :math:`k_i>0` we use a result on Jacobi polynomials given by, e.g., :cite:`Gau09`
+        .. math::
 
-    .. math::
+            &
+                \\pi
+                (1-x)^{a+\\frac{1}{2}}
+                (1+x)^{b+\\frac{1}{2}}
+                \\left(
+                    \\frac{P_{n}^{(a, b)}(x)}
+                          {\\left\\| P_{n}^{(a, b)} \\right\\|}
+                \\right)^2\\\\
+            &\\leq
+                \\frac{2}
+                      {n!(n+(a+b+1) / 2)^{2 \\max(a,b)}}
+                \\frac{\\Gamma(n+a+b+1)
+                        \\Gamma(n+\\max(a,b)+1)}
+                      {\\Gamma(n+\\min(a,b)+1)}
 
-        &
-            \\pi
-            (1-x)^{a+\\frac{1}{2}}
-            (1+x)^{b+\\frac{1}{2}}
-            \\frac{P_{n}^{(a, b)}(x)^2}{\\|P_{n}^{(a, b)}\\|^2}\\\\
-        &\\leq
-            \\frac{2}
-                  {n!(n+(a+b+1) / 2)^{2 \\max(a,b)}}
-            \\frac{\\Gamma(n+a+b+1)
-                    \\Gamma(n+\\max(a,b)+1)}
-                  {\\Gamma(n+\\min(a,b)+1)},
-        \\quad|a|,|b| \\leq \\frac{1}{2}
+        - For :math:`k_i=0`, we use less involved properties of the `Jacobi polynomials <https://en.wikipedia.org/wiki/Jacobi_polynomials>`_:
 
-    - For :math:`k_i=0`, we use less involved properties of the `Jacobi polynomials <https://en.wikipedia.org/wiki/Jacobi_polynomials>`_:
+            - :math:`P_{0}^{(a, b)} = 1`
+            - :math:`\\|P_{0}^{(a, b)}\\|^2 = 2^{a+b+1} \\operatorname{B}(a+1,b+1)`
+            - :math:`m = \\frac{b-a}{a+b+1}` is the mode of :math:`(1-x)^{a+\\frac{1}{2}} (1+x)^{b+\\frac{1}{2}}` (valid since :math:`a+\\frac{1}{2}, b+\\frac{1}{2} > 0`)
 
-        - :math:`P_{0}^{(a, b)} = 1`
-        - :math:`\\|P_{0}^{(a, b)}\\|^2 = 2^{a+b+1} \\operatorname{B}(a+1,b+1)`
-        - :math:`m = \\frac{b-a}{a+b+1}` is the mode of :math:`(1-x)^{a+\\frac{1}{2}} (1+x)^{b+\\frac{1}{2}}` (valid since :math:`a+\\frac{1}{2}, b+\\frac{1}{2} > 0`)
+            So that,
 
-    So that,
+            .. math::
 
-    .. math::
-
-            \\pi
-            (1-x)^{a+\\frac{1}{2}}
-            (1+x)^{b+\\frac{1}{2}}
-            \\left[\\frac{P_{0}^{(a, b)}(x)}
-                   {\\|P_{0}^{(a, b)}\\|}\\right]^{2}
-        =
-            \\frac
-            {\\pi
-             (1-x)^{a+\\frac{1}{2}}
-             (1+x)^{b+\\frac{1}{2}}}
-            {\\|P_{0}^{(a, b)}\\|^2}
-        \\leq
-            \\frac
-            {\\pi
-             (1-m)^{a+\\frac{1}{2}}
-             (1+m)^{b+\\frac{1}{2}}}
-            {2^{a+b+1} \\operatorname{B}(a+1,b+1)}
+                    \\pi
+                    (1-x)^{a+\\frac{1}{2}}
+                    (1+x)^{b+\\frac{1}{2}}
+                    \\left(\\frac{P_{0}^{(a, b)}(x)}
+                           {\\|P_{0}^{(a, b)}\\|}\\right)^{2}
+                &=
+                    \\frac
+                    {\\pi
+                     (1-x)^{a+\\frac{1}{2}}
+                     (1+x)^{b+\\frac{1}{2}}}
+                    {\\|P_{0}^{(a, b)}\\|^2} \\\\
+                &\\leq
+                    \\frac
+                    {\\pi
+                     (1-m)^{a+\\frac{1}{2}}
+                     (1+m)^{b+\\frac{1}{2}}}
+                    {2^{a+b+1} \\operatorname{B}(a+1,b+1)}
 
     :param jacobi_params:
         Jacobi parameters :math:`[(a_i, b_i)]_{i=1}^d \\in [-\\frac{1}{2}, \\frac{1}{2}]^{d \\times 2}`.
@@ -829,16 +866,18 @@ def compute_Gautschi_bounds(jacobi_params, ordering, log_scale=True):
         array_like
 
     :param log_scale:
-        Specify if, when computing the rejection bound, the logarithmic versions ``betaln``, ``gammaln`` of ``beta`` and ``gamma`` functions are used to avoid overflows
+        If True, the rejection bound is computed using the logarithmic versions ``betaln``, ``gammaln`` of ``beta`` and ``gamma`` functions to avoid overflows
+
     :type log_scale:
         bool
 
     :return:
-        Gautschi bound
-    :rtype:
-        float
+        The rejection bounds :math:`C_{k}` for :math:`k = \\mathfrak{b}^{-1}(0), \\dots, \\mathfrak{b}^{-1}(N-1)`
 
-    .. see also::
+    :rtype:
+        array_like
+
+    .. seealso::
 
         - :cite:`Gau09` for the domination when :math:`k_i > 0`
         - :py:meth:`compute_poly1D_square_norms`

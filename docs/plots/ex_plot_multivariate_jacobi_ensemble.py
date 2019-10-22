@@ -1,4 +1,4 @@
-import numpy.random as rndm
+import numpy as np
 import matplotlib.pyplot as plt
 from dppy.multivariate_jacobi_ope import MultivariateJacobiOPE
 
@@ -7,7 +7,8 @@ from dppy.multivariate_jacobi_ope import MultivariateJacobiOPE
 # Number of points / dimension
 N, d = 200, 2
 # Jacobi parameters in [-0.5, 0.5]^{d x 2}
-jac_params = 0.5 - rndm.rand(d, 2)
+jac_params = np.array([[0.5, 0.5],
+                       [-0.3, 0.4]])
 
 dpp = MultivariateJacobiOPE(N, jac_params)
 
