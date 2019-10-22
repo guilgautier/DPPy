@@ -563,34 +563,29 @@ Suppose that we draw a sample of :math:`t` points i.i.d. proportional to ridge l
 In practice
 ===========
 
-.. todo::
+.. testcode::
 
-	Put some test code in the same spirit as the other techniques
+    from numpy.random import RandomState
+    from dppy.finite_dpps import FiniteDPP
+    from dppy.utils import example_eval_L_linear
 
-	# .. testcode::
+    rng = RandomState(1)
 
-		from numpy.random import RandomState
-		from scipy.linalg import qr
-		from dppy.finite_dpps import FiniteDPP
+    r, N = 4, 10
 
-		rng = RandomState(1)
+    DPP = FiniteDPP('likelihood',
+            **{'L_eval_X_data': (example_eval_L_linear, rng.randn(N, r))})
 
-		r, N = 4, 10
-		eig_vals = rng.rand(r)  # For projection DPP
-		eig_vecs, _ = qr(rng.randn(N, r), mode='economic')
+    for _ in range(10):
+        DPP.sample_exact(mode='vfx', random_state=rng, verbose=False)
 
-		DPP = FiniteDPP(kernel_type='correlation',
-						projection=False,
-						**{'K': (eig_vecs*eig_vals).dot(eig_vecs.T)})
+    print(DPP.list_of_samples)
 
-		for _ in range(10):
-			DPP.sample_exact(mode='Chol', random_state=rng)
+.. testoutput::
 
-		print(DPP.list_of_samples)
+    [[5, 1, 0, 3], [9, 0, 8, 3], [6, 4, 1], [5, 1, 2], [2, 1, 3], [3, 8, 4, 0], [0, 8, 1], [7, 8], [1, 8, 2, 0], [5, 8, 3]]
 
-	# .. testoutput::
-
-		[[2, 9], [0], [2], [6], [4, 9], [2, 7, 9], [0], [1, 9], [0, 1, 2], [2]]
+The ``verbose=False`` flag is used to suppress the default progress bars when running in batch mode (e.g. when generating these docs).
 
 Given, the RLS :math:`\tau_1,\dots,\tau_N`, the normalization constant :math:`\det(I+\tilde{\mathbf L}_\sigma)` and access to the likelihood kernel :math:`\tilde{\mathbf L}_\sigma`, the intermediate sampling method proceeds as follows:
 
