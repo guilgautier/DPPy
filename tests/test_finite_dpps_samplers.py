@@ -97,6 +97,16 @@ class TestAdequationOfFiniteDppSamplers(unittest.TestCase):
         return pval > tol, msg
 
     @staticmethod
+    def uniqueness_of_items(dpp, samples):
+        """Check that each sample is made of unique items (no duplicates)
+        """
+
+        adeq = all(len(set(x)) == len(x) for x in samples)
+        msg = 'Some samples contain duplicated items, while each item must appear only once'
+
+        return adeq, msg
+
+    @staticmethod
     def cardinality_adequation(dpp, samples):
         """Check that the empirical cardinality of the samples is within a standard deviation to the true E[|X|] = Trace(K).
         For k-DPP, simply check that the samples have the prescribed cadinality"""
@@ -127,7 +137,9 @@ class TestAdequationOfFiniteDppSamplers(unittest.TestCase):
             return adeq, msg
 
     def adequation(self, typ, samples, dpp):
-        if typ == 'cardinality':
+        if typ == 'uniqueness_of_items':
+            return self.uniqueness_of_items(dpp, samples)
+        elif typ == 'cardinality':
             return self.cardinality_adequation(dpp, samples)
         elif typ == 'singleton':
             return self.singleton_adequation(dpp, samples)
@@ -192,7 +204,7 @@ class TestAdequationOfFiniteDppSamplers(unittest.TestCase):
 
     #     dict_sampler_mode_param = {'mcmc_dpp': {'zonotope': {}}}
 
-    #     adequation_to_check = ('cardinality', 'singleton', 'doubleton')
+    #     adequation_to_check = ('uniqueness_of_items', 'cardinality', 'singleton', 'doubleton')
 
     #     self.run_adequation_tests(kernel_type,
     #                               list_dpp_params,
@@ -222,7 +234,7 @@ class TestAdequationOfFiniteDppSamplers(unittest.TestCase):
     #          'mcmc_k_dpp': {'E': {'size': k,
     #                               'nb_iter': self.nb_iter_mcmc}}}
 
-    #     adequation_to_check = ('cardinality', 'singleton', 'doubleton')
+    #     adequation_to_check = ('uniqueness_of_items', 'cardinality', 'singleton', 'doubleton')
 
     #     self.run_adequation_tests(kernel_type,
     #                               list_dpp_params,
@@ -254,7 +266,7 @@ class TestAdequationOfFiniteDppSamplers(unittest.TestCase):
     #          'mcmc_k_dpp': {'E': {'size': k,
     #                               'nb_iter': self.nb_iter_mcmc}}}
 
-    #     adequation_to_check = ('cardinality', 'singleton', 'doubleton')
+    #     adequation_to_check = ('uniqueness_of_items', 'cardinality', 'singleton', 'doubleton')
 
     #     self.run_adequation_tests(kernel_type,
     #                               list_dpp_params,
@@ -283,7 +295,7 @@ class TestAdequationOfFiniteDppSamplers(unittest.TestCase):
     #          'mcmc_k_dpp': {'E': {'size': k,
     #                               'nb_iter': self.nb_iter_mcmc}}}
 
-    #     adequation_to_check = ('cardinality', 'singleton', 'doubleton')
+    #     adequation_to_check = ('uniqueness_of_items', 'cardinality', 'singleton', 'doubleton')
 
     #     self.run_adequation_tests(kernel_type,
     #                               list_dpp_params,
@@ -320,7 +332,7 @@ class TestAdequationOfFiniteDppSamplers(unittest.TestCase):
     #          'mcmc_k_dpp': {'E': {'size': k,
     #                               'nb_iter': self.nb_iter_mcmc}}}
 
-    #     adequation_to_check = ('cardinality', 'singleton', 'doubleton')
+    #     adequation_to_check = ('uniqueness_of_items', 'cardinality', 'singleton', 'doubleton')
 
     #     self.run_adequation_tests(kernel_type,
     #                               list_dpp_params,
@@ -350,7 +362,7 @@ class TestAdequationOfFiniteDppSamplers(unittest.TestCase):
                                      'rls_oversample_bless': 5},
                              'GS': {'size': k}}}
 
-        adequation_to_check = ('cardinality', 'singleton', 'doubleton')
+        adequation_to_check = ('uniqueness_of_items', 'cardinality', 'singleton', 'doubleton')
 
         self.run_adequation_tests(kernel_type,
                                   list_dpp_params,
@@ -380,12 +392,13 @@ class TestAdequationOfFiniteDppSamplers(unittest.TestCase):
                                      'rls_oversample_bless': 10},
                              'GS': {'size': k}}}
 
-        adequation_to_check = ('cardinality', 'singleton', 'doubleton')
+        adequation_to_check = ('uniqueness_of_items', 'cardinality', 'singleton', 'doubleton')
 
         self.run_adequation_tests(kernel_type,
                                   list_dpp_params,
                                   dict_sampler_mode_param,
                                   adequation_to_check)
+
 
 def main():
 
