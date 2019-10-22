@@ -22,15 +22,9 @@ from dppy.utils import check_random_state
 
 class MultivariateJacobiOPE:
     """
-    Multivariate Jacobi Orthogonal Polynomial Ensemble used by :cite:`BaHa16` for Monte Carlo with Determinantal Point Processes and in our `ICML'19 workshop paper <http://negative-dependence-in-ml-workshop.lids.mit.edu/wp-content/uploads/sites/29/2019/06/icml_camera_ready.pdf>`_
+    Multivariate Jacobi Orthogonal Polynomial Ensemble used in :cite:`GaBaVa19` for Monte Carlo with Determinantal Point Processes
 
-    .. important::
-
-        In the current implementation of the chain rule, the proposal density is :math:`\\frac{1}{N} K(x,x) w(x)` and not :math:`\\prod_{i=1}^d \\frac{1}{\\pi\\sqrt{1-(x^i)^2}}` as previously used in the references mentioned above.
-
-        This yields faster sampling since less evaluations of the conditionnals involving Schur complements are required, see also :py:meth:`~dppy.multivariate_jacobi_ope.MultivariateJacobiOPE.sample`
-
-    The multivariate Jacobi orthogonal polynomial ensemble corresponds to a continuous multivariate projection DPP with state space :math:`[-1, 1]^d` and
+    This corresponds to a continuous multivariate projection DPP with state space :math:`[-1, 1]^d` with respect to
 
     - reference measure :math:`\\mu(dx) = w(x) dx` (see also :py:meth:`~dppy.multivariate_jacobi_ope.MultivariateJacobiOPE.eval_w`), where
 
@@ -268,7 +262,7 @@ class MultivariateJacobiOPE:
         .. math::
 
             \\frac{1}{N} K(x, x) w(x) dx
-            = \\frac{1}{N} \\sum_{\\mathfrak{k}=0}^{N-1} P_k(x)^2 w(x)
+            = \\frac{1}{N} \\sum_{\\mathfrak{b}(k)=0}^{N-1} P_k(x)^2 w(x)
 
         with proposal distribution
 
@@ -415,7 +409,7 @@ class MultivariateJacobiOPE:
 
         .. seealso::
 
-            - :ref:`finite_dpps_exact_sampling_projection_dpp_chain_rule`
+            - :ref:`continuous_dpps_exact_sampling_projection_dpp_chain_rule`
             - :py:meth:`sample_proposal_lev_score`
         """
 
@@ -449,7 +443,8 @@ class MultivariateJacobiOPE:
             for trial in range(nb_trials_max):
 
                 # Propose a point from 1/N K(x,x) w(x) i.e. leverage score
-                sample[it], K_xx = self.sample_proposal_lev_score(random_state=rng)
+                sample[it], K_xx =\
+                    self.sample_proposal_lev_score(random_state=rng)
 
                 # Compute Schur cmplmt = K(x, x) - K(x, Y) K(Y, Y)^-1 K(Y, x)
                 #
@@ -750,7 +745,7 @@ def compute_Gautschi_bounds(jacobi_params, ordering, log_scale=True):
     .. math::
 
         \\frac{1}{N} K(x, x) w(x) dx
-        = \\frac{1}{N} \\sum_{\\mathfrak{k}=0}^{N-1} P_k(x)^2 w(x)
+        = \\frac{1}{N} \\sum_{\\mathfrak{b}(k)=0}^{N-1} P_k(x)^2 w(x)
 
     with proposal distribution
 
