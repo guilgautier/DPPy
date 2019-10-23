@@ -108,7 +108,7 @@ def reduce_lambda(X_data, eval_L, intermediate_dict_bless, lam_new, rng, rls_ove
 
     if not u > 0:
         raise ValueError('No point selected during uniform sampling step, try to increase rls_oversample_bless. '
-                         'Expected number of points: {:.3f}'.format(n * ucb))
+                         'Expected number of points: {:.3f}'.format(n * ucb.mean()))
 
     X_U = X_data[U, :]
 
@@ -212,7 +212,11 @@ def bless(X_data, eval_L, lam_final, rls_oversample_param, random_state=None, nb
     nb_iter_bless = nb_iter_bless if nb_iter_bless is not None else np.ceil(np.log(n)).astype('int')
 
     diag_norm = np.asarray(evaluate_L_diagonal(eval_L, X_data))
-    ucb_init = rls_oversample_param * diag_norm / n
+    lam_init = n
+    ucb_init = rls_oversample_param * diag_norm / (diag_norm + lam_init)
+    while ucb_init.sum() <= 10:
+        lam_init = lam_init / 1.25
+        ucb_init = rls_oversample_param * diag_norm / (diag_norm + lam_init)
 
     rng = check_random_state(random_state)
 
@@ -224,12 +228,12 @@ def bless(X_data, eval_L, lam_final, rls_oversample_param, random_state=None, nb
     intermediate_dict_bless = CentersDictionary(idx=selected_init.nonzero(),
                                                 X=X_data[selected_init, :],
                                                 probs=np.ones(np.sum(selected_init)) * ucb_init[selected_init],
-                                                lam=n,
+                                                lam=lam_init,
                                                 rls_oversample=rls_oversample_param)
 
-    lam_sequence = list(np.geomspace(lam_final, n, nb_iter_bless))
+    lam_sequence = list(np.geomspace(lam_final, lam_init, nb_iter_bless))
 
-    # discard n from the list, we already used it to initialize
+    # discard lam_init from the list, we already used it to initialize
     lam_sequence.pop()
 
     with get_progress_bar(total=len(lam_sequence), disable=not verbose) as t:
