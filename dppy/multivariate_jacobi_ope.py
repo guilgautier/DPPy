@@ -702,6 +702,10 @@ def compute_poly1D_square_norms(jacobi_params, deg_max):
             = \\int_{-1}^{1}
                 \\left( P_{k}^{(a_i,b_i)}(x) \\right)^2
                 (1-x)^{a_i} (1+x)^{b_i} d x
+            = \\frac{2^{a_i+b_i+1}}
+                    {2k+a_i+b_i+1}
+              \\frac{\\Gamma(k+a_i+1)\\Gamma(k+b_i+1)}
+                    {\\Gamma(k+a_i+b_i+1)n!}
 
     :param jacobi_params:
         Jacobi parameters :math:`[(a_i, b_i)]_{i=1}^d \\in [-\\frac{1}{2}, \\frac{1}{2}]^{d \\times 2}`
