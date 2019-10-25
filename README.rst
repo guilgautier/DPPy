@@ -146,8 +146,7 @@ How to cite this work?
 ~~~~~~~~~~~~~~~~~~~~~~
 
 We wrote a companion paper to
-`DPPy <https://github.com/guilgautier/DPPy>`__ for latter submission to
-the `MLOSS <http://www.jmlr.org/mloss/>`__ track of JMLR.
+`DPPy <https://github.com/guilgautier/DPPy>`__ which got accepted for publication in the `MLOSS <http://www.jmlr.org/mloss/>`__ track of JMLR.
 
 The companion paper is available on
 
@@ -159,13 +158,12 @@ BibTeX:
 
 .. code:: bibtex
 
-  @article{GPBV18,
+  @article{GPBV19,
     archivePrefix = {arXiv},
     arxivId = {1809.07258},
     author = {Gautier, Guillaume and Polito, Guillermo and Bardenet, R{\'{e}}mi and Valko, Michal},
-    eprint = {1809.07258},
-    journal = {ArXiv e-prints},
-    title = {{DPPy: Sampling Determinantal Point Processes with Python}},
+    journal = {Journal of Machine Learning Research - Machine Learning Open Source Software (JMLR-MLOSS), in press},
+    title = {{DPPy: DPP Sampling with Python}},
     keywords = {Computer Science - Machine Learning, Computer Science - Mathematical Software, Statistics - Machine Learning},
     url = {http://arxiv.org/abs/1809.07258},
     year = {2018},

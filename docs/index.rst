@@ -12,12 +12,15 @@
 .. |Coverage Status| image:: https://coveralls.io/repos/github/guilgautier/DPPy/badge.svg?branch=master
   :target: https://coveralls.io/github/guilgautier/DPPy?branch=master
 
+.. |PyPI package| image:: https://badge.fury.io/py/dppy.svg
+    :target: https://badge.fury.io/py/dppy
+
 .. |Google Colab| image:: https://badgen.net/badge/Launch/on%20Google%20Colab/blue?icon=terminal
    :target: https://colab.research.google.com/github/guilgautier/DPPy/blob/master/notebooks/Tuto_DPPy.ipynbs
 
 .. _DPPy: https://github.com/guilgautier/DPPy
 
-|Documentation Status| |Build Status| |Coverage Status|
+|Documentation Status| |Build Status| |Coverage Status| |PyPI package|
 
 .. |siren| replace:: 🚨
 .. |fire| replace:: 🔥
@@ -102,7 +105,7 @@ How to cite this work?
 We wrote a companion paper to
 `DPPy <https://github.com/guilgautier/DPPy>`__ which is available on
 
--  `arXiv <http://arxiv.org/abs/1809.07258>`__ :cite:`GPBV18`
+-  `arXiv <http://arxiv.org/abs/1809.07258>`__ :cite:`GPBV19`
 -  `GitHub <https://github.com/guilgautier/DPPy_paper>`__ for the lastest version
 
 If you use this package, please consider citing it with this piece of
@@ -110,13 +113,12 @@ BibTeX:
 
 .. code:: bibtex
 
-  @article{GPBV18,
+  @article{GPBV19,
     archivePrefix = {arXiv},
     arxivId = {1809.07258},
     author = {Gautier, Guillaume and Polito, Guillermo and Bardenet, R{\'{e}}mi and Valko, Michal},
-    eprint = {1809.07258},
-    journal = {ArXiv e-prints},
-    title = {{DPPy: Sampling Determinantal Point Processes with Python}},
+    journal = {Journal of Machine Learning Research - Machine Learning Open Source Software (JMLR-MLOSS), in press},
+    title = {{DPPy: DPP Sampling with Python}},
     keywords = {Computer Science - Machine Learning, Computer Science - Mathematical Software, Statistics - Machine Learning},
     url = {http://arxiv.org/abs/1809.07258},
     year = {2018},
