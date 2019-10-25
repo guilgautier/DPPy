@@ -13,7 +13,7 @@ Multivariate Jacobi ensemble
     d) our `ICML'19 workshop paper <https://guilgautier.github.io/publications/>`_
 
 The figures below display a sample of a :math:`d=2` dimensional Jacobi ensemble :py:class:`~dppy.multivariate_jacobi_ope.MultivariateJacobiOPE` with :math:`N=200` points.
-The red and green dashed curves correspond to the normalized base densities proportional to :math:`(1-x)^{a^1} (1+x)^{b^1}` and :math:`(1-y)^{a^1} (1+y)^{b^1}`, respectively.
+The red and green dashed curves correspond to the normalized base densities proportional to :math:`(1-x)^{a_1} (1+x)^{b_1}` and :math:`(1-y)^{a_2} (1+y)^{b_2}`, respectively.
 
 .. plot:: plots/ex_plot_multivariate_jacobi_ensemble.py
     :width: 50%
