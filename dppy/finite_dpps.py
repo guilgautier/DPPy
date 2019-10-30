@@ -71,9 +71,9 @@ class FiniteDPP:
             - ``{'L': L}``, with :math:`\\mathbf{L}\\succeq 0`
             - ``{'L_eig_dec': (eig_vals, eig_vecs)}``, with :math:`eigvals \\geq 0`
             - ``{'L_gram_factor': Phi}``, with :math:`\\mathbf{L} = \\Phi^{ \\top} \\Phi`
-            - ``{'L_eval_X_data': (eval_L, X_data)}``, with :math:`\mathbf{X}_{data}(N \\times d)` and
+            - ``{'L_eval_X_data': (eval_L, X_data)}``, with :math:`\\mathbf{X}_{data}(N \\times d)` and
               :math:`eval \_ L` a likelihood function such that
-              :math:`\mathbf{L} = eval \_ L(\mathbf{X}_{data}, \mathbf{X}_{data})`. For a full description of the
+              :math:`\\mathbf{L} = eval \_ L(\\mathbf{X}_{data}, \\{X}_{data})`. For a full description of the
               requirements imposed on `eval_L`'s interface, see the documentation :func:`dppy.vfx_sampling.vfx_sampling_precompute_constants`.
               For an example, see the implementation of any of the kernels provided by scikit-learn
               (e.g. sklearn.gaussian_process.kernels.PairwiseKernel).
@@ -422,9 +422,7 @@ class FiniteDPP:
                                      random_state=rng)
 
         else:
-            raise ValueError('None of the available samplers could be used based on the current DPP representation.'
-                             ' This should never happen, please consider rasing an issue on github'
-                             ' at https://github.com/guilgautier/DPPy/issues')
+            raise ValueError('None of the available samplers could be used based on the current DPP representation. This should never happen, please consider rasing an issue on github at https://github.com/guilgautier/DPPy/issues')
 
         self.list_of_samples.append(sampl)
         return sampl
@@ -505,7 +503,7 @@ class FiniteDPP:
             if self.eval_L is None or self.X_data is None:
                 raise ValueError("The vfx sampler is currently only available for the 'L_eval_X_data' representation.")
 
-            params.pop("random_state",None)
+            params.pop("random_state", None)
             sampl, self.intermediate_sample_info = k_dpp_vfx_sampler(
                                                 size,
                                                 self.intermediate_sample_info,
@@ -522,7 +520,7 @@ class FiniteDPP:
                     rank = np.rint(np.sum(self.K_eig_vals)).astype(int)
                 elif self.A_zono is not None:
                     rank = self.A_zono.shape[0]
-                else: # self.K is not None
+                else:  # self.K is not None
                     rank = np.rint(np.trace(self.K)).astype(int)
 
                 if size != rank:
@@ -629,9 +627,7 @@ class FiniteDPP:
                                            random_state=rng)
 
         else:
-            raise ValueError('None of the available samplers could be used based on the current DPP representation.'
-                             ' This should never happen, please consider rasing an issue on github'
-                             ' at https://github.com/guilgautier/DPPy/issues')
+            raise ValueError('None of the available samplers could be used based on the current DPP representation. This should never happen, please consider rasing an issue on github at https://github.com/guilgautier/DPPy/issues')
 
         self.list_of_samples.append(sampl)
         return sampl
@@ -725,7 +721,7 @@ class FiniteDPP:
                          '- `AED`: Add-Exchange-Delete',
                          '- `AD`: Add-Delete',
                          '- `E`: Exchange',
-                         '- `zonotope` for projection correlation kernel only)',
+                         '- `zonotope`: projection correlation kernel only',
                          'Given: {}'.format(self.sampling_mode)]
             raise ValueError('\n'.join(err_print))
 

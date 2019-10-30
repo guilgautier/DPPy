@@ -93,7 +93,7 @@ def initialize_AED_sampler(kernel, random_state=None):
             S0 = np.intersect1d(T, ground_set, assume_unique=True)
             det_S0 = det_ST(kernel, S0)
     else:
-        raise ValueError('Initialization problem, you may be using a size `k` > rank of the kernel')
+        raise ValueError('Initialization problem, make sure size `k` <= rank of the kernel')
 
     return S0.tolist()
 
