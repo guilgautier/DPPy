@@ -32,7 +32,7 @@
 .. |die| replace:: 🎲
 
 Welcome to DPPy_'s documentation!
-########################################
+#################################
 
 **Determinantal point processes** (DPPs) are specific probability distributions over clouds of points, which have been popular as models or computational tools across physics, probability, statistics, random matrices, and more recently machine learning. DPPs are often used to induce diversity or repulsiveness among the points of a sample.
 
@@ -103,9 +103,11 @@ How to cite this work?
 ======================
 
 We wrote a companion paper to
-`DPPy <https://github.com/guilgautier/DPPy>`__ which is available on
+`DPPy <https://github.com/guilgautier/DPPy>`__ which got accepted for publication in the `MLOSS <http://www.jmlr.org/mloss/>`__ track of JMLR.
 
--  `arXiv <http://arxiv.org/abs/1809.07258>`__ :cite:`GPBV19`
+The companion paper is available on
+
+-  `arXiv <http://arxiv.org/abs/1809.07258>`__
 -  `GitHub <https://github.com/guilgautier/DPPy_paper>`__ for the lastest version
 
 If you use this package, please consider citing it with this piece of
@@ -121,7 +123,7 @@ BibTeX:
     title = {{DPPy: DPP Sampling with Python}},
     keywords = {Computer Science - Machine Learning, Computer Science - Mathematical Software, Statistics - Machine Learning},
     url = {http://arxiv.org/abs/1809.07258},
-    year = {2018},
+    year = {2019},
     note = {Code at http://github.com/guilgautier/DPPy/ Documentation at http://dppy.readthedocs.io/}
   }
 

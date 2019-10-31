@@ -60,7 +60,7 @@ This project depends on the following libraries, which are automatically downloa
           sudo apt install -qq gcc g++
 
 Download instructions
-~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~
 
 DPPy is now available on `PyPI <https://pypi.org/project/dppy/>`__ |PyPI package|
 
@@ -97,7 +97,7 @@ However you may not work with the latest version, so
        pip install .
 
 How to use it
-------------
+-------------
 
 To avoid duplicating the docs, the entire DPPy documentation is in read the docs in the following link http://dppy.readthedocs.io/.
 There are also some interactive tutorials using Jupyter in here https://github.com/guilgautier/DPPy/blob/master/notebooks/.
@@ -111,7 +111,7 @@ web browser, without having to download or install Python or anything.
 Just click, wait a little bit, and play with the notebook!
 
 Documentation
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~
 
 The
 `documentation <http://dppy.readthedocs.io/>`__
@@ -166,7 +166,7 @@ BibTeX:
     title = {{DPPy: DPP Sampling with Python}},
     keywords = {Computer Science - Machine Learning, Computer Science - Mathematical Software, Statistics - Machine Learning},
     url = {http://arxiv.org/abs/1809.07258},
-    year = {2018},
+    year = {2019},
     note = {Code at http://github.com/guilgautier/DPPy/ Documentation at http://dppy.readthedocs.io/}
   }
 
