@@ -40,6 +40,7 @@ setup(
     license='MIT',
 
     # See https://pypi.python.org/pypi?%3Aaction=list_classifiers
+    # https://pypi.org/classifiers/
     classifiers=[
         # How mature is this project? Common values are
         #   3 - Alpha
@@ -50,7 +51,7 @@ setup(
         # Indicate who your project is intended for
         'Intended Audience :: Science/Research',
         'Topic :: Scientific/Engineering :: Mathematics',
-        'Topic :: Scientific/Engineering :: Machine Learning',
+        'Topic :: Scientific/Engineering :: Artificial Intelligence',
 
         # Pick your license as you wish (should match "license" above)
         'License :: OSI Approved :: MIT License',
