@@ -12,8 +12,8 @@ DPPy: Sampling Determinantal Point Processes with Python
 .. |Coverage Status| image:: https://coveralls.io/repos/github/guilgautier/DPPy/badge.svg?branch=master
   :target: https://coveralls.io/github/guilgautier/DPPy?branch=master
 
-.. |PyPI package| image:: https://badge.fury.io/py/dppy.svg
-    :target: https://badge.fury.io/py/dppy
+.. |PyPI package| image:: https://img.shields.io/pypi/v/dppy?color=blue
+  :target: https://pypi.org/project/dppy/
 
 .. |Google Colab| image:: https://badgen.net/badge/Launch/on%20Google%20Colab/blue?icon=terminal
   :target: https://colab.research.google.com/github/guilgautier/DPPy/blob/master/notebooks/Tuto_DPPy.ipynb
