@@ -199,7 +199,7 @@ The cost of getting one sample from a **projection** DPP is of order :math:`\mat
 		        DPP.sample_exact(mode=mode, random_state=rng)
 
 		    print(DPP.sampling_mode)
-		    print(list(map(list, DPP.list_of_samples)))
+		    print(DPP.list_of_samples)
 
 	.. testoutput::
 
@@ -241,7 +241,7 @@ The cost of getting one sample from a **projection** DPP is of order :math:`\mat
 			# mode='GS': Gram-Schmidt (default)
 			DPP.sample_exact(mode='GS', random_state=rng)
 
-		print(list(map(list, DPP.list_of_samples)))
+		print(DPP.list_of_samples)
 
 	.. testoutput::
 
@@ -324,7 +324,7 @@ In practice
 			# mode='GS': Gram-Schmidt (default)
 			DPP.sample_exact(mode='GS', random_state=rng)
 
-		print(list(map(list, DPP.list_of_samples)))
+		print(DPP.list_of_samples)
 
 	.. testoutput::
 
@@ -362,7 +362,7 @@ In practice
 			# mode='GS': Gram-Schmidt (default)
 			DPP.sample_exact(mode='GS', random_state=rng)
 
-		print(list(map(list, DPP.list_of_samples)))
+		print(DPP.list_of_samples)
 
 	.. testoutput::
 
@@ -409,7 +409,7 @@ In practice
 			# mode='GS': Gram-Schmidt (default)
 			DPP.sample_exact(mode='GS', random_state=rng)
 
-		print(list(map(list, DPP.list_of_samples)))
+		print(DPP.list_of_samples)
 
 	.. testoutput::
 
@@ -527,7 +527,7 @@ In practice
 	for _ in range(10):
 		DPP.sample_exact(mode='Chol', random_state=rng)
 
-	print(list(map(list, DPP.list_of_samples)))
+	print(DPP.list_of_samples)
 
 .. testoutput::
 
@@ -546,20 +546,74 @@ Intermediate sampling method
 Main idea
 =========
 
-First sample an intermediate distribution and correct the bias by thinning the intermediate sample using a carefully designed DPP.
+This method is based on the concept of a **distortion-free intermediate sample**, where we draw a larger sample of points in such a way that we can then downsample to the correct DPP distribution. We assume access to the likelihood kernel :math:`\mathbf{L}` (although a variant of this method also exists for projection DPPs). Crucially the sampling relies on an important connection between DPPs and so-called **ridge leverage scores** (RLS, see :cite:`AlMa15`), which are commonly used for sampling in randomized linear algebra. Namely, the marginal probability of the i-th point in :math:`\mathcal{X} \sim \operatorname{DPP}(\mathbf{L})` is also the i-th ridge leverage score of :math:`\mathbf{L}` (with ridge parameter equal 1):
 
-.. seealso::
+.. math::
 
-	:cite:`DeCaVa19`
+	\mathbb{P}[i \in \mathcal{X}] = \big[\mathbf{L}(I + \mathbf{L})^{-1}\big]_{ii}=\tau_i,\quad i\text{th 1-ridge leverage score}.
+
+Suppose that we draw a sample of :math:`t` points i.i.d. proportional to ridge leverage scores, i.e., :math:`\sigma=(\sigma_1, \sigma_2,...,\sigma_t)` such that :math:`\mathbb{P}[\sigma_j=i]\propto\tau_i`. Intuitively, this sample is similar fo :math:`\mathcal{X}\sim \operatorname{DPP}(\mathbf{L})` except that it "ignores" all the dependencies between the points. However, if we sample sufficiently many points i.i.d. according to RLS, then a proper sample :math:`\mathcal{X}` will likely be contained within it. This can be formally shown for :math:`t = O(\mathbb{E}[|\mathcal{X}|]^2)`. When :math:`\mathbb{E}[|\mathcal{X}|]^2\ll N`, then this allows us to reduce the size of the DPP kernel :math:`\mathbf{L}` from :math:`N\times N` to a much smaller size :math:`\mathbf{\tilde{L}}` :math:`t\times t`. Making this sampling exact requires considerably more care, because even with a large :math:`t` there is always a small probability that the i.i.d. sample :math:`\sigma` is not sufficiently diverse. We guard against this possibility by rejection sampling.
+
+.. important::
+   Use this method for sampling  :math:`\mathcal{X} \sim \operatorname{DPP}(\mathbf{L})` when :math:`\mathbb{E}\left[|\mathcal{X}|\right]\ll\sqrt{N}`.
+
+   - Preprocessing costs :math:`\mathcal{O}\big(N\cdot \text{poly}(\mathbb{E}\left[|\mathcal{X}|\right])\, \text{polylog}(N)\big)`.
+   - Each sample costs :math:`\mathcal{O}\big(\mathbb{E}[|\mathcal{X}|]^6\big)`.
 
 In practice
 ===========
 
-   - In certain regimes, this procedure may be more practical with an overall :math:`\mathcal{O}(N \text{poly}(\mathbb{E}\left[|\mathcal{X}|\right]) \text{polylog}(N))` cost.
+.. testcode::
 
-.. todo::
+    from numpy.random import RandomState
+    from dppy.finite_dpps import FiniteDPP
+    from dppy.utils import example_eval_L_linear
 
-	TBC
+    rng = RandomState(1)
+
+    r, N = 4, 10
+
+    DPP = FiniteDPP('likelihood',
+            **{'L_eval_X_data': (example_eval_L_linear, rng.randn(N, r))})
+
+    for _ in range(10):
+        DPP.sample_exact(mode='vfx', random_state=rng, verbose=False)
+
+    print(DPP.list_of_samples)
+
+.. testoutput::
+
+    [[5, 1, 0, 3], [9, 0, 8, 3], [6, 4, 1], [5, 1, 2], [2, 1, 3], [3, 8, 4, 0], [0, 8, 1], [7, 8], [1, 8, 2, 0], [5, 8, 3]]
+
+The ``verbose=False`` flag is used to suppress the default progress bars when running in batch mode (e.g. when generating these docs).
+
+Given, the RLS :math:`\tau_1,\dots,\tau_N`, the normalization constant :math:`\det(I+\tilde{\mathbf L}_\sigma)` and access to the likelihood kernel :math:`\tilde{\mathbf L}_\sigma`, the intermediate sampling method proceeds as follows:
+
+.. math::
+
+	&\textbf{repeat}&\\
+	&&\text{sample }t \sim\mathrm{Poisson}(k^2\,\mathrm{e}^{1/k}),\hspace{3.5cm}\text{where }k=\mathbb{E}[|\mathcal{X}|]\\
+	&&\text{sample }\sigma_1,\dots,\sigma_t\sim (\tau_1,\dots\tau_N),\\
+	&&\text{sample } \textit{Acc}\sim\!\text{Bernoulli}\Big(\frac{\mathrm{e}^{k}\det(I+\tilde{\mathbf{L}}_{\sigma})}{\mathrm{e}^{t/k}\det(I+\mathbf{L})}\Big),\quad\text{where }\tilde{L}_{ij} = \frac1{k\sqrt{\tau_i\tau_j}}L_{ij},\\
+	&\textbf{until }&\textit{Acc}=\text{true}\\
+	&\textbf{return }&\mathcal{X}=\{\sigma_i:i\in \tilde{\mathcal{X}}\}\quad\text{where }\tilde{\mathcal{X}}\sim \operatorname{DPP}(\tilde{\mathbf{L}}_{\sigma})
+
+
+It can be shown that :math:`\mathcal{X}` is distributed exactly according to :math:`\operatorname{DPP}(\mathbf{L})` and the expected number of rejections is a small constant. The intermediate likelihood kernel :math:`\tilde{\mathbf L}_\sigma` forms a :math:`t\times t` DPP subproblem that can be solved using any other DPP sampler.
+
+   - Since the size of the intermediate sample is :math:`t=\mathcal{O}(\mathbb{E}[\mathcal{X}]^2)`, the primary cost of the sampling is computing :math:`\det(I+\tilde{\mathbf L}_\sigma)` which takes :math:`\mathcal{O}(t^3)=\mathcal{O}(\mathbb{E}[\mathcal{X}]^6)` time. This is also the expected cost of sampling from :math:`\operatorname{DPP}(\tilde{\mathbf{L}}_{\sigma})` if we use, for example, the spectral method.
+   - The algorithm requires precomputing the RLS :math:`\tau_1,\dots,\tau_n` and :math:`\det(I+\mathbf L)`. Computing them exactly takes :math:`\mathcal{O}(N^3)`, however, surprisingly, if we use sufficiently accurate approximations then the exactness of the sampling can be retained (details in :cite:`DeCaVa19`). Efficient methods for approximating leverage scores (see :cite:`RuCaCaRo18`) bring the precomputing cost down to :math:`\mathcal{O}(N \text{poly}(\mathbb{E}\left[|\mathcal{X}|\right]) \text{polylog}(N))`.
+   - When :math:`\mathbb{E}[|\mathcal{X}|]` is sufficiently small, the entire sampling procedure only looks at a small fraction of the entries of :math:`\mathbf{L}`. This makes the method useful when we want to avoid constructing the entire likelihood kernel.
+   - When the likelihood kernel is given implicitly via a matrix :math:`\mathbf{X}` such that :math:`\mathbf{L}=\mathbf{X}\mathbf{X}^\top` (dual formulation) then a version of this method is given by :cite:`Dere19`
+   - A variant of this method also exists for projection DPPs :cite:`DeWaHs18`
+
+
+.. seealso::
+
+	- :cite:`DeCaVa19` (Likelihood kernel)
+	- :cite:`Dere19` (Dual formulation)
+	- :cite:`DeWaHs18` (Projection DPP)
+
 
 .. _finite_dpps_exact_sampling_k_dpps:
 
@@ -628,7 +682,7 @@ Sampling :math:`k\!\operatorname{-DPP}(\mathbf{L})` from :math:`\mathbf{L} \succ
 	for _ in range(10):
 	    DPP.sample_exact_k_dpp(size=k, random_state=rng)
 
-	print(list(map(list, DPP.list_of_samples)))
+	print(DPP.list_of_samples)
 
 .. testoutput::
 
@@ -799,7 +853,7 @@ where the last equality is a simple computation of the `elementary symmetric pol
 
 .. important::
 
-	This shows that, when :math:`\mathbf{L}` is an orthogonal projection matrix, the order the items :math:`s_1, \dots, s_r` we selected by the chain rule :eq:`eq:chain_rule_caution_vector` can be forgotten, so that :math:`\{s_1, \dots, s_r\}` can be considered as valid sample of :math:`k\!\operatorname{-DPP}(\mathbf{L})`.
+	This shows that, when :math:`\mathbf{L}` is an orthogonal projection matrix, the order the items :math:`s_1, \dots, s_r` were selected by the chain rule :eq:`eq:chain_rule_caution_vector` can be forgotten, so that :math:`\{s_1, \dots, s_r\}` can be considered as valid sample of :math:`k\!\operatorname{-DPP}(\mathbf{L})`.
 
 .. code-block:: python
 

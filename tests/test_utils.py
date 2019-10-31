@@ -259,6 +259,22 @@ class TestUtils(unittest.TestCase):
 
                     self.assertIn('not full row rank', str(context.exception))
 
+    def test_evaluate_L_diagonal(self):
+        """ checking np.diag(dpp.L) = utils.evaluate_L_diagonal(eval_L, X_data)
+        """
+
+        X = rndm.randn(100, 20)
+
+        np.testing.assert_almost_equal(np.diag(utils.example_eval_L_linear(X)),
+                                       utils.evaluate_L_diagonal(utils.example_eval_L_linear, X))
+
+        X = rndm.rand(100, 1)
+
+        np.testing.assert_almost_equal(np.diag(utils.example_eval_L_min_kern(X)),
+                                       utils.evaluate_L_diagonal(utils.example_eval_L_min_kern, X))
+
+        pass
+
 
 def main():
 

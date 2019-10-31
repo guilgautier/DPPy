@@ -107,7 +107,7 @@ def is_square(array):
         return None
 
     shape = array.shape
-    if  len(shape) == 2 and len(set(shape)) == 1:
+    if len(shape) == 2 and len(set(shape)) == 1:
         return array
     else:
         raise ValueError('array not 2D square: shape={}'.format(shape))
@@ -138,7 +138,7 @@ def is_projection(array, col_idx=None):
     array = is_square(array)
 
     if col_idx is None:
-        col_idx =  np.arange(min(20, array.shape[0]))
+        col_idx = np.arange(min(20, array.shape[0]))
 
     M_j = array[:, col_idx]
     Mjj = array[col_idx, col_idx]
@@ -156,7 +156,7 @@ def is_orthonormal_columns(array, col_idx=None):
         return None
 
     if col_idx is None:
-        col_idx =  np.arange(np.min([5, array.shape[1]]))
+        col_idx = np.arange(np.min([5, array.shape[1]]))
 
     U = array[:, col_idx]
 
@@ -221,3 +221,121 @@ def is_full_row_rank(array):
             return array
         else:
             raise ValueError(err_print + 'd(={}) != rank(={})'.format(d, rank))
+
+
+def stable_invert_root(eigenvec, eigenval):
+    """ Given eigendecomposition of a PSD matrix, compute a representation of the pseudo-inverse square root
+    of the matrix using numerically stable operations. In particular, eigenvalues which are near-zero
+    and the associated eigenvectors are dropped from the pseudo-inverse.
+    """
+    n = eigenvec.shape[0]
+
+    if eigenvec.shape != (n, n) or eigenval.shape != (n,):
+        raise ValueError('array sizes of {} eigenvectors and {} eigenvalues do not match'.format(eigenvec.shape, eigenval.shape))
+
+    # threshold formula taken from pinv2's implementation of numpy/scipy
+    thresh = eigenval.max() * max(eigenval.shape) * np.finfo(eigenval.dtype).eps
+    stable_eig = np.logical_not(np.isclose(eigenval, 0., atol=thresh))
+    m = sum(stable_eig)
+
+    eigenvec_thin = eigenvec[:, stable_eig]
+    eigenval_thin = eigenval[stable_eig]
+
+    if eigenvec_thin.shape != (n, m) or eigenval_thin.shape != (m,):
+        raise ValueError('array sizes of {} eigenvectors and {} eigenvalues do not match'.format(eigenvec.shape, eigenval.shape))
+
+    eigenval_thin_inv_root = (1 / np.sqrt(eigenval_thin)).reshape(-1, 1)
+
+    return eigenvec_thin, eigenval_thin_inv_root
+
+
+def get_progress_bar(total=-1, disable=False, **kwargs):
+    """Helper function to get a tqdm progress bar (or a simple fallback otherwise)"""
+    class ProgBar(object):
+        def __init__(self, total=-1, disable=False, **kwargs):
+            self.disable = disable
+            self.t = 0
+            self.total = total
+            self.debug_string = ""
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *args, **kwargs):
+            pass
+
+        def set_postfix(self, **kwargs):
+            self.debug_string = ""
+            for arg in kwargs:
+                self.debug_string += "{}={} ".format(arg, kwargs[arg])
+
+        def update(self):
+            if not self.disable:
+                self.t += 1
+                print_str = "{}".format(self.t)
+
+                if self.total > 0:
+                    print_str += "/{}".format(self.total)
+
+                print_str += ": {}".format(self.debug_string)
+
+                if len(print_str) < 80:
+                    print_str = print_str + " " * (80 - len(print_str))
+
+                print(print_str, end='\r', flush=True)
+
+            if self.t == self.total:
+                print("")
+
+    try:
+        from tqdm import tqdm
+        progress_bar = tqdm(total=total, disable=disable)
+    except ImportError:
+        progress_bar = ProgBar(total=total, disable=disable)
+
+    return progress_bar
+
+
+def evaluate_L_diagonal(eval_L, X):
+    """Helper function to evaluate a likelihood function on a set of points (i.e. compute the diagonal of the L matrix)"""
+    diag_eval = getattr(eval_L, "diag", None)
+    if callable(diag_eval):
+        return diag_eval(X)
+    else:
+        # inspired by sklearn.gaussian_process.kernels.PairwiseKernel
+        return np.apply_along_axis(eval_L, 1, X).ravel()
+
+
+def example_eval_L_linear(X, Y=None):
+    X = np.atleast_2d(X)
+    if Y is None:
+        return X.dot(X.T)
+    else:
+        Y = np.atleast_2d(Y)
+        return X.dot(Y.T)
+
+
+def example_eval_L_polynomial(X, Y=None, p=2):
+    if Y is None:
+        ret = example_eval_L_linear(X)
+        np.power(ret, p, out=ret)
+        return ret
+    else:
+        ret = example_eval_L_linear(X, Y)
+        np.power(ret, p, out=ret)
+        return ret
+
+
+def example_eval_L_min_kern(X, Y=None):
+
+    X = np.atleast_2d(X)
+    assert X.shape[1] == 1 and np.all((0 <= X) & (X <= 1))
+
+    if Y is None:
+        Y = X
+    else:
+        Y = np.atleast_2d(Y)
+        assert Y.shape[1] == 1 and np.all((0 <= Y) & (Y <= 1))
+
+    return np.minimum(np.repeat(X, Y.size, axis=1),
+                      np.repeat(Y.T, X.size, axis=0))
