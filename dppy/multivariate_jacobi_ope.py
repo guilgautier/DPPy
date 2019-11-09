@@ -326,6 +326,7 @@ class MultivariateJacobiOPE:
         k_multi_ind = self.ordering[ind]
         square_norm = self.poly_multiD_square_norms[ind]
         rejection_bound = self.Gautschi_bounds[ind]
+        a_05, b_05 = self._jacobi_params_plus_05.T
 
         for trial in range(nb_trials_max):
 
@@ -345,9 +346,7 @@ class MultivariateJacobiOPE:
             #   / (1/pi * ((1-x_i)*(1+x_i))^{-1/2})
             # = prod_{i=1}^d pi * (1-x_i)^{a_i+1/2} (1+x_i)^{b_i+1/2}
             ratio_w_proposal =\
-                self._pi_power_dim\
-                * np.prod((1.0 - x)**(self._jacobi_params_plus_05[:, 0])
-                          * (1.0 + x)**(self._jacobi_params_plus_05[:, 1]))
+                self._pi_power_dim * np.prod((1.0 - x)**a_05 * (1.0 + x)**b_05)
 
             if rng.rand() * rejection_bound < Pk2_x * ratio_w_proposal:
                 break
@@ -400,7 +399,7 @@ class MultivariateJacobiOPE:
             return np.prod(poly_1D_jacobi[:, self.ordering, range(self.dim)],
                            axis=2)
 
-    def sample(self, nb_trials_max=10000, random_state=None, tridiag_1D=True):
+    def sample_old(self, nb_trials_max=10000, random_state=None, tridiag_1D=True):
         """Use the chain rule :cite:`HKPV06` (Algorithm 18) to sample :math:`\\left(x_{1}, \\dots, x_{N} \\right)` with density
 
         .. math::
@@ -455,6 +454,7 @@ class MultivariateJacobiOPE:
 
         sample[0], K_xx = self.sample_proposal_lev_score(random_state=rng)
         # K_YY^-1 = K(Y, Y)^-1
+
         K_Y_inv = np.zeros((self.N - 1, self.N - 1))
         K_Y_inv[0, 0] = 1.0 / K_xx
         # K_Yx = Phi_Y.dot(Phi_x) = Phi_Yx[:n].dot(Phi_Yx[n])
@@ -466,7 +466,6 @@ class MultivariateJacobiOPE:
         for n in range(1, self.N):
 
             for trial in range(nb_trials_max):
-
                 # Propose a point from 1/N K(x,x) w(x) i.e. leverage score
                 sample[n], K_xx =\
                     self.sample_proposal_lev_score(random_state=rng)
@@ -500,6 +499,82 @@ class MultivariateJacobiOPE:
                 K_Y_inv[n, :n] = K_Y_inv[:n, n]
 
                 K_Y_inv[n, n] = 1.0 / schur
+
+        return sample
+
+    def sample_new(self, nb_trials_max=10000, random_state=None, tridiag_1D=True):
+        """Use the chain rule :cite:`HKPV06` (Algorithm 18) to sample :math:`\\left(x_{1}, \\dots, x_{N} \\right)` with density
+
+        .. math::
+
+            & \\frac{1}{N!}
+                \\left[K(x_n,x_p)\\right]_{n,p=1}^{N}
+                \\prod_{n=1}^{N} w(x_n)\\\\
+            &= \\frac{1}{N} K(x_1,x_1) w(x_1)
+            \\prod_{n=2}^{N}
+                \\frac{
+                    K(x_n,x_n)
+                    - K(x_n,x_{1:n-1})
+                    \\left[\\left[K(x_k,x_l)\\right]_{k,l=1}^{n-1}\\right]^{-1}
+                    K(x_{1:n-1},x_n)
+                    }{N-(n-1)}
+                    w(x_n)
+
+        The order in which the points were sampled can be forgotten to obtain a valid sample of the corresponding DPP
+
+        Each conditional density is sampled using rejection sampling with proposal density :math:`\\frac{1}{N} K(x,x) w(x)`
+
+        - :math:`x_1 \\sim \\frac{1}{N} K(x,x) w(x)` using :py:meth:`sample_proposal_lev_score`
+
+        - :math:`x_n | Y = x_{1}, \\dots, x_{n-1}`
+
+            .. math::
+
+                \\frac{1}{N-|Y|} [K(x,x) - K(x, Y) K_Y^{-1} K(Y, x)] w(x)
+                \\leq \\frac{N}{N-|Y|} \\frac{1}{N} K(x,x) w(x)
+
+        .. seealso::
+
+            - :ref:`continuous_dpps_exact_sampling_projection_dpp_chain_rule`
+            - :py:meth:`sample_proposal_lev_score`
+        """
+
+        rng = check_random_state(random_state)
+
+        if self.dim == 1 and tridiag_1D:
+            sample = tridiagonal_model(a=self.jacobi_params[0, 0] + 1,
+                                       b=self.jacobi_params[0, 1] + 1,
+                                       size=self.N,
+                                       random_state=rng)[:, None]
+            return 1.0 - 2.0 * sample
+
+        sample = np.zeros((self.N, self.dim))
+        phi = np.zeros((self.N,) * 2)
+
+        for n in range(self.N):
+
+            for trial in range(nb_trials_max):
+
+                # Propose a point ~ 1/N K(x,x) w(x)
+                sample[n] = self.sample_proposal_lev_score(random_state=rng)[0]
+                # phi(x) = (phi_0(x), ..., phi_N-1(x))
+                phi[n] = self.eval_poly_multiD(sample[n], normalize='norm')
+
+                # K(x,x) = phi(x)^T phi(x)
+                K_xx = phi[n].dot(phi[n])
+                # schur = K(x, x) - K(x, Y) K(Y, Y)^-1 K(Y, x)
+                #       = ||(I - Proj{phi(Y)}) phi(x)||^2
+                # Y = x_1, ..., x_n-1
+                phi[n] -= phi[:n].dot(phi[n]).dot(phi[:n])
+                schur = phi[n].dot(phi[n])
+
+                # accept: x_n = x, or reject
+                if rng.rand() < schur / K_xx:
+                    # normalize phi(x_n) / ||phi(x_n)||
+                    phi[n] /= np.sqrt(schur)
+                    break
+            else:
+                print('conditional x_{} | x_1,...,x_{}, rejection fails after {} proposals'.format(n + 1, n, trial))
 
         return sample
 
