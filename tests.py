@@ -6,8 +6,8 @@
 import pytest
 
 import matplotlib
-import warnings
 matplotlib.use('agg')
+import warnings
 warnings.filterwarnings("ignore", category=FutureWarning)
 
 pytest.main(['-k-slow', '--cov=dppy', '--cov-report=term-missing'])

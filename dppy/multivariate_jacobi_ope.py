@@ -19,7 +19,7 @@ import matplotlib.pyplot as plt
 
 from dppy.random_matrices import mu_ref_beta_sampler_tridiag as tridiagonal_model
 
-from dppy.utils import check_random_state
+from dppy.utils import check_random_state, inner1d
 
 
 class MultivariateJacobiOPE:
@@ -38,21 +38,23 @@ class MultivariateJacobiOPE:
 
         .. math::
             K(x, y) = \\sum_{\\mathfrak{b}(k)=0}^{N-1}
-                        \\frac{P_{k}(x)P_{k}(y)}
-                              {\\|P_{k}\\|^2}
+                        P_{k}(x) P_{k}(y)
+                    = \\Phi(x)^{\\top} \\Phi(y)
 
         where
 
-        - :math:`k \\in \\mathbb{N}^d` is a multi-index ordered according to the ordering :math:`\\mathfrak{b}` (see :py:meth:`compute_ordering_BaHa16`)
+        - :math:`k \\in \\mathbb{N}^d` is a multi-index ordered according to the ordering :math:`\\mathfrak{b}` (see :py:meth:`compute_ordering`)
 
-        - :math:`P_{k}(x) = \\prod_{i=1}^d P_{k_i}^{(a_i, b_i)}(x_i)` is the product of orthogonal Jacobi polynomials w.r.t. :math:`\\mu`, (see :py:meth:`eval_poly_multiD`)
+        - :math:`P_{k}(x) = \\prod_{i=1}^d P_{k_i}^{(a_i, b_i)}(x_i)` is the product of orthonormal Jacobi polynomials w.r.t. :math:`\\mu`, (see :py:meth:`eval_multiD_polynomials`)
 
             .. math::
 
                 \\int_{-1}^{1}
                     P_{k}^{(a_i,b_i)}(x) P_{\\ell}^{(a_i,b_i)}(x)
                     (1-x)^{a_i} (1+x)^{b_i} d x
-                \\propto \\delta_{k\\ell}
+                = \\delta_{k\\ell}
+
+        - :math:`\\Phi(x) = \\left(P_{\\mathfrak{b}^{-1}(0)}(x_{1}), \\dots, P_{\\mathfrak{b}^{-1}(N-1)}(x_{N}) \\right)`
 
     :param N:
         Number of points :math:`N \\geq 1`
@@ -79,27 +81,25 @@ class MultivariateJacobiOPE:
         self.N, self.jacobi_params, self.dim =\
             self._check_params(N, jacobi_params)
 
-        self.ordering = compute_ordering_BaHa16(self.N, self.dim)
+        self.ordering = compute_ordering(self.N, self.dim)
 
-        self.deg_max, self.poly_1D_degrees =\
-            poly_1D_degrees(np.max(self.ordering, axis=0))
+        self.deg_max, self.degrees_1D_polynomials =\
+            compute_degrees_1D_polynomials(np.max(self.ordering, axis=0))
 
-        self.poly_1D_square_norms =\
-            compute_poly1D_square_norms(self.jacobi_params, self.deg_max)
+        self.norms_1D_polynomials =\
+            compute_norms_1D_polynomials(self.jacobi_params, self.deg_max)
 
-        self.poly_multiD_square_norms =\
-            np.prod(self.poly_1D_square_norms[self.ordering, range(self.dim)],
+        self.square_norms_multiD_polynomials =\
+            np.prod((self.norms_1D_polynomials**2)[self.ordering,
+                                                   range(self.dim)],
                     axis=1)
 
-        self.mass_of_mu = self.poly_multiD_square_norms[0]
+        self.mass_of_mu = self.square_norms_multiD_polynomials[0]
 
-        self.Gautschi_bounds =\
-            compute_Gautschi_bounds(self.jacobi_params,
-                                    self.ordering,
-                                    log_scale=True)
-
-        self._jacobi_params_plus_05 = 0.5 + self.jacobi_params
-        self._pi_power_dim = np.pi**self.dim
+        self.rejection_bounds =\
+            compute_rejection_bounds(self.jacobi_params,
+                                     self.ordering,
+                                     log_scale=True)
 
     def _check_params(self, N, jacobi_params):
         """ Check that:
@@ -121,147 +121,131 @@ class MultivariateJacobiOPE:
 
         return N, jacobi_params, dim
 
-    def eval_w(self, X, jac_params=None):
-        """Evaluate :math:`w(x) = \\prod_{i=1}^{d} (1-x_i)^{a_i} (1+x_i)^{b_i}` which corresponds to the density of the base measure :math:`\\mu` if ``jac_params`` is ``None``.
+    def eval_w(self, X):
+        """Evaluate :math:`w(x) = \\prod_{i=1}^{d} (1-x_i)^{a_i} (1+x_i)^{b_i}` which corresponds to the density of the base measure :math:`\\mu(dx) = w(x) dx`
 
         :param X:
-            Array of points :math:`\\in [-1, 1]^d`, with size :math:`N\\times d` where :math:`N` is the number of points
+            :math:`M\\times d` array of :math:`M` points :math:`\\in [-1, 1]^d`
         :type X:
             array_like
 
-        :param jac_params:
-            - if ``None``, use attribute ``MultivariateJacobiOPE.jacobi_params`` i.e. :math:`[(a_i, b_i)]_{i=1}^d \\in [-0.5, 0.5]^{d \\times 2}`.
-            - else Jacobi parameters :math:`[(a_i, b_i)]_{i=1}^d \\in [-1, \\infty)^{d \\times 2}`.
-        :type jac_params:
-            array_like (default None)
-
         :return:
-            - if ``jac_params`` is ``None``, evaluation of :math:`w(x)` the density of the base measure
-            - else ``jac_params`` :math:`= [(a_i, b_i)]_{i=1}^d` evaluation of :math:`w(x) = \\prod_{i=1}^{d} (1-x_i)^{a_i} (1+x_i)^{b_i}`
+            :math:`w(x) = \\prod_{i=1}^{d} (1-x_i)^{a_i} (1+x_i)^{b_i}`
         :rtype:
             array_like
         """
-        if jac_params is None:
-            return np.prod((1.0 - X)**(self.jacobi_params[:, 0])
-                           * (1.0 + X)**(self.jacobi_params[:, 1]),
-                           axis=-1)
-        else:
-            if np.all(jac_params > -1):
-                return np.prod((1.0 - X)**(jac_params[:, 0])
-                               * (1.0 + X)**(jac_params[:, 1]),
-                               axis=-1)
-            else:
-                raise ValueError('Invalid Jacobi parameters, must be all > -1')
+        a, b = self.jacobi_params.T
 
-    def K(self, X, Y=None):
-        '''Evaluate the orthogonal projection kernel :math:`K`.
+        return np.prod((1.0 - X)**a * (1.0 + X)**b, axis=-1)
+
+    def eval_multiD_polynomials(self, X):
+        """Evaluate :math:`\\Phi(x) = \\left(P_{\\mathfrak{b}^{-1}(0)}(x_{1}), \\dots, P_{\\mathfrak{b}^{-1}(N-1)}(x_{N}) \\right)` such that
+        :math:`K(x, y) = \\Phi(x)^{\top} \\Phi(y)`where :math:`\\mathfrak{b}` denotes the ordering chosen to order multi-indices :math:`k\\in \\mathbb{N}^d`
+
+        :param X:
+            :math:`M\\times d` array of :math:`M` points :math:`\\in [-1, 1]^d`
+        :type X:
+            array_like
+
+        :return:
+            :math:`\\left( \\Phi(x) \\right)_{x \\in X}`
+        :rtype:
+            array_like
+
+        .. seealso::
+
+            - evaluation of the kernel :py:meth:`~dppy.multivariate_jacobi_ope.MultivariateJacobiOPE.K`
+        """
+        poly_1D_jacobi = eval_jacobi(self.degrees_1D_polynomials,
+                                     self.jacobi_params[:, 0],
+                                     self.jacobi_params[:, 1],
+                                     np.atleast_2d(X)[:, None])\
+                        / self.norms_1D_polynomials
+
+        return np.prod(poly_1D_jacobi[:, self.ordering, range(self.dim)],
+                       axis=2)
+
+    def K(self, X, Y=None, eval_pointwise=False):
+        """Evaluate the orthogonal projection kernel :math:`K`.
         It is based on the `3-terms recurrence relations <https://en.wikipedia.org/wiki/Jacobi_polynomials#Recurrence_relations>`_ satisfied by each univariate orthogonal Jacobi polynomial, `see also SciPy <https://docs.scipy.org/doc/scipy/reference/generated/scipy.special.eval_jacobi.html>`_ :func:`eval_jacobi`
 
         .. math::
+
             K(x, y) = \\sum_{\\mathfrak{b}(k)=0}^{N-1}
                         \\frac{P_{k}(x)P_{k}(y)}
                               {\\|P_{k}\\|^2}
+                    = \\phi(x)^{\\top} \\phi(y)
 
         where
 
-        - :math:`k \\in \\mathbb{N}^d` is a multi-index ordered according to the ordering :math:`\\mathfrak{b}`, :py:meth:`compute_ordering_BaHa16`
+        - :math:`k \\in \\mathbb{N}^d` is a multi-index ordered according to the ordering :math:`\\mathfrak{b}`, :py:meth:`compute_ordering`
 
-        - :math:`P_{k}(x) = \\prod_{i=1}^d P_{k_i}^{(a_i, b_i)}(x_i)` is the product of orthogonal Jacobi polynomials w.r.t. :math:`\\mu(dx) = \\prod_{i=1}^{d} (1-x_i)^{a_i} (1+x_i)^{b_i} d x_i`
+        - :math:`P_{k}(x) = \\prod_{i=1}^d P_{k_i}^{(a_i, b_i)}(x_i)` is the product of orthonormal Jacobi polynomials w.r.t. :math:`\\mu(dx) = \\prod_{i=1}^{d} (1-x_i)^{a_i} (1+x_i)^{b_i} d x_i`
 
             .. math::
 
                 \\int_{-1}^{1}
                     P_{k}^{(a_i,b_i)}(x) P_{\\ell}^{(a_i,b_i)}(x)
                     (1-x)^{a_i} (1+x)^{b_i} d x
-                \\propto \\delta_{k\\ell}
+                = \\delta_{k\\ell}
 
         :param X:
-            Array of points :math:`\\in [-1, 1]^d`, with size :math:`N\\times d` where :math:`N` is the number of points
+            :math:`M\\times d` array of :math:`M` points :math:`\\in [-1, 1]^d`
         :type X:
             array_like
 
         :param Y:
-            Array of points :math:`\\in [-1, 1]^d`, with size :math:`N\\times d` where :math:`N` is the number of points
+            :math:`P\\times d` array of :math:`P` points :math:`\\in [-1, 1]^d`
         :type Y:
             array_like (default None)
 
+        :param eval_pointwise:
+            sets pointwise evaluation of the kernel, see return
+        :type eval_pointwise:
+            bool (default False)
+
         :return:
+
+            If ``eval_pointwise=False`` (default), evaluate the kernel matrix
+
+            .. math::
+
+                \\left[ K(x, y) \\right]_{x\\in X, y\\in Y}
+
+            If ``eval_pointwise=True`` (default) kernel matrix
             Pointwise evaluation of :math:`K` as depicted in the following pseudo code output
 
             - if ``Y`` is ``None``
 
-                - ``K(X, X)`` if ``X.size`` :math:`=d`
-                - ``[K(x, x) for x in X]`` otherwise
+                - ``\\left[ K(x, y) \\right]_{x\\in X, y\\in X}`` if ``eval_pointwise=False``
+                - ``\\left( K(x, x) \\right)_{x\\in X}`` if ``eval_pointwise=True``
 
             - otherwise
 
-                - ``K(X, Y)`` if ``X.size=Y.size``:math:`=d`
-                - ``[K(X, y) for y in Y]`` if ``X.size`` :math:`=d`
-                - ``[K(x, y) for x, y in zip(X, Y)]`` otherwise
+                - ``\\left[ K(x, y) \\right]_{x\\in X, y\\in Y}`` if ``eval_pointwise=False``
+                - ``\\left( K(x, y) \\right)_{(x, y)\\in (X, Y)}`` if ``eval_pointwise=True`` (in this case X and Y should have the same shape)
         :rtype:
-            - float if ``Y`` is ``None`` and ``X.size`` :math:`=d`
-            - array_like otherwise
-        '''
-        if Y is None:
+            array_like
+        """
 
-            if X.size == self.dim:  # X is vector in R^d
-                polys_X_2 = eval_jacobi(self.poly_1D_degrees,
-                                        self.jacobi_params[:, 0],
-                                        self.jacobi_params[:, 1],
-                                        X)**2\
-                            / self.poly_1D_square_norms
+        X = np.atleast_2d(X)
 
-                return np.sum(
-                            np.prod(
-                                polys_X_2[self.ordering, range(self.dim)],
-                            axis=1),
-                        axis=0)
-
+        if Y is None or Y is X:
+            phi_X = self.eval_multiD_polynomials(X)
+            if eval_pointwise:
+                return inner1d(phi_X, phi_X, axis=1)
             else:
-                polys_X_2 = eval_jacobi(self.poly_1D_degrees,
-                                        self.jacobi_params[:, 0],
-                                        self.jacobi_params[:, 1],
-                                        X[:, None])**2\
-                            / self.poly_1D_square_norms
-
-                return np.sum(
-                            np.prod(
-                                polys_X_2[:, self.ordering, range(self.dim)],
-                            axis=2),
-                        axis=1)
-
+                return phi_X.dot(phi_X.T)
         else:
+            len_X = len(X)
+            phi_XY = self.eval_multiD_polynomials(np.vstack((X, Y)))
+            if eval_pointwise:
+                return inner1d(phi_XY[:len_X], phi_XY[len_X:], axis=1)
+            else:
+                return phi_XY[:len_X].dot(phi_XY[len_X:].T)
 
-            lenX = X.size // self.dim  # X.shape[0] if X.ndim > 1 else 1
-            lenY = Y.size // self.dim  # Y.shape[0] if Y.ndim > 1 else 1
-
-            polys_X_Y = eval_jacobi(self.poly_1D_degrees,
-                                    self.jacobi_params[:, 0],
-                                    self.jacobi_params[:, 1],
-                                    np.vstack((X, Y))[:, None])
-
-            if lenX > lenY:
-
-                polys_X_Y[:lenX] *= polys_X_Y[lenX:] / self.poly_1D_square_norms
-
-                return np.sum(
-                            np.prod(
-                                polys_X_Y[:lenX, self.ordering, range(self.dim)],
-                            axis=2),
-                        axis=1)
-
-            else:  # if lenX <= lenY:
-
-                polys_X_Y[lenX:] *= polys_X_Y[:lenX] / self.poly_1D_square_norms
-
-                return np.sum(
-                            np.prod(
-                                polys_X_Y[lenX:, self.ordering, range(self.dim)],
-                            axis=2),
-                        axis=1)
-
-    def sample_proposal_lev_score(self, nb_trials_max=10000,
-                                  random_state=None):
+    def sample_chain_rule_proposal(self, nb_trials_max=10000,
+                                   random_state=None):
         """Use a rejection sampling mechanism to sample
 
         .. math::
@@ -308,7 +292,7 @@ class MultivariateJacobiOPE:
 
             .. note::
 
-                Each of the rejection constant :math:`C_{k}` is computed at initialization of the :py:class:`MultivariateJacobiOPE` object using :py:meth:`compute_Gautschi_bounds`
+                Each of the rejection constant :math:`C_{k}` is computed at initialization of the :py:class:`MultivariateJacobiOPE` object using :py:meth:`compute_rejection_bounds`
 
         :return:
             A sample :math:`x\\in[-1,1]^d` with probability distribution :math:`\\frac{1}{N} K(x,x) w(x)`
@@ -317,87 +301,123 @@ class MultivariateJacobiOPE:
 
         .. seealso::
 
-            - :py:meth:`compute_Gautschi_bounds`
+            - :py:meth:`compute_rejection_bounds`
             - :py:meth:`sample`
         """
         rng = check_random_state(random_state)
 
+        a, b = self.jacobi_params.T
+        a_05, b_05 = a + 0.5, b + 0.5
+        d = self.dim
+
         ind = rng.randint(self.N)
-        k_multi_ind = self.ordering[ind]
-        square_norm = self.poly_multiD_square_norms[ind]
-        rejection_bound = self.Gautschi_bounds[ind]
-        a_05, b_05 = self._jacobi_params_plus_05.T
+        k = self.ordering[ind]
+        Pk_square_norm = self.square_norms_multiD_polynomials[ind]
+        # norm_Pk = self.poly_multiD_norm[ind]
+        rejection_bound = self.rejection_bounds[ind]
 
         for trial in range(nb_trials_max):
 
-            # Propose x ~ arcsine = \prod_{i=1}^{d} 1/pi 1/sqrt(1-(x_i)^2)
+            # Propose x ~ w_eq(x) = \prod_{i=1}^{d} 1/pi 1/sqrt(1-(x_i)^2)
+            # rng.beta is defined as beta(a, b) = x^(a-1) (1-x)^(b-1)
             x = 1.0 - 2.0 * rng.beta(0.5, 0.5, size=self.dim)
 
             # Compute (P_k(x)/||P_k||)^2
-            Pk2_x = np.prod(eval_jacobi(k_multi_ind,
-                                        self.jacobi_params[:, 0],
-                                        self.jacobi_params[:, 1],
-                                        x))**2
-            Pk2_x /= square_norm
+            Pk2_x = np.prod(eval_jacobi(k, a, b, x))**2 / Pk_square_norm
+            # Pk2_x = (np.prod(eval_jacobi(k, a, b, x)) / norm_Pk)**2
 
-            # Compute w(x) / proposal(x)
-            # = \prod_{i=1}^{d}
-            #   (1-x_i)^{a_i} (1+x_i)^{b_i}
-            #   / (1/pi * ((1-x_i)*(1+x_i))^{-1/2})
-            # = prod_{i=1}^d pi * (1-x_i)^{a_i+1/2} (1+x_i)^{b_i+1/2}
-            ratio_w_proposal =\
-                self._pi_power_dim * np.prod((1.0 - x)**a_05 * (1.0 + x)**b_05)
+            # Compute w(x) / w_eq(x)
+            w_over_w_eq =\
+                np.pi**d * np.prod((1.0 - x)**a_05 * (1.0 + x)**b_05)
 
-            if rng.rand() * rejection_bound < Pk2_x * ratio_w_proposal:
+            if rng.rand() * rejection_bound < Pk2_x * w_over_w_eq:
                 break
         else:
             print('marginal distribution 1/N K(x,x), rejection fails after {} proposals'.format(trial))
 
-        return x, self.K(x, None)
+        return x
 
-    def eval_poly_multiD(self, X, normalize='norm'):
-        """Evaluate (and potentially normalize) multivariate Jacobi polynomials :math:`P_{k}(x) = \\prod_{i=1}^d P_{k_i}^{(a_i, b_i)}(x_i)`
+    def sample(self, nb_trials_max=10000, random_state=None, tridiag_1D=True):
+        """Use the chain rule :cite:`HKPV06` (Algorithm 18) to sample :math:`\\left(x_{1}, \\dots, x_{N} \\right)` with density
 
-        :param X:
-            Array of points :math:`\\in [-1, 1]^d`, with size :math:`N\\times d` where :math:`N` is the number of points
-        :type X:
-            array_like
+        .. math::
 
-        :param normalize:
-            - 'norm'
-            - 'square_norm'
-        :type normalize:
-            str (default 'norm')
+            & \\frac{1}{N!}
+                \\left[K(x_n,x_p)\\right]_{n,p=1}^{N}
+                \\prod_{n=1}^{N} w(x_n)\\\\
+            &= \\frac{1}{N} K(x_1,x_1) w(x_1)
+            \\prod_{n=2}^{N}
+                \\frac{
+                    K(x_n,x_n)
+                    - K(x_n,x_{1:n-1})
+                    \\left[\\left[K(x_k,x_l)\\right]_{k,l=1}^{n-1}\\right]^{-1}
+                    K(x_{1:n-1},x_n)
+                    }{N-(n-1)}
+                    w(x_n)
 
-        :return:
-            - ``normalize='norm'`` :math:`P_k(X) / \\left\\| P_k \\right\\|`
-            - ``normalize='square_norm'`` :math:`P_k(X) / \\left\\| P_k \\right\\|^2`
-        :rtype:
-            array_like
+        The order in which the points were sampled can be forgotten to obtain a valid sample of the corresponding DPP
+
+        - :math:`x_1 \\sim \\frac{1}{N} K(x,x) w(x)` using :py:meth:`sample_chain_rule_proposal`
+
+        - :math:`x_n | Y = \\left\\{ x_{1}, \\dots, x_{n-1} \\right\\}`, is sampled using rejection sampling with proposal density :math:`\\frac{1}{N} K(x,x) w(x)`
+
+            .. math::
+
+                \\frac{1}{N-|Y|} [K(x,x) - K(x, Y) K_Y^{-1} K(Y, x)] w(x)
+                \\leq \\frac{N}{N-|Y|} \\frac{1}{N} K(x,x) w(x)
+
+        .. note::
+
+            Using the gram structure :math:`K(x, y) = \\Phi(x)^{\\top} \\Phi(y)` the numerator of the successive conditionals reads
+            .. math::
+
+                K(x, x) - K(x, Y) K(Y, Y)^-1 K(Y, x)
+                = \\left\\| (I - \\Pi_{\\operatorname{span}(\\phi(x_1), \\dots, \\phi_{N})}) \\phi(x)\\right\\^2
+
+            which can be computed simply in a vectorized way, similarly to a step of a Gram-Schmidt procedure
 
         .. seealso::
 
-            - evaluation of the kernel :py:meth:`~dppy.multivariate_jacobi_ope.MultivariateJacobiOPE.K`
+            - :ref:`continuous_dpps_exact_sampling_projection_dpp_chain_rule`
+            - :py:meth:`sample_chain_rule_proposal`
         """
 
-        flag_1D = X.size == self.dim
+        rng = check_random_state(random_state)
 
-        poly_1D_jacobi = eval_jacobi(self.poly_1D_degrees,
-                                     self.jacobi_params[:, 0],
-                                     self.jacobi_params[:, 1],
-                                     X if flag_1D else X[:, None])
+        if self.dim == 1 and tridiag_1D:
+            sample = tridiagonal_model(a=self.jacobi_params[0, 0] + 1,
+                                       b=self.jacobi_params[0, 1] + 1,
+                                       size=self.N,
+                                       random_state=rng)[:, None]
+            return 1.0 - 2.0 * sample
 
-        if normalize == 'square_norm':
-            poly_1D_jacobi /= self.poly_1D_square_norms
-        elif normalize == 'norm':
-            poly_1D_jacobi /= np.sqrt(self.poly_1D_square_norms)
+        sample = np.zeros((self.N, self.dim))
+        phi = np.zeros((self.N, self.N))
 
-        if flag_1D:
-            return np.prod(poly_1D_jacobi[self.ordering, range(self.dim)],
-                           axis=1)
-        else:
-            return np.prod(poly_1D_jacobi[:, self.ordering, range(self.dim)],
-                           axis=2)
+        for n in range(self.N):
+
+            for trial in range(nb_trials_max):
+
+                # Propose a point ~ 1/N K(x,x) w(x)
+                sample[n] = self.sample_chain_rule_proposal(random_state=rng)
+
+                # Schur complement (numerator of x_n | Y = x_1:n-1)
+                #   = K(x, x) - K(x, Y) K(Y, Y)^-1 K(Y, x)
+                #   = ||(I - Proj{phi(Y)}) phi(x)||^2
+                phi[n] = self.eval_multiD_polynomials(sample[n])
+                K_xx = phi[n].dot(phi[n])  # self.K(sample[n], sample[n])
+                phi[n] -= phi[:n].dot(phi[n]).dot(phi[:n])
+                schur = phi[n].dot(phi[n])
+
+                # accept: x_n = x, or reject
+                if rng.rand() < schur / K_xx:
+                    # normalize phi(x_n) / ||phi(x_n)||
+                    phi[n] /= np.sqrt(schur)
+                    break
+            else:
+                print('conditional x_{} | x_1,...,x_{}, rejection fails after {} proposals'.format(n + 1, n, trial))
+
+        return sample
 
     def sample_old(self, nb_trials_max=10000, random_state=None, tridiag_1D=True):
         """Use the chain rule :cite:`HKPV06` (Algorithm 18) to sample :math:`\\left(x_{1}, \\dots, x_{N} \\right)` with density
@@ -421,7 +441,7 @@ class MultivariateJacobiOPE:
 
         Each conditional density is sampled using rejection sampling with proposal density :math:`\\frac{1}{N} K(x,x) w(x)`
 
-        - :math:`x_1 \\sim \\frac{1}{N} K(x,x) w(x)` using :py:meth:`sample_proposal_lev_score`
+        - :math:`x_1 \\sim \\frac{1}{N} K(x,x) w(x)` using :py:meth:`sample_chain_rule_proposal`
 
         - :math:`x_n | Y = x_{1}, \\dots, x_{n-1}`
 
@@ -433,7 +453,7 @@ class MultivariateJacobiOPE:
         .. seealso::
 
             - :ref:`continuous_dpps_exact_sampling_projection_dpp_chain_rule`
-            - :py:meth:`sample_proposal_lev_score`
+            - :py:meth:`sample_chain_rule_proposal`
         """
 
         rng = check_random_state(random_state)
@@ -445,150 +465,63 @@ class MultivariateJacobiOPE:
                                        random_state=rng)[:, None]
             return 1.0 - 2.0 * sample
 
-        # In multi D
         sample = np.zeros((self.N, self.dim))
+        phi = np.zeros((self.N, self.N))
+
         # To compute Schur complement
         # schur = K(x, x) - K(x, Y) K(Y, Y)^-1 K(Y, x)
-        #
-        # K(x, x) = K_xx above
-
-        sample[0], K_xx = self.sample_proposal_lev_score(random_state=rng)
-        # K_YY^-1 = K(Y, Y)^-1
-
-        K_Y_inv = np.zeros((self.N - 1, self.N - 1))
-        K_Y_inv[0, 0] = 1.0 / K_xx
-        # K_Yx = Phi_Y.dot(Phi_x) = Phi_Yx[:n].dot(Phi_Yx[n])
+        K_inv = np.ones((self.N - 1, self.N - 1))
         K_Yx = np.zeros(self.N - 1)
-        Phi_Yx = np.zeros((self.N, self.N))
-        Phi_Yx[0] = self.eval_poly_multiD(sample[0], normalize='square_norm')
-        temp = np.zeros(self.N - 1)
-
-        for n in range(1, self.N):
-
-            for trial in range(nb_trials_max):
-                # Propose a point from 1/N K(x,x) w(x) i.e. leverage score
-                sample[n], K_xx =\
-                    self.sample_proposal_lev_score(random_state=rng)
-
-                # Compute Schur cmplmt = K(x, x) - K(x, Y) K(Y, Y)^-1 K(Y, x)
-                #
-                # K_Yx = Phi_Y.dot(Phi_x)
-                Phi_Yx[n] = self.eval_poly_multiD(sample[n], normalize='')
-                K_Yx[:n] = Phi_Yx[:n].dot(Phi_Yx[n])
-                # Schur complement
-                schur = K_xx - K_Yx[:n].dot(K_Y_inv[:n, :n]).dot(K_Yx[:n])
-
-                if rng.rand() < schur / K_xx:
-                    break
-            else:
-                print('conditional x_{} | x_1,...,x_{}, rejection fails after {} proposals'.format(n + 1, n, trial))
-
-            if n < self.N - 1:
-                # Normalize Phi_x with square norm
-                Phi_Yx[n] /= self.poly_multiD_square_norms
-                # Update [K_Y]^-1
-                # K_{Y+x}^-1 =
-                # [[K_Y^-1 + (K_Y^-1 K_Yx K_xY K_Y^-1)/schur(x),
-                #   -K_Y^-1 K_Yx / schur(x)],
-                # [-K_xY K_Y^-1/ schur(x),
-                #   1/schur(x)]]
-                temp[:n] = K_Y_inv[:n, :n].dot(K_Yx[:n])
-
-                K_Y_inv[:n, :n] += np.outer(temp[:n], temp[:n] / schur)
-                K_Y_inv[:n, n] = - temp[:n] / schur
-                K_Y_inv[n, :n] = K_Y_inv[:n, n]
-
-                K_Y_inv[n, n] = 1.0 / schur
-
-        return sample
-
-    def sample_new(self, nb_trials_max=10000, random_state=None, tridiag_1D=True):
-        """Use the chain rule :cite:`HKPV06` (Algorithm 18) to sample :math:`\\left(x_{1}, \\dots, x_{N} \\right)` with density
-
-        .. math::
-
-            & \\frac{1}{N!}
-                \\left[K(x_n,x_p)\\right]_{n,p=1}^{N}
-                \\prod_{n=1}^{N} w(x_n)\\\\
-            &= \\frac{1}{N} K(x_1,x_1) w(x_1)
-            \\prod_{n=2}^{N}
-                \\frac{
-                    K(x_n,x_n)
-                    - K(x_n,x_{1:n-1})
-                    \\left[\\left[K(x_k,x_l)\\right]_{k,l=1}^{n-1}\\right]^{-1}
-                    K(x_{1:n-1},x_n)
-                    }{N-(n-1)}
-                    w(x_n)
-
-        The order in which the points were sampled can be forgotten to obtain a valid sample of the corresponding DPP
-
-        Each conditional density is sampled using rejection sampling with proposal density :math:`\\frac{1}{N} K(x,x) w(x)`
-
-        - :math:`x_1 \\sim \\frac{1}{N} K(x,x) w(x)` using :py:meth:`sample_proposal_lev_score`
-
-        - :math:`x_n | Y = x_{1}, \\dots, x_{n-1}`
-
-            .. math::
-
-                \\frac{1}{N-|Y|} [K(x,x) - K(x, Y) K_Y^{-1} K(Y, x)] w(x)
-                \\leq \\frac{N}{N-|Y|} \\frac{1}{N} K(x,x) w(x)
-
-        .. seealso::
-
-            - :ref:`continuous_dpps_exact_sampling_projection_dpp_chain_rule`
-            - :py:meth:`sample_proposal_lev_score`
-        """
-
-        rng = check_random_state(random_state)
-
-        if self.dim == 1 and tridiag_1D:
-            sample = tridiagonal_model(a=self.jacobi_params[0, 0] + 1,
-                                       b=self.jacobi_params[0, 1] + 1,
-                                       size=self.N,
-                                       random_state=rng)[:, None]
-            return 1.0 - 2.0 * sample
-
-        sample = np.zeros((self.N, self.dim))
-        phi = np.zeros((self.N,) * 2)
+        K_inv_K_Yx = np.zeros(self.N - 1)
 
         for n in range(self.N):
 
             for trial in range(nb_trials_max):
 
                 # Propose a point ~ 1/N K(x,x) w(x)
-                sample[n] = self.sample_proposal_lev_score(random_state=rng)[0]
-                # phi(x) = (phi_0(x), ..., phi_N-1(x))
-                phi[n] = self.eval_poly_multiD(sample[n], normalize='norm')
+                sample[n] = self.sample_chain_rule_proposal(random_state=rng)
 
-                # K(x,x) = phi(x)^T phi(x)
+                # Compute Schur complement (numerator of x_n | Y = x_1:n-1)
+                #   = K(x, x) - K(x, Y) K(Y, Y)^-1 K(Y, x)
+                # using K(x, y) = phi(x)^T phi(y)
+                phi[n] = self.eval_multiD_polynomials(sample[n])
                 K_xx = phi[n].dot(phi[n])
-                # schur = K(x, x) - K(x, Y) K(Y, Y)^-1 K(Y, x)
-                #       = ||(I - Proj{phi(Y)}) phi(x)||^2
-                # Y = x_1, ..., x_n-1
-                phi[n] -= phi[:n].dot(phi[n]).dot(phi[:n])
-                schur = phi[n].dot(phi[n])
+                K_Yx[:n] = phi[:n].dot(phi[n])
+                K_inv_K_Yx[:n] = K_inv[:n, :n].dot(K_Yx[:n])
+                schur = K_xx - K_Yx[:n].dot(K_inv_K_Yx[:n])
 
                 # accept: x_n = x, or reject
                 if rng.rand() < schur / K_xx:
-                    # normalize phi(x_n) / ||phi(x_n)||
-                    phi[n] /= np.sqrt(schur)
                     break
             else:
                 print('conditional x_{} | x_1,...,x_{}, rejection fails after {} proposals'.format(n + 1, n, trial))
 
+            # Update [K_Y]^-1
+            # K_{Y+x}^-1 =
+            #  |           K_Y^-1 K_Yx K_Yx K_Y^-1     K_Y^-1 K_Yx] |
+            #  |  K_Y^-1 + -----------------------,  - ------------ |
+            #  |                    schur                 schur     |
+            #  |          K_Yx K_Y^-1                   1           |
+            #  |        - -----------,               -------        |
+            #  |             schur                    schur         |
+            if n < self.N - 1:
+                K_inv[:n, n] = - K_inv_K_Yx[:n] / schur
+                K_inv[n, :n] = K_inv[:n, n]
+                K_inv[:n, :n] -= np.outer(K_inv_K_Yx[:n], K_inv[n, :n])
+                K_inv[n, n] = 1.0 / schur
+
         return sample
 
-    def plot(self, sample=None, weighted=False):
+    def plot(self, sample, weighted=False):
 
         if self.dim >= 3:
             raise NotImplementedError('Visualizations in d>=3 not implemented')
 
         tols = 5e-2 * np.ones_like(self.jacobi_params)
 
-        if sample is None:
-            sample = self.sample()
-
-        weights = 1. / self.K(sample) if weighted else None
+        weights = None
+        if weighted:
+            weights = 1. / self.K(sample, eval_pointwise=True)
 
         ticks_pos = [-1, 0, 1]
         ticks_labs = list(map(str, ticks_pos))
@@ -729,7 +662,7 @@ class MultivariateJacobiOPE:
                            frameon=False)
 
 
-def compute_ordering_BaHa16(N, d):
+def compute_ordering(N, d):
     """ Compute the ordering of the multi-indices :math:`\\in\\mathbb{N}^d` defining the order between the multivariate monomials as described in Section 2.1.3 of :cite:`BaHa16`.
 
     :param N:
@@ -767,7 +700,7 @@ def compute_ordering_BaHa16(N, d):
     return list(ordering)[:N]
 
 
-def compute_poly1D_square_norms(jacobi_params, deg_max):
+def compute_norms_1D_polynomials(jacobi_params, deg_max):
     """ Compute the square norms :math:`\\|P_{k}^{(a_i,b_i)}\\|^2` of each (univariate) Jacobi polynomial for :math:`k=0` to ``deg_max`` and :math:`a_i, b_i =` ``jacobi_params[i, :]``
     Recall that the Jacobi polynomials :math:`\\left( P_{k}^{(a_i,b_i)} \\right)` are `orthogonal <http://en.wikipedia.org/wiki/Jacobi_polynomials#Orthogonality>`_ w.r.t. :math:`(1-x)^{a_i} (1+x)^{b_i}`.
 
@@ -801,7 +734,7 @@ def compute_poly1D_square_norms(jacobi_params, deg_max):
     .. seealso::
 
         - `Wikipedia Jacobi polynomials <http://en.wikipedia.org/wiki/Jacobi_polynomials#Orthogonality>`_
-        - :py:meth:`compute_ordering_BaHa16`
+        - :py:meth:`compute_ordering`
     """
 
     # Initialize
@@ -838,11 +771,11 @@ def compute_poly1D_square_norms(jacobi_params, deg_max):
                                                - np.log(2 * n + 1 + a + b)
                                                - gammaln(n + 1 + a + b))
 
-    return square_norms
+    return np.sqrt(square_norms)
 
 
-def compute_Gautschi_bounds(jacobi_params, ordering, log_scale=True):
-    """ Compute the rejection constants for the acceptance/rejection mechanism used in :py:meth:`sample_proposal_lev_score` to sample
+def compute_rejection_bounds(jacobi_params, ordering, log_scale=True):
+    """ Compute the rejection constants for the acceptance/rejection mechanism used in :py:meth:`sample_chain_rule_proposal` to sample
 
     .. math::
 
@@ -936,7 +869,7 @@ def compute_Gautschi_bounds(jacobi_params, ordering, log_scale=True):
         array_like
 
     :param ordering:
-        Ordering of the multi-indices :math:`\\in\\mathbb{N}^d` defining the order between the multivariate monomials (see also :py:meth:`compute_ordering_BaHa16`)
+        Ordering of the multi-indices :math:`\\in\\mathbb{N}^d` defining the order between the multivariate monomials (see also :py:meth:`compute_ordering`)
 
         - the number of rows corresponds to the number :math:`N` of monomials considered.
         - the number of columns :math:`=d`
@@ -959,7 +892,7 @@ def compute_Gautschi_bounds(jacobi_params, ordering, log_scale=True):
     .. seealso::
 
         - :cite:`Gau09` for the domination when :math:`k_i > 0`
-        - :py:meth:`compute_poly1D_square_norms`
+        - :py:meth:`compute_poly1D_norms`
     """
 
     # Initialize [bounds]_ij on
@@ -1029,12 +962,12 @@ def compute_Gautschi_bounds(jacobi_params, ordering, log_scale=True):
         return np.prod(bounds[ordering, range(dim)], axis=1)
 
 
-def poly_1D_degrees(max_degrees):
-    """ :return:poly_1D_degrees[i, j] = i if i <= max_degrees[j] else 0
+def compute_degrees_1D_polynomials(max_degrees):
+    """ deg[i, j] = i if i <= max_degrees[j] else 0
     """
 
     max_deg, dim = max(max_degrees), len(max_degrees)
-    polys = np.arange(max_deg + 1)[:, None] * np.ones(dim, dtype=int)
-    polys[polys > max_degrees] = 0
+    deg = np.tile(np.arange(max_deg + 1)[:, None], (1, dim))
+    deg[deg > max_degrees] = 0
 
     return max_deg, polys
