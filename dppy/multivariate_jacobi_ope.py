@@ -32,7 +32,7 @@ class MultivariateJacobiOPE:
 
         .. math::
 
-            w(x) = \\prod_{i=1}^{d} (1-x)^{a_i} (1+x)^{b_i}
+            w(x) = \\prod_{i=1}^{d} (1-x_i)^{a_i} (1+x_i)^{b_i}
 
     - kernel :math:`K` (see also :py:meth:`~dppy.multivariate_jacobi_ope.MultivariateJacobiOPE.K`)
 
@@ -45,16 +45,18 @@ class MultivariateJacobiOPE:
 
         - :math:`k \\in \\mathbb{N}^d` is a multi-index ordered according to the ordering :math:`\\mathfrak{b}` (see :py:meth:`compute_ordering`)
 
-        - :math:`P_{k}(x) = \\prod_{i=1}^d P_{k_i}^{(a_i, b_i)}(x_i)` is the product of orthonormal Jacobi polynomials w.r.t. :math:`\\mu`, (see :py:meth:`eval_multiD_polynomials`)
+        - :math:`P_{k}(x) = \\prod_{i=1}^d P_{k_i}^{(a_i, b_i)}(x_i)` is the product of orthonormal Jacobi polynomials
 
             .. math::
 
                 \\int_{-1}^{1}
-                    P_{k}^{(a_i,b_i)}(x) P_{\\ell}^{(a_i,b_i)}(x)
-                    (1-x)^{a_i} (1+x)^{b_i} d x
+                    P_{k}^{(a_i,b_i)}(u) P_{\\ell}^{(a_i,b_i)}(u)
+                    (1-u)^{a_i} (1+u)^{b_i} d u
                 = \\delta_{k\\ell}
 
-        - :math:`\\Phi(x) = \\left(P_{\\mathfrak{b}^{-1}(0)}(x_{1}), \\dots, P_{\\mathfrak{b}^{-1}(N-1)}(x_{N}) \\right)`
+            so that :math:`(P_{k})` are orthonormal w.r.t :math:`\\mu(dx)`
+
+        - :math:`\\Phi(x) = \\left(P_{\\mathfrak{b}^{-1}(0)}(x), \\dots, P_{\\mathfrak{b}^{-1}(N-1)}(x) \\right)^{\\top}`
 
     :param N:
         Number of points :math:`N \\geq 1`
@@ -139,8 +141,23 @@ class MultivariateJacobiOPE:
         return np.prod((1.0 - X)**a * (1.0 + X)**b, axis=-1)
 
     def eval_multiD_polynomials(self, X):
-        """Evaluate :math:`\\Phi(x) = \\left(P_{\\mathfrak{b}^{-1}(0)}(x_{1}), \\dots, P_{\\mathfrak{b}^{-1}(N-1)}(x_{N}) \\right)` such that
-        :math:`K(x, y) = \\Phi(x)^{\top} \\Phi(y)`where :math:`\\mathfrak{b}` denotes the ordering chosen to order multi-indices :math:`k\\in \\mathbb{N}^d`
+        """Evaluate
+
+        .. math::
+
+            \\mathbf{\\Phi}(X)
+                := \\begin{pmatrix}
+                    \\Phi(x_1)^{\\top}\\\\
+                    \\vdots\\\\
+                    \\Phi(x_M)^{\\top}
+                  \\end{pmatrix}
+
+        where :math:`\\Phi(x) = \\left(P_{\\mathfrak{b}^{-1}(0)}(x), \\dots, P_{\\mathfrak{b}^{-1}(N-1)}(x) \\right)^{\\top}` such that
+        :math:`K(x, y) = \\Phi(x)^{\\top} \\Phi(y)`.
+        Recall that :math:`\\mathfrak{b}` denotes the ordering chosen to order multi-indices :math:`k\\in \\mathbb{N}^d`.
+
+        This is done by evaluating each of the `three-term recurrence relations <https://en.wikipedia.org/wiki/Jacobi_polynomials#Recurrence_relations>`_ satisfied by each univariate orthogonal Jacobi polynomial, using the dedicated `see also SciPy <https://docs.scipy.org/doc/scipy/reference/generated/scipy.special.eval_jacobi.html>`_ :func:`scipy.special.eval_jacobi` satistified by the respective univariate Jacobi polynomials :math:`P_{k_i}^{(a_i, b_i)}(x_i)`.
+        Then we use the slicing feature of the Python language to compute :math:`\\Phi(x)=\\left(P_{k}(x) = \\prod_{i=1}^d P_{k_i}^{(a_i, b_i)}(x_i)\\right)_{k=\\mathfrak{b}^{-1}(0), \\dots, \\mathfrak{b}^{-1}(N-1)}^{\\top}`
 
         :param X:
             :math:`M\\times d` array of :math:`M` points :math:`\\in [-1, 1]^d`
@@ -148,7 +165,7 @@ class MultivariateJacobiOPE:
             array_like
 
         :return:
-            :math:`\\left( \\Phi(x) \\right)_{x \\in X}`
+            :math:`\\mathbf{\\Phi}(X)` - :math:`M\\times N` array
         :rtype:
             array_like
 
@@ -166,28 +183,30 @@ class MultivariateJacobiOPE:
                        axis=2)
 
     def K(self, X, Y=None, eval_pointwise=False):
-        """Evaluate the orthogonal projection kernel :math:`K`.
-        It is based on the `3-terms recurrence relations <https://en.wikipedia.org/wiki/Jacobi_polynomials#Recurrence_relations>`_ satisfied by each univariate orthogonal Jacobi polynomial, `see also SciPy <https://docs.scipy.org/doc/scipy/reference/generated/scipy.special.eval_jacobi.html>`_ :func:`eval_jacobi`
+        """Evalute :math:`\\left(K(x, y)\\right)_{x\\in X, y\\in Y}` if ``eval_pointwise=False`` or :math:`\\left(K(x, y)\\right)_{(x, y)\\in (X, Y)}` otherwise
 
         .. math::
 
             K(x, y) = \\sum_{\\mathfrak{b}(k)=0}^{N-1}
-                        \\frac{P_{k}(x)P_{k}(y)}
-                              {\\|P_{k}\\|^2}
+                        P_{k}(x) P_{k}(y)
                     = \\phi(x)^{\\top} \\phi(y)
 
         where
 
         - :math:`k \\in \\mathbb{N}^d` is a multi-index ordered according to the ordering :math:`\\mathfrak{b}`, :py:meth:`compute_ordering`
 
-        - :math:`P_{k}(x) = \\prod_{i=1}^d P_{k_i}^{(a_i, b_i)}(x_i)` is the product of orthonormal Jacobi polynomials w.r.t. :math:`\\mu(dx) = \\prod_{i=1}^{d} (1-x_i)^{a_i} (1+x_i)^{b_i} d x_i`
+        - :math:`P_{k}(x) = \\prod_{i=1}^d P_{k_i}^{(a_i, b_i)}(x_i)` is the product of orthonormal Jacobi polynomials
 
             .. math::
 
                 \\int_{-1}^{1}
-                    P_{k}^{(a_i,b_i)}(x) P_{\\ell}^{(a_i,b_i)}(x)
-                    (1-x)^{a_i} (1+x)^{b_i} d x
+                    P_{k}^{(a_i,b_i)}(u) P_{\\ell}^{(a_i,b_i)}(u)
+                    (1-u)^{a_i} (1+u)^{b_i} d u
                 = \\delta_{k\\ell}
+
+            so that :math:`(P_{k})` are orthonormal w.r.t :math:`\\mu(dx)`
+
+        - :math:`\\Phi(x) = \\left(P_{\\mathfrak{b}^{-1}(0)}(x), \\dots, P_{\\mathfrak{b}^{-1}(N-1)}(x) \\right)`, see :py:meth:`eval_multiD_polynomials`
 
         :param X:
             :math:`M\\times d` array of :math:`M` points :math:`\\in [-1, 1]^d`
@@ -195,12 +214,12 @@ class MultivariateJacobiOPE:
             array_like
 
         :param Y:
-            :math:`P\\times d` array of :math:`P` points :math:`\\in [-1, 1]^d`
+            :math:`M'\\times d` array of :math:`M'` points :math:`\\in [-1, 1]^d`
         :type Y:
             array_like (default None)
 
         :param eval_pointwise:
-            sets pointwise evaluation of the kernel, see return
+            sets pointwise evaluation of the kernel, if ``True``, :math:`X` and :math:`Y` must have the same shape, see Returns
         :type eval_pointwise:
             bool (default False)
 
@@ -210,22 +229,26 @@ class MultivariateJacobiOPE:
 
             .. math::
 
-                \\left[ K(x, y) \\right]_{x\\in X, y\\in Y}
+                \\left(K(x, y)\\right)_{x\\in X, y\\in Y}
 
-            If ``eval_pointwise=True`` (default) kernel matrix
+            If ``eval_pointwise=True`` kernel matrix
             Pointwise evaluation of :math:`K` as depicted in the following pseudo code output
 
             - if ``Y`` is ``None``
 
-                - ``\\left[ K(x, y) \\right]_{x\\in X, y\\in X}`` if ``eval_pointwise=False``
-                - ``\\left( K(x, x) \\right)_{x\\in X}`` if ``eval_pointwise=True``
+                - :math:`\\left(K(x, y)\\right)_{x\\in X, y\\in X}` if ``eval_pointwise=False``
+                - :math:`\\left(K(x, x)\\right)_{x\\in X}` if ``eval_pointwise=True``
 
             - otherwise
 
-                - ``\\left[ K(x, y) \\right]_{x\\in X, y\\in Y}`` if ``eval_pointwise=False``
-                - ``\\left( K(x, y) \\right)_{(x, y)\\in (X, Y)}`` if ``eval_pointwise=True`` (in this case X and Y should have the same shape)
+                - :math:`\\left(K(x, y)\\right)_{x\\in X, y\\in Y}` if ``eval_pointwise=False``
+                - :math:`\\left(K(x, y)\\right)_{(x, y)\\in (X, Y)}` if ``eval_pointwise=True`` (in this case X and Y should have the same shape)
         :rtype:
             array_like
+
+        .. seealso::
+
+            :py:meth:`eval_multiD_polynomials`
         """
 
         X = np.atleast_2d(X)
@@ -343,38 +366,46 @@ class MultivariateJacobiOPE:
         .. math::
 
             & \\frac{1}{N!}
-                \\left[K(x_n,x_p)\\right]_{n,p=1}^{N}
+                \\left(K(x_n,x_p)\\right)_{n,p=1}^{N}
                 \\prod_{n=1}^{N} w(x_n)\\\\
             &= \\frac{1}{N} K(x_1,x_1) w(x_1)
             \\prod_{n=2}^{N}
                 \\frac{
                     K(x_n,x_n)
                     - K(x_n,x_{1:n-1})
-                    \\left[\\left[K(x_k,x_l)\\right]_{k,l=1}^{n-1}\\right]^{-1}
+                    \\left[\\left(K(x_k,x_l)\\right)_{k,l=1}^{n-1}\\right]^{-1}
                     K(x_{1:n-1},x_n)
                     }{N-(n-1)}
-                    w(x_n)
+                    w(x_n)\\\\
+            &= \\frac{\\| \\Phi(x) \\|^2}{N} \\omega(x_1) d x_1
+            \\prod_{n=2}^{N}
+                \\frac{\\operatorname{distance}^2(\\Phi(x_n), \\operatorname{span}\\{\\Phi(x_p)\\}_{p=1}^{n-1})}
+                {N-(n-1)}
+            \\omega(x_n) d x_n
 
         The order in which the points were sampled can be forgotten to obtain a valid sample of the corresponding DPP
 
         - :math:`x_1 \\sim \\frac{1}{N} K(x,x) w(x)` using :py:meth:`sample_chain_rule_proposal`
 
-        - :math:`x_n | Y = \\left\\{ x_{1}, \\dots, x_{n-1} \\right\\}`, is sampled using rejection sampling with proposal density :math:`\\frac{1}{N} K(x,x) w(x)`
+        - :math:`x_n | Y = \\left\\{ x_{1}, \\dots, x_{n-1} \\right\\}`, is sampled using rejection sampling with proposal density :math:`\\frac{1}{N} K(x,x) w(x)` and rejection bound \\frac{N}{N-(n-1)}
 
             .. math::
 
-                \\frac{1}{N-|Y|} [K(x,x) - K(x, Y) K_Y^{-1} K(Y, x)] w(x)
-                \\leq \\frac{N}{N-|Y|} \\frac{1}{N} K(x,x) w(x)
+                \\frac{1}{N-(n-1)} [K(x,x) - K(x, Y) K_Y^{-1} K(Y, x)] w(x)
+                \\leq \\frac{N}{N-(n-1)} \\frac{1}{N} K(x,x) w(x)
 
         .. note::
 
             Using the gram structure :math:`K(x, y) = \\Phi(x)^{\\top} \\Phi(y)` the numerator of the successive conditionals reads
+
             .. math::
 
-                K(x, x) - K(x, Y) K(Y, Y)^-1 K(Y, x)
-                = \\left\\| (I - \\Pi_{\\operatorname{span}(\\phi(x_1), \\dots, \\phi_{N})}) \\phi(x)\\right\\^2
+                K(x, x) - K(x, Y) K(Y, Y)^{-1} K(Y, x)
+                &= \\operatorname{distance}^2(\\Phi(x_n), \\operatorname{span}\\{\\Phi(x_p)\\}_{p=1}^{n-1})\\\\
+                &= \\left\\| (I - \\Pi_{\\operatorname{span}\\{\\Phi(x_p)\\}_{p=1}^{n-1}} \\phi(x)\\right\\|^2
 
-            which can be computed simply in a vectorized way, similarly to a step of a Gram-Schmidt procedure
+            which can be computed simply in a vectorized way.
+            The overall procedure is akin to a sequential Gram-Schmidt orthogonalization of :math:`\\Phi(x_{1}), \\dots, \\Phi(x_{N})`.
 
         .. seealso::
 
@@ -416,99 +447,6 @@ class MultivariateJacobiOPE:
                     break
             else:
                 print('conditional x_{} | x_1,...,x_{}, rejection fails after {} proposals'.format(n + 1, n, trial))
-
-        return sample
-
-    def sample_old(self, nb_trials_max=10000, random_state=None, tridiag_1D=True):
-        """Use the chain rule :cite:`HKPV06` (Algorithm 18) to sample :math:`\\left(x_{1}, \\dots, x_{N} \\right)` with density
-
-        .. math::
-
-            & \\frac{1}{N!}
-                \\left[K(x_n,x_p)\\right]_{n,p=1}^{N}
-                \\prod_{n=1}^{N} w(x_n)\\\\
-            &= \\frac{1}{N} K(x_1,x_1) w(x_1)
-            \\prod_{n=2}^{N}
-                \\frac{
-                    K(x_n,x_n)
-                    - K(x_n,x_{1:n-1})
-                    \\left[\\left[K(x_k,x_l)\\right]_{k,l=1}^{n-1}\\right]^{-1}
-                    K(x_{1:n-1},x_n)
-                    }{N-(n-1)}
-                    w(x_n)
-
-        The order in which the points were sampled can be forgotten to obtain a valid sample of the corresponding DPP
-
-        Each conditional density is sampled using rejection sampling with proposal density :math:`\\frac{1}{N} K(x,x) w(x)`
-
-        - :math:`x_1 \\sim \\frac{1}{N} K(x,x) w(x)` using :py:meth:`sample_chain_rule_proposal`
-
-        - :math:`x_n | Y = x_{1}, \\dots, x_{n-1}`
-
-            .. math::
-
-                \\frac{1}{N-|Y|} [K(x,x) - K(x, Y) K_Y^{-1} K(Y, x)] w(x)
-                \\leq \\frac{N}{N-|Y|} \\frac{1}{N} K(x,x) w(x)
-
-        .. seealso::
-
-            - :ref:`continuous_dpps_exact_sampling_projection_dpp_chain_rule`
-            - :py:meth:`sample_chain_rule_proposal`
-        """
-
-        rng = check_random_state(random_state)
-
-        if self.dim == 1 and tridiag_1D:
-            sample = tridiagonal_model(a=self.jacobi_params[0, 0] + 1,
-                                       b=self.jacobi_params[0, 1] + 1,
-                                       size=self.N,
-                                       random_state=rng)[:, None]
-            return 1.0 - 2.0 * sample
-
-        sample = np.zeros((self.N, self.dim))
-        phi = np.zeros((self.N, self.N))
-
-        # To compute Schur complement
-        # schur = K(x, x) - K(x, Y) K(Y, Y)^-1 K(Y, x)
-        K_inv = np.ones((self.N - 1, self.N - 1))
-        K_Yx = np.zeros(self.N - 1)
-        K_inv_K_Yx = np.zeros(self.N - 1)
-
-        for n in range(self.N):
-
-            for trial in range(nb_trials_max):
-
-                # Propose a point ~ 1/N K(x,x) w(x)
-                sample[n] = self.sample_chain_rule_proposal(random_state=rng)
-
-                # Compute Schur complement (numerator of x_n | Y = x_1:n-1)
-                #   = K(x, x) - K(x, Y) K(Y, Y)^-1 K(Y, x)
-                # using K(x, y) = phi(x)^T phi(y)
-                phi[n] = self.eval_multiD_polynomials(sample[n])
-                K_xx = phi[n].dot(phi[n])
-                K_Yx[:n] = phi[:n].dot(phi[n])
-                K_inv_K_Yx[:n] = K_inv[:n, :n].dot(K_Yx[:n])
-                schur = K_xx - K_Yx[:n].dot(K_inv_K_Yx[:n])
-
-                # accept: x_n = x, or reject
-                if rng.rand() < schur / K_xx:
-                    break
-            else:
-                print('conditional x_{} | x_1,...,x_{}, rejection fails after {} proposals'.format(n + 1, n, trial))
-
-            # Update [K_Y]^-1
-            # K_{Y+x}^-1 =
-            #  |           K_Y^-1 K_Yx K_Yx K_Y^-1     K_Y^-1 K_Yx] |
-            #  |  K_Y^-1 + -----------------------,  - ------------ |
-            #  |                    schur                 schur     |
-            #  |          K_Yx K_Y^-1                   1           |
-            #  |        - -----------,               -------        |
-            #  |             schur                    schur         |
-            if n < self.N - 1:
-                K_inv[:n, n] = - K_inv_K_Yx[:n] / schur
-                K_inv[n, :n] = K_inv[:n, n]
-                K_inv[:n, :n] -= np.outer(K_inv_K_Yx[:n], K_inv[n, :n])
-                K_inv[n, n] = 1.0 / schur
 
         return sample
 
@@ -701,16 +639,16 @@ def compute_ordering(N, d):
 
 
 def compute_norms_1D_polynomials(jacobi_params, deg_max):
-    """ Compute the square norms :math:`\\|P_{k}^{(a_i,b_i)}\\|^2` of each (univariate) Jacobi polynomial for :math:`k=0` to ``deg_max`` and :math:`a_i, b_i =` ``jacobi_params[i, :]``
-    Recall that the Jacobi polynomials :math:`\\left( P_{k}^{(a_i,b_i)} \\right)` are `orthogonal <http://en.wikipedia.org/wiki/Jacobi_polynomials#Orthogonality>`_ w.r.t. :math:`(1-x)^{a_i} (1+x)^{b_i}`.
+    """ Compute the square norms :math:`\\|P_{k}^{(a_i,b_i)}\\|^2` of each (univariate) orthogoanl Jacobi polynomial for :math:`k=0` to ``deg_max`` and :math:`a_i, b_i =` ``jacobi_params[i, :]``
+    Recall that the Jacobi polynomials :math:`\\left( P_{k}^{(a_i,b_i)} \\right)` are `orthogonal <http://en.wikipedia.org/wiki/Jacobi_polynomials#Orthogonality>`_ w.r.t. :math:`(1-u)^{a_i} (1+u)^{b_i} du`.
 
     .. math::
 
         \\|P_{k}^{(a_i,b_i)}\\|^2
-            = \\int_{-1}^{1}
-                \\left( P_{k}^{(a_i,b_i)}(x) \\right)^2
-                (1-x)^{a_i} (1+x)^{b_i} d x
-            = \\frac{2^{a_i+b_i+1}}
+            &= \\int_{-1}^{1}
+                \\left( P_{k}^{(a_i,b_i)}(u) \\right)^2
+                (1-u)^{a_i} (1+u)^{b_i} d u\\\\
+            &= \\frac{2^{a_i+b_i+1}}
                     {2k+a_i+b_i+1}
               \\frac{\\Gamma(k+a_i+1)\\Gamma(k+b_i+1)}
                     {\\Gamma(k+a_i+b_i+1)n!}
@@ -739,7 +677,6 @@ def compute_norms_1D_polynomials(jacobi_params, deg_max):
 
     # Initialize
     # - [square_norms]_ij = ||P_i^{a_j, b_j}||^2
-    #       pi (1-x)^(a_j+1/2) (1+x)^(b_j+1/2) P_i^2/||P_i||^2
     dim = jacobi_params.size // 2
     square_norms = np.zeros((deg_max + 1, dim))
 
@@ -820,10 +757,10 @@ def compute_rejection_bounds(jacobi_params, ordering, log_scale=True):
 
             &
                 \\pi
-                (1-x)^{a+\\frac{1}{2}}
-                (1+x)^{b+\\frac{1}{2}}
+                (1-u)^{a+\\frac{1}{2}}
+                (1+u)^{b+\\frac{1}{2}}
                 \\left(
-                    \\frac{P_{n}^{(a, b)}(x)}
+                    \\frac{P_{n}^{(a, b)}(u)}
                           {\\left\\| P_{n}^{(a, b)} \\right\\|}
                 \\right)^2\\\\
             &\\leq
@@ -837,22 +774,22 @@ def compute_rejection_bounds(jacobi_params, ordering, log_scale=True):
 
             - :math:`P_{0}^{(a, b)} = 1`
             - :math:`\\|P_{0}^{(a, b)}\\|^2 = 2^{a+b+1} \\operatorname{B}(a+1,b+1)`
-            - :math:`m = \\frac{b-a}{a+b+1}` is the mode of :math:`(1-x)^{a+\\frac{1}{2}} (1+x)^{b+\\frac{1}{2}}` (valid since :math:`a+\\frac{1}{2}, b+\\frac{1}{2} > 0`)
+            - :math:`m = \\frac{b-a}{a+b+1}` is the mode of :math:`(1-u)^{a+\\frac{1}{2}} (1+u)^{b+\\frac{1}{2}}` (valid since :math:`a+\\frac{1}{2}, b+\\frac{1}{2} > 0`)
 
             So that,
 
             .. math::
 
                     \\pi
-                    (1-x)^{a+\\frac{1}{2}}
-                    (1+x)^{b+\\frac{1}{2}}
-                    \\left(\\frac{P_{0}^{(a, b)}(x)}
+                    (1-u)^{a+\\frac{1}{2}}
+                    (1+u)^{b+\\frac{1}{2}}
+                    \\left(\\frac{P_{0}^{(a, b)}(u)}
                            {\\|P_{0}^{(a, b)}\\|}\\right)^{2}
                 &=
                     \\frac
                     {\\pi
-                     (1-x)^{a+\\frac{1}{2}}
-                     (1+x)^{b+\\frac{1}{2}}}
+                     (1-u)^{a+\\frac{1}{2}}
+                     (1+u)^{b+\\frac{1}{2}}}
                     {\\|P_{0}^{(a, b)}\\|^2} \\\\
                 &\\leq
                     \\frac
@@ -967,7 +904,7 @@ def compute_degrees_1D_polynomials(max_degrees):
     """
 
     max_deg, dim = max(max_degrees), len(max_degrees)
-    deg = np.tile(np.arange(max_deg + 1)[:, None], (1, dim))
-    deg[deg > max_degrees] = 0
+    degrees = np.tile(np.arange(max_deg + 1)[:, None], (1, dim))
+    degrees[degrees > max_degrees] = 0
 
-    return max_deg, polys
+    return max_deg, degrees
