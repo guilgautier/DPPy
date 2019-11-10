@@ -10,9 +10,6 @@ import numpy as np
 from scipy.integrate import quad
 from scipy.special import eval_jacobi
 
-import matplotlib
-matplotlib.use('agg')
-
 import sys
 sys.path.append('..')
 

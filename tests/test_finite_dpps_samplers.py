@@ -4,11 +4,6 @@
 - :class:`TestFiniteDppSamplers`
 """
 
-import matplotlib
-import warnings
-matplotlib.use('agg')
-warnings.filterwarnings("ignore", category=FutureWarning)
-
 import unittest
 
 from itertools import chain  # to flatten list of samples
