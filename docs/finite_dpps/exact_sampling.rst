@@ -517,7 +517,7 @@ In practice
 	rng = RandomState(1)
 
 	r, N = 4, 10
-	eig_vals = rng.rand(r)  # For projection DPP
+	eig_vals = rng.rand(r)
 	eig_vecs, _ = qr(rng.randn(N, r), mode='economic')
 
 	DPP = FiniteDPP(kernel_type='correlation',
@@ -716,7 +716,7 @@ Caution
 				- \mathbf{L}_{s, S_{i-1}}
 				  {\mathbf{L}_{S_{i-1}}}^{-1}
 				  \mathbf{L}_{S_{i-1}, s},
-		\quad \text{for } 2\leq i \leq r,
+		\quad \text{for } 2\leq i \leq k,
 
 	where :math:`S_{i-1} = \{s_{1}, \dots, s_{i-1}\}`, **and forgetting about the order** :math:`s_{1}, \dots, s_{k}` **were selected does not provide a subset** :math:`\{s_{1}, \dots, s_{k}\} \sim k\!\operatorname{-DPP}(\mathbf{L})`, **in the general case**.
 	**Nevertheless, it is valid when** :math:`\mathbf{L}` **is an orthogonal projection kernel!**
@@ -729,7 +729,7 @@ Caution
 	:label: eq:caution_likelihood_kDPP_L
 
 	\mathbb{P}[\mathcal{X}=S]
-	= \frac{1}{e_k(\mathbf{L})} \det \mathbf{L}_S ~ 1_{|S|=k}.
+	= \frac{1}{e_k(\mathbf{L})} \det \mathbf{L}_S 1_{|S|=k}.
 
 2. Now, if we were to use the chain rule :eq:`eq:chain_rule_caution` this would correspond to sampling sequentially the items :math:`s_1, \dots, s_{k}`, so that the resulting **vector** :math:`(s_{1}, \dots, s_{k})` has probability
 
@@ -738,7 +738,7 @@ Caution
 
 	\mathbb{Q}[(s_{1}, \dots, s_{k})]
 	&= \dfrac{\mathbf{L}_{s_1,s_1}}{Z_1}
-		\prod_{i=2}^{r}
+		\prod_{i=2}^{k}
 			\dfrac{
 				\mathbf{L}_{s_i, s_i} - \mathbf{L}_{s_i, S_{i-1}} {\mathbf{L}_{S_{i-1}}}^{-1} \mathbf{L}_{S_{i-1}, s_i}
 				}{Z_i(s_{1}, \dots, s_{i-1})}\\

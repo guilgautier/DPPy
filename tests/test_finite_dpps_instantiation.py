@@ -7,11 +7,6 @@
 check that, in various settings, the instanciation of FiniteDPP works well, the computation of the correlation/likelihood kernels is correct
 """
 
-import matplotlib
-import warnings
-matplotlib.use('agg')
-warnings.filterwarnings("ignore", category=FutureWarning)
-
 import unittest
 import warnings
 

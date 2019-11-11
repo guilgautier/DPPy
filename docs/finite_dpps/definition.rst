@@ -134,7 +134,10 @@ It is naturally defined through its joint probabilities
 	:label: eq:likelihood_kDPP_L
 
 	\mathbb{P}_{k\!\operatorname{-DPP}}[\mathcal{X}=S]
-		= \frac{1}{e_k(L)} \det \mathbf{L}_S ~ 1_{|S|=k},
+	= \frac{1}{e_k(L)} \det \mathbf{L}_S 1_{|S|=k},
+
+.. \mathbb{P}_{k\!\operatorname{-DPP}}[\mathcal{X}=S]
+.. 	= \frac{1}{e_k(L)} \det \mathbf{L}_S ~ 1_{|S|=k},
 
 where the normalizing constant :math:`e_k(L)` corresponds to the `elementary symmetric polynomial <https://en.wikipedia.org/wiki/Elementary_symmetric_polynomial>`_ of order :math:`k` evaluated in the eigenvalues of :math:`\mathbf{L}`,
 

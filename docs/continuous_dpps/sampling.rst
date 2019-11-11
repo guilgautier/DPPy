@@ -131,7 +131,8 @@ where :math:`\mathbf{K}_{i-1} = [K(x_p,x_q)]_{p,q=1}^{i-1}` and :math:`\mathbf{K
 .. hint::
 
     a) The chain rule :eq:`eq:continuous_dpps_exact_sampling_projection_DPP_chain_rule_dist2_K` can be understood as an application of the base :math:`\times` height formula.
-    b) MLers will recognize in :eq:`eq:continuous_dpps_exact_sampling_projection_DPP_chain_rule_schur` the incremental posterior variance of the Gaussian Process (GP) associated to :math:`K`, see :cite:`RaWi06` Equation 2.26.
+    b) The overall procedure is akin to a sequential Gram-Schmidt orthogonalization of :math:`\\Phi(x_{1}), \\dots, \\Phi(x_{N})`.
+    c) MLers will recognize in :eq:`eq:continuous_dpps_exact_sampling_projection_DPP_chain_rule_schur` the incremental posterior variance of the Gaussian Process (GP) associated to :math:`K`, see :cite:`RaWi06` Equation 2.26.
 
     .. caution::
 

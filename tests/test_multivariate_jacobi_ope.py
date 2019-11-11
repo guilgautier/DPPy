@@ -14,10 +14,10 @@ import sys
 sys.path.append('..')
 
 from dppy.multivariate_jacobi_ope import (MultivariateJacobiOPE,
-                                          compute_ordering_BaHa16,
-                                          compute_Gautschi_bounds)
+                                          compute_ordering,
+                                          compute_rejection_bounds)
 
-from dppy.utils import inner1d, check_random_state
+from dppy.utils import is_symmetric
 
 
 class TestMultivariateJacobiOPE(unittest.TestCase):
@@ -42,38 +42,40 @@ class TestMultivariateJacobiOPE(unittest.TestCase):
         orderings = [ord_d2_N16, ord_d3_N27]
 
         for idx, ord_to_check in enumerate(orderings):
+            with self.subTest(idx=idx):
 
-            N, d = len(ord_to_check), len(ord_to_check[0])
+                N, d = len(ord_to_check), len(ord_to_check[0])
 
-            self.assertTrue(compute_ordering_BaHa16(N, d), ord_to_check)
+                self.assertTrue(compute_ordering(N, d), ord_to_check)
 
-    def test_square_norms(self):
+    def test_norms_of_multiD_polynomials(self):
 
         N = 100
         dims = np.arange(2, 5)
 
         max_deg = 50  # to avoid quad warning in dimension 1
         for d in dims:
+            with self.subTest(dimension=d):
 
-            jacobi_params = 0.5 - np.random.rand(d, 2)
-            jacobi_params[0, :] = -0.5
+                jacobi_params = 0.5 - np.random.rand(d, 2)
+                jacobi_params[0, :] = -0.5
 
-            dpp = MultivariateJacobiOPE(N, jacobi_params)
-            pol_2_eval = dpp.poly_1D_degrees[:max_deg]
+                dpp = MultivariateJacobiOPE(N, jacobi_params)
+                pol_2_eval = dpp.degrees_1D_polynomials[:max_deg]
 
-            quad_square_norms =\
-                [[quad(lambda x:
-                        (1-x)**a * (1+x)**b * eval_jacobi(n, a, b, x)**2,
-                        -1, 1)[0]
-                        for n, a, b in zip(deg,
-                                            dpp.jacobi_params[:, 0],
-                                            dpp.jacobi_params[:, 1])]
-                 for deg in pol_2_eval]
+                quad_square_norms =\
+                    [[quad(lambda x:
+                            (1-x)**a * (1+x)**b * eval_jacobi(n, a, b, x)**2,
+                            -1, 1)[0]
+                            for n, a, b in zip(deg,
+                                               dpp.jacobi_params[:, 0],
+                                               dpp.jacobi_params[:, 1])]
+                     for deg in pol_2_eval]
 
-            self.assertTrue(np.allclose(
-                            dpp.poly_1D_square_norms[pol_2_eval,
-                                                     range(dpp.dim)],
-                            quad_square_norms))
+                self.assertTrue(
+                    np.allclose(
+                        dpp.norms_1D_polynomials[pol_2_eval, range(dpp.dim)],
+                        np.sqrt(quad_square_norms)))
 
     def test_Gautschi_bounds(self):
         """Test if bounds computed w/wo log scale coincide"""
@@ -82,106 +84,50 @@ class TestMultivariateJacobiOPE(unittest.TestCase):
         dims = np.arange(2, 5)
 
         for d in dims:
+            with self.subTest(dimension=d):
 
-            jacobi_params = 0.5 - np.random.rand(d, 2)
-            jacobi_params[0, :] = -0.5
+                jacobi_params = 0.5 - np.random.rand(d, 2)
+                jacobi_params[0, :] = -0.5
 
-            dpp = MultivariateJacobiOPE(N, jacobi_params)
+                dpp = MultivariateJacobiOPE(N, jacobi_params)
 
-            with_log_scale = compute_Gautschi_bounds(dpp.jacobi_params,
-                                                     dpp.ordering,
-                                                     log_scale=True)
+                with_log_scale = compute_rejection_bounds(dpp.jacobi_params,
+                                                          dpp.ordering,
+                                                          log_scale=True)
 
-            without_log_scale = compute_Gautschi_bounds(dpp.jacobi_params,
-                                                        dpp.ordering,
-                                                        log_scale=False)
+                without_log_scale = compute_rejection_bounds(dpp.jacobi_params,
+                                                             dpp.ordering,
+                                                             log_scale=False)
 
-            self.assertTrue(np.allclose(with_log_scale, without_log_scale))
+                self.assertTrue(np.allclose(with_log_scale, without_log_scale))
 
-    def test_kernel_symmetry(self):
-        """
-            K(x) == K(x, x)
-            K(x, y) == K(y, x)
-            K(x, Y) == K(Y, x) = [K(x, y) for y in Y]
-            K(X) == [K(x, x) for x in X]
-            K(X, Y) == [K(x, y) for x, y in zip(X, Y)]
-        """
+    def test_kernel_evaluations(self):
         N = 100
         dims = np.arange(2, 5)
 
         for d in dims:
+            with self.subTest(dimension=d):
 
-            jacobi_params = 0.5 - np.random.rand(d, 2)
-            jacobi_params[0, :] = -0.5
+                jacobi_params = 0.5 - np.random.rand(d, 2)
+                jacobi_params[0, :] = -0.5
 
-            dpp = MultivariateJacobiOPE(N, jacobi_params)
+                dpp = MultivariateJacobiOPE(N, jacobi_params)
 
-            x, y = np.random.rand(d), np.random.rand(d)
-            X, Y = np.random.rand(5, d), np.random.rand(5, d)
+                X = np.random.rand(20, d)
+                Y = np.random.rand(20, d)
 
-            self.assertTrue(np.allclose(dpp.K(x),
-                                        dpp.K(x, x)))
+                K_XX = is_symmetric(dpp.K(X, X))
+                K_xx = np.diag(K_XX)
+                K_xy = np.ravel([dpp.K(x, y) for x, y in zip(X, Y)])
 
-            self.assertTrue(
-                np.allclose(np.array([dpp.K(x) for x in X]),
-                            np.concatenate([dpp.K(x, x) for x in X])))
+                checks = ((dpp.K(X), K_XX),
+                          (dpp.K(X, X, eval_pointwise=True), K_xx),
+                          (dpp.K(X, Y, eval_pointwise=True), K_xy))
 
-            self.assertTrue(np.allclose(dpp.K(X),
-                                        dpp.K(X, X)))
-
-            self.assertTrue(np.allclose(dpp.K(x, y),
-                                        dpp.K(y, x)))
-
-            self.assertTrue(
-                np.allclose(dpp.K(x, Y),
-                            np.concatenate([dpp.K(x, y) for y in Y])))
-
-            self.assertTrue(np.allclose(dpp.K(x, Y),
-                                        dpp.K(Y, x)))
-
-            self.assertTrue(np.allclose(dpp.K(X, Y),
-                                        dpp.K(Y, X)))
-
-    def test_kernel_gram_matrix(self):
-        """
-            K(x) == phi_x.dot(phi_x)
-            K(x, y) == phi_x.dot(phi_y)
-            K(x, Y) == K(Y, x) = [phi_x.dot(phi_y) for y in Y]
-            K(X) == [phi_x.dot(phi_x) for x in X]
-            K(X, Y) == [phi_x.dot(phi_y) for x, y in zip(X, Y)]
-        """
-        N = 100
-        dims = np.arange(2, 5)
-
-        for d in dims:
-
-            jacobi_params = 0.5 - np.random.rand(d, 2)
-            jacobi_params[0, :] = -0.5
-
-            dpp = MultivariateJacobiOPE(N, jacobi_params)
-
-            x, y = np.random.rand(d), np.random.rand(d)
-            phi_x = dpp.eval_poly_multiD(x, normalize='norm')
-            phi_y = dpp.eval_poly_multiD(y, normalize='norm')
-
-            X, Y = np.random.rand(5, d), np.random.rand(5, d)
-            phi_X = dpp.eval_poly_multiD(X, normalize='norm').T
-            phi_Y = dpp.eval_poly_multiD(Y, normalize='norm').T
-
-            self.assertTrue(np.allclose(dpp.K(x),
-                                        inner1d(phi_x)))
-
-            self.assertTrue(np.allclose(dpp.K(X),
-                                        inner1d(phi_X)))
-
-            self.assertTrue(np.allclose(dpp.K(x, y),
-                                        inner1d(phi_x, phi_y)))
-
-            self.assertTrue(np.allclose(dpp.K(x, Y),
-                                        phi_x.dot(phi_Y)))
-
-            self.assertTrue(np.allclose(dpp.K(X, Y),
-                                        inner1d(phi_X, phi_Y)))
+                for idx, (a, b) in enumerate(checks):
+                    with self.subTest(idx=idx):
+                        self.assertTrue(np.allclose(a, b),
+                                        'a={}, b={}'.format(a, b))
 
     def test_sample_1D(self):
 
@@ -189,8 +135,7 @@ class TestMultivariateJacobiOPE(unittest.TestCase):
         jacobi_params = - 0.5 * np.ones((d, 2))
 
         dpp = MultivariateJacobiOPE(N, jacobi_params)
-        sampl = dpp.sample(random_state=self.seed)
-        # seed = 0
+        sampl = dpp.sample(random_state=self.seed)  # seed = 0
         expected_sample = np.array([[0.9995946],
                                     [0.98944808],
                                     [0.97485733],
@@ -221,28 +166,28 @@ class TestMultivariateJacobiOPE(unittest.TestCase):
 
         dpp = MultivariateJacobiOPE(N, jacobi_params)
 
-        sampl = dpp.sample(random_state=self.seed)
-        # seed = 0
+        sampl = dpp.sample(random_state=self.seed)  # seed = 0
+
         expected_sample = np.array([[-0.44929357, -0.92988338],
-                                    [-0.38287518, 0.20141371],
-                                    [-0.82081218, 0.71370281],
-                                    [0.54434591, -0.40548681],
-                                    [0.83560033, 0.99975326],
-                                    [0.58479869, -0.97294791],
-                                    [-0.97140965, -0.9958691],
-                                    [0.73176809, 0.0462124],
-                                    [0.99999994, 0.62478638],
-                                    [-0.995107, 0.6146506],
-                                    [0.99956026, -0.54696107],
-                                    [-0.73400973, 0.99976412],
+                                    [0.07128896, -0.98828901],
+                                    [-0.43895328, -0.64850438],
+                                    [-0.56491996, 0.43632636],
+                                    [0.33859341, 0.6642957],
+                                    [-0.89437538, -0.98384996],
+                                    [0.93451148, -0.42788073],
+                                    [-0.81846092, 0.57000777],
+                                    [-0.42084694, 0.98065145],
+                                    [0.97651548, 0.94243444],
+                                    [0.11753084, 0.96240585],
+                                    [-0.12183308, -0.14093164],
                                     [-0.9940169, 0.16811198],
-                                    [0.26219327, 0.71667124],
                                     [-0.76730512, -0.05402772],
-                                    [0.99910531, 0.90729924],
                                     [0.99984566, -0.95942833],
                                     [0.99996511, -0.01959666],
                                     [0.05053165, -0.40778628],
-                                    [0.11004152, 0.99337928]])
+                                    [0.82158181, 0.58501064],
+                                    [-0.97396649, 0.90805501],
+                                    [-0.99808676, -0.49690354]])
 
         self.assertTrue(np.allclose(sampl, expected_sample))
 

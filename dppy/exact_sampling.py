@@ -268,8 +268,8 @@ def proj_dpp_sampler_kernel_Schur(K, size=None, random_state=None):
     for it in range(size):
         # Pick a new item proportionally to residual norm^2
         j = rng.choice(ground_set[avail],
-                             p=np.abs(schur_comp[avail]) / (rank - it))
-        # store the item and make it unavailable
+                       p=np.abs(schur_comp[avail]) / (rank - it))
+        # store the item and make it unavailasble
         sampl[it], avail[j] = j, False
 
         # Update Schur complements K_ii - K_iY (K_Y)^-1 K_Yi
