@@ -24,9 +24,9 @@ Then, denote :math:`\mathcal{X}^B \sim \operatorname{DPP}(K^B)` with
 	\quad
 	\text{where}
 	\quad
-	B_n \overset{\text{i.i.d.}}{\sim} \mathcal{B}er(\lambda_n),
+	B_n \sim \mathcal{B}er(\lambda_n) \text{ are independent},
 
-where :math:`\mathcal{X}^B` is obtained by first choosing :math:`B_1, \dots, B_N` independently and then sampling from :math:`\operatorname{DPP}(K^B)` the DPP with orthogonal projection kernel :math:`K^B`.
+:math:`\mathcal{X}^B` is obtained by first sampling :math:`B_1, \dots, B_N` independently and then sampling conditionally from :math:`\operatorname{DPP}(K^B)`, the DPP with orthogonal projection kernel :math:`K^B`.
 
 Finally, we have :math:`\mathcal{X} \overset{d}{=} \mathcal{X}^B`.
 
@@ -89,7 +89,7 @@ b. Orthogonal projection case i.e. :math:`K^2 = K = K^*`
 Number of points
 ================
 
-For projection DPPs, i.e., when :math:`K` is the kernel associated to an orthogonal projector, one can show that :math:`|\mathcal{X}|=\operatorname{rank}(K)=\operatorname{Trace}(K)` almost surely (see, e.g., Lemma 17 of :cite:`HKPV06`).
+For projection DPPs, i.e., when :math:`K` is the kernel associated to an orthogonal projector, one can show that :math:`|\mathcal{X}|=\operatorname{rank}(K)=\operatorname{Trace}(K)` almost surely (see, e.g., :cite:`HKPV06` Lemma 17).
 
 In the general case, based on the fact that :ref:`generic DPPs are mixtures of projection DPPs <finite_dpps_mixture>`, we have
 
@@ -112,30 +112,35 @@ In the general case, based on the fact that :ref:`generic DPPs are mixtures of p
 Thinning
 ========
 
+.. important::
+
+	The class of DPPs is closed under independent thinning.
+
 Let :math:`\lambda > 1`.
 The configuration of points :math:`\mathcal{X}^{\lambda}` obtained after subsampling the points of a configuration :math:`\mathcal{X}\sim \operatorname{DPP}(K)` with i.i.d. :math:`\operatorname{\mathcal{B}er}\left(\frac{1}{\lambda}\right)` is still a DPP with kernel :math:`\frac{1}{\lambda} K`.
+To see this, let's compute the correlation functions of the thinned process
 
-	.. math::
+.. math::
 
-		\mathbb{E}\left[ \sum_{\substack{(x_1,\dots,x_k) \\ x_i \neq x_j \in \mathcal{X}^{\lambda}} } f(x_1,\dots,x_k) \right]
-		&= \mathbb{E}\left[
-				\mathbb{E}\left[
-				\sum_{\substack{(x_1,\dots,x_k) \\ x_i \neq x_j \in \mathcal{X} } }
-				f(x_1,\dots,x_k)
-				\prod_{i=1}^k 1_{\{x_i \in \mathcal{X}^{\lambda} \}}
-				\Bigg| \mathcal{X}\right]
-				\right]\\
-		&= \mathbb{E}\left[
-						\sum_{\substack{(x_1,\dots,x_k) \\ x_i \neq x_j \in \mathcal{X} } }
-						f(x_1,\dots,x_k)
-						\mathbb{E}\left[ \prod_{i=1}^k B_i \Bigg| \mathcal{X} \right]
-				\right]\\
-		&= \mathbb{E}\left[
-						\sum_{\substack{(x_1,\dots,x_k) \\ x_i \neq x_j \in \mathcal{X} } }
-								f(x_1,\dots,x_k)
-						\frac{1}{\lambda^k}
-				\right]\\
-		&= \int
-				f(x_1,\dots,x_k)
-				\det \left[ \frac{1}{\lambda} K(x_i,x_j) \right]_{1\leq i,j\leq k}
-				\mu^{\otimes k}(dx).
+	\mathbb{E}\left[ \sum_{\substack{(x_1,\dots,x_k) \\ x_i \neq x_j \in \mathcal{X}^{\lambda}} } f(x_1,\dots,x_k) \right]
+	&= \mathbb{E}\left[
+			\mathbb{E}\left[
+			\sum_{\substack{(x_1,\dots,x_k) \\ x_i \neq x_j \in \mathcal{X} } }
+			f(x_1,\dots,x_k)
+			\prod_{i=1}^k 1_{\{x_i \in \mathcal{X}^{\lambda} \}}
+			\Bigg| \mathcal{X}\right]
+			\right]\\
+	&= \mathbb{E}\left[
+					\sum_{\substack{(x_1,\dots,x_k) \\ x_i \neq x_j \in \mathcal{X} } }
+					f(x_1,\dots,x_k)
+					\mathbb{E}\left[ \prod_{i=1}^k B_i \Bigg| \mathcal{X} \right]
+			\right]\\
+	&= \mathbb{E}\left[
+					\sum_{\substack{(x_1,\dots,x_k) \\ x_i \neq x_j \in \mathcal{X} } }
+							f(x_1,\dots,x_k)
+					\frac{1}{\lambda^k}
+			\right]\\
+	&= \int
+			f(x_1,\dots,x_k)
+			\det \left[ \frac{1}{\lambda} K(x_i,x_j) \right]_{1\leq i,j\leq k}
+			\mu^{\otimes k}(dx).

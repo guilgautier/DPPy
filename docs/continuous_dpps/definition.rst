@@ -104,9 +104,12 @@ To access spectral properties of the kernel, it is common practice to assume :ma
 
 	.. math::
 
-		\iint |K(x,y)|^2  \mu(dx) \mu(dy) < \infty,
+		\iint_{\mathbb{X}\times \mathbb{X}}
+			|K(x,y)|^2
+			\mu(dx) \mu(dy)
+		< \infty,
 
-2. Self adjoint equiv. hermitian
+2. Self-adjoint equiv. Hermitian
 
 	.. math::
 
@@ -119,17 +122,9 @@ To access spectral properties of the kernel, it is common practice to assume :ma
 		\forall B\subset \mathbb{X} \text{ compact}, \quad
 		\int_B K(x,x) \mu(dx) < \infty.
 
-Under assumptions 1-3, the
-
-.. math::
-
-	\operatorname{DPP}(K) \text{ exists}
-	\Longleftrightarrow
-		\lambda_n \in [0,1], \quad \forall n.
-
 .. hint::
 
-	- 1. implies :math:`K` to be a compact operator.
+	- 1. implies :math:`K` to be a continuous compact operator.
 
 	- 2. with 1. allows to apply the spectral theorem, providing
 
@@ -141,12 +136,37 @@ Under assumptions 1-3, the
 
 .. warning::
 
-	These are only sufficient conditions, there indeed exist DPPs with non symmetric kernels such as the :ref:`carries_process`.
+	These are only sufficient conditions, there indeed exist DPPs with non symmetric kernels, see, e.g., :ref:`carries_process`.
+
+.. important::
+
+	Under assumptions 1, 2, and 3
+
+	.. math::
+
+		\operatorname{DPP}(K) \text{ exists}
+		\Longleftrightarrow
+			0\leq \lambda_n \leq 1, \quad \forall n \in \mathbb{N}
 
 .. seealso::
 
 	- Remarks 1-2 and Theorem 3 :cite:`Sos00`
 	- Theorem 22 :cite:`HKPV06`
+
+.. _continuous_dpps_projection_dpps:
+
+Projection DPPs
+===============
+
+:math:`\operatorname{DPP}(K)` is said to be a **projection** DPP with reference measure :math:`\mu` when :math:`K:\mathbb{X}\times \mathbb{X}\to \mathbb{C}` is a orthogonal projection kernel, that is
+
+.. math::
+
+    K(x,y)=\overline{K(y,x)}
+    \quad\text{and}\quad
+    \int_{\mathbb{X}} K(x, z) K(z, y) \mu(d z) = K(x, y)
+
+.. _continuous_dpps_construction:
 
 Construction
 ============
@@ -163,14 +183,12 @@ and attach :math:`[0,1]`-valued coefficients :math:`\lambda_n` such that
 
 .. math::
 
-	K_N (x, y) = \sum_{n=0}^{N-1} \lambda_n \phi_{n}(x)\phi_{n}(y).
+	K(x, y) = \sum_{n=0}^{N-1} \lambda_n \phi_{n}(x)\phi_{n}(y).
 
-.. note::
-
-	In this setting, in order to generate configurations :math:`\{x_1, \dots ,x_N\}` of :math:`N` points a.s. set :math:`\lambda_n=1`.
-	The corresponding kernel :math:`K_N` is the projection onto :math:`\operatorname{Span} \{\phi_{0},...,\phi_{N−1}\}`
+The special case where :math:`\lambda_0=\cdots=\lambda_{N-1}=1` corresponds to the construction of a projection DPP with :math:`N` points.
 
 .. seealso::
 
+	- :ref:`continuous_dpps_number_of_points`
 	- Lemma 21 :cite:`HKPV06`
 	- Proposition 2.11 :cite:`Joh06` biorthogonal families
