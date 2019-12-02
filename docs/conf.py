@@ -139,8 +139,8 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, 'main.tex', 'Sphinx format for Latex and HTML',
-     'Meher Krishna Patel', 'report')
+    (master_doc, 'main.tex', 'DPPy documentation',
+     'Guillaume Gautier et al.', 'report')
 ]
 
 
