@@ -32,7 +32,7 @@ install:
   - pip install pytest-cov
   - pip install coveralls
   # - pip install sphinx
-  - pip install .
+  - pip install -e .
 
 # Command to run tests. These are run for each configuration
 script:
