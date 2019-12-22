@@ -26,8 +26,6 @@ import functools  # used for decorators to pass docstring
 
 import numpy as np
 
-# For Uniform Spanning Trees
-import networkx as nx
 from itertools import chain  # create graph edges from path
 
 # For class PoissonizedPlancherel
@@ -38,6 +36,10 @@ from dppy.utils import check_random_state
 
 def ust_sampler_wilson(list_of_neighbors, root=None,
                        random_state=None):
+    try:
+        import networkx as nx
+    except ImportError:
+        raise ValueError('The networkx package is required to sample spanning trees (see setup.py).')
 
     rng = check_random_state(random_state)
 
@@ -98,6 +100,11 @@ def ust_sampler_wilson(list_of_neighbors, root=None,
 
 def ust_sampler_aldous_broder(list_of_neighbors, root=None,
                               random_state=None):
+
+    try:
+        import networkx as nx
+    except ImportError:
+        raise ValueError('The networkx package is required to sample spanning trees (see setup.py).')
 
     rng = check_random_state(random_state)
 

@@ -44,6 +44,9 @@ This project depends on the following libraries, which are automatically downloa
 -  `NumPy <http://www.numpy.org>`__
 -  `SciPy <http://www.scipy.org/>`__
 -  `Matplotlib <http://matplotlib.org/>`__
+
+The following dependencies are optional, and unlock extra functionality if installed:
+
 -  `Networkx <http://networkx.github.io/>`__ to play with `uniform
    spanning
    trees <https://dppy.readthedocs.io/en/latest/exotic_dpps/index.html#uniform-spanning-trees>`__
