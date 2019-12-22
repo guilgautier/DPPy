@@ -32,7 +32,7 @@ install:
   - pip install pytest-cov
   - pip install coveralls
   # - pip install sphinx
-  - pip install -e .['networkx']
+  - pip install -e .['trees']
 
 # Command to run tests. These are run for each configuration
 script:
