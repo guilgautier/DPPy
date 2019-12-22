@@ -49,7 +49,7 @@ The following dependencies are optional, and unlock extra functionality if insta
 
 -  `Networkx <http://networkx.github.io/>`__ to play with `uniform
    spanning
-   trees <https://dppy.readthedocs.io/en/latest/exotic_dpps/index.html#uniform-spanning-trees>`__
+   trees <https://dppy.readthedocs.io/en/latest/exotic_dpps/index.html#uniform-spanning-trees>`__ .
 -  `CVXOPT <http://cvxopt.org>`__ to use the ``zono_sampling`` MCMC
    sampler for finite DPPs. **CVXOPT itself requires**
    `GCC <http://gcc.gnu.org>`__,
@@ -90,7 +90,7 @@ However you may not work with the latest version, so
        cd <directory_of_your_choice>
        git clone https://github.com/guilgautier/DPPy.git
 
-3. Otherwise simply dowload the project
+3. Otherwise simply download the project
 
 4. In any case, install the project with
 
@@ -98,6 +98,10 @@ However you may not work with the latest version, so
 
        cd DPPy
        pip install .
+
+For a full installation,
+including extra dependencies and dependencies necessary to build the documentation,
+use :code:`pip install dppy['cvxopt','trees','docs']`.
 
 How to use it
 -------------
