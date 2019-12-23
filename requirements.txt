@@ -1,7 +1,9 @@
 numpy
 scipy>=1.1.0
 matplotlib
-
+# =========
+# Optionals
+# =========
 # for the zonotope MCMC sampler
 cvxopt==1.2.1
 # for notebook on sampling spanning trees

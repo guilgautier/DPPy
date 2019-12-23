@@ -61,6 +61,8 @@ The following dependencies are optional, and unlock extra functionality if insta
       .. code:: bash
 
           sudo apt install -qq gcc g++
+-  `Sphinx <http://www.sphinx-doc.org/en/master/>`__ to modify and rebuild the documentation
+
 
 Download instructions
 ~~~~~~~~~~~~~~~~~~~~~
@@ -73,15 +75,12 @@ DPPy is now available on `PyPI <https://pypi.org/project/dppy/>`__ |PyPI package
 
 However you may not work with the latest version, so
 
-1. If you have a GitHub account
+1. If you have a GitHub account please consider forking DPPy and use git to clone your copy of the repo
 
-   -  Please consider forking DPPy
-   -  Use git to clone your copy of the repo
+   .. code:: bash
 
-      .. code:: bash
-
-          cd <directory_of_your_choice>
-          git clone https://github.com/<username>/DPPy.git
+       cd <directory_of_your_choice>
+       git clone https://github.com/<username>/DPPy.git
 
 2. If you only use git, clone this repository
 
@@ -101,7 +100,7 @@ However you may not work with the latest version, so
 
 For a full installation,
 including extra dependencies and dependencies necessary to build the documentation,
-use :code:`pip install dppy['cvxopt','trees','docs']`.
+use :code:`pip install dppy['cvxopt','trees','docs']` (or :code:`pip install .['cvxopt','trees','docs']` to install from a local source tree).
 
 How to use it
 -------------
@@ -127,13 +126,7 @@ is generated locally with
 by `ReadTheDocs <https://readthedocs.org/projects/dppy/>`__.
 
 If you wish to contribute to the documentation or just play with it
-locally, you can:
-
--  Install Sphinx
-
-   .. code:: bash
-
-       pip install -U sphinx
+locally, you can install the necessary dependencies and then:
 
 -  Generate the docs locally
 
@@ -176,6 +169,9 @@ BibTeX:
     year = {2019},
     note = {Code at http://github.com/guilgautier/DPPy/ Documentation at http://dppy.readthedocs.io/}
   }
+
+Many of the algorithms implemented in DPPy also have associated literature that you should consider citing.
+Please refer to the docs and documentation strings of each specific DPP sampler for details.
 
 Reproducibility
 ---------------

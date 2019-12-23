@@ -116,7 +116,14 @@ To recover the finite DPP samples one needs to identify the tile in which the su
 
 .. hint::
 
-  Sampling from a *projection* DPP boils down to solving randomized LPs.
+  Sampling from a *projection* DPP boils down to solving randomized linear programs (LPs).
+
+.. important::
+
+	For its LPs solving needs DPPy uses the :code:`cvxopt` library,
+    which is not installed by default when installing DPPy. Please refer to the
+    `installation instructions <https://github.com/guilgautier/DPPy#installation>`_ on GitHub
+    for more details on how to install the necessary dependencies.
 
 .. testcode::
 
