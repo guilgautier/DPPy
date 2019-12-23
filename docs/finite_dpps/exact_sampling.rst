@@ -487,7 +487,7 @@ In practice
 
 	- The method is fully generic since it applies to any (valid), even non-Hermitian, correlation kernel :math:`\mathbf{K}`.
 	- Each sample costs :math:`\mathcal{O}(N^3)`.
-	- Nevertheless, the connexion between the chain rule on sets and Cholesky-type factorization is nicely supported by the surprising simplicty to implement the corresponding sampler.
+	- Nevertheless, the link between the chain rule on sets and Cholesky-type factorization is nicely supported by the surprisingly simple implementation of the corresponding generic sampler.
 
 	.. code-block:: python
 
@@ -636,7 +636,8 @@ In practice
 
 Sampling :math:`k\!\operatorname{-DPP}(\mathbf{L})` from :math:`\mathbf{L} \succeq 0_N` can be done by following
 
-	**Step 0.**
+	**Step** 0.
+
 		a) compute the eigendecomposition of :math:`\mathbf{L} = V \Gamma V^{\dagger}` in :math:`\mathcal{O}(N^3)`
 		b) evaluate the `elementary symmetric polynomials <https://en.wikipedia.org/wiki/Elementary_symmetric_polynomial>`_ in the eigenvalues of :math:`\mathbf{L}`: :math:`E[l, n]:=e_l(\gamma_1, \dots, \gamma_n)` for :math:`0\leq l\leq k` and :math:`0\leq n\leq N`. These computations can done recursively in :math:`\mathcal{O}(N k)` using Algorithm 7 of :cite:`KuTa12`.
 

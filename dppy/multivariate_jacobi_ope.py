@@ -450,16 +450,37 @@ class MultivariateJacobiOPE:
 
         return sample
 
-    def plot(self, sample, weighted=False):
+    def plot(self, sample, weighted=''):
 
         if self.dim >= 3:
             raise NotImplementedError('Visualizations in d>=3 not implemented')
 
         tols = 5e-2 * np.ones_like(self.jacobi_params)
+        tols = np.zeros_like(self.jacobi_params)
+        tols[1, 0] = 8e-2
 
-        weights = None
-        if weighted:
+        weights = np.ones(len(sample))
+
+        if weighted == 'BH':
+            # w_n = 1 / K(x_n, x_n)
             weights = 1. / self.K(sample, eval_pointwise=True)
+
+        elif weighted == 'EZ':
+            Phi_X = self.eval_multiD_polynomials(sample)
+
+            idx = np.tile(np.arange(self.N), (self.N, 1))
+            idx = idx[~np.eye(idx.shape[0], dtype=bool)].reshape(self.N, -1)
+
+            # w_n = +/- c det A / det B
+            #     = +/- c sgn(det A) sgn(det B) exp(logdet A − logdet B)
+            sgn_det_A, log_det_A = np.array(np.linalg.slogdet(Phi_X[idx, 1:]))
+            sgn_det_B, log_det_B = np.linalg.slogdet(Phi_X)
+
+            np.exp(log_det_A - log_det_B, out=weights)
+            weights *= sgn_det_A * sgn_det_B
+            weights[1::2] *= -1
+
+        weights /= max(weights.min(), weights.max(), key=abs)
 
         ticks_pos = [-1, 0, 1]
         ticks_labs = list(map(str, ticks_pos))
@@ -477,7 +498,7 @@ class MultivariateJacobiOPE:
 
             ax_main.scatter(sample[:, 0],
                             np.zeros_like(sample[:, 0]),
-                            s=2000 * weights if weighted else 1)
+                            s=weights)
 
             ax_main.hist(sample[:, 0],
                          bins=10,
@@ -523,9 +544,21 @@ class MultivariateJacobiOPE:
 
             ax_main.tick_params(axis='both', which='major', labelsize=18)
 
-            ax_main.scatter(sample[:, 0],
-                            sample[:, 1],
-                            s=2000 * weights if weighted else 10)
+            if weighted == 'EZ':
+                weights *= 100
+                w_geq_0 = weights >= 0
+                ax_main.scatter(sample[w_geq_0, 0],
+                                sample[w_geq_0, 1],
+                                s=weights[w_geq_0], alpha=0.7)
+
+                ax_main.scatter(sample[~w_geq_0, 0],
+                                sample[~w_geq_0, 1],
+                                s=-weights[~w_geq_0], alpha=0.7)
+            else:
+                weights *= 20
+                ax_main.scatter(sample[:, 0],
+                                sample[:, 1],
+                                s=weights, alpha=0.8)
 
             x_lim = ax_main.get_xlim()
             y_lim = ax_main.get_ylim()
@@ -540,7 +573,7 @@ class MultivariateJacobiOPE:
             # Top histogram
             ax_top.hist(sample[:, 0],
                         bins=10,
-                        weights=weights,
+                        weights=np.abs(weights),
                         density=True,
                         orientation='vertical',
                         alpha=0.5)
@@ -561,7 +594,7 @@ class MultivariateJacobiOPE:
             # Right histogram
             ax_right.hist(sample[:, 1],
                           bins=10,
-                          weights=weights,
+                          weights=np.abs(weights),
                           density=True,
                           orientation='horizontal',
                           alpha=0.5)
@@ -595,7 +628,7 @@ class MultivariateJacobiOPE:
                            leg_text,
                            fontsize=15,
                            loc='center',
-                           bbox_to_anchor=(0.5, -0.14 if weighted else -0.18),
+                           bbox_to_anchor=(0.5, -0.15 if weighted else -0.18),
                            labelspacing=0.1,
                            frameon=False)
 

@@ -22,6 +22,8 @@ sampl = dpp.sample()
 dpp.plot(sample=sampl, weighted=False)
 plt.tight_layout()
 
-# Attach a weight 1/K(x,x) to each of the points
-dpp.plot(sample=sampl, weighted=True)
+dpp.plot(sample=sampl, weighted='BH')
+plt.tight_layout()
+
+dpp.plot(sample=sampl, weighted='EZ')
 plt.tight_layout()

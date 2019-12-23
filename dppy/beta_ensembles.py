@@ -1120,10 +1120,10 @@ class CircularEnsemble(BetaEnsemble):
                 unit_circle = plt.Circle((0, 0), 1, color='r', fill=False)
                 ax.add_artist(unit_circle)
 
-                ax.set_xlim([-1.3, 1.3])
-                ax.set_ylim([-1.3, 1.3])
-                ax.set_aspect('equal')
-                ax.scatter(points.real, points.imag, c='blue', label='sample')
+            ax.set_xlim([-1.3, 1.3])
+            ax.set_ylim([-1.3, 1.3])
+            ax.set_aspect('equal')
+            ax.scatter(points.real, points.imag, c='blue', label='sample')
 
         elif display_type == 'hist':
             points = np.angle(points)
