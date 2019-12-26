@@ -105,25 +105,20 @@ How to cite this work?
 We wrote a companion paper to
 `DPPy <https://github.com/guilgautier/DPPy>`__ which got accepted for publication in the `MLOSS <http://www.jmlr.org/mloss/>`__ track of JMLR.
 
-The companion paper is available on
-
--  `arXiv <http://arxiv.org/abs/1809.07258>`__
--  `GitHub <https://github.com/guilgautier/DPPy_paper>`__ for the lastest version
-
 If you use this package, please consider citing it with this piece of
 BibTeX:
 
 .. code:: bibtex
 
   @article{GPBV19,
-    archivePrefix = {arXiv},
-    arxivId = {1809.07258},
     author = {Gautier, Guillaume and Polito, Guillermo and Bardenet, R{\'{e}}mi and Valko, Michal},
-    journal = {Journal of Machine Learning Research - Machine Learning Open Source Software (JMLR-MLOSS), in press},
+    journal = {Journal of Machine Learning Research - Machine Learning Open Source Software (JMLR-MLOSS)},
     title = {{DPPy: DPP Sampling with Python}},
     keywords = {Computer Science - Machine Learning, Computer Science - Mathematical Software, Statistics - Machine Learning},
-    url = {http://arxiv.org/abs/1809.07258},
+    url = {http://jmlr.org/papers/v20/19-179.html},
     year = {2019},
+    archivePrefix = {arXiv},
+    arxivId = {1809.07258},
     note = {Code at http://github.com/guilgautier/DPPy/ Documentation at http://dppy.readthedocs.io/}
   }
 
