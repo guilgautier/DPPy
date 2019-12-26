@@ -917,7 +917,7 @@ def k_dpp_vfx_sampler(size, intermediate_sample_info, X_data, eval_L, random_sta
     rng = check_random_state(random_state)
 
     if (intermediate_sample_info is None
-        or intermediate_sample_info.s != size):
+        or not np.isclose(intermediate_sample_info.s, size).item()):
         intermediate_sample_info = vfx_sampling_precompute_constants(
                                     X_data=X_data,
                                     eval_L=eval_L,
