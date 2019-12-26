@@ -98,7 +98,7 @@ However you may not work with the latest version, so
        cd DPPy
        pip install .
 
-For a full installation, including extra dependencies and dependencies necessary to build the documentation (see above), use :code:`pip install dppy['cvxopt','trees','docs']` (or :code:`pip install .['cvxopt','trees','docs']` to install from a local source tree).
+For a full installation, including extra dependencies and dependencies necessary to build the documentation (see above), use :code:`pip install dppy['zonotope','trees','docs']` (or :code:`pip install .['zonotope','trees','docs']` to install from a local source tree).
 
 How to use it
 -------------
