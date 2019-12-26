@@ -74,7 +74,7 @@ DPPy is now available on `PyPI <https://pypi.org/project/dppy/>`__ |PyPI package
   pip install dppy
 For a full installation, including extra dependencies and dependencies necessary to build the documentation (see above), use :code:`pip install dppy['zonotope','trees','docs']`.
 
-However you might want to work with the latest version, so
+Note that only stable DPPy releases are available on PyPI, and recently included improvements might only be available on the git master branch. If you want to work with the latest version of DPPy
 
 1. If you have a GitHub account please consider forking DPPy and use git to clone your copy of the repo
 
