@@ -72,8 +72,9 @@ DPPy is now available on `PyPI <https://pypi.org/project/dppy/>`__ |PyPI package
 .. code:: bash
 
   pip install dppy
+For a full installation, including extra dependencies and dependencies necessary to build the documentation (see above), use :code:`pip install dppy['zonotope','trees','docs']`.
 
-However you may not work with the latest version, so
+However you might want to work with the latest version, so
 
 1. If you have a GitHub account please consider forking DPPy and use git to clone your copy of the repo
 
@@ -98,13 +99,13 @@ However you may not work with the latest version, so
        cd DPPy
        pip install .
 
-For a full installation, including extra dependencies and dependencies necessary to build the documentation (see above), use :code:`pip install dppy['zonotope','trees','docs']` (or :code:`pip install .['zonotope','trees','docs']` to install from a local source tree).
+Use :code:`pip install .['zonotope','trees','docs']` to perform a full install from a local source tree.
 
 How to use it
 -------------
 
-To avoid duplicating the docs, the entire DPPy documentation is in read the docs in the following link http://dppy.readthedocs.io/.
-There are also some interactive tutorials using Jupyter in here https://github.com/guilgautier/DPPy/blob/master/notebooks/.
+The main DPPy documentation is available online at `http://dppy.readthedocs.io <http://dppy.readthedocs.io>`_.
+There are also some interactive tutorials using Jupyter available at https://github.com/guilgautier/DPPy/blob/master/notebooks/.
 For more details, check below.
 
 Tutorials in `Jupyter notebooks <https://github.com/guilgautier/DPPy/blob/master/notebooks/>`_
@@ -114,7 +115,7 @@ You can read and work on these interactive tutorial `Notebooks <https://github.c
 web browser, without having to download or install Python or anything.
 Just click, wait a little bit, and play with the notebook!
 
-Documentation
+Building the documentation
 ~~~~~~~~~~~~~
 
 The
@@ -122,7 +123,6 @@ The
 is generated locally with
 `Sphinx <http://www.sphinx-doc.org/en/master/>`__ and then built online
 by `ReadTheDocs <https://readthedocs.org/projects/dppy/>`__.
-
 If you wish to contribute to the documentation or just play with it
 locally, you can install the necessary dependencies and then:
 
