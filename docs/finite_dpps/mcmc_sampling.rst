@@ -120,10 +120,7 @@ To recover the finite DPP samples one needs to identify the tile in which the su
 
 .. important::
 
-	For its LPs solving needs DPPy uses the :code:`cvxopt` library,
-    which is not installed by default when installing DPPy. Please refer to the
-    `installation instructions <https://github.com/guilgautier/DPPy#installation>`_ on GitHub
-    for more details on how to install the necessary dependencies.
+  For its LPs solving needs DPPy uses the :code:`cvxopt` library, but :code:`cvxopt` is not installed by default when installing DPPy. Please refer to the `installation instructions <https://github.com/guilgautier/DPPy#installation>`_ on GitHub for more details on how to install the necessary dependencies.
 
 .. testcode::
 
