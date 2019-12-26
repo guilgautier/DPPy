@@ -99,7 +99,7 @@ setup(
     # List additional groups of dependencies here (e.g. development dependencies). You can install these using the following syntax, for example:
     # $ pip install -e .[dev,test]
     extras_require={
-        'zono': ['cvxopt==1.2.1'], # For zonotope MCMC sampler
+        'zonotope': ['cvxopt==1.2.1'], # For zonotope MCMC sampler
         'trees': ['networkx'],
         'docs': ['sphinxcontrib-bibtex', # Documentation bibliography
                  'sphinx_rtd_theme'], # Documentation theme
