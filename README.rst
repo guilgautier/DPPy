@@ -44,9 +44,12 @@ This project depends on the following libraries, which are automatically downloa
 -  `NumPy <http://www.numpy.org>`__
 -  `SciPy <http://www.scipy.org/>`__
 -  `Matplotlib <http://matplotlib.org/>`__
+
+The following dependencies are optional, and unlock extra functionality if installed:
+
 -  `Networkx <http://networkx.github.io/>`__ to play with `uniform
    spanning
-   trees <https://dppy.readthedocs.io/en/latest/exotic_dpps/index.html#uniform-spanning-trees>`__
+   trees <https://dppy.readthedocs.io/en/latest/exotic_dpps/index.html#uniform-spanning-trees>`__ .
 -  `CVXOPT <http://cvxopt.org>`__ to use the ``zono_sampling`` MCMC
    sampler for finite DPPs. **CVXOPT itself requires**
    `GCC <http://gcc.gnu.org>`__,
@@ -59,26 +62,26 @@ This project depends on the following libraries, which are automatically downloa
 
           sudo apt install -qq gcc g++
 
-Download instructions
-~~~~~~~~~~~~~~~~~~~~~
+-  `Sphinx <http://www.sphinx-doc.org/en/master/>`__ to modify and rebuild the documentation
+
+Installation instructions
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
 DPPy is now available on `PyPI <https://pypi.org/project/dppy/>`__ |PyPI package|
 
 .. code:: bash
 
   pip install dppy
+For a full installation, including extra dependencies and dependencies necessary to build the documentation (see above), use :code:`pip install dppy['zonotope','trees','docs']`.
 
-However you may not work with the latest version, so
+Note that only stable DPPy releases are available on PyPI, and recently included improvements might only be available on the git master branch. If you want to work with the latest version of DPPy
 
-1. If you have a GitHub account
+1. If you have a GitHub account please consider forking DPPy and use git to clone your copy of the repo
 
-   -  Please consider forking DPPy
-   -  Use git to clone your copy of the repo
+   .. code:: bash
 
-      .. code:: bash
-
-          cd <directory_of_your_choice>
-          git clone https://github.com/<username>/DPPy.git
+       cd <directory_of_your_choice>
+       git clone https://github.com/<username>/DPPy.git
 
 2. If you only use git, clone this repository
 
@@ -87,7 +90,7 @@ However you may not work with the latest version, so
        cd <directory_of_your_choice>
        git clone https://github.com/guilgautier/DPPy.git
 
-3. Otherwise simply dowload the project
+3. Otherwise simply download the project
 
 4. In any case, install the project with
 
@@ -96,11 +99,13 @@ However you may not work with the latest version, so
        cd DPPy
        pip install .
 
+Use :code:`pip install .['zonotope','trees','docs']` to perform a full install from a local source tree.
+
 How to use it
 -------------
 
-To avoid duplicating the docs, the entire DPPy documentation is in read the docs in the following link http://dppy.readthedocs.io/.
-There are also some interactive tutorials using Jupyter in here https://github.com/guilgautier/DPPy/blob/master/notebooks/.
+The main DPPy documentation is available online at `http://dppy.readthedocs.io <http://dppy.readthedocs.io>`_.
+There are also some interactive tutorials using Jupyter available at https://github.com/guilgautier/DPPy/blob/master/notebooks/.
 For more details, check below.
 
 Tutorials in `Jupyter notebooks <https://github.com/guilgautier/DPPy/blob/master/notebooks/>`_
@@ -110,7 +115,7 @@ You can read and work on these interactive tutorial `Notebooks <https://github.c
 web browser, without having to download or install Python or anything.
 Just click, wait a little bit, and play with the notebook!
 
-Documentation
+Building the documentation
 ~~~~~~~~~~~~~
 
 The
@@ -118,15 +123,8 @@ The
 is generated locally with
 `Sphinx <http://www.sphinx-doc.org/en/master/>`__ and then built online
 by `ReadTheDocs <https://readthedocs.org/projects/dppy/>`__.
-
 If you wish to contribute to the documentation or just play with it
-locally, you can:
-
--  Install Sphinx
-
-   .. code:: bash
-
-       pip install -U sphinx
+locally, you can install the necessary dependencies and then:
 
 -  Generate the docs locally
 
@@ -148,27 +146,25 @@ How to cite this work?
 We wrote a companion paper to
 `DPPy <https://github.com/guilgautier/DPPy>`__ which got accepted for publication in the `MLOSS <http://www.jmlr.org/mloss/>`__ track of JMLR.
 
-The companion paper is available on
-
--  `arXiv <http://arxiv.org/abs/1809.07258>`__
--  `GitHub <https://github.com/guilgautier/DPPy_paper>`__ for the lastest version
-
 If you use this package, please consider citing it with this piece of
 BibTeX:
 
 .. code:: bibtex
 
   @article{GPBV19,
-    archivePrefix = {arXiv},
-    arxivId = {1809.07258},
     author = {Gautier, Guillaume and Polito, Guillermo and Bardenet, R{\'{e}}mi and Valko, Michal},
-    journal = {Journal of Machine Learning Research - Machine Learning Open Source Software (JMLR-MLOSS), in press},
+    journal = {Journal of Machine Learning Research - Machine Learning Open Source Software (JMLR-MLOSS)},
     title = {{DPPy: DPP Sampling with Python}},
     keywords = {Computer Science - Machine Learning, Computer Science - Mathematical Software, Statistics - Machine Learning},
-    url = {http://arxiv.org/abs/1809.07258},
+    url = {http://jmlr.org/papers/v20/19-179.html},
     year = {2019},
+    archivePrefix = {arXiv},
+    arxivId = {1809.07258},
     note = {Code at http://github.com/guilgautier/DPPy/ Documentation at http://dppy.readthedocs.io/}
   }
+
+Many of the algorithms implemented in DPPy also have associated literature that you should consider citing.
+Please refer to the docs and documentation strings of each specific DPP sampler for details.
 
 Reproducibility
 ---------------
