@@ -361,8 +361,8 @@ def dpp_sampler_generic_kernel(K, random_state=None):
 # Phase 1: subsample eigenvectors by drawing independent Bernoulli variables with parameter the eigenvalues of the correlation kernel K.
 def dpp_eig_vecs_selector(ber_params, eig_vecs,
                           random_state=None):
-    """ Phase 1 of exact sampling procedure. Subsample eigenvectors :math:`V` of the initial kernel (correlation :math:`K`, resp. likelihood :math:`L`) to build a projection DPP with kernel :math:`V V^{\\top}` from which sampling is easy.
-    The selection is made based on a realization of Bernoulli variables with parameters related to the eigenvalues of :math:`K`, resp. :math:`L`.
+    """ Phase 1 of exact sampling procedure. Subsample eigenvectors :math:`V` of the initial kernel (correlation :math:`K`, resp. likelihood :math:`L`) to build a projection DPP with kernel :math:`U U^{\\top}` from which sampling is easy.
+    The selection is made based on a realization of Bernoulli variables with parameters to the eigenvalues of :math:`K`.
 
     :param ber_params:
         Parameters of Bernoulli variables
@@ -391,52 +391,6 @@ def dpp_eig_vecs_selector(ber_params, eig_vecs,
 
     return eig_vecs[:, ind_sel]
 
-
-def dpp_eig_vecs_selector_L_dual(eig_vals, eig_vecs, gram_factor,
-                                 random_state=None):
-    """ Subsample eigenvectors :math:`V` of likelihood kernel :math:`L=\\Phi^{\\top} \\Phi` based on the eigendecomposition dual kernel :math:`L'=\\Phi \\Phi^{\\top}`. Note that :math:`L'` and :math:`L'` share the same nonzero eigenvalues.
-
-    :param eig_vals:
-        Collection of eigenvalues of :math:`L_dual` kernel.
-    :type eig_vals:
-        list, array_like
-
-    :param eig_vecs:
-        Collection of eigenvectors of :math:`L_dual` kernel.
-    :type eig_vecs:
-        array_like
-
-    :param gram_factor:
-        Feature matrix :math:`\\Phi`
-    :type gram_factor:
-        array_like
-
-    :return:
-        selected eigenvectors
-    :rtype:
-        array_like
-
-    .. see also::
-
-        Phase 1:
-
-        - :func:`dpp_eig_vecs_selector <dpp_eig_vecs_selector>`
-
-        Phase 2:
-
-        - :func:`proj_dpp_sampler_eig_GS <proj_dpp_sampler_eig_GS>`
-        - :func:`proj_dpp_sampler_eig_GS_bis <proj_dpp_sampler_eig_GS_bis>`
-        - :func:`proj_dpp_sampler_eig_KuTa12 <proj_dpp_sampler_eig_KuTa12>`
-    """
-
-    rng = check_random_state(random_state)
-
-    # Realisation of Bernoulli random variables with params eig_vals
-    ind_sel = rng.rand(eig_vals.size) < eig_vals / (1.0 + eig_vals)
-
-    return gram_factor.T.dot(eig_vecs[:, ind_sel] / np.sqrt(eig_vals[ind_sel]))
-
-
 # Phase 2:
 # Sample projection kernel VV.T where V are the eigvecs selected in Phase 1.
 def proj_dpp_sampler_eig(eig_vecs, mode='GS', size=None,
@@ -448,7 +402,6 @@ def proj_dpp_sampler_eig(eig_vecs, mode='GS', size=None,
         Phase 1:
 
         - :func:`dpp_eig_vecs_selector <dpp_eig_vecs_selector>`
-        - :func:`dpp_eig_vecs_selector_gram_factor <dpp_eig_vecs_selector_gram_factor>`
 
         Phase 2:
 

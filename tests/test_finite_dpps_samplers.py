@@ -45,51 +45,58 @@ class TestAdequationOfFiniteDppSamplers(unittest.TestCase):
         """Perform chi-square test to check that
         P[{i} C X] = K_ii
         """
-        dpp.compute_K()
-        N = len(dpp.K)
 
-        marginal_th = np.diag(dpp.K) / np.trace(dpp.K)
+        if dpp.size_k_dpp:
+            return True, 'We do not check inclusion probabilities for k-DPPs'
+        else:
+            dpp.compute_K()
+            N = len(dpp.K)
 
-        samples_as_singletons = list(chain.from_iterable(samples))
-        marginal_emp, _ = np.histogram(samples_as_singletons,
-                                       bins=range(N + 1),
-                                       density=True)
+            marginal_th = np.diag(dpp.K) / np.trace(dpp.K)
 
-        _, pval = chisquare(f_obs=marginal_emp, f_exp=marginal_th)
+            samples_as_singletons = list(chain.from_iterable(samples))
+            marginal_emp, _ = np.histogram(samples_as_singletons,
+                                           bins=range(N + 1),
+                                           density=True)
 
-        msg = 'pval = {}, emp = {}, th = {}'.format(pval,
-                                                    marginal_emp,
-                                                    marginal_th)
+            _, pval = chisquare(f_obs=marginal_emp, f_exp=marginal_th)
 
-        return pval > tol, msg
+            msg = 'pval = {}, emp = {}, th = {}'.format(pval,
+                                                        marginal_emp,
+                                                        marginal_th)
+
+            return pval > tol, msg
 
     @staticmethod
     def doubleton_adequation(dpp, samples, tol=0.05):
         """Perform chi-square test to check that
         P[{i, j} C X] = det [[K_ii, K_ij], [K_ji, K_jj]]
         """
-        samples = list(map(set, samples))
-        dpp.compute_K()
-        N = len(dpp.K)
+        if dpp.size_k_dpp:
+            return True, 'We do not check inclusion probabilities for k-DPPs'
+        else:
+            samples = list(map(set, samples))
+            dpp.compute_K()
+            N = len(dpp.K)
 
-        nb_doubletons = 10
-        doubletons = [set(rndm.choice(N, size=2, replace=False))
-                      for _ in range(nb_doubletons)]
+            nb_doubletons = 10
+            doubletons = [set(rndm.choice(N, size=2, replace=False))
+                          for _ in range(nb_doubletons)]
 
-        # det [[K_ii, K_ij], [K_ji, K_jj]]
-        marginal_th = [det_ST(dpp.K, list(d)) for d in doubletons]
+            # det [[K_ii, K_ij], [K_ji, K_jj]]
+            marginal_th = [det_ST(dpp.K, list(d)) for d in doubletons]
 
-        counts = [sum([doubl.issubset(sampl) for sampl in samples])
-                  for doubl in doubletons]
-        marginal_emp = np.array(counts) / len(samples)
+            counts = [sum([doubl.issubset(sampl) for sampl in samples])
+                      for doubl in doubletons]
+            marginal_emp = np.array(counts) / len(samples)
 
-        _, pval = chisquare(f_obs=marginal_emp, f_exp=marginal_th)
+            _, pval = chisquare(f_obs=marginal_emp, f_exp=marginal_th)
 
-        msg = 'pval = {}, emp = {}, th = {}'.format(pval,
-                                                    marginal_emp,
-                                                    marginal_th)
+            msg = 'pval = {}, emp = {}, th = {}'.format(pval,
+                                                        marginal_emp,
+                                                        marginal_th)
 
-        return pval > tol, msg
+            return pval > tol, msg
 
     @staticmethod
     def uniqueness_of_items(dpp, samples):
@@ -311,7 +318,7 @@ class TestAdequationOfFiniteDppSamplers(unittest.TestCase):
              (False,
                 {'L_eig_dec': (self.e_vals_geq_0, self.e_vecs)}),
              (False,
-                {'L_gram_factor': self.phi})]
+                {'L_gram_factor': self.phi})]  # L_gram_factor to test L_dual
 
         k = self.rank // 2
 

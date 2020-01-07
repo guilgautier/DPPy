@@ -368,20 +368,19 @@ In practice
 
 		[[3, 1, 0, 4], [9, 6], [4, 1, 3, 0], [7, 0, 6, 4], [5, 0, 7], [4, 0, 2], [5, 3, 8, 4], [0, 5, 2], [7, 0, 2], [6, 0, 3]]
 
-- Sampling a :math:`\operatorname{DPP}(\mathbf{L})` for which each item is represented by a :math:`d\leq N` dimensional feature vector, all stored in a _feature_ matrix :math:`\Phi \in \mathbb{R}^{d\times N}`, so that :math:`\mathbf{L}=\Phi^{\top} \Phi \succeq 0_N`, can be done by following
+- Sampling a :math:`\operatorname{DPP}(\mathbf{L})` for which each item is represented by a :math:`d\leq N` dimensional feature vector, all stored in a *feature matrix* :math:`\Phi \in \mathbb{R}^{d\times N}`, so that :math:`\mathbf{L}=\Phi^{\top} \Phi \succeq 0_N`, can be done by following
 
-  	**Step** 0. compute the so-called *dual* kernel :math:`\tilde{L}=\Phi \Phi^{\dagger}\in \mathbb{R}^{d\times}` and eigendecompose it :math:`\tilde{\mathbf{L}} = W \Delta W^{\top}`.
-  	This corresponds to a cost of order :math:`\mathcal{O}(Nd^2 + d^3)`.
+  	**Step** 0. compute the so-called *dual* kernel :math:`\tilde{L}=\Phi \Phi^{\dagger}\in \mathbb{R}^{d\times}`, eigendecompose it :math:`\tilde{\mathbf{L}} = W \Delta W^{\top}` and recover the eigenvectors of :math:`\mathbf{L}` as :math:`V=\Phi^{\top}W \Delta^{-\frac{1}{2}}`
+  	This corresponds to a cost of order :math:`\mathcal{O}(Nd^2 + d^3 + d^2 + Nd^2)`.
 
- 	**Step** :ref:`1. <finite_dpps_exact_sampling_spectral_method_step_1>` is adapted to: draw independent Bernoulli random variables :math:`B_i \sim \operatorname{\mathcal{B}er}(\delta_i)` for :math:`i=1,\dots, d` and collect :math:`\mathcal{B}=\left\{ i ~;~ B_i=1 \right\}`
+ 	**Step** :ref:`1. <finite_dpps_exact_sampling_spectral_method_step_1>` is adapted to: draw independent Bernoulli random variables :math:`B_i \sim \operatorname{\mathcal{B}er}(\frac{\delta_i}{1+\delta_i})` for :math:`i=1,\dots, d` and collect :math:`\mathcal{B}=\left\{ i ~;~ B_i=1 \right\}`
 
-	**Step** :ref:`2. <finite_dpps_exact_sampling_spectral_method_step_2>` is adapted to: sample from the **projection** DPP with correlation kernel defined by its eigenvectors :math:`\Phi^{\top} W_{:,\mathcal{B}} \Delta_{\mathcal{B}}^{-1/2}`.
-	The computation of the eigenvectors requires :math:`\mathcal{O}(Nd|\mathcal{B}|)`.
+	**Step** :ref:`2. <finite_dpps_exact_sampling_spectral_method_step_2>` is adapted to: sample from the **projection** DPP with correlation kernel defined by its eigenvectors :math:`V_{:,\mathcal{B}} = \left[\Phi^{\top} W \Delta^{-1/2}\right]_{:,\mathcal{B}}`.
 
 	.. important::
 
 		Step 0. must be performed once and for all in :math:`\mathcal{O}(Nd^2 + d^3)`.
-		Then the average cost of getting one sample by applying Steps 1. and 2. is :math:`\mathcal{O}(Nd\mathbb{E}\left[|\mathcal{X}|\right] + N \mathbb{E}\left[|\mathcal{X}|\right]^2)`, where :math:`\mathbb{E}\left[|\mathcal{X}|\right]=\operatorname{trace}(\mathbf{\tilde{L}(I+\tilde{L})^{-1}})=\sum_{i=1}^{d} \frac{\delta_i}{1+\delta_i}`
+		Then the average cost of getting one sample by applying Steps 1. and 2. is :math:`\mathcal{O}(N \mathbb{E}\left[|\mathcal{X}|\right]^2)`, where :math:`\mathbb{E}\left[|\mathcal{X}|\right]=\operatorname{trace}(\mathbf{\tilde{L}(I+\tilde{L})^{-1}})=\sum_{i=1}^{d} \frac{\delta_i}{1+\delta_i}\leq d`
 
 	.. seealso::
 

@@ -24,7 +24,6 @@ from dppy.exact_sampling import (dpp_sampler_generic_kernel,
                                  proj_dpp_sampler_eig,
                                  dpp_vfx_sampler,
                                  dpp_eig_vecs_selector,
-                                 dpp_eig_vecs_selector_L_dual,
                                  k_dpp_vfx_sampler,
                                  k_dpp_eig_vecs_selector,
                                  elementary_symmetric_polynomials)
@@ -131,7 +130,7 @@ class FiniteDPP:
         self.A_zono = is_full_row_rank(params.get('A_zono', None))
 
         # Attributes relative to L likelihood kernel:
-        # L, L_eig_vals, L_eig_vecs, L_gram_factor, L_dual, L_dual_eig_vals, L_dual_eig_vecs
+        # L, L_eig_vals, L_eig_vecs, L_gram_factor, L_dual
         self.L = is_symmetric(params.get('L', None))
         if self.projection:
             self.L = is_projection(self.L)
@@ -147,8 +146,6 @@ class FiniteDPP:
         # L' "dual" likelihood kernel, L' = Phi Phi.T, Phi = L_gram_factor
         self.L_gram_factor = params.get('L_gram_factor', None)
         self.L_dual = None
-        self.L_dual_eig_vals = None
-        self.L_dual_eig_vecs = None
 
         if self.L_gram_factor is not None:
             Phi = self.L_gram_factor
@@ -366,18 +363,30 @@ class FiniteDPP:
             sampl = proj_dpp_sampler_eig(V, self.sampling_mode,
                                          random_state=rng)
 
-        elif self.L_dual_eig_vals is not None:
-            # Phase 1
-            V = dpp_eig_vecs_selector_L_dual(self.L_dual_eig_vals,
-                                             self.L_dual_eig_vecs,
-                                             self.L_gram_factor,
-                                             random_state=rng)
-            # Phase 2
-            sampl = proj_dpp_sampler_eig(V, self.sampling_mode,
-                                         random_state=rng)
+        # elif self.L_dual_eig_vals is not None:
+        #     # Phase 1
+        #     V = dpp_eig_vecs_selector_L_dual(self.L_dual_eig_vals,
+        #                                      self.L_dual_eig_vecs,
+        #                                      self.L_gram_factor,
+        #                                      random_state=rng)
+        #     # Phase 2
+        #     sampl = proj_dpp_sampler_eig(V, self.sampling_mode,
+        #                                  random_state=rng)
+        #
 
         elif self.L_eig_vals is not None:
             self.K_eig_vals = self.L_eig_vals / (1.0 + self.L_eig_vals)
+            return self.sample_exact(mode=self.sampling_mode,
+                                     random_state=rng)
+
+        elif self.L_dual is not None:
+            # L_dual = Phi Phi.T = W Theta W.T
+            # L = Phi.T Phi = V Gamma V
+            # implies Gamma = Theta and V = Phi.T W Theta^{-1/2}
+            self.L_eig_vals, L_dual_eig_vecs = la.eigh(self.L_dual)
+            self.L_eig_vals = is_geq_0(self.L_eig_vals)
+            self.eig_vecs =self.L_gram_factor.T.dot(L_dual_eig_vecs
+                                                    / np.sqrt(self.L_eig_vals))
             return self.sample_exact(mode=self.sampling_mode,
                                      random_state=rng)
 
@@ -386,13 +395,6 @@ class FiniteDPP:
         elif self.K is not None and self.projection:
             sampl = proj_dpp_sampler_kernel(self.K, self.sampling_mode,
                                             random_state=rng)
-
-        elif self.L_dual is not None:
-            self.L_dual_eig_vals, self.L_dual_eig_vecs =\
-                la.eigh(self.L_dual)
-            self.L_dual_eig_vals = is_geq_0(self.L_dual_eig_vals)
-            return self.sample_exact(mode=self.sampling_mode,
-                                     random_state=rng)
 
         elif self.K is not None:
             self.K_eig_vals, self.eig_vecs = la.eigh(self.K)
@@ -585,15 +587,6 @@ class FiniteDPP:
             sampl = proj_dpp_sampler_eig(V, self.sampling_mode,
                                          random_state=rng)
 
-        elif self.L_dual_eig_vals is not None:
-            # There is
-            self.L_eig_vals = self.L_dual_eig_vals
-            self.eig_vecs =\
-                self.L_gram_factor.T.dot(
-                    self.L_dual_eig_vecs / np.sqrt(self.L_dual_eig_vals))
-            return self.sample_exact_k_dpp(size, self.sampling_mode,
-                                           random_state=rng)
-
         elif self.K_eig_vals is not None:
             np.seterr(divide='raise')
             self.L_eig_vals = self.K_eig_vals / (1.0 - self.K_eig_vals)
@@ -602,21 +595,25 @@ class FiniteDPP:
 
         # Otherwise eigendecomposition is necessary
         elif self.L_dual is not None:
-            self.L_dual_eig_vals, self.L_dual_eig_vecs =\
-                la.eigh(self.L_dual)
-            self.L_dual_eig_vals = is_geq_0(self.L_dual_eig_vals)
+            # L_dual = Phi Phi.T = W Theta W.T
+            # L = Phi.T Phi = V Gamma V.T
+            # implies Gamma = Theta and V = Phi.T W Theta^{-1/2}
+            self.L_eig_vals, L_dual_eig_vecs = la.eigh(self.L_dual)
+            self.L_eig_vals = is_geq_0(self.L_eig_vals)
+            self.eig_vecs =self.L_gram_factor.T.dot(L_dual_eig_vecs
+                                                    / np.sqrt(self.L_eig_vals))
+            return self.sample_exact_k_dpp(size, mode=self.sampling_mode,
+                                           random_state=rng)
+
+        elif self.L is not None:
+            self.L_eig_vals, self.eig_vecs = la.eigh(self.L)
+            self.L_eig_vals = is_geq_0(self.L_eig_vals)
             return self.sample_exact_k_dpp(size, self.sampling_mode,
                                            random_state=rng)
 
         elif self.K is not None:
             self.K_eig_vals, self.eig_vecs = la.eigh(self.K)
             self.K_eig_vals = is_in_01(self.K_eig_vals)
-            return self.sample_exact_k_dpp(size, self.sampling_mode,
-                                           random_state=rng)
-
-        elif self.L is not None:
-            self.L_eig_vals, self.eig_vecs = la.eigh(self.L)
-            self.L_eig_vals = is_geq_0(self.L_eig_vals)
             return self.sample_exact_k_dpp(size, self.sampling_mode,
                                            random_state=rng)
 
