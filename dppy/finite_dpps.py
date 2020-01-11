@@ -741,7 +741,7 @@ class FiniteDPP:
         self.size_k_dpp = size
         params['size'] = size
 
-        self.sample_mcmc(self.sampling_mode, **params)
+        return self.sample_mcmc(self.sampling_mode, **params)
 
     def compute_K(self, msg=False):
         """ Compute the correlation kernel :math:`\\mathbf{K}` from the original parametrization of the :class:`FiniteDPP` object.

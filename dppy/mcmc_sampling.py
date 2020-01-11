@@ -82,10 +82,10 @@ def initialize_AED_sampler(kernel, random_state=None):
     ground_set = np.arange(N)
 
     S0, det_S0 = [], 0.0
-    nb_iter = 100
+    nb_trials = 100
     tol = 1e-9
 
-    for _ in range(nb_iter):
+    for _ in range(nb_trials):
         if det_S0 > tol:
             break
         else:
@@ -93,7 +93,10 @@ def initialize_AED_sampler(kernel, random_state=None):
             S0 = np.intersect1d(T, ground_set, assume_unique=True)
             det_S0 = det_ST(kernel, S0)
     else:
-        raise ValueError('Initialization problem, make sure size `k` <= rank of the kernel')
+        err_str = ['Initialization terminated unsuccessfully.',
+                   'After {} random trials, no initial set S0 satisfies det L_S0 > {}.'.format(nb_trials, tol),
+                   'You may consider passing your own initial state **{"s_init": S0}.']
+        raise ValueError('\n'.join(err_str))
 
     return S0.tolist()
 
@@ -112,10 +115,10 @@ def initialize_AD_and_E_sampler(kernel, size=None, random_state=None):
     N = kernel.shape[0]
 
     S0, det_S0 = [], 0.0
-    it_max = 100
+    nb_trials = 100
     tol = 1e-9
 
-    for _ in range(it_max):
+    for _ in range(nb_trials):
         if det_S0 > tol:
             break
         else:
@@ -124,7 +127,11 @@ def initialize_AD_and_E_sampler(kernel, size=None, random_state=None):
                             replace=False)
             det_S0 = det_ST(kernel, S0)
     else:
-        raise ValueError('Initialization problem, you may be using a size `k` > rank of the kernel')
+        err_str = ['Initialization terminated unsuccessfully.',
+                   'After {} random trials, no initial set S0 satisfies det L_S0 > {}.'.format(nb_trials, tol),
+                   'If you are sampling from a k-DPP, make sure k <= rank(L).' if size else '',
+                   'You may consider passing your own initial state **{"s_init": S0}.']
+        raise ValueError('\n'.join(err_str))
 
     return S0.tolist()
 
