@@ -22,8 +22,6 @@ from scipy.linalg import qr
 import matplotlib.pyplot as plt
 from matplotlib import collections as mc  # see plot_diagram
 
-# For Uniform Spanning Trees
-import networkx as nx
 from dppy.exotic_dpps_core import ust_sampler_wilson, ust_sampler_aldous_broder
 from dppy.exact_sampling import proj_dpp_sampler_eig, proj_dpp_sampler_kernel
 
@@ -466,6 +464,12 @@ class UST:
     """
 
     def __init__(self, graph):
+        # For Uniform Spanning Trees
+        try:
+            import networkx as nx
+            self.nx = nx
+        except ImportError:
+            raise ValueError('The networkx package is required to sample spanning trees (see setup.py).')
 
         if nx.is_connected(graph):
             self.graph = graph
@@ -567,7 +571,7 @@ class UST:
                                               mode=self.sampling_mode,
                                               random_state=rng)
 
-            sampl = nx.Graph()
+            sampl = self.nx.Graph()
             sampl.add_edges_from([self.edges[e] for e in dpp_sample])
 
         elif self.sampling_mode in self._sampling_modes['projection-K-kernel']:
@@ -577,7 +581,7 @@ class UST:
                                                  mode=self.sampling_mode,
                                                  random_state=rng)
 
-            sampl = nx.Graph()
+            sampl = self.nx.Graph()
             sampl.add_edges_from([self.edges[e] for e in dpp_sample])
 
         else:
@@ -612,7 +616,7 @@ class UST:
 
         if self.kernel_eig_vecs is None:
 
-            inc_mat = nx.incidence_matrix(self.graph, oriented=True)
+            inc_mat = self.nx.incidence_matrix(self.graph, oriented=True)
             # Discard any row e.g. the last one
             A = inc_mat[:-1, :].toarray()
             # Orthonormalize rows of A
@@ -636,8 +640,8 @@ class UST:
 
         plt.figure(figsize=(4, 4))
 
-        pos = nx.circular_layout(self.graph)
-        nx.draw_networkx(graph_to_plot,
+        pos = self.nx.circular_layout(self.graph)
+        self.nx.draw_networkx(graph_to_plot,
                          pos=pos,
                          node_color='orange',
                          with_labels=True,
@@ -645,7 +649,7 @@ class UST:
 
         edge_labs = {e: self.edge_labels[e if e in self.edges else e[::-1]]
                      for e in graph_to_plot.edges()}
-        nx.draw_networkx_edge_labels(graph_to_plot,
+        self.nx.draw_networkx_edge_labels(graph_to_plot,
                                      pos=pos,
                                      edge_labels=edge_labs,
                                      font_size=20)
@@ -675,8 +679,8 @@ class UST:
 
         plt.figure(figsize=(4, 4))
 
-        pos = nx.circular_layout(self.graph)
-        nx.draw_networkx(self.graph,
+        pos = self.nx.circular_layout(self.graph)
+        self.nx.draw_networkx(self.graph,
                          pos=pos,
                          node_color='orange',
                          with_labels=True,
@@ -684,7 +688,7 @@ class UST:
         # nx.draw_networkx_labels(self.graph,
         #                         pos,
         #                         node_labels)
-        nx.draw_networkx_edge_labels(self.graph,
+        self.nx.draw_networkx_edge_labels(self.graph,
                                      pos=pos,
                                      edge_labels=self.edge_labels,
                                      font_size=20)

@@ -15,11 +15,6 @@ import time
 import numpy as np
 import scipy.linalg as la
 
-# For zonotope sampler
-from cvxopt import matrix, spmatrix, solvers
-solvers.options['show_progress'] = False
-solvers.options['glpk'] = {'msg_lev': 'GLP_MSG_OFF'}
-
 from dppy.utils import det_ST, check_random_state
 
 
@@ -488,6 +483,14 @@ def zonotope_sampler(A_zono, **params):
         - :func:`extract_basis <extract_basis>`
         - :func:`basis_exchange_sampler <basis_exchange_sampler>`
     """
+    # For zonotope sampler
+    try:
+        from cvxopt import matrix, spmatrix, solvers
+    except ImportError:
+        raise ValueError('The cvxopt package is required to use the zonotype sampler (see setup.py).')
+
+    solvers.options['show_progress'] = params.get('show_progress', False)
+    solvers.options['glpk'] = {'msg_lev': params.get('show_progress', 'GLP_MSG_OFF')}
 
     rng = check_random_state(params.get('random_state', None))
 

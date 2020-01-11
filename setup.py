@@ -85,11 +85,7 @@ setup(
     # https://packaging.python.org/en/latest/requirements.html
     install_requires=['numpy',
                       'scipy>=1.1.0',
-                      'matplotlib',
-                      'cvxopt==1.2.1',  # For zonotope MCMC sampler
-                      'networkx',
-                      'sphinxcontrib-bibtex',  # Documentation bibliography
-                      'sphinx_rtd_theme'],  # Documentation theme
+                      'matplotlib'],
 
     project_urls={  # Optional
         "Companion paper": "https://github.com/guilgautier/DPPy_paper",
@@ -98,16 +94,19 @@ setup(
         "Travis": "https://travis-ci.com/guilgautier/DPPy",
         "Documentation": "https://dppy.readthedocs.io/en/latest/",
         "Source code": "https://github.com/guilgautier/DPPy"
-    }
+    },
+
     # List additional groups of dependencies here (e.g. development dependencies). You can install these using the following syntax, for example:
     # $ pip install -e .[dev,test]
-    # extras_require={
-    #     'dev': ['check-manifest'],
-    #     'test': ['coverage'],
-    # },
+    extras_require={
+        'zonotope': ['cvxopt==1.2.1'], # For zonotope MCMC sampler
+        'trees': ['networkx'],
+        'docs': ['sphinxcontrib-bibtex', # Documentation bibliography
+                 'sphinx_rtd_theme'], # Documentation theme
+    }
 
-    # If there are data files included in your packages that need to be
-    # installed, specify them here.  If using Python 2.6 or less, then these
+# If there are data files included in your packages that need to be
+# installed, specify them here.  If using Python 2.6 or less, then these
     # have to be included in MANIFEST.in as well.
     # package_data={
     #     'sample': ['package_data.dat'],
