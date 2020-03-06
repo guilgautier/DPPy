@@ -24,7 +24,7 @@ setup(
     # Versions should comply with PEP440.  For a discussion on single-sourcing
     # the version across setup.py and the project code, see
     # https://packaging.python.org/en/latest/single_source_version.html
-    version='0.3.0',
+    version='0.3.1b1',
 
     description='DPPy is a Python library for exact and approximate sampling of Determinantal Point Processes.',
     long_description=long_description,
@@ -98,15 +98,17 @@ setup(
 
     # List additional groups of dependencies here (e.g. development dependencies). You can install these using the following syntax, for example:
     # $ pip install -e .[dev,test]
+    # zonotope: To play with the zonotope MCMC sampler
+    # trees: To play with uniform spanning trees
+    # docs: Documentation bibligraphy and theme theme
     extras_require={
-        'zonotope': ['cvxopt==1.2.1'], # For zonotope MCMC sampler
+        'zonotope': ['cvxopt==1.2.1'],
         'trees': ['networkx'],
-        'docs': ['sphinxcontrib-bibtex', # Documentation bibliography
-                 'sphinx_rtd_theme'], # Documentation theme
-    }
+        'docs': ['sphinxcontrib-bibtex', 'sphinx_rtd_theme']
+        }
 
-# If there are data files included in your packages that need to be
-# installed, specify them here.  If using Python 2.6 or less, then these
+    # If there are data files included in your packages that need to be
+    # installed, specify them here.  If using Python 2.6 or less, then these
     # have to be included in MANIFEST.in as well.
     # package_data={
     #     'sample': ['package_data.dat'],
