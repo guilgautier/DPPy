@@ -166,6 +166,7 @@ class HermiteEnsemble(BetaEnsemble):
                                             random_state=rng)
 
         self.list_of_samples.append(sampl)
+        return sampl
 
     def sample_banded_model(self, loc=0.0, scale=np.sqrt(2.0), size_N=10,
                             random_state=None):
@@ -220,6 +221,7 @@ class HermiteEnsemble(BetaEnsemble):
                         random_state=rng)
 
         self.list_of_samples.append(sampl)
+        return sampl
 
     def normalize_points(self, points):
         """ Normalize points obtained after sampling to fit the limiting distribution, i.e., the semi-circle
@@ -451,6 +453,7 @@ class LaguerreEnsemble(BetaEnsemble):
                                              random_state=rng)
 
         self.list_of_samples.append(sampl)
+        return sampl
 
     def sample_banded_model(self,
                             shape=1.0, scale=2.0,
@@ -547,6 +550,7 @@ class LaguerreEnsemble(BetaEnsemble):
                                                     random_state=rng)
 
         self.list_of_samples.append(sampl)
+        return sampl
 
     def normalize_points(self, points):
         """ Normalize points obtained after sampling to fit the limiting distribution, i.e., the Marcenko-Pastur distribution
@@ -787,6 +791,7 @@ class JacobiEnsemble(BetaEnsemble):
                                            random_state=rng)
 
         self.list_of_samples.append(sampl)
+        return sampl
 
     def sample_banded_model(self, a=1.0, b=2.0,
                             size_N=10, size_M1=None, size_M2=None,
@@ -891,6 +896,7 @@ class JacobiEnsemble(BetaEnsemble):
                                                    random_state=rng)
 
         self.list_of_samples.append(sampl)
+        return sampl
 
     def normalize_points(self, points):
         """No need to renormalize the points
@@ -1048,6 +1054,7 @@ class CircularEnsemble(BetaEnsemble):
                         random_state=rng)
 
         self.list_of_samples.append(sampl)
+        return sampl
 
     def sample_banded_model(self, size_N=10,
                             random_state=None):
@@ -1084,6 +1091,7 @@ class CircularEnsemble(BetaEnsemble):
                         random_state=rng)
 
         self.list_of_samples.append(sampl)
+        return sampl
 
     def normalize_points(self, points):
         """No need to renormalize the points
@@ -1219,6 +1227,7 @@ class GinibreEnsemble(BetaEnsemble):
                                         random_state=rng)
 
         self.list_of_samples.append(sampl)
+        return sampl
 
     def sample_banded_model(self, *args, **kwargs):
         """ No banded model is known for Ginibre, use :py:meth:`sample_full_model`

@@ -214,7 +214,7 @@ def proj_dpp_sampler_kernel_GS(K, size=None, random_state=None):
 
         norm_2[avail] -= c[avail, it]**2
 
-    return sampl.tolist()
+    return sampl.tolist()  # , np.prod(norm_2[sampl])
 
 
 def proj_dpp_sampler_kernel_Schur(K, size=None, random_state=None):
@@ -390,6 +390,7 @@ def dpp_eig_vecs_selector(ber_params, eig_vecs,
     ind_sel = rng.rand(ber_params.size) < ber_params
 
     return eig_vecs[:, ind_sel]
+
 
 # Phase 2:
 # Sample projection kernel VV.T where V are the eigvecs selected in Phase 1.
@@ -957,6 +958,7 @@ def k_dpp_eig_vecs_selector(eig_vals, eig_vecs, size,
                 break
 
     return eig_vecs[:, ind_selected]
+
 
 # Evaluate the elementary symmetric polynomials
 def elementary_symmetric_polynomials(eig_vals, size):

@@ -71,8 +71,8 @@ class FiniteDPP:
             - ``{'L_eig_dec': (eig_vals, eig_vecs)}``, with :math:`eigvals \\geq 0`
             - ``{'L_gram_factor': Phi}``, with :math:`\\mathbf{L} = \\Phi^{ \\top} \\Phi`
             - ``{'L_eval_X_data': (eval_L, X_data)}``, with :math:`\\mathbf{X}_{data}(N \\times d)` and
-              :math:`eval \_ L` a likelihood function such that
-              :math:`\\mathbf{L} = eval \_ L(\\mathbf{X}_{data}, \\{X}_{data})`. For a full description of the
+              :math:`eval \\_ L` a likelihood function such that
+              :math:`\\mathbf{L} = eval \\_ L(\\mathbf{X}_{data}, \\{X}_{data})`. For a full description of the
               requirements imposed on `eval_L`'s interface, see the documentation :func:`dppy.vfx_sampling.vfx_sampling_precompute_constants`.
               For an example, see the implementation of any of the kernels provided by scikit-learn
               (e.g. sklearn.gaussian_process.kernels.PairwiseKernel).
@@ -320,7 +320,7 @@ class FiniteDPP:
         self.sampling_mode = mode
 
         if self.sampling_mode == 'Schur':
-            if self.kernel_type=='correlation' and self.projection:
+            if self.kernel_type == 'correlation' and self.projection:
                 self.compute_K()
                 sampl = proj_dpp_sampler_kernel(self.K, self.sampling_mode,
                                                 random_state=rng)
@@ -332,7 +332,7 @@ class FiniteDPP:
 
         elif self.sampling_mode == 'Chol':
             self.compute_K()
-            if self.kernel_type=='correlation' and self.projection:
+            if self.kernel_type == 'correlation' and self.projection:
                 sampl = proj_dpp_sampler_kernel(self.K, self.sampling_mode,
                                                 random_state=rng)
             else:
@@ -343,7 +343,7 @@ class FiniteDPP:
                 raise ValueError('The vfx sampler is currently only available with '
                                  '{"L_eval_X_data": (L_eval, X_data)} representation.')
 
-            params.pop("random_state",None)
+            params.pop("random_state", None)
             sampl, self.intermediate_sample_info = dpp_vfx_sampler(
                                                 self.intermediate_sample_info,
                                                 self.X_data,
@@ -385,7 +385,7 @@ class FiniteDPP:
             # implies Gamma = Theta and V = Phi.T W Theta^{-1/2}
             self.L_eig_vals, L_dual_eig_vecs = la.eigh(self.L_dual)
             self.L_eig_vals = is_geq_0(self.L_eig_vals)
-            self.eig_vecs =self.L_gram_factor.T.dot(L_dual_eig_vecs
+            self.eig_vecs = self.L_gram_factor.T.dot(L_dual_eig_vecs
                                                     / np.sqrt(self.L_eig_vals))
             return self.sample_exact(mode=self.sampling_mode,
                                      random_state=rng)
@@ -694,7 +694,7 @@ class FiniteDPP:
                 raise ValueError(' '.join(err_print))
 
         elif self.sampling_mode == 'E':
-            if (self.kernel_type == 'correlation') and self.projection:
+            if self.kernel_type == 'correlation' and self.projection:
                 self.compute_K()
                 size = params.get('size', None)
                 rank = np.rint(np.trace(self.K)).astype(int)
@@ -863,7 +863,7 @@ class FiniteDPP:
                 self.compute_K(msg=True)
                 self.compute_L(msg=True)
 
-    def plot_kernel(self, title=''):
+    def plot_kernel(self, kernel_type='correlation', save_path=''):
         """Display a heatmap of the kernel used to define the :class:`FiniteDPP` object (correlation kernel :math:`\\mathbf{K}` or likelihood kernel :math:`\\mathbf{L}`)
 
         :param title:
@@ -873,19 +873,25 @@ class FiniteDPP:
             string
         """
 
+        if not kernel_type:
+            kernel_type = self.kernel_type
+
         fig, ax = plt.subplots(1, 1)
 
-        if self.kernel_type == 'correlation':
+        if kernel_type == 'correlation':
             self.compute_K()
             nb_items, kernel_to_plot = self.K.shape[0], self.K
             str_title = r'$K$ (correlation) kernel'
 
-        elif self.kernel_type == 'likelihood':
+        elif kernel_type == 'likelihood':
             self.compute_L()
             nb_items, kernel_to_plot = self.L.shape[0], self.L
             str_title = r'$L$ (likelihood) kernel'
 
-        heatmap = ax.pcolor(kernel_to_plot, cmap='jet')
+        else:
+            raise ValueError('kernel_type != "correlation" or "likelihood"')
+
+        heatmap = ax.pcolor(kernel_to_plot, cmap='jet', vmin=-0.3, vmax=1)
 
         ax.set_aspect('equal')
 
@@ -901,6 +907,9 @@ class FiniteDPP:
         ax.set_xticklabels(ticks_label, minor=False)
         ax.set_yticklabels(ticks_label, minor=False)
 
-        plt.title(title if title else str_title, y=1.1)
+        # plt.title(title if title else str_title, y=1.1)
 
         plt.colorbar(heatmap)
+
+        if save_path:
+            plt.savefig(save_path)

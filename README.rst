@@ -72,6 +72,7 @@ DPPy is now available on `PyPI <https://pypi.org/project/dppy/>`__ |PyPI package
 .. code:: bash
 
   pip install dppy
+
 For a full installation, including extra dependencies and dependencies necessary to build the documentation (see above), use :code:`pip install dppy['zonotope','trees','docs']`.
 
 Note that only stable DPPy releases are available on PyPI, and recently included improvements might only be available on the git master branch. If you want to work with the latest version of DPPy
@@ -116,7 +117,7 @@ web browser, without having to download or install Python or anything.
 Just click, wait a little bit, and play with the notebook!
 
 Building the documentation
-~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The
 `documentation <http://dppy.readthedocs.io/>`__
@@ -143,10 +144,9 @@ locally, you can install the necessary dependencies and then:
 How to cite this work?
 ~~~~~~~~~~~~~~~~~~~~~~
 
-We wrote a companion paper to
-`DPPy <https://github.com/guilgautier/DPPy>`__ which got accepted for publication in the `MLOSS <http://www.jmlr.org/mloss/>`__ track of JMLR.
+`We wrote a companion paper to DPPy which got accepted for publication in the Machine Learning Open Source Software track of JMLR <http://jmlr.org/papers/v20/19-179.html>`__.
 
-If you use this package, please consider citing it with this piece of
+If you use the DPPy toolbox, please consider citing it with this piece of
 BibTeX:
 
 .. code:: bibtex
@@ -164,7 +164,7 @@ BibTeX:
   }
 
 Many of the algorithms implemented in DPPy also have associated literature that you should consider citing.
-Please refer to the docs and documentation strings of each specific DPP sampler for details.
+Please refer to the `bibliography on the documentation page <https://dppy.readthedocs.io/en/latest/bibliography/>`__ and docstrings of each specific DPP sampler for details.
 
 Reproducibility
 ---------------
