@@ -55,7 +55,7 @@ def semi_circle_law(x, R=2.0):
 
         - https://en.wikipedia.org/wiki/Wigner_semicircle_distribution
     """
-    return 2 / (np.pi * R**2) * np.sqrt(R**2 - x**2)
+    return 2 / (np.pi * R**2) * np.sqrt(np.maximum(R**2 - x**2, 0.0))
 
 
 def mu_ref_normal_sampler_tridiag(loc=0.0, scale=1.0, beta=2, size=10,

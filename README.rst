@@ -34,7 +34,7 @@ exact and approximate sampling algorithms for DPPs.
 Installation
 ------------
 
-DPPy works with `Python 3.4+ <http://docs.python.org/3/>`__.
+DPPy works with `Python 3.6+ <http://docs.python.org/3/>`__.
 
 Dependencies
 ~~~~~~~~~~~~

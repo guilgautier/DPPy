@@ -416,7 +416,7 @@ def basis_exchange_sampler(kernel, s_init, nb_iter=10, T_max=None,
 # ZONOTOPE #
 ############
 def extract_basis(y_sol, eps=1e-5):
-    """ Subroutine of zono_sampling to extract the tile of the zonotope
+    """ Subroutine of :func:`zonotope_sampler <zonotope_sampler>` to extract the tile of the zonotope
     in which a point lies. It extracts the indices of entries of the solution
     of LP :eq:`eq:Px` that are in (0,1).
 
@@ -440,7 +440,7 @@ def extract_basis(y_sol, eps=1e-5):
 
         Algorithm 3 in :cite:`GaBaVa17`
 
-        - :func:`zono_sampling <zono_sampling>`
+        - :func:`zonotope_sampler <zonotope_sampler>`
     """
 
     basis = np.where((eps < y_sol) & (y_sol < 1 - eps))[0]
