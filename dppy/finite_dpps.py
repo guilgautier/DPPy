@@ -866,11 +866,9 @@ class FiniteDPP:
     def plot_kernel(self, kernel_type='correlation', save_path=''):
         """Display a heatmap of the kernel used to define the :class:`FiniteDPP` object (correlation kernel :math:`\\mathbf{K}` or likelihood kernel :math:`\\mathbf{L}`)
 
-        :param title:
-            Plot title
+        :param str kernel_type: Type of kernel (``'correlation'`` or ``'likelihood'``), default ``'correlation'``
 
-        :type title:
-            string
+        :param str save_path: Path to save plot, if empty (default) the plot is not saved.
         """
 
         if not kernel_type:
@@ -881,12 +879,10 @@ class FiniteDPP:
         if kernel_type == 'correlation':
             self.compute_K()
             nb_items, kernel_to_plot = self.K.shape[0], self.K
-            str_title = r'$K$ (correlation) kernel'
 
         elif kernel_type == 'likelihood':
             self.compute_L()
             nb_items, kernel_to_plot = self.L.shape[0], self.L
-            str_title = r'$L$ (likelihood) kernel'
 
         else:
             raise ValueError('kernel_type != "correlation" or "likelihood"')
@@ -906,8 +902,6 @@ class FiniteDPP:
 
         ax.set_xticklabels(ticks_label, minor=False)
         ax.set_yticklabels(ticks_label, minor=False)
-
-        # plt.title(title if title else str_title, y=1.1)
 
         plt.colorbar(heatmap)
 
