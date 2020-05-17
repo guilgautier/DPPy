@@ -3,7 +3,7 @@ import numpy as np
 from numpy.linalg import det, matrix_rank
 
 
-def check_random_state(seed):
+def check_random_state(seed: object) -> np.random.RandomState:
     """Turn seed into a np.random.RandomState instance
     Parameters
     ----------
@@ -12,6 +12,10 @@ def check_random_state(seed):
         If seed is an int, return a new RandomState instance seeded with seed.
         If seed is already a RandomState instance, return it.
         Otherwise raise ValueError.
+
+    Returns
+    -------
+    np.random.RandomState
 
     .. seealso::
 
