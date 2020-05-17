@@ -13,7 +13,8 @@
 # copies of the Software, and to permit persons to whom the Software is
 # furnished to do so, subject to the following conditions:
 #
-# The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+# The above copyright notice and this permission notice shall be included
+# in all copies or substantial portions of the Software.
 #
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
@@ -24,20 +25,22 @@
 # SOFTWARE.
 
 from dppy.bless import bless, CentersDictionary, estimate_rls_bless
-from dppy.utils import stable_invert_root, evaluate_L_diagonal, get_progress_bar, check_random_state
+from dppy.utils import stable_invert_root, evaluate_L_diagonal, get_progress_bar
 import numpy as np
 from scipy.optimize import brentq
 from collections import namedtuple
 
 
-def compute_nystrom_dict(X_data, eval_L, rls_oversample_bless, rls_oversample_dppvfx, rng, nb_iter_bless=None, verbose=True):
+
+def compute_nystrom_dict(X_data, eval_L, rls_oversample_bless, rls_oversample_dppvfx, rng,
+                         nb_iter_bless=None, verbose=True):
     """ Computes the initial dictionary necessary for the algorithm. Internally invoke BLESS.
 
     :param array_like X_data: dataset that we must approximate
     :param callable eval_L: likelihood function
     :param float rls_oversample_bless: see :func:`vfx_sampling_precompute_constants`
     :param float rls_oversample_dppvfx: see :func:`vfx_sampling_precompute_constants`
-    :param RandomState rng: random source used for sampling
+    :param np.random.RandomState rng: random source used for sampling
     :param int nb_iter_bless:  iterations for BLESS, if None it is set to log(n)
     :param bool verbose: controls verbosity of debug output, including progress bars.
         the progress bar reports:
@@ -136,7 +139,7 @@ def vfx_sampling_precompute_constants(X_data,
         accept a single argument X and return eval_L(X) = eval_L(X, X).
         As an example, see the implementation of any of the kernels provided by scikit-learn
         (e.g. sklearn.gaussian_process.kernels.PairwiseKernel).
-        :param RandomState rng: random source used for sampling
+        :param np.random.RandomState rng: random source used for sampling
         :param desired_expected_size: desired expected sample size for the DPP. If None, use the natural DPP expected
         sample size. The vfx sampling algorithm can approximately adjust the expected sample size of the DPP by
         rescaling the L matrix with a scalar alpha_star <= 1. Adjusting the expected sample size can be useful to
@@ -320,9 +323,9 @@ def vfx_sampling_do_sampling_loop(X_data, eval_L, intermediate_sample_info, rng,
         accept a single argument X and return eval_L(X) = eval_L(X, X).
         As an example, see the implementation of any of the kernels provided by scikit-learn
         (e.g. sklearn.gaussian_process.kernels.PairwiseKernel).
-        :param _IntermediateSampleInfo: Pre-computed information necessary for the vfx rejection sampling loop,
-        as returned by :func:`vfx_sampling_precompute_constants`
-        :param RandomState rng: random source used for sampling
+        :param _IntermediateSampleInfo intermediate_sample_info: Pre-computed information necessary for the
+        vfx rejection sampling loop, as returned by :func:`vfx_sampling_precompute_constants.`
+        :param np.random.RandomState rng: random source used for sampling
         :param max_iter:
         :type max_iter:
             int, default 1000
@@ -338,7 +341,7 @@ def vfx_sampling_do_sampling_loop(X_data, eval_L, intermediate_sample_info, rng,
         :return: Sample from a DPP (as a list) and number of rejections as int
         :rtype: tuple(list, int)
     """
-    #TODO: taking as input a catch-all kwargs can be misleading for the user. e.g. if there is a typo in a paremater
+    # TODO: taking as input a catch-all kwargs can be misleading for the user. e.g. if there is a typo in a paremater
     # it will silently ignore it and use the default instead
 
     n, d = X_data.shape
@@ -398,7 +401,7 @@ def vfx_sampling_do_sampling_loop(X_data, eval_L, intermediate_sample_info, rng,
             raise ValueError('The vfx sampler reached the maximum number of rejections allowed '
                              'for the intermediate sample selection ({}), try to increase the q factor '
                              '(see q_func parameter) or the Nystrom approximation accuracy '
-                             'see rls_oversample_* parameters).'.format(max_iter))
+                             '(see rls_oversample_* parameters).'.format(max_iter))
 
     # Phase 4: use L_tilda to perform exact DPP sampling
     # compute alpha_star * L_tilda = alpha_star * W*L_sigma*W

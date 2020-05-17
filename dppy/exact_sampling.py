@@ -12,8 +12,8 @@
 import numpy as np
 import scipy.linalg as la
 from dppy.utils import inner1d, check_random_state
-from dppy.vfx_sampling import (vfx_sampling_precompute_constants,
-                               vfx_sampling_do_sampling_loop)
+from dppy.intermediate_sampling import (vfx_sampling_precompute_constants,
+                                        vfx_sampling_do_sampling_loop)
 
 
 #####################
