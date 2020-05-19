@@ -227,7 +227,7 @@ def bless(X_data, eval_L, lam_final, rls_oversample_param, random_state=None, nb
     selected_init[0] = 1
     ucb_init[0] = rls_oversample_param * 1.
 
-    intermediate_dict_bless = CentersDictionary(idx=selected_init.nonzero(),
+    intermediate_dict_bless = CentersDictionary(idx=selected_init.nonzero()[0],
                                                 X=X_data[selected_init, :],
                                                 probs=np.ones(np.sum(selected_init)) * ucb_init[selected_init],
                                                 lam=lam_init,
@@ -344,7 +344,7 @@ def bless_size(X_data, eval_L, size_final, rls_oversample_param, random_state=No
     selected_init[0] = 1
     ucb_init[0] = rls_oversample_param * 1.
 
-    intermediate_dict_bless = CentersDictionary(idx=selected_init.nonzero(),
+    intermediate_dict_bless = CentersDictionary(idx=selected_init.nonzero()[0],
                                                 X=X_data[selected_init, :],
                                                 probs=np.ones(np.sum(selected_init)) * ucb_init[selected_init],
                                                 lam=lam_init,
@@ -379,4 +379,4 @@ def bless_size(X_data, eval_L, size_final, rls_oversample_param, random_state=No
                                                                     intermediate_dict_bless.probs.min()))
             t.update()
 
-    return (lam_max, lam_min), intermediate_dict_bless
+    return lam_max, lam_min, intermediate_dict_bless
