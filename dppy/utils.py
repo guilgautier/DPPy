@@ -227,10 +227,8 @@ def is_full_row_rank(array):
             raise ValueError(err_print + 'd(={}) != rank(={})'.format(d, rank))
 
 
-def stable_invert_root(eigenvec, eigenval):
-    """ Given eigendecomposition of a PSD matrix, compute a representation of the pseudo-inverse square root
-    of the matrix using numerically stable operations. In particular, eigenvalues which are near-zero
-    and the associated eigenvectors are dropped from the pseudo-inverse.
+def stable_filter(eigenvec, eigenval):
+    """ Given eigendecomposition of a PSD matrix, compute a reduced (thin) version containing only stable eigenvalues.
     """
     n = eigenvec.shape[0]
 
@@ -238,15 +236,29 @@ def stable_invert_root(eigenvec, eigenval):
         raise ValueError('array sizes of {} eigenvectors and {} eigenvalues do not match'.format(eigenvec.shape, eigenval.shape))
 
     # threshold formula taken from pinv2's implementation of numpy/scipy
-    thresh = eigenval.max() * max(eigenval.shape) * np.finfo(eigenval.dtype).eps
+    thresh = np.abs(eigenval).max() * max(eigenval.shape) * np.finfo(eigenval.dtype).eps
     stable_eig = np.logical_not(np.isclose(eigenval, 0., atol=thresh))
-    m = sum(stable_eig)
 
+    if np.any(eigenval <= - thresh):
+        raise ValueError('Some eigenvalues of a PSD matrix are negative, this should never happen. '
+                         'Minimum eig: {}'.format(np.min(eigenval)))
+
+    m = sum(stable_eig)
     eigenvec_thin = eigenvec[:, stable_eig]
     eigenval_thin = eigenval[stable_eig]
-
     if eigenvec_thin.shape != (n, m) or eigenval_thin.shape != (m,):
-        raise ValueError('array sizes of {} eigenvectors and {} eigenvalues do not match'.format(eigenvec.shape, eigenval.shape))
+        raise ValueError(
+            'array sizes of {} eigenvectors and {} eigenvalues do not match'.format(eigenvec.shape, eigenval.shape))
+
+    return eigenvec_thin, eigenval_thin
+
+
+def stable_invert_root(eigenvec, eigenval):
+    """ Given eigendecomposition of a PSD matrix, compute a representation of the pseudo-inverse square root
+    of the matrix using numerically stable operations. In particular, eigenvalues which are near-zero
+    and the associated eigenvectors are dropped from the pseudo-inverse.
+    """
+    eigenvec_thin, eigenval_thin = stable_filter(eigenvec, eigenval)
 
     eigenval_thin_inv_root = (1 / np.sqrt(eigenval_thin)).reshape(-1, 1)
 
