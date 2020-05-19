@@ -36,6 +36,7 @@ _IntermediateSampleInfo = namedtuple('_IntermediateSampleInfo',
 _IntermediateSampleInfoAlphaRescale = namedtuple('_IntermediateSampleInfoAlphaRescale',
                                                  ['alpha_hat', 'alpha_min', 'alpha_max',
                                                   'eigvecs_L_hat', 'eigvals_L_hat', 'deff_alpha_L_hat',
+                                                  'rls_upper_bound', 'rls_upper_bound_valid',
                                                   'r',
                                                   'dict_dppvfx', 'diag_L'])
 
@@ -537,6 +538,8 @@ def alpha_dpp_sampling_precompute_constants(X_data, eval_L, rng,
                                                  eigvals_L_hat=eigvals_L_hat,
                                                  eigvecs_L_hat=eigvecs_L_hat,
                                                  deff_alpha_L_hat=deff_alpha_L_hat,
+                                                 rls_upper_bound=alpha_hat * diag_L,
+                                                 rls_upper_bound_valid=np.full((diag_L.shape[0],), False),
                                                  r=-1,
                                                  dict_dppvfx=dict_dppvfx,
                                                  diag_L=diag_L)
@@ -585,33 +588,45 @@ def alpha_dpp_sampling_do_sampling_loop(X_data,
     # rename it to pre-computed state for shortness
     pc_state = intermediate_sample_info
 
+    rls_bound = pc_state.rls_upper_bound.copy()
+    rls_bound_valid = pc_state.rls_upper_bound_valid.copy()
+
     # Phase 3: rejection sampling loop
     with get_progress_bar(disable=not verbose) as prog_bar:
         for rej_iter in range(max_iter):
-            # sample u
-            rls_bound = pc_state.alpha_hat * pc_state.diag_L
-            u_lam = np.ceil(pc_state.r * np.exp(1 / pc_state.r) * pc_state.alpha_hat * pc_state.diag_L.sum())
-            u = rng.poisson(lam=u_lam)
+            # sample all s_i
+            rls_bound_old = rls_bound.copy()
+            s_vec = rng.poisson(lam=pc_state.r * np.exp(1/pc_state.r) * rls_bound)
 
-            # sample rho set uniformly
-            rho = rng.choice(n, size=u, replace=True)
+            idx_active_items = s_vec.nonzero()[0]
 
-            rls_estimate = estimate_rls_from_weighted_dict_eigendecomp(X_data[rho, :],
-                                                                       eval_L,
-                                                                       pc_state.dict_dppvfx,
-                                                                       pc_state.eigvecs_L_hat,
-                                                                       pc_state.eigvals_L_hat,
-                                                                       pc_state.alpha_hat)
+            s_vec_filtered = s_vec.copy()
+            idx_rls_to_recompute = idx_active_items[np.logical_not(rls_bound_valid[idx_active_items])]
+            if len(idx_rls_to_recompute) > 0:
+                rls_estimate = estimate_rls_from_weighted_dict_eigendecomp(X_data[idx_rls_to_recompute, :],
+                                                                           eval_L,
+                                                                           pc_state.dict_dppvfx,
+                                                                           pc_state.eigvecs_L_hat,
+                                                                           pc_state.eigvals_L_hat,
+                                                                           pc_state.alpha_hat)
 
-            rejection_coin_flips = rng.rand(u) <= (rls_estimate / rls_bound[rho])
+                if np.any(rls_estimate > rls_bound[idx_rls_to_recompute]):
+                    raise ValueError('Some estimated RLS are larger than the pre-computed bound,'
+                                     ' this should never happen. Double check your kernel function.'
+                                     'Maximum/minimum ratio: {}'.format(np.ptp(rls_estimate/rls_bound[idx_rls_to_recompute])))
 
-            sigma, sigma_idx = rho[rejection_coin_flips], rejection_coin_flips.nonzero()[0]
+                rls_bound[idx_rls_to_recompute] = rls_estimate
+                rls_bound_valid[idx_rls_to_recompute] = True
 
-            t = len(sigma)
+                acceptance_prob = rls_bound[idx_rls_to_recompute] / rls_bound_old[idx_rls_to_recompute]
+
+                s_vec_filtered[idx_rls_to_recompute] = rng.binomial(s_vec[idx_rls_to_recompute], acceptance_prob)
+
+            t = s_vec_filtered.sum()
+            sigma_uniq = np.nonzero(s_vec_filtered)[0]
+            sigma_uniq_count = s_vec_filtered[sigma_uniq]
 
             # sample sigma subset
-            sigma_uniq, sigma_uniq_index, sigma_uniq_count = np.unique(sigma, return_index=True, return_counts=True)
-            sigma_uniq_idx_in_rho = sigma_idx[sigma_uniq_index]
             X_sigma_uniq = X_data[sigma_uniq, :]
 
             # compute log(Det(I + \tilda{L}_sigma)) = log(Det(I + A*L_sigma*A))
@@ -619,7 +634,7 @@ def alpha_dpp_sampling_do_sampling_loop(X_data,
             #
             # For numerical stability we will also de-alias identical sigmas, which amounts to summing their weights
 
-            A = np.sqrt(sigma_uniq_count / (pc_state.r * rls_estimate[sigma_uniq_idx_in_rho])).reshape(-1, 1)
+            A = np.sqrt(sigma_uniq_count / (pc_state.r * rls_bound[sigma_uniq])).reshape(-1, 1)
 
             I_L_sigma = (pc_state.alpha_hat * A.T * eval_L(X_sigma_uniq, X_sigma_uniq) * A + np.eye(A.shape[0]))
 
@@ -653,7 +668,7 @@ def alpha_dpp_sampling_do_sampling_loop(X_data,
     # Phase 4: use L_tilda to perform exact DPP sampling
     # compute alpha_star * L_tilda = alpha_star * A*L_sigma*A
     # with A_ii = ( 1 / (r * l_i) )^1/2
-    A = np.sqrt(sigma_uniq_count / (pc_state.r * rls_estimate[sigma_uniq_idx_in_rho])).reshape(-1, 1)
+    A = np.sqrt(sigma_uniq_count / (pc_state.r * rls_bound[sigma_uniq])).reshape(-1, 1)
 
     L_tilda = pc_state.alpha_hat * A.T * eval_L(X_sigma_uniq, X_sigma_uniq) * A
 
@@ -667,4 +682,7 @@ def alpha_dpp_sampling_do_sampling_loop(X_data,
 
     S = sigma_uniq[S_tilda].ravel().tolist()
 
-    return S, rej_iter
+    intermediate_sample_info = intermediate_sample_info._replace(rls_upper_bound=rls_bound)
+    intermediate_sample_info = intermediate_sample_info._replace(rls_upper_bound_valid=rls_bound_valid)
+
+    return S, rej_iter, intermediate_sample_info

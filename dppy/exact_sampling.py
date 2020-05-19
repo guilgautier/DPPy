@@ -782,7 +782,7 @@ def alpha_dpp_sampler(intermediate_sample_info, X_data, eval_L, random_state=Non
         r_func = params.get('r_func', lambda r: r)
         intermediate_sample_info = intermediate_sample_info._replace(r=r_func(intermediate_sample_info.deff_alpha_L_hat))
 
-    sampl, rej_count = alpha_dpp_sampling_do_sampling_loop(X_data, eval_L, intermediate_sample_info, rng, **params)
+    sampl, rej_count, intermediate_sample_info = alpha_dpp_sampling_do_sampling_loop(X_data, eval_L, intermediate_sample_info, rng, **params)
 
     return sampl, intermediate_sample_info
 
