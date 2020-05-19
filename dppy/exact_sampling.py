@@ -13,7 +13,9 @@ import numpy as np
 import scipy.linalg as la
 from dppy.utils import inner1d, check_random_state
 from dppy.intermediate_sampling import (vfx_sampling_precompute_constants,
-                                        vfx_sampling_do_sampling_loop)
+                                        vfx_sampling_do_sampling_loop,
+                                        alpha_dpp_sampling_precompute_constants,
+                                        alpha_dpp_sampling_do_sampling_loop)
 
 
 #####################
@@ -769,6 +771,20 @@ def dpp_vfx_sampler(intermediate_sample_info, X_data, eval_L, random_state=None,
 
     return sampl, intermediate_sample_info
 
+def alpha_dpp_sampler(intermediate_sample_info, X_data, eval_L, random_state=None, **params):
+    """ TODO """
+    rng = check_random_state(random_state)
+
+    if intermediate_sample_info is None:
+        intermediate_sample_info = alpha_dpp_sampling_precompute_constants(X_data=X_data, eval_L=eval_L,
+                                                                           rng=rng, **params)
+
+        r_func = params.get('r_func', lambda r: r)
+        intermediate_sample_info = intermediate_sample_info._replace(r=r_func(intermediate_sample_info.deff_alpha_L_hat))
+
+    sampl, rej_count = alpha_dpp_sampling_do_sampling_loop(X_data, eval_L, intermediate_sample_info, rng, **params)
+
+    return sampl, intermediate_sample_info
 
 ##########
 # k-DPPs #
