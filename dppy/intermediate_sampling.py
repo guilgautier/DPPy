@@ -24,7 +24,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from dppy.bless import bless, reduce_lambda
+from dppy.bless import bless, reduce_lambda, bless_size
 from dppy.utils import stable_filter, stable_invert_root, evaluate_L_diagonal, get_progress_bar
 import numpy as np
 from scipy.optimize import brentq
@@ -480,8 +480,12 @@ def alpha_dpp_sampling_precompute_constants(X_data, eval_L, rng,
     # Phase 0: compute initial dictionary D_bless with small rls_oversample_bless
     # D_bless is used only to estimate all RLS
 
-    dict_bless = bless(X_data, eval_L, 1.0, rls_oversample_bless, rng,
-                       nb_iter_bless=nb_iter_bless, verbose=verbose)
+    if desired_expected_size is None:
+        dict_bless = bless(X_data, eval_L, 1.0, rls_oversample_bless, rng,
+                           nb_iter_bless=nb_iter_bless, verbose=verbose)
+    else:
+        _, _, dict_bless = bless_size(X_data, eval_L, desired_expected_size, rls_oversample_bless, rng,
+                                                  nb_iter_bless=nb_iter_bless, verbose=verbose)
 
     # Phase 1: use estimate RLS to sample the dict_dppvfx dictionary, i.e. the one used to construct A
     # here theory says that to have high acceptance probability we need the oversampling factor to be ~deff^2
