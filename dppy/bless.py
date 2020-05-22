@@ -115,29 +115,27 @@ def reduce_lambda(X_data, eval_L, intermediate_dict_bless, lam_new, rng, rls_ove
 
     rls_estimate = estimate_rls_bless(intermediate_dict_bless, X_U, eval_L, lam_new)
 
-    # RLS should always be smaller than 1
-    rls_estimate = np.minimum(rls_estimate, 1.0)
-
     # same as before, oversample by a rls_oversample factor
-    probs = np.minimum(rls_oversample_parameter * rls_estimate, ucb[U]) / ucb[U]
+    probs = np.minimum(rls_oversample_parameter * rls_estimate, ucb[U])
+    probs_reject = probs / ucb[U]
 
     if not np.all(probs >= 0.0):
         raise ValueError('Some estimated probability is negative, this should never happen. '
-                         'Min prob: {}'.format(np.min(probs)))
+                         'Min prob: {}'.format(np.min(probs_reject)))
 
-    deff_estimate = probs.sum() / rls_oversample_parameter
+    deff_estimate = probs_reject.sum() / rls_oversample_parameter
 
     if not rls_oversample_parameter * deff_estimate >= 1.0:
         raise ValueError('Estimated deff is smaller than 1, you might want to reconsider your kernel. '
                          'deff_estimate: {:.3f}'.format(rls_oversample_parameter * deff_estimate))
 
-    selected = np.asarray(rng.rand(u)) <= probs
+    selected = np.asarray(rng.rand(u)) <= probs_reject
 
     s = selected.sum()
 
     if not s > 0:
         raise ValueError('No point selected during RLS sampling step, try to increase rls_oversample_bless. '
-                         'Expected number of points (rls_oversample_bless*deff): {:.3f}'.format(np.sum(probs)))
+                         'Expected number of points (rls_oversample_bless*deff): {:.3f}'.format(np.sum(probs_reject)))
 
     intermediate_dict_bless_new = CentersDictionary(idx=U.nonzero()[0][selected.nonzero()[0]],
                                                     X=X_U[selected, :],
