@@ -398,7 +398,7 @@ class FiniteDPP:
             # L = Phi.T Phi = V Gamma V
             # implies Gamma = Theta and V = Phi.T W Theta^{-1/2}
             self.L_eig_vals, L_dual_eig_vecs = la.eigh(self.L_dual)
-            self.L_eig_vals = is_geq_0(self.L_eig_vals)
+            self.L_eig_vals = np.maximum(is_geq_0(self.L_eig_vals), 0.0)
             self.eig_vecs = self.L_gram_factor.T.dot(L_dual_eig_vecs
                                                     / np.sqrt(self.L_eig_vals))
             return self.sample_exact(mode=self.sampling_mode,
