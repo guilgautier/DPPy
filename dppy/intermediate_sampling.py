@@ -100,7 +100,11 @@ def estimate_rls_from_weighted_dict_eigendecomp(X_to_estimate, eval_L, dict_dppv
     E = eigvec.T.dot(L_DX)
     E *= np.sqrt(1.0/(alpha_hat * eigvals + 1.0)).reshape(-1, 1)
 
-    rls_estimate = alpha_hat * (diag_L_to_estimate - np.square(E, out=E).sum(axis=0))
+    rls_estimate = alpha_hat * (diag_L_to_estimate - alpha_hat * np.square(E, out=E).sum(axis=0))
+
+    if not np.all(rls_estimate >= 0.0):
+        raise ValueError('Some estimated RLS is negative, this should never happen. '
+                         'Min prob: {}'.format(np.min(rls_estimate)))
 
     return rls_estimate
 
