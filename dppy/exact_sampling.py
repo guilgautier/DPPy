@@ -15,6 +15,7 @@ from dppy.utils import inner1d, check_random_state
 from dppy.intermediate_sampling import (vfx_sampling_precompute_constants,
                                         vfx_sampling_do_sampling_loop,
                                         alpha_dpp_sampling_precompute_constants,
+                                        alpha_k_dpp_sampling_precompute_constants,
                                         alpha_dpp_sampling_do_sampling_loop)
 
 
@@ -913,6 +914,80 @@ def k_dpp_vfx_sampler(size, intermediate_sample_info, X_data, eval_L, random_sta
                          'see rls_oversample_* parameters).'.format(max_iter_size_rejection))
 
     return sampl, intermediate_sample_info
+
+
+def alpha_k_dpp_sampler(size, intermediate_sample_info, X_data, eval_L, random_state=None, **params):
+    """ TODO """
+    rng = check_random_state(random_state)
+
+    if intermediate_sample_info is None or intermediate_sample_info.k != size:
+        intermediate_sample_info = alpha_k_dpp_sampling_precompute_constants(X_data=X_data,
+                                                                             eval_L=eval_L,
+                                                                             desired_expected_size=size,
+                                                                             rng=rng,
+                                                                             **params)
+
+        r_func = params.get('r_func', lambda r: r)
+
+        intermediate_sample_info = intermediate_sample_info._replace(r=r_func(intermediate_sample_info.deff_alpha_L_hat))
+
+
+    max_iter_size_rejection = params.get('max_iter_size_rejection', 100)
+    number_trial_search = np.ceil(np.sqrt(size)).astype('int')
+    stopping_ratio = (1 + 1 / (size + 3) ** 2)
+
+    sample_count = 0
+    trial_count = 0
+    under_k_count = 0
+    over_k_count = 0
+
+    ratio_alpha = intermediate_sample_info.alpha_max / intermediate_sample_info.alpha_min
+    found_good_alpha = ratio_alpha <= stopping_ratio
+
+    for size_rejection_iter in range(max_iter_size_rejection):
+        sampl, rej_count, intermediate_sample_info = alpha_dpp_sampling_do_sampling_loop(X_data, eval_L,
+                                                                                         intermediate_sample_info, rng,
+                                                                                         **params)
+        trial_count += 1
+
+        if len(sampl) == size:
+            sampl_out = sampl
+            sample_count += 1
+        if len(sampl) < size:
+                under_k_count += 1
+        if len(sampl) > size:
+                over_k_count += 1
+
+        if sample_count == 2:
+            found_good_alpha = True
+            break
+
+        if trial_count == number_trial_search:
+            if under_k_count > over_k_count:
+                intermediate_sample_info = intermediate_sample_info._replace(alpha_min=intermediate_sample_info.alpha_hat)
+            else:
+                intermediate_sample_info = intermediate_sample_info._replace(alpha_max=intermediate_sample_info.alpha_hat)
+
+            geom_mean_alpha = np.sqrt(intermediate_sample_info.alpha_min * intermediate_sample_info.alpha_max)
+            diag_L = intermediate_sample_info.diag_L
+            intermediate_sample_info = intermediate_sample_info._replace(alpha_hat=geom_mean_alpha)
+            intermediate_sample_info = intermediate_sample_info._replace(rls_upper_bound=geom_mean_alpha * diag_L)
+            intermediate_sample_info = intermediate_sample_info._replace(rls_upper_bound_valid=np.full((diag_L.shape[0],), False))
+
+            ratio_alpha = intermediate_sample_info.alpha_max/intermediate_sample_info.alpha_min
+            if ratio_alpha <= stopping_ratio and sample_count > 0:
+                found_good_alpha = True
+                break
+    else:
+        raise ValueError('The vfx sampler reached the maximum number of rejections allowed '
+                         'for the k-DPP size rejection ({}), try to increase the q factor '
+                         '(see q_func parameter) or the Nystrom approximation accuracy '
+                         'see rls_oversample_* parameters).'.format(max_iter_size_rejection))
+    if found_good_alpha:
+        intermediate_sample_info = intermediate_sample_info._replace(alpha_min=intermediate_sample_info.alpha_hat)
+        intermediate_sample_info = intermediate_sample_info._replace(alpha_max=intermediate_sample_info.alpha_hat)
+
+    return sampl_out, intermediate_sample_info
 
 
 def k_dpp_eig_vecs_selector(eig_vals, eig_vecs, size,

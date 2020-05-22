@@ -34,7 +34,7 @@ _IntermediateSampleInfo = namedtuple('_IntermediateSampleInfo',
                                      ['alpha_star', 'logdet_I_A', 'q', 's', 'z', 'rls_estimate'])
 
 _IntermediateSampleInfoAlphaRescale = namedtuple('_IntermediateSampleInfoAlphaRescale',
-                                                 ['alpha_hat', 'alpha_min', 'alpha_max',
+                                                 ['alpha_hat', 'alpha_min', 'alpha_max', 'k',
                                                   'eigvecs_L_hat', 'eigvals_L_hat', 'deff_alpha_L_hat',
                                                   'rls_upper_bound', 'rls_upper_bound_valid',
                                                   'r',
@@ -67,6 +67,9 @@ def estimate_rls_from_embedded_points(eigvec, eigvals, B_bar_T, diag_L, diag_L_h
                     - diag_L_hat * alpha_star
                     + np.square(X_precond, out=X_precond).sum(axis=0))
 
+    if not np.all(rls_estimate >= 0.0):
+        raise ValueError('Some estimated RLS is negative, this should never happen. '
+                         'Min prob: {}'.format(np.min(rls_estimate)))
     return rls_estimate
 
 
@@ -407,8 +410,8 @@ def vfx_sampling_do_sampling_loop(X_data, eval_L, intermediate_sample_info, rng,
 
 
 def alpha_dpp_sampling_precompute_constants(X_data, eval_L, rng,
-                                      desired_expected_size=None, rls_oversample_dppvfx=4.0, rls_oversample_bless=4.0,
-                                      nb_iter_bless=None, verbose=True):
+                                            desired_expected_size=None, rls_oversample_dppvfx=4.0,
+                                            rls_oversample_bless=4.0, nb_iter_bless=None, verbose=True, **kwargs):
     """Pre-compute quantities necessary for the vfx rejection sampling loop, such as the inner Nystrom approximation,
     and the RLS of all elements in L.
 
@@ -535,6 +538,7 @@ def alpha_dpp_sampling_precompute_constants(X_data, eval_L, rng,
     result = _IntermediateSampleInfoAlphaRescale(alpha_hat=alpha_hat,
                                                  alpha_min=alpha_hat,
                                                  alpha_max=alpha_hat,
+                                                 k=-1,
                                                  eigvals_L_hat=eigvals_L_hat,
                                                  eigvecs_L_hat=eigvecs_L_hat,
                                                  deff_alpha_L_hat=deff_alpha_L_hat,
@@ -546,6 +550,148 @@ def alpha_dpp_sampling_precompute_constants(X_data, eval_L, rng,
 
     return result
 
+
+def alpha_k_dpp_sampling_precompute_constants(X_data, eval_L, rng,
+                                              desired_expected_size=None, rls_oversample_dppvfx=4.0,
+                                              rls_oversample_bless=4.0, nb_iter_bless=None, verbose=True, **kwargs):
+    """Pre-compute quantities necessary for the vfx rejection sampling loop, such as the inner Nystrom approximation,
+    and the RLS of all elements in L.
+
+        :param array_like X_data: dataset such that L = eval_L(X_data), out of which we aresampling objects according
+        to a DPP
+        :param callable eval_L: likelihood function. Given two sets of n points X and m points Y, eval_L(X, Y) should
+        compute the (n x m) matrix containing the likelihood between points. The function should also
+        accept a single argument X and return eval_L(X) = eval_L(X, X).
+        As an example, see the implementation of any of the kernels provided by scikit-learn
+        (e.g. sklearn.gaussian_process.kernels.PairwiseKernel).
+        :param np.random.RandomState rng: random source used for sampling
+        :param desired_expected_size: desired expected sample size for the DPP. If None, use the natural DPP expected
+        sample size. The vfx sampling algorithm can approximately adjust the expected sample size of the DPP by
+        rescaling the L matrix with a scalar alpha_star <= 1. Adjusting the expected sample size can be useful to
+        control downstream complexity, and it is necessary to improve the probability of drawing a sample with
+        exactly k elements when using vfx for k-DPP sampling. Currently only reducing the sample size is supported,
+        and the sampler will return an exception if the DPP sample has already a natural expected size
+        smaller than desired_expected_size.
+        :type desired_expected_size:
+            float or None, default None
+        :param rls_oversample_dppvfx: Oversampling parameter used to construct dppvfx's internal Nystrom approximation.
+        The rls_oversample_dppvfx >= 1 parameter is used to increase the rank of the approximation by
+        a rls_oversample_dppvfx factor. This makes each rejection round slower and more memory intensive,
+        but reduces variance and the number of rounds of rejections, so the actual runtime might increase or decrease.
+        Empirically, a small factor rls_oversample_dppvfx = [2,10] seems to work. It is suggested to start with
+        a small number and increase if the algorithm fails to terminate.
+        :type rls_oversample_dppvfx:
+            float, default 4.0
+        :param rls_oversample_bless: Oversampling parameter used during bless's internal Nystrom approximation.
+        Note that this is a different Nystrom approximation than the one related to :func:`rls_oversample_dppvfx`,
+        and can be tuned separately.
+        The rls_oversample_bless >= 1 parameter is used to increase the rank of the approximation by
+        a rls_oversample_bless factor. This makes the one-time pre-processing slower and more memory intensive,
+        but reduces variance and the number of rounds of rejections, so the actual runtime might increase or decrease.
+        Empirically, a small factor rls_oversample_bless = [2,10] seems to work. It is suggested to start with
+        a small number and increase if the algorithm fails to terminate or is not accurate.
+        :type rls_oversample_bless:
+            float, default 4.0
+        :param int nb_iter_bless:  iterations for BLESS, if None it is set to log(n)
+        :type nb_iter_bless:
+            int or None, default None
+        :param bool verbose: controls verbosity of debug output, including progress bars.
+        The progress bar reports the inner execution of the bless algorithm, showing:
+            - lam: lambda value of the current iteration
+            - m: current size of the dictionary (number of centers contained)
+            - m_expected: expected size of the dictionary before sampling
+            - probs_dist: (mean, max, min) of the approximate rlss at the current iteration
+
+        :return: Pre-computed information necessary for the vfx rejection sampling loop with fields
+        - result.alpha_star: appropriate rescaling such that the expected sample size of DPP(alpha_star * L) is equal
+        to a user-indicated constant desired_expected_size, or 1.0 if no such constant was specified by the user.
+        - result.logdet_I_A: log determinant of the Nystrom approximation of L + I
+        - result.q: placeholder q constant used for vfx sampling, to be replaced by the user before the sampling loop
+        - result.s and result.z: approximations of the expected sample size of DPP(alpha_star * L) to be used in
+        the sampling loop. For more details see [DeCaVa19]
+        - result.rls_estimate: approximations of the RLS of all elements in X (i.e. in L)
+        :rtype: _IntermediateSampleInfo
+
+    """
+    diag_L = evaluate_L_diagonal(eval_L, X_data)
+
+    # Phase 0: compute initial dictionary D_bless with small rls_oversample_bless
+    # D_bless is used only to estimate all RLS
+
+    lam_max, lam_min, dict_bless = bless_size(X_data, eval_L, desired_expected_size, rls_oversample_bless, rng,
+                                              nb_iter_bless=nb_iter_bless, verbose=verbose)
+    alpha_min, alpha_max = 1.0 / lam_max, 1.0 / lam_min
+
+    # Phase 1: use estimate RLS to sample the dict_dppvfx dictionary, i.e. the one used to construct A
+    # here theory says that to have high acceptance probability we need the oversampling factor to be ~deff^2
+    # but even with constant oversampling factor we seem to accept fast
+
+    dict_dppvfx = reduce_lambda(X_data, eval_L, dict_bless, dict_bless.lam, rng, rls_oversample_parameter=rls_oversample_dppvfx)
+
+    # Phase 2: pre-compute L_hat, det(I + L_hat), etc.
+    L_DD = eval_L(dict_dppvfx.X, dict_dppvfx.X)
+
+    W_sqrt = (1.0 / np.sqrt(dict_dppvfx.probs)).reshape(-1, 1)
+
+    L_hat = W_sqrt.T * L_DD * W_sqrt
+    eigvals_L_hat, eigvecs_L_hat = np.linalg.eigh(L_hat)
+
+    eigvecs_L_hat, eigvals_L_hat = stable_filter(eigvecs_L_hat, eigvals_L_hat)
+
+    natural_expected_size = np.sum(eigvals_L_hat/(eigvals_L_hat + 1.0))
+
+    if not natural_expected_size >= 0.0:
+        raise ValueError('natural_expected_size is negative, this should never happen. '
+                         'natural_expected_size: {}'.format(natural_expected_size))
+
+    # s might naturally be too large, but we can rescale L to shrink it
+    # if we rescale alpha * L by a constant alpha,
+    # s is now trace(alpha * L - alpha * L_hat + L_hat(L_hat + I / alpha)^-1)
+    if desired_expected_size is None:
+        raise ValueError('Trying to precompute constants for the alpha k-dpp sampler but k is not provided.'
+                         ' This should never happen.')
+    elif natural_expected_size <= desired_expected_size:
+        raise ValueError('The expected sample size is smaller than the desired sample size or k (if sampling from'
+                         'a k-DPP).\n'
+                         'This is unusual (i.e. you are trying to select more than the overall amount of diversity '
+                         'in your set.\n'
+                         'Increasing the expected sample size is currently not supported (only decreasing).\n'
+                         'Please consider decreasing your k={} or changing L.'
+                         ' Estimated mean cardinality: {}'.format(desired_expected_size,
+                                                                  natural_expected_size))
+    else:
+        # since this is monotone in alpha, we can simply use Brent's algorithm (bisection + tricks)
+        # it is a root finding algorithm so we must create a function with a root in desired_expected_size
+        def temp_func_with_root_in_desired_expected_size(x):
+            return np.sum(1 - 1/(x * eigvals_L_hat + 1.0)) - desired_expected_size
+
+        alpha_hat, opt_result = brentq(temp_func_with_root_in_desired_expected_size,
+                                       a=10.0 * np.finfo(np.float).eps,
+                                       b=1.0,
+                                       full_output=True)
+
+        if not opt_result.converged:
+            raise ValueError('Could not find an appropriate rescaling for desired_expected_size.'
+                             '(Flag, Iter, Root): {}'.format((opt_result.flag,
+                                                              opt_result.iterations,
+                                                              opt_result.root)))
+
+    deff_alpha_L_hat = np.sum(1 - 1/(alpha_hat * eigvals_L_hat + 1.0))
+
+    result = _IntermediateSampleInfoAlphaRescale(alpha_hat=alpha_hat,
+                                                 alpha_min=alpha_min,
+                                                 alpha_max=alpha_max,
+                                                 k=desired_expected_size,
+                                                 eigvals_L_hat=eigvals_L_hat,
+                                                 eigvecs_L_hat=eigvecs_L_hat,
+                                                 deff_alpha_L_hat=deff_alpha_L_hat,
+                                                 rls_upper_bound=alpha_hat * diag_L,
+                                                 rls_upper_bound_valid=np.full((diag_L.shape[0],), False),
+                                                 r=-1,
+                                                 dict_dppvfx=dict_dppvfx,
+                                                 diag_L=diag_L)
+
+    return result
 
 def alpha_dpp_sampling_do_sampling_loop(X_data,
                                         eval_L,
