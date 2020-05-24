@@ -38,7 +38,8 @@ _IntermediateSampleInfoAlphaRescale = namedtuple('_IntermediateSampleInfoAlphaRe
                                                   'eigvecs_L_hat', 'eigvals_L_hat', 'deff_alpha_L_hat',
                                                   'rls_upper_bound', 'rls_upper_bound_valid',
                                                   'r',
-                                                  'dict_dppvfx', 'diag_L'])
+                                                  'dict_dppvfx', 'diag_L',
+                                                  'alpha_switches'])
 
 
 def estimate_rls_from_embedded_points(eigvec, eigvals, B_bar_T, diag_L, diag_L_hat, alpha_star):

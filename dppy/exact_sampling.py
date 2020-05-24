@@ -11,7 +11,7 @@
 
 import numpy as np
 import scipy.linalg as la
-from dppy.utils import inner1d, check_random_state
+from dppy.utils import inner1d, check_random_state, get_progress_bar
 from dppy.intermediate_sampling import (vfx_sampling_precompute_constants,
                                         vfx_sampling_do_sampling_loop,
                                         alpha_dpp_sampling_precompute_constants,
@@ -944,11 +944,20 @@ def alpha_k_dpp_sampler(size, intermediate_sample_info, X_data, eval_L, random_s
     ratio_alpha = intermediate_sample_info.alpha_max / intermediate_sample_info.alpha_min
     found_good_alpha = ratio_alpha <= stopping_ratio
 
+    prog_bar = get_progress_bar(disable=not params.get('verbose', False))
+    verbose_outer = None
+    if 'verbose' in params:
+        verbose_outer = params.pop('verbose')
+    params['verbose'] = False
+
     for size_rejection_iter in range(max_iter_size_rejection):
         sampl, rej_count, intermediate_sample_info = alpha_dpp_sampling_do_sampling_loop(X_data, eval_L,
                                                                                          intermediate_sample_info, rng,
                                                                                          **params)
         trial_count += 1
+
+        prog_bar.set_postfix(trial_count=trial_count, alpha=intermediate_sample_info.alpha_hat, k=size, k_emp=len(sampl))
+        prog_bar.update()
 
         if len(sampl) == size:
             sampl_out = sampl
@@ -986,6 +995,12 @@ def alpha_k_dpp_sampler(size, intermediate_sample_info, X_data, eval_L, random_s
     if found_good_alpha:
         intermediate_sample_info = intermediate_sample_info._replace(alpha_min=intermediate_sample_info.alpha_hat)
         intermediate_sample_info = intermediate_sample_info._replace(alpha_max=intermediate_sample_info.alpha_hat)
+        intermediate_sample_info = intermediate_sample_info._replace(alpha_switches=intermediate_sample_info.alpha_switches + 1)
+
+    if verbose_outer:
+        params['verbose'] = verbose_outer
+    else:
+        params.pop('verbose')
 
     return sampl_out, intermediate_sample_info
 
