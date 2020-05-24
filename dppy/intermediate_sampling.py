@@ -213,9 +213,9 @@ def vfx_sampling_precompute_constants(X_data, eval_L, rng,
     # we can use the fact the the non-zero eigenvalues of I + L_hat and I_A_mm are equal
     eigvals, eigvec = np.linalg.eigh(I_A_mm)
 
-    if not np.all(eigvals >= 0.0):
+    if not np.all(eigvals > 1.0):
         raise ValueError('Some eigenvalues of L_hat are negative, this should never happen. '
-                         'Minimum eig: {}'.format(np.min(eigvals)))
+                         'Minimum eig: {}'.format(np.min(eigvals - 1.0)))
 
     natural_expected_size = trace_L - trace_L_hat + np.sum((eigvals - 1.0) / eigvals)
 
@@ -555,7 +555,8 @@ def alpha_dpp_sampling_precompute_constants(X_data, eval_L, rng,
                                                  rls_upper_bound_valid=np.full((diag_L.shape[0],), False),
                                                  r=-1,
                                                  dict_dppvfx=dict_dppvfx,
-                                                 diag_L=diag_L)
+                                                 diag_L=diag_L,
+                                                 alpha_switches=0)
 
     return result
 
@@ -698,7 +699,9 @@ def alpha_k_dpp_sampling_precompute_constants(X_data, eval_L, rng,
                                                  rls_upper_bound_valid=np.full((diag_L.shape[0],), False),
                                                  r=-1,
                                                  dict_dppvfx=dict_dppvfx,
-                                                 diag_L=diag_L)
+                                                 diag_L=diag_L,
+                                                 alpha_switches=0)
+
 
     return result
 
