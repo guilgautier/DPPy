@@ -505,7 +505,14 @@ def alpha_dpp_sampling_precompute_constants(X_data, eval_L, rng,
 
     eigvecs_L_hat, eigvals_L_hat = stable_filter(eigvecs_L_hat, eigvals_L_hat)
 
-    natural_expected_size = np.sum(eigvals_L_hat/(eigvals_L_hat + 1.0))
+    rls_estimate = estimate_rls_from_weighted_dict_eigendecomp(dict_dppvfx.X,
+                                                               eval_L,
+                                                               dict_dppvfx,
+                                                               eigvecs_L_hat,
+                                                               eigvals_L_hat,
+                                                               1.0/dict_dppvfx.lam)
+
+    natural_expected_size = np.sum(rls_estimate/dict_dppvfx.probs)
 
     if not natural_expected_size >= 0.0:
         raise ValueError('natural_expected_size is negative, this should never happen. '
@@ -533,7 +540,7 @@ def alpha_dpp_sampling_precompute_constants(X_data, eval_L, rng,
 
         alpha_hat, opt_result = brentq(temp_func_with_root_in_desired_expected_size,
                                        a=10.0 * np.finfo(np.float).eps,
-                                       b=1.0,
+                                       b=4.0,
                                        full_output=True)
 
         if not opt_result.converged:
@@ -541,6 +548,11 @@ def alpha_dpp_sampling_precompute_constants(X_data, eval_L, rng,
                              '(Flag, Iter, Root): {}'.format((opt_result.flag,
                                                               opt_result.iterations,
                                                               opt_result.root)))
+        elif alpha_hat > 1.0:
+            raise ValueError('The rescaling factor alpha_hat is larger than 1 (i.e. we would need to increase the expected sample size).'
+                             ' Increasing the expected sample size is currently not supported (only decreasing).\n'
+                             'Please consider decreasing your k={} or changing L.'
+                             ' alpha_hat: {}'.format(desired_expected_size, alpha_hat))
 
     deff_alpha_L_hat = np.sum(1 - 1/(alpha_hat * eigvals_L_hat + 1.0))
 
@@ -648,7 +660,14 @@ def alpha_k_dpp_sampling_precompute_constants(X_data, eval_L, rng,
 
     eigvecs_L_hat, eigvals_L_hat = stable_filter(eigvecs_L_hat, eigvals_L_hat)
 
-    natural_expected_size = np.sum(eigvals_L_hat/(eigvals_L_hat + 1.0))
+    rls_estimate = estimate_rls_from_weighted_dict_eigendecomp(dict_dppvfx.X,
+                                                               eval_L,
+                                                               dict_dppvfx,
+                                                               eigvecs_L_hat,
+                                                               eigvals_L_hat,
+                                                               1.0/dict_dppvfx.lam)
+
+    natural_expected_size = np.sum(rls_estimate/dict_dppvfx.probs)
 
     if not natural_expected_size >= 0.0:
         raise ValueError('natural_expected_size is negative, this should never happen. '
@@ -677,7 +696,7 @@ def alpha_k_dpp_sampling_precompute_constants(X_data, eval_L, rng,
 
         alpha_hat, opt_result = brentq(temp_func_with_root_in_desired_expected_size,
                                        a=10.0 * np.finfo(np.float).eps,
-                                       b=1.0,
+                                       b=4.0,
                                        full_output=True)
 
         if not opt_result.converged:
@@ -685,6 +704,11 @@ def alpha_k_dpp_sampling_precompute_constants(X_data, eval_L, rng,
                              '(Flag, Iter, Root): {}'.format((opt_result.flag,
                                                               opt_result.iterations,
                                                               opt_result.root)))
+        elif alpha_hat > 1.0:
+            raise ValueError('The rescaling factor alpha_hat is larger than 1 (i.e. we would need to increase the expected sample size).'
+                             ' Increasing the expected sample size is currently not supported (only decreasing).\n'
+                             'Please consider decreasing your k={} or changing L.'
+                             ' alpha_hat: {}'.format(desired_expected_size, alpha_hat))
 
     deff_alpha_L_hat = np.sum(1 - 1/(alpha_hat * eigvals_L_hat + 1.0))
 
