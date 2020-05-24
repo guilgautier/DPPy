@@ -987,6 +987,11 @@ def alpha_k_dpp_sampler(size, intermediate_sample_info, X_data, eval_L, random_s
             if ratio_alpha <= stopping_ratio and sample_count > 0:
                 found_good_alpha = True
                 break
+
+            intermediate_sample_info = intermediate_sample_info._replace(alpha_switches=intermediate_sample_info.alpha_switches + 1)
+            trial_count = 0
+            under_k_count = 0
+            over_k_count = 0
     else:
         raise ValueError('The vfx sampler reached the maximum number of rejections allowed '
                          'for the k-DPP size rejection ({}), try to increase the q factor '
