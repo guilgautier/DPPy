@@ -830,7 +830,7 @@ def alpha_dpp_sampling_do_sampling_loop(X_data,
 
             acc_thresh = (deff_alpha_L_hat + logdet_I_L_sigma - log_det_alpha_L_hat - (t / pc_state.r)).item()
 
-            if acc_thresh >= 0.1:
+            if acc_thresh >= 0.0:
                 raise ValueError('Accepting with probability larger than 1, this should never happen. '
                                  's: {}'.format(np.exp(acc_thresh)))
 

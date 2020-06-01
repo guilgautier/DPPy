@@ -371,6 +371,7 @@ def bless_size(X_data, eval_L, size_final, rls_oversample_param, random_state=No
 
             t.set_postfix(lam=int(lam_new),
                           m=len(intermediate_dict_bless.probs),
+                          d_hat=deff_hat_new,
                           m_expected=int(intermediate_dict_bless.probs.mean() * n),
                           probs_dist="({:.4}, {:.4}, {:.4})".format(intermediate_dict_bless.probs.mean(),
                                                                     intermediate_dict_bless.probs.max(),
