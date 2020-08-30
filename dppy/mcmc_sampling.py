@@ -3,7 +3,7 @@
 
 - `add_exchange_delete_sampler`
 - `add_delete_sampler`
-- `basis_exchange_sampler`
+- `exchange_sampler`
 - `zonotope_sampler`
 
 .. seealso:
@@ -16,6 +16,7 @@ import numpy as np
 import scipy.linalg as la
 
 from dppy.utils import det_ST, check_random_state
+from dppy.
 
 
 ############################################
@@ -30,7 +31,7 @@ def dpp_sampler_mcmc(kernel, mode='AED', **params):
         - :func:`add_exchange_delete_sampler <add_exchange_delete_sampler>`
         - :func:`initialize_AED_sampler <initialize_AED_sampler>`
         - :func:`add_delete_sampler <add_delete_sampler>`
-        - :func:`basis_exchange_sampler <basis_exchange_sampler>`
+        - :func:`exchange_sampler <exchange_sampler>`
         - :func:`initialize_AD_and_E_sampler <initialize_AD_and_E_sampler>`
     """
 
@@ -38,26 +39,26 @@ def dpp_sampler_mcmc(kernel, mode='AED', **params):
 
     s_init = params.get('s_init', None)
     nb_iter = params.get('nb_iter', 10)
-    T_max = params.get('T_max', None)
+    t_max = params.get('t_max', None)
     size = params.get('size', None)  # = Tr(K) for projection correlation K
 
     if mode == 'AED':  # Add-Exchange-Delete S'=S+t, S-t+u, S-t
         if s_init is None:
             s_init = initialize_AED_sampler(kernel, random_state=rng)
-        sampl = add_exchange_delete_sampler(kernel, s_init, nb_iter, T_max,
+        sampl = add_exchange_delete_sampler(kernel, s_init, nb_iter, t_max,
                                             random_state=rng)
 
     elif mode == 'AD':  # Add-Delete S'=S+t, S-t
         if s_init is None:
             s_init = initialize_AD_and_E_sampler(kernel, random_state=rng)
-        sampl = add_delete_sampler(kernel, s_init, nb_iter, T_max,
+        sampl = add_delete_sampler(kernel, s_init, nb_iter, t_max,
                                    random_state=rng)
 
     elif mode == 'E':  # Exchange S'=S-t+u
         if s_init is None:
             s_init = initialize_AD_and_E_sampler(kernel, size,
                                                  random_state=rng)
-        sampl = basis_exchange_sampler(kernel, s_init, nb_iter, T_max,
+        sampl = exchange_sampler(kernel, s_init, nb_iter, t_max,
                                        random_state=rng)
 
     return sampl
@@ -67,7 +68,7 @@ def initialize_AED_sampler(kernel, random_state=None):
     """
     .. seealso::
         - :func:`add_delete_sampler <add_delete_sampler>`
-        - :func:`basis_exchange_sampler <basis_exchange_sampler>`
+        - :func:`exchange_sampler <exchange_sampler>`
         - :func:`initialize_AED_sampler <initialize_AED_sampler>`
         - :func:`add_exchange_delete_sampler <add_exchange_delete_sampler>`
     """
@@ -101,7 +102,7 @@ def initialize_AD_and_E_sampler(kernel, size=None, random_state=None):
     .. seealso::
 
         - :func:`add_delete_sampler <add_delete_sampler>`
-        - :func:`basis_exchange_sampler <basis_exchange_sampler>`
+        - :func:`exchange_sampler <exchange_sampler>`
         - :func:`initialize_AED_sampler <initialize_AED_sampler>`
         - :func:`add_exchange_delete_sampler <add_exchange_delete_sampler>`
     """
@@ -131,7 +132,7 @@ def initialize_AD_and_E_sampler(kernel, size=None, random_state=None):
     return S0.tolist()
 
 
-def add_exchange_delete_sampler(kernel, s_init=None, nb_iter=10, T_max=None,
+def add_exchange_delete_sampler(kernel, s_init=None, nb_iter=10, t_max=None,
                                 random_state=None):
     """ MCMC sampler for generic DPPs, it is a mix of add/delete and basis exchange MCMC samplers.
 
@@ -151,9 +152,9 @@ def add_exchange_delete_sampler(kernel, s_init=None, nb_iter=10, T_max=None,
     :type nb_iter:
         int
 
-    :param T_max:
+    :param t_max:
         Maximum running time of the algorithm (in seconds).
-    :type T_max:
+    :type t_max:
         float
 
     :param random_state:
@@ -180,19 +181,19 @@ def add_exchange_delete_sampler(kernel, s_init=None, nb_iter=10, T_max=None,
     chain = [S0]  # Initialize the collection (list) of sample
 
     # Evaluate running time...
-    t_start = time.time() if T_max else 0
+    t_start = time.time() if t_max else 0
 
-    for _ in range(1, nb_iter):
+    for _ in range(nb_iter):
 
+        ratio = size_S0 / N  # Proportion of items in current sample
         S1 = S0.copy()  # S1 = S0
+
         # Pick one element s in S_0 by index uniformly at random
-        s_ind = rng.choice(size_S0 if size_S0 else N)  # , size=1)[0]
+        s_ind = rng.randint(0, size_S0) if size_S0 else 0
         # Unif t in [N]-S0
         t = rng.choice(np.delete(ground_set, S0))
 
         U = rng.rand()
-        ratio = size_S0 / N  # Proportion of items in current sample
-
         # Add: S1 = S0 + t
         if U < 0.5 * (1 - ratio)**2:
             S1.append(t)  # S1 = S0 + t
@@ -200,10 +201,7 @@ def add_exchange_delete_sampler(kernel, s_init=None, nb_iter=10, T_max=None,
             det_S1 = det_ST(kernel, S1)  # det K_S1
             if rng.rand() < det_S1 / det_S0 * (size_S0 + 1) / (N - size_S0):
                 S0, det_S0 = S1, det_S1
-                chain.append(S1)
                 size_S0 += 1
-            else:
-                chain.append(S0)
 
         # Exchange: S1 = S0 - s + t
         elif (0.5 * (1 - ratio)**2 <= U) & (U < 0.5 * (1 - ratio)):
@@ -213,10 +211,6 @@ def add_exchange_delete_sampler(kernel, s_init=None, nb_iter=10, T_max=None,
             det_S1 = det_ST(kernel, S1)  # det K_S1
             if rng.rand() < (det_S1 / det_S0):
                 S0, det_S0 = S1, det_S1
-                chain.append(S1)
-                # size_S0 stays the same
-            else:
-                chain.append(S0)
 
         # Delete: S1 = S0 - s
         elif (0.5 * (1 - ratio) <= U) & (U < 0.5 * (ratio**2 + (1 - ratio))):
@@ -225,22 +219,110 @@ def add_exchange_delete_sampler(kernel, s_init=None, nb_iter=10, T_max=None,
             det_S1 = det_ST(kernel, S1)  # det K_S1
             if rng.rand() < det_S1 / det_S0 * size_S0 / (N - (size_S0 - 1)):
                 S0, det_S0 = S1, det_S1
-                chain.append(S1)
                 size_S0 -= 1
-            else:
-                chain.append(S0)
 
-        else:
-            chain.append(S0)
+        chain.append(S0)
 
-        if T_max:
-            if time.time() - t_start < T_max:
-                break
+        if t_max and (time.time() - t_start < t_max):
+            break
 
     return chain
 
 
-def add_delete_sampler(kernel, s_init, nb_iter=10, T_max=None,
+def add_exchange_delete_sampler_refactored(kernel, s_init=None, nb_iter=10, t_max=None, random_state=None):
+    """ MCMC sampler for generic DPPs, it is a mix of add/delete and basis exchange MCMC samplers.
+
+    :param kernel:
+        Kernel martrix
+    :type kernel:
+        array_like
+
+    :param s_init:
+        Initial sample.
+    :type s_init:
+        list
+
+    :param nb_iter:
+        Maximum number of iterations performed by the the algorithm.
+        Default is 10.
+    :type nb_iter:
+        int
+
+    :param t_max:
+        Maximum running time of the algorithm (in seconds).
+    :type t_max:
+        float
+
+    :param random_state:
+    :type random_state:
+        None, np.random, int, np.random.RandomState
+
+    :return:
+        list of `nb_iter` approximate sample of DPP(kernel)
+    :rtype:
+        array_like
+
+    .. seealso::
+
+        Algorithm 3 in :cite:`LiJeSr16c`
+    """
+    rng = check_random_state(random_state)
+
+    # Initialization, the ground set of items is devided into two: items forming the current samples and the rest.
+    N = kernel.shape[0]
+    items = s_init + [i for i in range(N) if i not in s_init]
+
+    det_S0 = det_ST(kernel, s_init)
+    size = len(s_init)
+    chain = [s_init]
+
+    t_start = time.time() if t_max else 0
+
+    for _ in range(nb_iter):
+
+        # Pick the indices of one element s inside and t outside of the current sample uniformly at random
+        s, t = rng.randint(0, size), rng.randint(size, N)
+
+        U, V = rng.rand(), rng.rand()
+        ratio = size / N  # Proportion of items in current sample
+
+        # Add: S += t
+        if U < 0.5 * (1 - ratio)**2:
+            items[t], items[size] = items[size], items[t]
+            # Accept_reject the move
+            det_S1 = det_ST(kernel, items[:size + 1])
+            if V < det_S1 / det_S0 * (size + 1) / (N - size):
+                det_S0 = det_S1
+                size += 1
+
+        # Exchange: S = S - s + t
+        elif (0.5 * (1 - ratio)**2 <= U) & (U < 0.5 * (1 - ratio)):
+            items[s], items[t] = items[t], items[s]
+            # Accept_reject the move, size stays the same
+            det_S1 = det_ST(kernel, items[:size])
+            if V < det_S1 / det_S0:
+                det_S0 = det_S1
+            else:
+                items[s], items[t] = items[t], items[s]
+
+        # Delete: S -= s
+        elif (0.5 * (1 - ratio) <= U) & (U < 0.5 * (ratio**2 + (1 - ratio))):
+            items[s], items[size - 1] = items[size - 1], items[s]
+            # Accept_reject the move
+            det_S1 = det_ST(kernel, items[:size - 1])
+            if V < det_S1 / det_S0 * size / (N - (size - 1)):
+                det_S0 = det_S1
+                size -= 1
+
+        chain.append(items[:size])
+
+        if t_max and (time.time() - t_start < t_max):
+            break
+
+    return chain
+
+
+def add_delete_sampler(kernel, s_init, nb_iter=10, t_max=None,
                        random_state=None):
     """ MCMC sampler for generic DPP(kernel), it performs local moves by removing/adding one element at a time.
 
@@ -260,10 +342,10 @@ def add_delete_sampler(kernel, s_init, nb_iter=10, T_max=None,
     :type nb_iter:
         int
 
-    :param T_max:
+    :param t_max:
         Maximum running time of the algorithm (in seconds).
         Default is None.
-    :type T_max:
+    :type t_max:
         float
 
     :param random_state:
@@ -289,9 +371,9 @@ def add_delete_sampler(kernel, s_init, nb_iter=10, T_max=None,
     chain = [S0]  # Initialize the collection (list) of sample
 
     # Evaluate running time...
-    t_start = time.time() if T_max else 0
+    t_start = time.time() if t_max else 0
 
-    for _ in range(1, nb_iter):
+    for _ in range(nb_iter):
 
         # With proba 1/2 try to add/delete an element
         if rng.rand() < 0.5:
@@ -308,22 +390,94 @@ def add_delete_sampler(kernel, s_init, nb_iter=10, T_max=None,
             det_S1 = det_ST(kernel, S1)  # det K_S1
             if rng.rand() < det_S1 / det_S0:
                 S0, det_S0 = S1, det_S1
-                chain.append(S1)
 
-            else:
-                chain.append(S0)
+        chain.append(S0)
 
-        else:
-            chain.append(S0)
-
-        if T_max:
-            if time.time() - t_start < T_max:
-                break
+        if t_max and (time.time() - t_start < t_max):
+            break
 
     return chain
 
 
-def basis_exchange_sampler(kernel, s_init, nb_iter=10, T_max=None,
+def add_delete_sampler_refactored(kernel, s_init, nb_iter=10, t_max=None,
+                       random_state=None):
+    """ MCMC sampler for generic DPP(kernel), it performs local moves by removing/adding one element at a time.
+
+    :param kernel:
+        Kernel martrix
+    :type kernel:
+        array_like
+
+    :param s_init:
+        Initial sample.
+    :type s_init:
+        list
+
+    :param nb_iter:
+        Maximum number of iterations performed by the the algorithm.
+        Default is 10.
+    :type nb_iter:
+        int
+
+    :param t_max:
+        Maximum running time of the algorithm (in seconds).
+        Default is None.
+    :type t_max:
+        float
+
+    :param random_state:
+    :type random_state:
+        None, np.random, int, np.random.RandomState
+
+    :return:
+        list of `nb_iter` approximate sample of DPP(kernel)
+    :rtype:
+        array_like
+
+    .. seealso::
+
+        Algorithm 1 in :cite:`LiJeSr16c`
+    """
+
+    # Initialization
+    rng = check_random_state(random_state)
+
+    N = kernel.shape[0]
+    items = s_init + [i for i in range(N) if i not in s_init]
+
+    det_S0, size, add_or_del = det_ST(kernel, s_init), len(s_init), 0
+    chain = [s_init]
+
+    t_start = time.time() if t_max else 0
+
+    for _ in range(nb_iter):
+
+        # With proba 1/2 try to add/delete an element
+        if rng.rand() < 0.5:
+
+            s = rng.randint(0, N)  # Uniform item in [N]
+            if s >= size:  # S += s
+                items[s], items[size] = items[size], items[s]
+                add_or_del = 1
+            else:  # S -= s
+                items[s], items[size - 1] = items[size - 1], items[s]
+                add_or_del = -1
+
+            # Accept_reject the move
+            det_S1 = det_ST(kernel, items[:size + add_or_del])
+            if rng.rand() < det_S1 / det_S0:
+                det_S0 = det_S1
+                size += add_or_del
+
+        chain.append(items[:size])
+
+        if t_max and (time.time() - t_start < t_max):
+            break
+
+    return chain
+
+
+def exchange_sampler(kernel, s_init, nb_iter=10, t_max=None,
                            random_state=None):
     """ MCMC sampler for projection DPPs, based on the basis exchange property.
 
@@ -344,10 +498,10 @@ def basis_exchange_sampler(kernel, s_init, nb_iter=10, T_max=None,
     :type nb_iter:
         int
 
-    :param T_max:
+    :param t_max:
         Maximum running time of the algorithm (in seconds).
         Default is None.
-    :type T_max:
+    :type t_max:
         float
 
     :param random_state:
@@ -377,7 +531,7 @@ def basis_exchange_sampler(kernel, s_init, nb_iter=10, T_max=None,
     chain[0] = S0
 
     # Evaluate running time...
-    t_start = time.time() if T_max else 0
+    t_start = time.time() if t_max else 0
 
     for it in range(1, nb_iter):
 
@@ -405,9 +559,84 @@ def basis_exchange_sampler(kernel, s_init, nb_iter=10, T_max=None,
         else:
             chain[it] = S0
 
-        if T_max:
-            if time.time() - t_start < T_max:
+        if t_max:
+            if time.time() - t_start < t_max:
                 break
+
+    return chain.tolist()
+
+
+def exchange_sampler_refactored(kernel, s_init, nb_iter=10, t_max=None,
+                           random_state=None):
+    """ MCMC sampler for projection DPPs, based on the basis exchange property.
+
+    :param kernel:
+        Feature vector matrix, feature vectors are stacked columnwise.
+        It is assumed to be full row rank.
+    :type kernel:
+        array_like
+
+    :param s_init:
+        Initial sample.
+    :type s_init:
+        list
+
+    :param nb_iter:
+        Maximum number of iterations performed by the the algorithm.
+        Default is 10.
+    :type nb_iter:
+        int
+
+    :param t_max:
+        Maximum running time of the algorithm (in seconds).
+        Default is None.
+    :type t_max:
+        float
+
+    :param random_state:
+    :type random_state:
+        None, np.random, int, np.random.RandomState
+
+    :return:
+        MCMC chain of approximate sample (stacked row_wise i.e. nb_iter rows).
+    :rtype:
+        array_like
+
+    .. seealso::
+
+        Algorithm 2 in :cite:`LiJeSr16c`
+    """
+
+    # Initialization
+    rng = check_random_state(random_state)
+
+    N = kernel.shape[0]
+    items = s_init + [i for i in range(N) if i not in s_init]
+
+    det_S0, size = det_ST(kernel, s_init), len(s_init)
+
+    chain = np.zeros((nb_iter, size), dtype=int)
+    chain[0] = s_init
+
+    t_start = time.time() if t_max else 0
+
+    for it in range(1, nb_iter):
+
+        if rng.rand() < 0.5:
+
+            s, t = rng.randint(0, size), rng.randint(size, N)
+            items[s], items[t] = items[t], items[s]
+
+            det_S1 = det_ST(kernel, items[:size])
+            if rng.rand() < det_S1 / det_S0:
+                det_S0 = det_S1
+            else:
+                items[s], items[t] = items[t], items[s]
+
+        chain[it] = items[:size]
+
+        if t_max and time.time() - t_start < t_max:
+            break
 
     return chain.tolist()
 
@@ -466,7 +695,7 @@ def zonotope_sampler(A_zono, **params):
         - ``'lin_obj'`` (list): Linear objective (:math:`c`) of the linear program used to identify the tile in which a point lies. Default is a random Gaussian vector.
         - ``'x_0'` (list): Initial point.
         - ``'nb_iter'`` (int): Number of iterations of the MCMC chain. Default is 10.
-        - ``'T_max'`` (float): Maximum running time of the algorithm (in seconds).
+        - ``'t_max'`` (float): Maximum running time of the algorithm (in seconds).
         Default is None.
         - ``'random_state`` (default None)
     :type params: dict
@@ -481,7 +710,7 @@ def zonotope_sampler(A_zono, **params):
         Algorithm 5 in :cite:`GaBaVa17`
 
         - :func:`extract_basis <extract_basis>`
-        - :func:`basis_exchange_sampler <basis_exchange_sampler>`
+        - :func:`exchange_sampler <exchange_sampler>`
     """
     # For zonotope sampler
     try:
@@ -501,7 +730,7 @@ def zonotope_sampler(A_zono, **params):
     x0 = matrix(params.get('x_0', A_zono.dot(rng.rand(N))))
 
     nb_iter = params.get('nb_iter', 10)
-    T_max = params.get('T_max', None)
+    t_max = params.get('t_max', None)
 
     ###################
     # Linear problems #
@@ -574,7 +803,7 @@ def zonotope_sampler(A_zono, **params):
     # Compute the det of the tile (Vol(B)=abs(det(B)))
     det_B_x0 = la.det(A_zono[:, B_x0])
 
-    t_start = time.time() if T_max else 0
+    t_start = time.time() if t_max else 0
 
     for it in range(1, nb_iter):
 
@@ -607,8 +836,7 @@ def zonotope_sampler(A_zono, **params):
             else:
                 chain[it] = B_x0
 
-        if T_max:
-            if time.time() - t_start < T_max:
-                break
+        if t_max and time.time() - t_start < t_max:
+            break
 
     return chain.tolist()

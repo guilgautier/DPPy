@@ -649,7 +649,7 @@ class FiniteDPP:
 
                 + ``'s_init'`` (default None) Starting state of the Markov chain
                 + ``'nb_iter'`` (default 10) Number of iterations of the chain
-                + ``'T_max'`` (default None) Time horizon
+                + ``'t_max'`` (default None) Time horizon
                 + ``'size'`` (default None) Size of the initial sample for ``mode='AD'/'E'``
 
                     * :math:`\\operatorname{rank}(\\mathbf{K})=\\operatorname{trace}(\\mathbf{K})` for projection :math:`\\mathbf{K}` (correlation) kernel and ``mode='E'``
@@ -659,7 +659,7 @@ class FiniteDPP:
                 + ``'lin_obj'`` linear objective in main optimization problem (default np.random.randn(N))
                 + ``'x_0'`` initial point in zonotope (default A*u, u~U[0,1]^n)
                 + ``'nb_iter'`` (default 10) Number of iterations of the chain
-                + ``'T_max'`` (default None) Time horizon
+                + ``'t_max'`` (default None) Time horizon
 
         :return:
             The last sample of the trajectory of Markov chain.
