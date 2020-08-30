@@ -641,6 +641,38 @@ def exchange_sampler_refactored(kernel, s_init, nb_iter=10, t_max=None,
     return chain.tolist()
 
 
+def exchange_sampler_gauss_quadrature(kernel, s_init, nb_iter=10, t_max=None, random_state=None):
+
+    rng = check_random_state(random_state)
+
+    N = kernel.shape[0]
+    items = s_init + [x for x in range(N) if x not in s_init]
+
+    size = len(s_init)
+
+    chain = np.zeros((nb_iter, size), dtype=int)
+    chain[0] = s_init
+
+    t_start = time.time() if t_max else 0
+
+    for it in range(1, nb_iter):
+
+        ind_x, ind_y = rng.randint(0, size), rng.randint(size, N)
+        x, y = items[ind_x], items[ind_y]
+
+        u = rng.rand()
+        if judge_exchange_gauss_quadrature(
+                unif=u, kernel=kernel, sample=items[:size], x_del=x, y_add=y):
+            items[ind_x], items[ind_y] = y, x
+
+        chain[it] = items[:k]
+
+        if t_max and time.time() - t_start < t_max:
+            break
+
+    return chain
+
+
 ############
 # ZONOTOPE #
 ############
