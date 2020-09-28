@@ -905,6 +905,7 @@ def k_dpp_vfx_sampler(size, intermediate_sample_info, X_data, eval_L, random_sta
     for size_rejection_iter in range(max_iter_size_rejection):
         sampl, rej_count = vfx_sampling_do_sampling_loop(X_data, eval_L, intermediate_sample_info, rng, **params)
 
+        intermediate_sample_info = intermediate_sample_info._replace(rej_to_first_sample=intermediate_sample_info.rej_to_first_sample + rej_count)
         if len(sampl) == size:
             break
     else:
@@ -952,17 +953,27 @@ def alpha_k_dpp_sampler(size, intermediate_sample_info, X_data, eval_L, random_s
 
     early_stop = params.get('early_stop', False)
 
+    trial_count_overall = 0
     for size_rejection_iter in range(max_iter_size_rejection):
         sampl, rej_count, intermediate_sample_info = alpha_dpp_sampling_do_sampling_loop(X_data, eval_L,
                                                                                          intermediate_sample_info, rng,
                                                                                          **params)
-        trial_count += 1
 
-        prog_bar.set_postfix(trial_count=trial_count, alpha=intermediate_sample_info.alpha_hat, k=size, k_emp=len(sampl))
+        trial_count += 1
+        trial_count_overall += 1
+
+        prog_bar.set_postfix(trial_count=trial_count,
+                             alpha="{:.4}".format(intermediate_sample_info.alpha_hat),
+                             alpha_switch=intermediate_sample_info.alpha_switches,
+                             k=size, k_emp=len(sampl),
+                             rej_count=rej_count,
+                             )
         prog_bar.update()
 
         if len(sampl) == size:
             sampl_out = sampl
+            if intermediate_sample_info.trial_to_first_sample == 0:
+                intermediate_sample_info = intermediate_sample_info._replace(trial_to_first_sample=trial_count_overall)
             sample_count += 1
             if early_stop:
                 break
@@ -970,6 +981,9 @@ def alpha_k_dpp_sampler(size, intermediate_sample_info, X_data, eval_L, random_s
                 under_k_count += 1
         if len(sampl) > size:
                 over_k_count += 1
+
+        if intermediate_sample_info.trial_to_first_sample == 0:
+            intermediate_sample_info = intermediate_sample_info._replace(rej_to_first_sample=intermediate_sample_info.rej_to_first_sample + rej_count)
 
         if sample_count == 2:
             found_good_alpha = True
@@ -997,9 +1011,9 @@ def alpha_k_dpp_sampler(size, intermediate_sample_info, X_data, eval_L, random_s
             under_k_count = 0
             over_k_count = 0
     else:
-        raise ValueError('The vfx sampler reached the maximum number of rejections allowed '
-                         'for the k-DPP size rejection ({}), try to increase the q factor '
-                         '(see q_func parameter) or the Nystrom approximation accuracy '
+        raise ValueError('The alpha sampler reached the maximum number of rejections allowed '
+                         'for the k-DPP size rejection ({}), try to increase the r factor '
+                         '(see r_func parameter) or the Nystrom approximation accuracy '
                          'see rls_oversample_* parameters).'.format(max_iter_size_rejection))
     if found_good_alpha:
         intermediate_sample_info = intermediate_sample_info._replace(alpha_min=intermediate_sample_info.alpha_hat)

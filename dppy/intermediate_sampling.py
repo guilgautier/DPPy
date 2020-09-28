@@ -1,6 +1,6 @@
 # MIT License
 #
-# Copyright (c) 2017 Laboratory for Computational and Statistical Learning
+# Copyright (c) 2020 Laboratory for Computational and Statistical Learning
 #
 # authors: Daniele Calandriello
 # email:   daniele.calandriello@iit.it
@@ -31,7 +31,7 @@ from scipy.optimize import brentq
 from collections import namedtuple
 
 _IntermediateSampleInfo = namedtuple('_IntermediateSampleInfo',
-                                     ['alpha_star', 'logdet_I_A', 'q', 's', 'z', 'rls_estimate'])
+                                     ['alpha_star', 'logdet_I_A', 'q', 's', 'z', 'rls_estimate', 'rej_to_first_sample'])
 
 _IntermediateSampleInfoAlphaRescale = namedtuple('_IntermediateSampleInfoAlphaRescale',
                                                  ['alpha_hat', 'alpha_min', 'alpha_max', 'k',
@@ -39,7 +39,7 @@ _IntermediateSampleInfoAlphaRescale = namedtuple('_IntermediateSampleInfoAlphaRe
                                                   'rls_upper_bound', 'rls_upper_bound_valid',
                                                   'r',
                                                   'dict_dppvfx', 'diag_L',
-                                                  'alpha_switches'])
+                                                  'rej_to_first_sample', 'trial_to_first_sample', 'alpha_switches'])
 
 
 def estimate_rls_from_embedded_points(eigvec, eigvals, B_bar_T, diag_L, diag_L_hat, alpha_star):
@@ -295,7 +295,8 @@ def vfx_sampling_precompute_constants(X_data, eval_L, rng,
                                      q=-1,
                                      s=s,
                                      z=z,
-                                     rls_estimate=rls_estimate)
+                                     rls_estimate=rls_estimate,
+                                     rej_to_first_sample=0)
 
     return result
 
@@ -417,65 +418,7 @@ def vfx_sampling_do_sampling_loop(X_data, eval_L, intermediate_sample_info, rng,
 def alpha_dpp_sampling_precompute_constants(X_data, eval_L, rng,
                                             desired_expected_size=None, rls_oversample_dppvfx=4.0,
                                             rls_oversample_bless=4.0, nb_iter_bless=None, verbose=True, **kwargs):
-    """Pre-compute quantities necessary for the vfx rejection sampling loop, such as the inner Nystrom approximation,
-    and the RLS of all elements in L.
-
-        :param array_like X_data: dataset such that L = eval_L(X_data), out of which we aresampling objects according
-        to a DPP
-        :param callable eval_L: likelihood function. Given two sets of n points X and m points Y, eval_L(X, Y) should
-        compute the (n x m) matrix containing the likelihood between points. The function should also
-        accept a single argument X and return eval_L(X) = eval_L(X, X).
-        As an example, see the implementation of any of the kernels provided by scikit-learn
-        (e.g. sklearn.gaussian_process.kernels.PairwiseKernel).
-        :param np.random.RandomState rng: random source used for sampling
-        :param desired_expected_size: desired expected sample size for the DPP. If None, use the natural DPP expected
-        sample size. The vfx sampling algorithm can approximately adjust the expected sample size of the DPP by
-        rescaling the L matrix with a scalar alpha_star <= 1. Adjusting the expected sample size can be useful to
-        control downstream complexity, and it is necessary to improve the probability of drawing a sample with
-        exactly k elements when using vfx for k-DPP sampling. Currently only reducing the sample size is supported,
-        and the sampler will return an exception if the DPP sample has already a natural expected size
-        smaller than desired_expected_size.
-        :type desired_expected_size:
-            float or None, default None
-        :param rls_oversample_dppvfx: Oversampling parameter used to construct dppvfx's internal Nystrom approximation.
-        The rls_oversample_dppvfx >= 1 parameter is used to increase the rank of the approximation by
-        a rls_oversample_dppvfx factor. This makes each rejection round slower and more memory intensive,
-        but reduces variance and the number of rounds of rejections, so the actual runtime might increase or decrease.
-        Empirically, a small factor rls_oversample_dppvfx = [2,10] seems to work. It is suggested to start with
-        a small number and increase if the algorithm fails to terminate.
-        :type rls_oversample_dppvfx:
-            float, default 4.0
-        :param rls_oversample_bless: Oversampling parameter used during bless's internal Nystrom approximation.
-        Note that this is a different Nystrom approximation than the one related to :func:`rls_oversample_dppvfx`,
-        and can be tuned separately.
-        The rls_oversample_bless >= 1 parameter is used to increase the rank of the approximation by
-        a rls_oversample_bless factor. This makes the one-time pre-processing slower and more memory intensive,
-        but reduces variance and the number of rounds of rejections, so the actual runtime might increase or decrease.
-        Empirically, a small factor rls_oversample_bless = [2,10] seems to work. It is suggested to start with
-        a small number and increase if the algorithm fails to terminate or is not accurate.
-        :type rls_oversample_bless:
-            float, default 4.0
-        :param int nb_iter_bless:  iterations for BLESS, if None it is set to log(n)
-        :type nb_iter_bless:
-            int or None, default None
-        :param bool verbose: controls verbosity of debug output, including progress bars.
-        The progress bar reports the inner execution of the bless algorithm, showing:
-            - lam: lambda value of the current iteration
-            - m: current size of the dictionary (number of centers contained)
-            - m_expected: expected size of the dictionary before sampling
-            - probs_dist: (mean, max, min) of the approximate rlss at the current iteration
-
-        :return: Pre-computed information necessary for the vfx rejection sampling loop with fields
-        - result.alpha_star: appropriate rescaling such that the expected sample size of DPP(alpha_star * L) is equal
-        to a user-indicated constant desired_expected_size, or 1.0 if no such constant was specified by the user.
-        - result.logdet_I_A: log determinant of the Nystrom approximation of L + I
-        - result.q: placeholder q constant used for vfx sampling, to be replaced by the user before the sampling loop
-        - result.s and result.z: approximations of the expected sample size of DPP(alpha_star * L) to be used in
-        the sampling loop. For more details see [DeCaVa19]
-        - result.rls_estimate: approximations of the RLS of all elements in X (i.e. in L)
-        :rtype: _IntermediateSampleInfo
-
-    """
+    """TODO docs, for now see vfx docs"""
     diag_L = evaluate_L_diagonal(eval_L, X_data)
 
     # Phase 0: compute initial dictionary D_bless with small rls_oversample_bless
@@ -568,7 +511,9 @@ def alpha_dpp_sampling_precompute_constants(X_data, eval_L, rng,
                                                  r=-1,
                                                  dict_dppvfx=dict_dppvfx,
                                                  diag_L=diag_L,
-                                                 alpha_switches=0)
+                                                 alpha_switches=0,
+                                                 trial_to_first_sample=0,
+                                                 rej_to_first_sample=0)
 
     return result
 
@@ -576,65 +521,7 @@ def alpha_dpp_sampling_precompute_constants(X_data, eval_L, rng,
 def alpha_k_dpp_sampling_precompute_constants(X_data, eval_L, rng,
                                               desired_expected_size=None, rls_oversample_dppvfx=4.0,
                                               rls_oversample_bless=4.0, nb_iter_bless=None, verbose=True, **kwargs):
-    """Pre-compute quantities necessary for the vfx rejection sampling loop, such as the inner Nystrom approximation,
-    and the RLS of all elements in L.
-
-        :param array_like X_data: dataset such that L = eval_L(X_data), out of which we aresampling objects according
-        to a DPP
-        :param callable eval_L: likelihood function. Given two sets of n points X and m points Y, eval_L(X, Y) should
-        compute the (n x m) matrix containing the likelihood between points. The function should also
-        accept a single argument X and return eval_L(X) = eval_L(X, X).
-        As an example, see the implementation of any of the kernels provided by scikit-learn
-        (e.g. sklearn.gaussian_process.kernels.PairwiseKernel).
-        :param np.random.RandomState rng: random source used for sampling
-        :param desired_expected_size: desired expected sample size for the DPP. If None, use the natural DPP expected
-        sample size. The vfx sampling algorithm can approximately adjust the expected sample size of the DPP by
-        rescaling the L matrix with a scalar alpha_star <= 1. Adjusting the expected sample size can be useful to
-        control downstream complexity, and it is necessary to improve the probability of drawing a sample with
-        exactly k elements when using vfx for k-DPP sampling. Currently only reducing the sample size is supported,
-        and the sampler will return an exception if the DPP sample has already a natural expected size
-        smaller than desired_expected_size.
-        :type desired_expected_size:
-            float or None, default None
-        :param rls_oversample_dppvfx: Oversampling parameter used to construct dppvfx's internal Nystrom approximation.
-        The rls_oversample_dppvfx >= 1 parameter is used to increase the rank of the approximation by
-        a rls_oversample_dppvfx factor. This makes each rejection round slower and more memory intensive,
-        but reduces variance and the number of rounds of rejections, so the actual runtime might increase or decrease.
-        Empirically, a small factor rls_oversample_dppvfx = [2,10] seems to work. It is suggested to start with
-        a small number and increase if the algorithm fails to terminate.
-        :type rls_oversample_dppvfx:
-            float, default 4.0
-        :param rls_oversample_bless: Oversampling parameter used during bless's internal Nystrom approximation.
-        Note that this is a different Nystrom approximation than the one related to :func:`rls_oversample_dppvfx`,
-        and can be tuned separately.
-        The rls_oversample_bless >= 1 parameter is used to increase the rank of the approximation by
-        a rls_oversample_bless factor. This makes the one-time pre-processing slower and more memory intensive,
-        but reduces variance and the number of rounds of rejections, so the actual runtime might increase or decrease.
-        Empirically, a small factor rls_oversample_bless = [2,10] seems to work. It is suggested to start with
-        a small number and increase if the algorithm fails to terminate or is not accurate.
-        :type rls_oversample_bless:
-            float, default 4.0
-        :param int nb_iter_bless:  iterations for BLESS, if None it is set to log(n)
-        :type nb_iter_bless:
-            int or None, default None
-        :param bool verbose: controls verbosity of debug output, including progress bars.
-        The progress bar reports the inner execution of the bless algorithm, showing:
-            - lam: lambda value of the current iteration
-            - m: current size of the dictionary (number of centers contained)
-            - m_expected: expected size of the dictionary before sampling
-            - probs_dist: (mean, max, min) of the approximate rlss at the current iteration
-
-        :return: Pre-computed information necessary for the vfx rejection sampling loop with fields
-        - result.alpha_star: appropriate rescaling such that the expected sample size of DPP(alpha_star * L) is equal
-        to a user-indicated constant desired_expected_size, or 1.0 if no such constant was specified by the user.
-        - result.logdet_I_A: log determinant of the Nystrom approximation of L + I
-        - result.q: placeholder q constant used for vfx sampling, to be replaced by the user before the sampling loop
-        - result.s and result.z: approximations of the expected sample size of DPP(alpha_star * L) to be used in
-        the sampling loop. For more details see [DeCaVa19]
-        - result.rls_estimate: approximations of the RLS of all elements in X (i.e. in L)
-        :rtype: _IntermediateSampleInfo
-
-    """
+    """TODO docs, for now see vfx docs"""
     diag_L = evaluate_L_diagonal(eval_L, X_data)
 
     # Phase 0: compute initial dictionary D_bless with small rls_oversample_bless
@@ -724,7 +611,9 @@ def alpha_k_dpp_sampling_precompute_constants(X_data, eval_L, rng,
                                                  r=-1,
                                                  dict_dppvfx=dict_dppvfx,
                                                  diag_L=diag_L,
-                                                 alpha_switches=0)
+                                                 alpha_switches=0,
+                                                 trial_to_first_sample=0,
+                                                 rej_to_first_sample=0)
 
 
     return result
@@ -736,32 +625,7 @@ def alpha_dpp_sampling_do_sampling_loop(X_data,
                                         max_iter=1000,
                                         verbose=True,
                                         **kwargs):
-    """Given pre-computed information, run a rejection sampling loop to generate DPP samples.
-        :param array_like X_data: dataset such that L = eval_L(X_data), out of which we are sampling objects
-        according to a DPP
-        :param callable eval_L: likelihood function. Given two sets of n points X and m points Y, eval_L(X, Y) should
-        compute the (n x m) matrix containing the likelihood between points. The function should also
-        accept a single argument X and return eval_L(X) = eval_L(X, X).
-        As an example, see the implementation of any of the kernels provided by scikit-learn
-        (e.g. sklearn.gaussian_process.kernels.PairwiseKernel).
-        :param _IntermediateSampleInfoAlphaRescale intermediate_sample_info: Pre-computed information necessary for the
-        vfx rejection sampling loop, as returned by :func:`vfx_sampling_precompute_constants.`
-        :param np.random.RandomState rng: random source used for sampling
-        :param max_iter:
-        :type max_iter:
-            int, default 1000
-        :param bool verbose: controls verbosity of debug output, including progress bars.
-        The progress bar reports the execution of the rejection sampling loop, showing:
-            - acc_thresh: latest computed probability of acceptance
-            - rej_iter: iteration of the rejection sampling loop (i.e. rejections so far)
-        :type verbose:
-            bool, default True
-        :param dict kwargs: we add a unused catch all kwargs argument to make sure that the user can pass the
-        same set of parameters to both vfx_sampling_precompute_constants and vfx_sampling_do_sampling_loop. This
-        way if there is any spurious non-shared parameter (e.g. rls_oversample_bless) we simply ignore it.
-        :return: Sample from a DPP (as a list) and number of rejections as int
-        :rtype: tuple(list, int)
-    """
+    """TODO docs, for now see vfx docs"""
     # TODO: taking as input a catch-all kwargs can be misleading for the user. e.g. if there is a typo in a paremater
     # it will silently ignore it and use the default instead
 
