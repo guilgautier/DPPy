@@ -950,6 +950,8 @@ def alpha_k_dpp_sampler(size, intermediate_sample_info, X_data, eval_L, random_s
         verbose_outer = params.pop('verbose')
     params['verbose'] = False
 
+    early_stop = params.get('early_stop', False)
+
     for size_rejection_iter in range(max_iter_size_rejection):
         sampl, rej_count, intermediate_sample_info = alpha_dpp_sampling_do_sampling_loop(X_data, eval_L,
                                                                                          intermediate_sample_info, rng,
@@ -962,6 +964,8 @@ def alpha_k_dpp_sampler(size, intermediate_sample_info, X_data, eval_L, random_s
         if len(sampl) == size:
             sampl_out = sampl
             sample_count += 1
+            if early_stop:
+                break
         if len(sampl) < size:
                 under_k_count += 1
         if len(sampl) > size:
