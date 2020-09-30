@@ -38,7 +38,7 @@ _IntermediateSampleInfoAlphaRescale = namedtuple('_IntermediateSampleInfoAlphaRe
                                                   'eigvecs_L_hat', 'eigvals_L_hat', 'deff_alpha_L_hat',
                                                   'rls_upper_bound', 'rls_upper_bound_valid',
                                                   'r',
-                                                  'dict_dppvfx', 'diag_L',
+                                                  'dict_alphadpp', 'diag_L',
                                                   'rej_to_first_sample', 'trial_to_first_sample', 'alpha_switches'])
 
 
@@ -416,7 +416,7 @@ def vfx_sampling_do_sampling_loop(X_data, eval_L, intermediate_sample_info, rng,
 
 
 def alpha_dpp_sampling_precompute_constants(X_data, eval_L, rng,
-                                            desired_expected_size=None, rls_oversample_dppvfx=4.0,
+                                            desired_expected_size=None, rls_oversample_alphadpp=4.0,
                                             rls_oversample_bless=4.0, nb_iter_bless=None, verbose=True, **kwargs):
     """TODO docs, for now see vfx docs"""
     diag_L = evaluate_L_diagonal(eval_L, X_data)
@@ -431,31 +431,31 @@ def alpha_dpp_sampling_precompute_constants(X_data, eval_L, rng,
         _, _, dict_bless = bless_size(X_data, eval_L, desired_expected_size, rls_oversample_bless, rng,
                                                   nb_iter_bless=nb_iter_bless, verbose=verbose)
 
-    # Phase 1: use estimate RLS to sample the dict_dppvfx dictionary, i.e. the one used to construct A
+    # Phase 1: use estimate RLS to sample the dict_alphadpp dictionary, i.e. the one used to construct A
     # here theory says that to have high acceptance probability we need the oversampling factor to be ~deff^2
     # but even with constant oversampling factor we seem to accept fast
 
-    dict_dppvfx = reduce_lambda(X_data, eval_L, dict_bless, dict_bless.lam, rng,
-                                rls_oversample_parameter=rls_oversample_dppvfx)
+    dict_alphadpp = reduce_lambda(X_data, eval_L, dict_bless, dict_bless.lam, rng,
+                                rls_oversample_parameter=rls_oversample_alphadpp)
 
     # Phase 2: pre-compute L_hat, det(I + L_hat), etc.
-    L_DD = eval_L(dict_dppvfx.X, dict_dppvfx.X)
+    L_DD = eval_L(dict_alphadpp.X, dict_alphadpp.X)
 
-    W_sqrt = (1.0 / np.sqrt(dict_dppvfx.probs)).reshape(-1, 1)
+    W_sqrt = (1.0 / np.sqrt(dict_alphadpp.probs)).reshape(-1, 1)
 
     L_hat = W_sqrt.T * L_DD * W_sqrt
     eigvals_L_hat, eigvecs_L_hat = np.linalg.eigh(L_hat)
 
     eigvecs_L_hat, eigvals_L_hat = stable_filter(eigvecs_L_hat, eigvals_L_hat)
 
-    rls_estimate = estimate_rls_from_weighted_dict_eigendecomp(dict_dppvfx.X,
+    rls_estimate = estimate_rls_from_weighted_dict_eigendecomp(dict_alphadpp.X,
                                                                eval_L,
-                                                               dict_dppvfx,
+                                                               dict_alphadpp,
                                                                eigvecs_L_hat,
                                                                eigvals_L_hat,
-                                                               1.0/dict_dppvfx.lam)
+                                                               1.0/dict_alphadpp.lam)
 
-    natural_expected_size = np.sum(rls_estimate/dict_dppvfx.probs)
+    natural_expected_size = np.sum(rls_estimate/dict_alphadpp.probs)
 
     if not natural_expected_size >= 0.0:
         raise ValueError('natural_expected_size is negative, this should never happen. '
@@ -509,7 +509,7 @@ def alpha_dpp_sampling_precompute_constants(X_data, eval_L, rng,
                                                  rls_upper_bound=alpha_hat * diag_L,
                                                  rls_upper_bound_valid=np.full((diag_L.shape[0],), False),
                                                  r=-1,
-                                                 dict_dppvfx=dict_dppvfx,
+                                                 dict_alphadpp=dict_alphadpp,
                                                  diag_L=diag_L,
                                                  alpha_switches=0,
                                                  trial_to_first_sample=0,
@@ -519,42 +519,42 @@ def alpha_dpp_sampling_precompute_constants(X_data, eval_L, rng,
 
 
 def alpha_k_dpp_sampling_precompute_constants(X_data, eval_L, rng,
-                                              desired_expected_size=None, rls_oversample_dppvfx=4.0,
+                                              desired_expected_size=None, rls_oversample_alphadpp=4.0,
                                               rls_oversample_bless=4.0, nb_iter_bless=None, verbose=True, **kwargs):
     """TODO docs, for now see vfx docs"""
     diag_L = evaluate_L_diagonal(eval_L, X_data)
 
     # Phase 0: compute initial dictionary D_bless with small rls_oversample_bless
-    # D_bless is used only to estimate all RLS
+    # D_bless is used only to estimate the RLS required to construct the dictionary in input for alpha
 
     lam_max, lam_min, dict_bless = bless_size(X_data, eval_L, desired_expected_size, rls_oversample_bless, rng,
                                               nb_iter_bless=nb_iter_bless, verbose=verbose)
     alpha_min, alpha_max = 1.0 / lam_max, 1.0 / lam_min
 
-    # Phase 1: use estimate RLS to sample the dict_dppvfx dictionary, i.e. the one used to construct A
+    # Phase 1: use estimate RLS to sample the dict_alphadpp dictionary, i.e. the one used to construct A
     # here theory says that to have high acceptance probability we need the oversampling factor to be ~deff^2
     # but even with constant oversampling factor we seem to accept fast
 
-    dict_dppvfx = reduce_lambda(X_data, eval_L, dict_bless, dict_bless.lam, rng, rls_oversample_parameter=rls_oversample_dppvfx)
+    dict_alphadpp = reduce_lambda(X_data, eval_L, dict_bless, dict_bless.lam, rng, rls_oversample_parameter=rls_oversample_alphadpp)
 
     # Phase 2: pre-compute L_hat, det(I + L_hat), etc.
-    L_DD = eval_L(dict_dppvfx.X, dict_dppvfx.X)
+    L_DD = eval_L(dict_alphadpp.X, dict_alphadpp.X)
 
-    W_sqrt = (1.0 / np.sqrt(dict_dppvfx.probs)).reshape(-1, 1)
+    W_sqrt = (1.0 / np.sqrt(dict_alphadpp.probs)).reshape(-1, 1)
 
     L_hat = W_sqrt.T * L_DD * W_sqrt
     eigvals_L_hat, eigvecs_L_hat = np.linalg.eigh(L_hat)
 
     eigvecs_L_hat, eigvals_L_hat = stable_filter(eigvecs_L_hat, eigvals_L_hat)
 
-    rls_estimate = estimate_rls_from_weighted_dict_eigendecomp(dict_dppvfx.X,
+    rls_estimate = estimate_rls_from_weighted_dict_eigendecomp(dict_alphadpp.X,
                                                                eval_L,
-                                                               dict_dppvfx,
+                                                               dict_alphadpp,
                                                                eigvecs_L_hat,
                                                                eigvals_L_hat,
-                                                               1.0/dict_dppvfx.lam)
+                                                               1.0/dict_alphadpp.lam)
 
-    natural_expected_size = np.sum(rls_estimate/dict_dppvfx.probs)
+    natural_expected_size = np.sum(rls_estimate/dict_alphadpp.probs)
 
     if not natural_expected_size >= 0.0:
         raise ValueError('natural_expected_size is negative, this should never happen. '
@@ -609,7 +609,7 @@ def alpha_k_dpp_sampling_precompute_constants(X_data, eval_L, rng,
                                                  rls_upper_bound=alpha_hat * diag_L,
                                                  rls_upper_bound_valid=np.full((diag_L.shape[0],), False),
                                                  r=-1,
-                                                 dict_dppvfx=dict_dppvfx,
+                                                 dict_alphadpp=dict_alphadpp,
                                                  diag_L=diag_L,
                                                  alpha_switches=0,
                                                  trial_to_first_sample=0,
