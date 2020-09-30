@@ -428,7 +428,7 @@ def alpha_dpp_sampling_precompute_constants(X_data, eval_L, rng,
         dict_bless = bless(X_data, eval_L, 1.0, rls_oversample_bless, rng,
                            nb_iter_bless=nb_iter_bless, verbose=verbose)
     else:
-        _, _, dict_bless = bless_size(X_data, eval_L, desired_expected_size, rls_oversample_bless, rng,
+        lam_max, lam_min, dict_bless = bless_size(X_data, eval_L, desired_expected_size, rls_oversample_bless, rng,
                                                   nb_iter_bless=nb_iter_bless, verbose=verbose)
 
     # Phase 1: use estimate RLS to sample the dict_alphadpp dictionary, i.e. the one used to construct A
@@ -499,110 +499,15 @@ def alpha_dpp_sampling_precompute_constants(X_data, eval_L, rng,
 
     deff_alpha_L_hat = np.sum(1 - 1/(alpha_hat * eigvals_L_hat + 1.0))
 
-    result = _IntermediateSampleInfoAlphaRescale(alpha_hat=alpha_hat,
-                                                 alpha_min=alpha_hat,
-                                                 alpha_max=alpha_hat,
-                                                 k=-1,
-                                                 eigvals_L_hat=eigvals_L_hat,
-                                                 eigvecs_L_hat=eigvecs_L_hat,
-                                                 deff_alpha_L_hat=deff_alpha_L_hat,
-                                                 rls_upper_bound=alpha_hat * diag_L,
-                                                 rls_upper_bound_valid=np.full((diag_L.shape[0],), False),
-                                                 r=-1,
-                                                 dict_alphadpp=dict_alphadpp,
-                                                 diag_L=diag_L,
-                                                 alpha_switches=0,
-                                                 trial_to_first_sample=0,
-                                                 rej_to_first_sample=0)
-
-    return result
-
-
-def alpha_k_dpp_sampling_precompute_constants(X_data, eval_L, rng,
-                                              desired_expected_size=None, rls_oversample_alphadpp=4.0,
-                                              rls_oversample_bless=4.0, nb_iter_bless=None, verbose=True, **kwargs):
-    """TODO docs, for now see vfx docs"""
-    diag_L = evaluate_L_diagonal(eval_L, X_data)
-
-    # Phase 0: compute initial dictionary D_bless with small rls_oversample_bless
-    # D_bless is used only to estimate the RLS required to construct the dictionary in input for alpha
-
-    lam_max, lam_min, dict_bless = bless_size(X_data, eval_L, desired_expected_size, rls_oversample_bless, rng,
-                                              nb_iter_bless=nb_iter_bless, verbose=verbose)
-    alpha_min, alpha_max = 1.0 / lam_max, 1.0 / lam_min
-
-    # Phase 1: use estimate RLS to sample the dict_alphadpp dictionary, i.e. the one used to construct A
-    # here theory says that to have high acceptance probability we need the oversampling factor to be ~deff^2
-    # but even with constant oversampling factor we seem to accept fast
-
-    dict_alphadpp = reduce_lambda(X_data, eval_L, dict_bless, dict_bless.lam, rng, rls_oversample_parameter=rls_oversample_alphadpp)
-
-    # Phase 2: pre-compute L_hat, det(I + L_hat), etc.
-    L_DD = eval_L(dict_alphadpp.X, dict_alphadpp.X)
-
-    W_sqrt = (1.0 / np.sqrt(dict_alphadpp.probs)).reshape(-1, 1)
-
-    L_hat = W_sqrt.T * L_DD * W_sqrt
-    eigvals_L_hat, eigvecs_L_hat = np.linalg.eigh(L_hat)
-
-    eigvecs_L_hat, eigvals_L_hat = stable_filter(eigvecs_L_hat, eigvals_L_hat)
-
-    rls_estimate = estimate_rls_from_weighted_dict_eigendecomp(dict_alphadpp.X,
-                                                               eval_L,
-                                                               dict_alphadpp,
-                                                               eigvecs_L_hat,
-                                                               eigvals_L_hat,
-                                                               1.0/dict_alphadpp.lam)
-
-    natural_expected_size = np.sum(rls_estimate/dict_alphadpp.probs)
-
-    if not natural_expected_size >= 0.0:
-        raise ValueError('natural_expected_size is negative, this should never happen. '
-                         'natural_expected_size: {}'.format(natural_expected_size))
-
-    # s might naturally be too large, but we can rescale L to shrink it
-    # if we rescale alpha * L by a constant alpha,
-    # s is now trace(alpha * L - alpha * L_hat + L_hat(L_hat + I / alpha)^-1)
     if desired_expected_size is None:
-        raise ValueError('Trying to precompute constants for the alpha k-dpp sampler but k is not provided.'
-                         ' This should never happen.')
-    elif natural_expected_size <= desired_expected_size:
-        raise ValueError('The expected sample size is smaller than the desired sample size or k (if sampling from'
-                         'a k-DPP).\n'
-                         'This is unusual (i.e. you are trying to select more than the overall amount of diversity '
-                         'in your set.\n'
-                         'Increasing the expected sample size is currently not supported (only decreasing).\n'
-                         'Please consider decreasing your k={} or changing L.'
-                         ' Estimated mean cardinality: {}'.format(desired_expected_size,
-                                                                  natural_expected_size))
+        alpha_min, alpha_max, k = alpha_hat, alpha_hat, -1
     else:
-        # since this is monotone in alpha, we can simply use Brent's algorithm (bisection + tricks)
-        # it is a root finding algorithm so we must create a function with a root in desired_expected_size
-        def temp_func_with_root_in_desired_expected_size(x):
-            return np.sum(1 - 1/(x * eigvals_L_hat + 1.0)) - desired_expected_size
-
-        alpha_hat, opt_result = brentq(temp_func_with_root_in_desired_expected_size,
-                                       a=10.0 * np.finfo(np.float).eps,
-                                       b=4.0,
-                                       full_output=True)
-
-        if not opt_result.converged:
-            raise ValueError('Could not find an appropriate rescaling for desired_expected_size.'
-                             '(Flag, Iter, Root): {}'.format((opt_result.flag,
-                                                              opt_result.iterations,
-                                                              opt_result.root)))
-        elif alpha_hat > 1.0:
-            raise ValueError('The rescaling factor alpha_hat is larger than 1 (i.e. we would need to increase the expected sample size).'
-                             ' Increasing the expected sample size is currently not supported (only decreasing).\n'
-                             'Please consider decreasing your k={} or changing L.'
-                             ' alpha_hat: {}'.format(desired_expected_size, alpha_hat))
-
-    deff_alpha_L_hat = np.sum(1 - 1/(alpha_hat * eigvals_L_hat + 1.0))
+        alpha_min, alpha_max, k = 1.0 / lam_max, 1.0 / lam_min, desired_expected_size
 
     result = _IntermediateSampleInfoAlphaRescale(alpha_hat=alpha_hat,
                                                  alpha_min=alpha_min,
                                                  alpha_max=alpha_max,
-                                                 k=desired_expected_size,
+                                                 k=k,
                                                  eigvals_L_hat=eigvals_L_hat,
                                                  eigvecs_L_hat=eigvecs_L_hat,
                                                  deff_alpha_L_hat=deff_alpha_L_hat,
@@ -615,8 +520,8 @@ def alpha_k_dpp_sampling_precompute_constants(X_data, eval_L, rng,
                                                  trial_to_first_sample=0,
                                                  rej_to_first_sample=0)
 
-
     return result
+
 
 def alpha_dpp_sampling_do_sampling_loop(X_data,
                                         eval_L,

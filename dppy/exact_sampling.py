@@ -15,7 +15,6 @@ from dppy.utils import inner1d, check_random_state, get_progress_bar
 from dppy.intermediate_sampling import (vfx_sampling_precompute_constants,
                                         vfx_sampling_do_sampling_loop,
                                         alpha_dpp_sampling_precompute_constants,
-                                        alpha_k_dpp_sampling_precompute_constants,
                                         alpha_dpp_sampling_do_sampling_loop)
 
 
@@ -922,7 +921,7 @@ def alpha_k_dpp_sampler(size, intermediate_sample_info, X_data, eval_L, random_s
     rng = check_random_state(random_state)
 
     if intermediate_sample_info is None or intermediate_sample_info.k != size:
-        intermediate_sample_info = alpha_k_dpp_sampling_precompute_constants(X_data=X_data,
+        intermediate_sample_info = alpha_dpp_sampling_precompute_constants(X_data=X_data,
                                                                              eval_L=eval_L,
                                                                              desired_expected_size=size,
                                                                              rng=rng,
