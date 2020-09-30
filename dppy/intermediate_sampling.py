@@ -74,7 +74,7 @@ def estimate_rls_from_embedded_points(eigvec, eigvals, B_bar_T, diag_L, diag_L_h
     return rls_estimate
 
 
-def estimate_rls_from_weighted_dict_eigendecomp(X_to_estimate, eval_L, dict_dppvfx, eigvec, eigvals, alpha_hat):
+def estimate_rls_from_weighted_dict_eigendecomp(X_to_estimate, eval_L, dict_alphadpp, eigvec, eigvals, alpha_hat):
     """ Given embedded points, and a decomposition of embedded covariance matrix, estimate RLS.
     Note that this is a different estimator than the one used in BLESS (i.e. :func:`dppy.bless.estimate_rls_bless`),
     which we use here for efficiency because we can recycle already embedded points and eigen-decomposition.
@@ -89,14 +89,14 @@ def estimate_rls_from_weighted_dict_eigendecomp(X_to_estimate, eval_L, dict_dppv
     :rtype:
         array_like
     """
-    W_sqrt = (1.0 / np.sqrt(dict_dppvfx.probs).reshape(-1, 1))
+    W_sqrt = (1.0 / np.sqrt(dict_alphadpp.probs).reshape(-1, 1))
     m = W_sqrt.shape[0]
 
     if not (eigvec.shape[0] == m):
         raise ValueError('Input eigendecomposition has wrong shape: {} {} {}'.format(m, eigvec.shape, eigvals.shape))
 
     diag_L_to_estimate = evaluate_L_diagonal(eval_L, X_to_estimate)
-    L_DX = eval_L(dict_dppvfx.X, X_to_estimate)
+    L_DX = eval_L(dict_alphadpp.X, X_to_estimate)
     L_DX *= W_sqrt
     E = eigvec.T.dot(L_DX)
     E *= np.sqrt(1.0/(alpha_hat * eigvals + 1.0)).reshape(-1, 1)
@@ -651,7 +651,7 @@ def alpha_dpp_sampling_do_sampling_loop(X_data,
             if len(idx_rls_to_recompute) > 0:
                 rls_estimate = estimate_rls_from_weighted_dict_eigendecomp(X_data[idx_rls_to_recompute, :],
                                                                            eval_L,
-                                                                           pc_state.dict_dppvfx,
+                                                                           pc_state.dict_alphadpp,
                                                                            pc_state.eigvecs_L_hat,
                                                                            pc_state.eigvals_L_hat,
                                                                            pc_state.alpha_hat)
