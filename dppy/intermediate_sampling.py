@@ -169,6 +169,8 @@ def vfx_sampling_precompute_constants(X_data, eval_L, rng,
         - result.s and result.z: approximations of the expected sample size of DPP(alpha_star * L) to be used in
         the sampling loop. For more details see [DeCaVa19]
         - result.rls_estimate: approximations of the RLS of all elements in X (i.e. in L)
+        - result.rej_to_first_sample: number of total rejections until first valid sample is generated. This is included
+        for debugging purposes and initialized to 0, to be later updated in the sampling loop.
         :rtype: _IntermediateSampleInfo
 
     """
@@ -314,7 +316,7 @@ def vfx_sampling_do_sampling_loop(X_data, eval_L, intermediate_sample_info, rng,
         :param _IntermediateSampleInfo intermediate_sample_info: Pre-computed information necessary for the
         vfx rejection sampling loop, as returned by :func:`vfx_sampling_precompute_constants.`
         :param np.random.RandomState rng: random source used for sampling
-        :param max_iter:
+        :param max_iter: maximum number of intermediate sample rejections before giving up.
         :type max_iter:
             int, default 1000
         :param bool verbose: controls verbosity of debug output, including progress bars.
@@ -418,7 +420,92 @@ def vfx_sampling_do_sampling_loop(X_data, eval_L, intermediate_sample_info, rng,
 def alpha_dpp_sampling_precompute_constants(X_data, eval_L, rng,
                                             desired_expected_size=None, rls_oversample_alphadpp=4.0,
                                             rls_oversample_bless=4.0, nb_iter_bless=None, verbose=True, **kwargs):
-    """TODO docs, for now see vfx docs"""
+    """Pre-compute quantities necessary for the alpha-dpp rejection sampling loop, such as the
+    inner Nystrom approximation, and the initial rescaling alpha_hat for the binary search.
+        :param array_like X_data: dataset such that L = eval_L(X_data), out of which we aresampling objects according
+        to a DPP
+        :param callable eval_L: likelihood function. Given two sets of n points X and m points Y, eval_L(X, Y) should
+        compute the (n x m) matrix containing the likelihood between points. The function should also
+        accept a single argument X and return eval_L(X) = eval_L(X, X).
+        As an example, see the implementation of any of the kernels provided by scikit-learn
+        (e.g. sklearn.gaussian_process.kernels.PairwiseKernel).
+        :param np.random.RandomState rng: random source used for sampling
+        :param desired_expected_size: desired expected sample size for the DPP. If None, use the natural DPP expected
+        sample size. The alpha DPP sampling algorithm can approximately adjust the expected sample size of the DPP by
+        rescaling the L matrix with a scalar alpha_star <= 1. Adjusting the expected sample size can be useful to
+        control downstream complexity, and it is necessary to improve the probability of drawing a sample with
+        exactly k elements when using alpha-dpp for k-DPP sampling. Currently only reducing the sample size is supported,
+        and the sampler will return an exception if the DPP sample has already a natural expected size
+        smaller than desired_expected_size.
+        :type desired_expected_size:
+            float or None, default None
+        :param rls_oversample_alphadpp: Oversampling parameter used to construct alpha_dpp's internal Nystrom
+        approximation. The rls_oversample_alphadpp >= 1 parameter is used to increase the rank of the approximation by
+        a rls_oversample_alphadpp factor. This makes each rejection round slower and more memory intensive,
+        but reduces variance and the number of rounds of rejections, so the actual runtime might increase or decrease.
+        Empirically, a small factor rls_oversample_alphadpp = [2,10] seems to work. It is suggested to start with
+        a small number and increase if the algorithm fails to terminate.
+        :type rls_oversample_alphadpp:
+            float, default 4.0
+        :param rls_oversample_bless: Oversampling parameter used during bless's internal Nystrom approximation.
+        Note that this is a different Nystrom approximation than the one related to :func:`rls_oversample_alphadpp`,
+        and can be tuned separately.
+        The rls_oversample_bless >= 1 parameter is used to increase the rank of the approximation by
+        a rls_oversample_bless factor. This makes the one-time pre-processing slower and more memory intensive,
+        but reduces variance and the number of rounds of rejections, so the actual runtime might increase or decrease.
+        Empirically, a small factor rls_oversample_bless = [2,10] seems to work. It is suggested to start with
+        a small number and increase if the algorithm fails to terminate or is not accurate.
+        :type rls_oversample_bless:
+            float, default 4.0
+        :param int nb_iter_bless:  iterations for BLESS, if None it is set to log(n)
+        :type nb_iter_bless:
+            int or None, default None
+        :param bool verbose: controls verbosity of debug output, including progress bars.
+        The progress bar reports the inner execution of the bless algorithm, showing:
+            - lam: lambda value of the current iteration (where lambda = 1/alpha)
+            - m: current size of the dictionary (number of centers contained)
+            - m_expected: expected size of the dictionary before sampling
+            - probs_dist: (mean, max, min) of the approximate rlss at the current iteration
+        :return: Pre-computed information necessary for the alpha-dpp rejection sampling loop with fields
+        - result.alpha_hat: estimate of the optimal rescaling such that the expected sample size of DPP(alpha_hat * L)
+        is equal to a user-indicated constant desired_expected_size, or 1.0 if no such constant was specified
+        by the user. It is used to initialize the binary search when sampling from a k-DPP
+        - result.alpha_min: lower bound on the optimal rescaling to be used in the binary search when sampling from
+        a k-DPP, or alpha_hat if desired_expected_size is none and no search is going to be performed.
+        - result.alpha_max: upper bound on the optimal rescaling to be used in the binary search when sampling from
+        a k-DPP, or alpha_hat if desired_expected_size is none and no search is going to be performed.
+        - result.k: size of the k-DPP to be used in the sampling loop, or -1 if the precomputation is done for a random
+        size DPP.
+        - result.eigvals_L_hat: eigenvalues and eigenvectors of the L_hat matrix, to be used in the rls nystrom
+        approximation and when computing accepting probabilities.
+        - result.eigvals_L_hat: see above.
+         size of the k-DPP to be used in the sampling loop, or -1 if the precomputation is done for a random
+        - result.deff_alpha_L_hat: approximations of the expected sample size of DPP(alpha_star * L) to be used in
+        the sampling loop. For more details see [CaDeVa20]
+        - result.diag_L: pre-computed diagonal of the L matrix to be used as an upper bound of the marginal inclusion
+        probabilities. Can be replaced with any known bound on the diagonal entries
+        - result.rls_upper_bound: a vector containing upper bounds for the ridge leverage scores (RLS), a.k.a.
+        the marginals of the DPP. These are either computed using the diagonal of the L matrix, or some estimate
+        based on Nystrom approximation.
+        - result.rls_upper_bound_valid: a boolean vector indicating whether the upper bound is considered tight enough
+        to be valid, or should be recomputed. A bound starts as invalid when it is set to a multiple of the diagonal of
+        L, and is then made valid when it is estimated using the Nystrom approximation. Afterward, the bound is never
+        recomputed unless a loss of accuracy happens, which mostly triggers when the alpha rescaling is changed
+        and the marginals must be re-estimated.
+        - result.r: placeholder r constant used for alpha-dpp sampling, to be replaced by the user before the sampling loop
+        - result.dict_alphadpp: pre-computed dictionary used to generate L_hat. The full object is kept around to
+        have access to the inclusion probabilities used when constructing L_hat.
+        - result.alpha_switches: number of times the alpha parameter has been changed during the binary search. This is
+        included for debugging purposes and initialized to 0, to be later updated in the sampling loop.
+        - result.rej_to_first_sample: number of trials until first valid sample is generated. This is included
+        for debugging purposes and initialized to 0, to be later updated in the sampling loop. Each trial correspond
+        to an alpha-dpp sample in the binary search procedure, and can accounts for many rejections. Multiple trials
+        are necessary before deciding to switch the alpha value in the binary search.
+        - result.rej_to_first_sample: number of total rejections until first valid sample is generated. This is included
+        for debugging purposes and initialized to 0, to be later updated in the sampling loop.
+        :rtype: _IntermediateSampleInfoAlphaRescale
+
+    """
     diag_L = evaluate_L_diagonal(eval_L, X_data)
 
     # Phase 0: compute initial dictionary D_bless with small rls_oversample_bless
@@ -511,11 +598,11 @@ def alpha_dpp_sampling_precompute_constants(X_data, eval_L, rng,
                                                  eigvals_L_hat=eigvals_L_hat,
                                                  eigvecs_L_hat=eigvecs_L_hat,
                                                  deff_alpha_L_hat=deff_alpha_L_hat,
+                                                 diag_L=diag_L,
                                                  rls_upper_bound=alpha_hat * diag_L,
                                                  rls_upper_bound_valid=np.full((diag_L.shape[0],), False),
                                                  r=-1,
                                                  dict_alphadpp=dict_alphadpp,
-                                                 diag_L=diag_L,
                                                  alpha_switches=0,
                                                  trial_to_first_sample=0,
                                                  rej_to_first_sample=0)
@@ -530,7 +617,34 @@ def alpha_dpp_sampling_do_sampling_loop(X_data,
                                         max_iter=1000,
                                         verbose=True,
                                         **kwargs):
-    """TODO docs, for now see vfx docs"""
+    """Given pre-computed information, run a rejection sampling loop to generate samples from an alpha-rescaled DPP,
+    where the alpha rescaling is provided as a field of the intermediate_sample_info structture.
+        :param array_like X_data: dataset such that L = eval_L(X_data), out of which we are sampling objects
+        according to a DPP
+        :param callable eval_L: likelihood function. Given two sets of n points X and m points Y, eval_L(X, Y) should
+        compute the (n x m) matrix containing the likelihood between points. The function should also
+        accept a single argument X and return eval_L(X) = eval_L(X, X).
+        As an example, see the implementation of any of the kernels provided by scikit-learn
+        (e.g. sklearn.gaussian_process.kernels.PairwiseKernel).
+        :param _IntermediateSampleInfoAlphaRescale intermediate_sample_info: Pre-computed information necessary for the
+        alpha-dpp rejection sampling loop, as returned by :func:`alpha_dpp_sampling_precompute_constants.`
+        :param np.random.RandomState rng: random source used for sampling
+        :param max_iter:  maximum number of intermediate sample rejections before giving up.
+        :type max_iter:
+            int, default 1000
+        :param bool verbose: controls verbosity of debug output, including progress bars.
+        The progress bar reports the execution of the rejection sampling loop, showing:
+            - acc_thresh: latest computed probability of acceptance
+            - rej_iter: iteration of the rejection sampling loop (i.e. rejections so far)
+        :type verbose:
+            bool, default True
+        :param dict kwargs: we add a unused catch all kwargs argument to make sure that the user can pass the
+        same set of parameters to both alpha_dpp_sampling_precompute_constants and alpha_dpp_sampling_do_sampling_loop.
+        This way if there is any spurious non-shared parameter (e.g. rls_oversample_bless) we simply ignore it.
+        :return: Sample from an alpha-rescaled DPP (as a list), number of rejections as int, and a modified copy of
+        intermediate_sample_info with updated estimates for the marginal inclusion probabilities (i.e. ridge leverage scores).
+        :rtype: tuple(list, int, _IntermediateSampleInfoAlphaRescale)
+    """
     # TODO: taking as input a catch-all kwargs can be misleading for the user. e.g. if there is a typo in a paremater
     # it will silently ignore it and use the default instead
 

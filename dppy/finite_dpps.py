@@ -277,6 +277,7 @@ class FiniteDPP:
                 - ``'Chol'`` :cite:`Pou19` Algorithm 1
                 - ``'KuTa12'``: Algorithm 1 in :cite:`KuTa12`
                 - ``'vfx'``: the dpp-vfx rejection sampler in :cite:`DeCaVa19`
+                - ``'alpha'``: the alpha-dpp rejection sampler in :cite:`CaDeVa20`
 
         :type mode:
             string, default ``'GS'``
@@ -293,6 +294,15 @@ class FiniteDPP:
                 + ``'rls_oversample_bless'`` (default 4.0) Oversampling parameter used during bless's internal Nystrom approximation. This makes the one-time pre-processing slower and more memory intensive, but reduces variance and the number of rounds of rejections
 
                 Empirically, a small factor [2,10] seems to work for both parameters. It is suggested to start with a small number and increase if the algorithm fails to terminate.
+            - If ``mode='alpha'``
+
+                See :py:meth:`~dppy.exact_sampling.alpha_k_dpp_sampler` for a full list of all parameters accepted by 'alpha' sampling. We report here the most impactful
+
+                + ``'rls_oversample_alphadpp'`` (default 4.0) Oversampling parameter used to construct alpha-dpp's internal Nystrom approximation. This makes each rejection round slower and more memory intensive, but reduces variance and the number of rounds of rejections.
+                + ``'rls_oversample_bless'`` (default 4.0) Oversampling parameter used during bless's internal Nystrom approximation. This makes the one-time pre-processing slower and more memory intensive, but reduces variance and the number of rounds of rejections
+
+                Empirically, a small factor [2,10] seems to work for both parameters. It is suggested to start with
+                a small number and increase if the algorithm fails to terminate.
 
         :return:
             Returns a sample from the corresponding :class:`FiniteDPP <FiniteDPP>` object. In any case, the sample is appended to the :py:attr:`~FiniteDPP.list_of_samples` attribute as a list.
@@ -477,6 +487,7 @@ class FiniteDPP:
                 - ``'GS_bis'``: Slight modification of ``'GS'``
                 - ``'KuTa12'``: Algorithm 1 in :cite:`KuTa12`
                 - ``'vfx'``: the dpp-vfx rejection sampler in :cite:`DeCaVa19`
+                - ``'alpha'``: the alpha-dpp rejection sampler in :cite:`CaDeVa20`
 
         :type mode:
             string, default ``'GS'``
@@ -492,6 +503,16 @@ class FiniteDPP:
 
                 + ``'rls_oversample_dppvfx'`` (default 4.0) Oversampling parameter used to construct dppvfx's internal Nystrom approximation. This makes each rejection round slower and more memory intensive, but reduces variance and the number of rounds of rejections.
                 + ``'rls_oversample_bless'`` (default 4.0) Oversampling parameter used during bless's internal Nystrom approximation. This makes the one-time pre-processing slower and more memory intensive, but reduces variance and the number of rounds of rejections
+
+                Empirically, a small factor [2,10] seems to work for both parameters. It is suggested to start with
+                a small number and increase if the algorithm fails to terminate.
+
+            - If ``mode='alpha'``
+                See :py:meth:`~dppy.exact_sampling.alpha_k_dpp_sampler` for a full list of all parameters accepted by 'alpha' sampling. We report here the most impactful
+
+                + ``'rls_oversample_alphadpp'`` (default 4.0) Oversampling parameter used to construct alpha-dpp's internal Nystrom approximation. This makes each rejection round slower and more memory intensive, but reduces variance and the number of rounds of rejections.
+                + ``'rls_oversample_bless'`` (default 4.0) Oversampling parameter used during bless's internal Nystrom approximation. This makes the one-time pre-processing slower and more memory intensive, but reduces variance and the number of rounds of rejections
+                + ``'early_stop'`` (default False) Wheter to return as soon as a k-DPP sample is drawn, or to continue with alpha-dpp internal binary search to make subsequent sampling faster.
 
                 Empirically, a small factor [2,10] seems to work for both parameters. It is suggested to start with
                 a small number and increase if the algorithm fails to terminate.
