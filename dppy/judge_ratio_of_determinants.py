@@ -1,5 +1,4 @@
 import numpy as np
-import scipy.linalg as la
 
 from dppy.utils import det_ST, check_random_state
 
@@ -18,39 +17,44 @@ def bound_min_max_eigvals(A):
 
 
 def lower_upper_bounds_bif_iterator(A, x, eig_A_min, eig_A_max):
-    """Compute lower and upper bounds on the bilinear inverse form :math:`x^{\top} A^{-1} x` using Gauss quadrature Lanczos.
+    """Compute lower and upper bounds on the bilinear inverse form :math:`x^{\top} A^{-1} x` using a combination of ideas involving Gauss quadrature, Lanczos and conjugate gradient methods :cite:`LiJeSr16`
+
+    .. seealso::
+
+        :cite:`LiJeSr16` Gaussian quadrature for matrix inverse forms with applications
     """
 
     beta = 0.0
     y_old, y = 1.0, 1.0
     c = 1.0
 
-    b, b_u, b_l, b_t = 0.0, 0.0, 0.0, 0.0
-    d, d_u, d_l = 1.0, 0.0, 0.0
+    # b, b_u provide lower bounds and b_u, b_t provide upper bounds
+    b, b_l, b_u, b_t = 0.0, 0.0, 0.0, 0.0
+    d, d_l, d_u = 1.0, 0.0, 0.0
     eta, eta_t = 1.0, 0.0
-    w, w_u, w_l, w_t = 0.0, eig_A_min, eig_A_max, 0.0
+    w, w_l, w_u, w_t = 0.0, eig_A_max, eig_A_min, 0.0
 
     norm2_x = x.dot(x)
 
-    u = x.copy()
-    norm2_u_old, norm2_u = norm2_x, 1.0
+    v = x.copy()
+    norm2_v_old, norm2_v = norm2_x, 1.0
 
-    p = u.copy()
+    p = v.copy()
     A_dot_p = np.dot(A, p)
 
     while True:
 
-        y = norm2_u_old / p.dot(A_dot_p)
+        y = norm2_v_old / p.dot(A_dot_p)
         w = 1.0 / y + beta / y_old
         y_old = y
 
-        u -= y * A_dot_p
-        norm2_u = u.dot(u)
+        v -= y * A_dot_p
+        norm2_v = v.dot(v)
 
-        beta = norm2_u / norm2_u_old
-        norm2_u_old = norm2_u
+        beta = norm2_v / norm2_v_old
+        norm2_v_old = norm2_v
 
-        p[:] = u + beta * p
+        p[:] = v + beta * p
         A_dot_p[:] = np.dot(A, p)
 
         c *= eta / d**2
@@ -78,7 +82,7 @@ def lower_upper_bounds_bif_iterator(A, x, eig_A_min, eig_A_max):
 
         yield lower_bound, upper_bound
 
-        if eta < 1e-10 or np.sqrt(norm2_u) < 1e-10:
+        if eta < 1e-10 or np.sqrt(norm2_v) < 1e-10:
             break
 
 
@@ -96,7 +100,13 @@ def judge_exchange_gauss_quadrature(unif, kernel, sample, x_del, y_add):
             p L_{x, S-x} L_{S-x}^{-1} L_{S-x, x}
             - L_{y, S-x} L_{S-x}^{-1} L_{S-x, y}
 
-    by computing upper and lower bounds on the two bilinear inverse terms obtained via gaussian quadrature.
+    Here u = ``unif``, L = ``kernel``, S = ``sample``, x = ``x_del`` and y = ``y_add``
+
+    This is done by computing upper and lower bounds on the two bilinear inverse terms using :py:func:`lower_upper_bounds_bif_iterator`.
+
+    .. seealso::
+
+        :cite:`LiJeSr16` Gaussian quadrature for matrix inverse forms with applications
     """
 
     S = sample.copy()

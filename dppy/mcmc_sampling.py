@@ -16,7 +16,6 @@ import numpy as np
 import scipy.linalg as la
 
 from dppy.utils import det_ST, check_random_state
-from dppy.
 
 
 ############################################
@@ -137,7 +136,7 @@ def add_exchange_delete_sampler(kernel, s_init=None, nb_iter=10, t_max=None,
     """ MCMC sampler for generic DPPs, it is a mix of add/delete and basis exchange MCMC samplers.
 
     :param kernel:
-        Kernel martrix
+        Kernel matrix
     :type kernel:
         array_like
 
@@ -162,7 +161,7 @@ def add_exchange_delete_sampler(kernel, s_init=None, nb_iter=10, t_max=None,
         None, np.random, int, np.random.RandomState
 
     :return:
-        list of `nb_iter` approximate sample of DPP(kernel)
+        list of `nb_iter` approximate samples of DPP(kernel)
     :rtype:
         array_like
 
@@ -233,7 +232,7 @@ def add_exchange_delete_sampler_refactored(kernel, s_init=None, nb_iter=10, t_ma
     """ MCMC sampler for generic DPPs, it is a mix of add/delete and basis exchange MCMC samplers.
 
     :param kernel:
-        Kernel martrix
+        Kernel matrix
     :type kernel:
         array_like
 
@@ -258,7 +257,7 @@ def add_exchange_delete_sampler_refactored(kernel, s_init=None, nb_iter=10, t_ma
         None, np.random, int, np.random.RandomState
 
     :return:
-        list of `nb_iter` approximate sample of DPP(kernel)
+        list of `nb_iter` approximate samples of DPP(kernel)
     :rtype:
         array_like
 
@@ -327,7 +326,7 @@ def add_delete_sampler(kernel, s_init, nb_iter=10, t_max=None,
     """ MCMC sampler for generic DPP(kernel), it performs local moves by removing/adding one element at a time.
 
     :param kernel:
-        Kernel martrix
+        Kernel matrix
     :type kernel:
         array_like
 
@@ -353,7 +352,7 @@ def add_delete_sampler(kernel, s_init, nb_iter=10, t_max=None,
         None, np.random, int, np.random.RandomState
 
     :return:
-        list of `nb_iter` approximate sample of DPP(kernel)
+        list of `nb_iter` approximate samples of DPP(kernel)
     :rtype:
         array_like
 
@@ -404,7 +403,7 @@ def add_delete_sampler_refactored(kernel, s_init, nb_iter=10, t_max=None,
     """ MCMC sampler for generic DPP(kernel), it performs local moves by removing/adding one element at a time.
 
     :param kernel:
-        Kernel martrix
+        Kernel matrix
     :type kernel:
         array_like
 
@@ -430,9 +429,9 @@ def add_delete_sampler_refactored(kernel, s_init, nb_iter=10, t_max=None,
         None, np.random, int, np.random.RandomState
 
     :return:
-        list of `nb_iter` approximate sample of DPP(kernel)
+        list of `nb_iter` approximate samples of DPP(kernel)
     :rtype:
-        array_like
+        list of lists
 
     .. seealso::
 
@@ -511,7 +510,7 @@ def exchange_sampler(kernel, s_init, nb_iter=10, t_max=None,
     :return:
         MCMC chain of approximate sample (stacked row_wise i.e. nb_iter rows).
     :rtype:
-        array_like
+        list of lists
 
     .. seealso::
 
@@ -600,7 +599,7 @@ def exchange_sampler_refactored(kernel, s_init, nb_iter=10, t_max=None,
     :return:
         MCMC chain of approximate sample (stacked row_wise i.e. nb_iter rows).
     :rtype:
-        array_like
+        list of lists
 
     .. seealso::
 
@@ -670,7 +669,7 @@ def exchange_sampler_gauss_quadrature(kernel, s_init, nb_iter=10, t_max=None, ra
         if t_max and time.time() - t_start < t_max:
             break
 
-    return chain
+    return chain.tolist()
 
 
 ############
@@ -735,7 +734,7 @@ def zonotope_sampler(A_zono, **params):
     :return:
         MCMC chain of approximate samples (stacked row_wise i.e. nb_iter rows).
     :rtype:
-        array_like
+        list of lists
 
     .. seealso::
 
