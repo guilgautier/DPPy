@@ -24,7 +24,7 @@ setup(
     # Versions should comply with PEP440.  For a discussion on single-sourcing
     # the version across setup.py and the project code, see
     # https://packaging.python.org/en/latest/single_source_version.html
-    version='0.3.1b1',
+    version='0.3.1',
 
     description='DPPy is a Python library for exact and approximate sampling of Determinantal Point Processes.',
     long_description=long_description,
