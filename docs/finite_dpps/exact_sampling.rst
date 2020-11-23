@@ -8,11 +8,31 @@ Exact sampling
 Consider a finite DPP defined by its correlation kernel :math:`\mathbf{K}` :eq:`eq:inclusion_proba_DPP_K` or likelihood kernel :math:`\mathbf{L}` :eq:`eq:likelihood_DPP_L`.
 There exist three main types of exact sampling procedures:
 
-1. The spectral method requires the eigendecomposition of the correlation kernel :math:`\mathbf{K}` or the likelihood kernel :math:`\mathbf{L}`. It is based on the fact that :ref:`generic DPPs are mixtures of projection DPPs <finite_dpps_mixture>` together with the application of the chain rule to sample projection DPPs. It is presented in Section :ref:`finite_dpps_exact_sampling_spectral_method`.
+1. The spectral method (used by default) requires the eigendecomposition of the correlation kernel :math:`\mathbf{K}` or the likelihood kernel :math:`\mathbf{L}`. It is based on the fact that :ref:`generic DPPs are mixtures of projection DPPs <finite_dpps_mixture>` together with the application of the chain rule to sample projection DPPs. It is presented in Section :ref:`finite_dpps_exact_sampling_spectral_method`.
 
-2. A Cholesky-based procedure which requires the correlation kernel :math:`\mathbf{K}` (even non-Hermitian!). It boilds down to applying the chain rule on sets; where each item in turn is decided to be excluded or included in the sample. It is presented in Section :ref:`finite_dpps_exact_sampling_cholesky_method`.
+2. A Cholesky-based procedure which requires the correlation kernel :math:`\mathbf{K}` (even non-Hermitian!). It boils down to applying the chain rule on sets; where each item in turn is decided to be excluded or included in the sample. It is presented in Section :ref:`finite_dpps_exact_sampling_cholesky_method`.
 
-3. Recently, :cite:`DeCaVa19` have also proposed an alternative method to get exact samples: first sample an intermediate distribution and correct the bias by thinning the intermediate sample using a carefully designed DPP. It is presented in Section :ref:`finite_dpps_exact_sampling_intermediate_sampling_method`.
+3. Recently, :cite:`DeCaVa19` have also proposed an alternative method to get exact samples: first sample an intermediate distribution and correct the bias by thinning the intermediate sample using a carefully designed DPP. This approach does not require a Cholesky/Eigen-decomposition of the DPP, but the runtime instead scale with the expected sample size of the DPP (see :ref:`finite_dpps_number_of_points`). It is presented in Section :ref:`finite_dpps_exact_sampling_intermediate_sampling_method`. A more refined procedure based on this approach was introduced in :cite:`CaDeVa20` for k-DPP sampling.
+
+The following table summarizes the complexity of all exact samplers currently available,
+where the expected sample size :math:`\mathbb{E}[|X|]` is equal to :math:`k` for k-DPPs
+and :math:`d_{\text{eff}}` for random-sized DPPs.
+
++-----------------------+--------------+--------------------------------------+--------------------------------------+--------------------------------------+--------------------------------------+------------------------------------------------------------------------------+
+|                       | ``mode=``    | Time to first sample                                                        |Time to subsequent samples                                                   | Notes                                                                        |
++                       +              +--------------------------------------+--------------------------------------+--------------------------------------+--------------------------------------+                                                                              +
+|                       |              | DPP                                  |  k-DPP                               | DPP                                  |  k-DPP                               |                                                                              |
++=======================+==============+======================================+======================================+======================================+======================================+==============================================================================+
+| Spectral sampler      |``"GS"``,     | :math:`O(n^3)`                       |:math:`O(n^3)`                        |:math:`O(n d_{\text{eff}}^2)`         |:math:`O(n k^2)`                      | The three variants differ slightly,                                          |
+|                       |``"GS_bis"``, |                                      |                                      |                                      |                                      | and depending on the DPP they can                                            |
+|                       |``"KuTa12"``  |                                      |                                      |                                      |                                      | have different numerical stability.                                          |
++-----------------------+--------------+--------------------------------------+--------------------------------------+--------------------------------------+--------------------------------------+------------------------------------------------------------------------------+
+| Cholesky sampler      | ``"chol"``   | :math:`O(n^3)`                       |:math:`O(n^3)`                        |:math:`O(n d_{\text{eff}}^2)`         |:math:`O(n k^2)`                      | Also works for non-Hermitian DPPs.                                           |
++-----------------------+--------------+--------------------------------------+--------------------------------------+--------------------------------------+--------------------------------------+------------------------------------------------------------------------------+
+| Intermediate sampler  | ``"vfx"``    | :math:`O(n d_{\text{eff}}^6)`        |:math:`O(n k^{10} + k^{15})`          |:math:`O(d_{\text{eff}}^6)`           |:math:`O(k^6)`                        | For `"alpha"` we report worst case runtime, but depending on the DPP         |
++                       +--------------+--------------------------------------+--------------------------------------+--------------------------------------+--------------------------------------+ structure best case runtime can be much faster than `"vfx"`. For particularly|
+|                       | ``"alpha"``  | :math:`O(n d_{\text{eff}}^5)`        |:math:`O(n k^6/d_{\text{eff}} + k^9)` |:math:`O(d_{\text{eff}}^6)`           |:math:`O(k^6)`                        | ill-posed DPPs `"vfx"` can be more numerically stable.                       |
++-----------------------+--------------+--------------------------------------+--------------------------------------+--------------------------------------+--------------------------------------+------------------------------------------------------------------------------+
 
 .. note::
 
@@ -551,7 +571,7 @@ This method is based on the concept of a **distortion-free intermediate sample**
 
 	\mathbb{P}[i \in \mathcal{X}] = \big[\mathbf{L}(I + \mathbf{L})^{-1}\big]_{ii}=\tau_i,\quad i\text{th 1-ridge leverage score}.
 
-Suppose that we draw a sample of :math:`t` points i.i.d. proportional to ridge leverage scores, i.e., :math:`\sigma=(\sigma_1, \sigma_2,...,\sigma_t)` such that :math:`\mathbb{P}[\sigma_j=i]\propto\tau_i`. Intuitively, this sample is similar fo :math:`\mathcal{X}\sim \operatorname{DPP}(\mathbf{L})` except that it "ignores" all the dependencies between the points. However, if we sample sufficiently many points i.i.d. according to RLS, then a proper sample :math:`\mathcal{X}` will likely be contained within it. This can be formally shown for :math:`t = O(\mathbb{E}[|\mathcal{X}|]^2)`. When :math:`\mathbb{E}[|\mathcal{X}|]^2\ll N`, then this allows us to reduce the size of the DPP kernel :math:`\mathbf{L}` from :math:`N\times N` to a much smaller size :math:`\mathbf{\tilde{L}}` :math:`t\times t`. Making this sampling exact requires considerably more care, because even with a large :math:`t` there is always a small probability that the i.i.d. sample :math:`\sigma` is not sufficiently diverse. We guard against this possibility by rejection sampling.
+Suppose that we draw a sample :math:`\sigma` of :math:`t` points i.i.d. proportional to ridge leverage scores, i.e., :math:`\sigma=(\sigma_1, \sigma_2,...,\sigma_t)` such that :math:`\mathbb{P}[\sigma_j=i]\propto\tau_i`. Intuitively, this sample is similar fo :math:`\mathcal{X}\sim \operatorname{DPP}(\mathbf{L})` because the marginals are the same, but it "ignores" all the dependencies between the points. However, if we sample sufficiently many points i.i.d. according to RLS, then a proper sample :math:`\mathcal{X}` will likely be contained within :math:`\sigma`. This can be formally shown for :math:`t = O(\mathbb{E}[|\mathcal{X}|]^2)`. When :math:`\mathbb{E}[|\mathcal{X}|]^2\ll N`, then this allows us to reduce the size of the DPP kernel :math:`\mathbf{L}` from :math:`N\times N` to a much smaller size :math:`\mathbf{\tilde{L}}` :math:`t\times t`. Making this sampling exact requires considerably more care, because even with a large :math:`t` there is always a small probability that the i.i.d. sample :math:`\sigma` is not sufficiently diverse. We guard against this possibility by rejection sampling.
 
 .. important::
    Use this method for sampling  :math:`\mathcal{X} \sim \operatorname{DPP}(\mathbf{L})` when :math:`\mathbb{E}\left[|\mathcal{X}|\right]\ll\sqrt{N}`.
@@ -559,9 +579,10 @@ Suppose that we draw a sample of :math:`t` points i.i.d. proportional to ridge l
    - Preprocessing costs :math:`\mathcal{O}\big(N\cdot \text{poly}(\mathbb{E}\left[|\mathcal{X}|\right])\, \text{polylog}(N)\big)`.
    - Each sample costs :math:`\mathcal{O}\big(\mathbb{E}[|\mathcal{X}|]^6\big)`.
 
+   There are two implementations of intermediate sampling available in :code:`dppy`: the :code:`mode='vfx'` sampler and the :code:`mode='alpha'` sampler.
+
 In practice
 ===========
-
 .. testcode::
 
     from numpy.random import RandomState

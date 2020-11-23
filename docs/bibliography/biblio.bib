@@ -179,16 +179,16 @@ year = {2013}
   abstract = 	 { Given a fixed $n\times d$ matrix $\mathbf{X}$, where $n\gg d$, we study the complexity of sampling from a  distribution over all subsets of rows where the probability of a subset is proportional to the squared volume of the parallelepiped spanned by the rows (a.k.a. a determinantal point process). In this task, it is important to minimize the preprocessing cost of the procedure (performed once) as well as the  sampling cost (performed repeatedly). To that end, we propose a new determinantal point process algorithm which has the following two properties, both of which are novel: (1) a preprocessing step which runs in time $O\big(\text{number-of-non-zeros}(\mathbf{X})\cdot\log n\big)+\text{poly}(d)$, and (2) a sampling step which runs in $\text{poly}(d)$ time, independent of the number of rows $n$. We achieve this by introducing a new \textit{regularized} determinantal point process (R-DPP), which serves as an intermediate distribution in the sampling procedure by reducing the number of rows from $n$ to $\text{poly}(d)$. Crucially, this intermediate distribution does not distort the probabilities of the target sample. Our key novelty in defining the R-DPP  is the use of a Poisson random variable for controlling the probabilities of different subset sizes, leading to new determinantal formulas such as the normalization constant for this distribution. Our algorithm has applications in many diverse areas where determinantal point processes have been used, such as  machine learning, stochastic optimization, data summarization and low-rank matrix reconstruction.}
 }
 @inproceedings{DeCaVa19,
-abstract = {We study the complexity of sampling from a distribution over all index subsets of the set {\{}1, ..., n{\}} with the probability of a subset S proportional to the determinant of the submatrix L S of some n × n p.s.d. matrix L, where L S corresponds to the entries of L indexed by S. Known as a de-terminantal point process (DPP), this distribution is widely used in machine learning to induce diversity in subset selection. In practice, we often wish to sample multiple subsets S with small expected size k = E[|S|] n from a very large matrix L, so it is important to minimize the pre-processing cost of the procedure (performed once) as well as the sampling cost (performed repeatedly). To that end, we propose a new algorithm which, given access to L, samples exactly from a DPP while satisfying the following two properties: (1) its preprocessing cost is n {\textperiodcentered} poly(k) (sublinear in the size of L) and (2) its sampling cost is poly(k) (independent of the size of L). Prior to this work, state-of-the-art exact samplers required O(n 3) preprocessing time and sampling time linear in n or dependent on L's spectrum.},
-archivePrefix = {arXiv},
-arxivId = {1905.13476},
 author = {Derezi{\'{n}}ski, Michal and Calandriello, Daniele and Valko, Michal},
-booktitle = {Workshop on Negative Dependence in Machine Learning, International Conference on Machine Learning (ICML)},
-eprint = {1905.13476},
-file = {:Users/ggautier/Documents/Mendeley Desktop/Derez{\'{i}}, Calandriello, Valko - 2019 - Exact sampling of determinantal point processes with sublinear time preprocessing.pdf:pdf},
 title = {{Exact sampling of determinantal point processes with sublinear time preprocessing}},
-url = {https://negative-dependence-in-ml-workshop.lids.mit.edu/wp-content/uploads/sites/29/2019/06/icml.pdf},
+booktitle={Advances in Neural Information Processing Systems},
 year = {2019}
+}
+@inproceedings{CaDeVa20,
+author = {Calandriello, Daniele and Derezi{\'{n}}ski, Michal and Valko, Michal},
+title = {{Sampling from a k-DPP without looking at all items}},
+booktitle={Advances in Neural Information Processing Systems},
+year = {2020}
 }
 @incollection{DeWaHs18,
 title = {Leveraged volume sampling for linear regression},
