@@ -162,7 +162,7 @@ where :math:`\mathbf{K}_{i-1} = \left[\left\langle \Phi(x_p)^{\top} \Phi(x_q) \r
     - Some :ref:`beta_ensembles_definition_OPE` (specific instances of projection DPPs) can be :ref:`sampled <beta_ensembles_sampling>` in :math:`\mathcal{O}(r^2)` by computing the eigenvalues of properly randomised tridiagonal matrices.
     - The :ref:`multivariate Jacobi ensemble <multivariate_jacobi_ope>` whose :py:meth:`~dppy.multivariate_jacobi_ope.MultivariateJacobiOPE.sample` method relies on the chain rule described by :eq:`eq:continuous_dpps_exact_sampling_projection_DPP_chain_rule_geometric`.
 
-.. _finite_dpps_exact_sampling_spectral_method:
+.. _continuous_dpps_exact_sampling_spectral_method:
 
 Generic DPPs: the spectral method
 ---------------------------------
