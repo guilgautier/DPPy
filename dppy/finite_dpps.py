@@ -286,6 +286,7 @@ class FiniteDPP:
             Dictionary containing the parameters for exact samplers with keys
 
             - ``'random_state'`` (default None)
+
             - If ``mode='vfx'``
 
                 See :py:meth:`~dppy.exact_sampling.dpp_vfx_sampler` for a full list of all parameters accepted by 'vfx' sampling. We report here the most impactful
@@ -294,6 +295,7 @@ class FiniteDPP:
                 + ``'rls_oversample_bless'`` (default 4.0) Oversampling parameter used during bless's internal Nystrom approximation. This makes the one-time pre-processing slower and more memory intensive, but reduces variance and the number of rounds of rejections
 
                 Empirically, a small factor [2,10] seems to work for both parameters. It is suggested to start with a small number and increase if the algorithm fails to terminate.
+
             - If ``mode='alpha'``
 
                 See :py:meth:`~dppy.exact_sampling.alpha_k_dpp_sampler` for a full list of all parameters accepted by 'alpha' sampling. We report here the most impactful
@@ -377,11 +379,12 @@ class FiniteDPP:
             if "random_state" in params:
                 r_state_outer = params.pop("random_state", None)
 
-            sampl, self.intermediate_sample_info = alpha_dpp_sampler(self.intermediate_sample_info,
-                                                                     self.X_data,
-                                                                     self.eval_L,
-                                                                     random_state=rng,
-                                                                     **params)
+            sampl, self.intermediate_sample_info = alpha_dpp_sampler(
+                                                self.intermediate_sample_info,
+                                                self.X_data,
+                                                self.eval_L,
+                                                random_state=rng,
+                                                **params)
             if r_state_outer:
                 params["random_state"] = r_state_outer
 
@@ -573,12 +576,13 @@ class FiniteDPP:
             if "random_state" in params:
                 r_state_outer = params.pop("random_state", None)
 
-            sampl, self.intermediate_sample_info = alpha_k_dpp_sampler(size,
-                                                                       self.intermediate_sample_info,
-                                                                       self.X_data,
-                                                                       self.eval_L,
-                                                                       random_state=rng,
-                                                                       **params)
+            sampl, self.intermediate_sample_info = alpha_k_dpp_sampler(
+                                                size,
+                                                self.intermediate_sample_info,
+                                                self.X_data,
+                                                self.eval_L,
+                                                random_state=rng,
+                                                **params)
 
             if r_state_outer:
                 params["random_state"] = r_state_outer

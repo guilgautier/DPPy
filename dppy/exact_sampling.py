@@ -398,7 +398,7 @@ def dpp_eig_vecs_selector(ber_params, eig_vecs,
 # Sample projection kernel VV.T where V are the eigvecs selected in Phase 1.
 def proj_dpp_sampler_eig(eig_vecs, mode='GS', size=None,
                          random_state=None):
-    """ Sample from projection :math:`\\operatorname{DPP}(K)` using the eigendecomposition of the projection kernel :math:`K=VV^{\top}` where :math:`V^{\top}V = I_r` and :math:`r=\\operatorname{rank}(\\mathbf{K})`.
+    """ Sample from projection :math:`\\operatorname{DPP}(K)` using the eigendecomposition of the projection kernel :math:`K=VV^{\\top}` where :math:`V^{\\top}V = I_r` and :math:`r=\\operatorname{rank}(\\mathbf{K})`.
 
     .. seealso::
 
@@ -443,11 +443,11 @@ def proj_dpp_sampler_eig(eig_vecs, mode='GS', size=None,
 # Using Gram-Schmidt orthogonalization
 def proj_dpp_sampler_eig_GS(eig_vecs, size=None,
                             random_state=None):
-    """ Sample from projection :math:`\\operatorname{DPP}(K)` using the eigendecomposition of the projection kernel :math:`K=VV^{\top}` where :math:`V^{\top}V = I_r` and :math:`r=\\operatorname{rank}(\\mathbf{K})`.
+    """ Sample from projection :math:`\\operatorname{DPP}(K)` using the eigendecomposition of the projection kernel :math:`K=VV^{\\top}` where :math:`V^{\\top}V = I_r` and :math:`r=\\operatorname{rank}(\\mathbf{K})`.
     It performs sequential update of Cholesky decomposition, which is equivalent to Gram-Schmidt orthogonalization of the rows of the eigenvectors.
 
     :param eig_vecs:
-        Eigenvectors used to form projection kernel :math:`K=VV^{\top}`.
+        Eigenvectors used to form projection kernel :math:`K=VV^{\\top}`.
     :type eig_vecs:
         array_like
 
@@ -506,11 +506,11 @@ def proj_dpp_sampler_eig_GS(eig_vecs, size=None,
 
 # Slight modif of Gram-Schmidt above
 def proj_dpp_sampler_eig_GS_bis(eig_vecs, size=None, random_state=None):
-    """ Sample from projection :math:`\\operatorname{DPP}(K)` using the eigendecomposition of the projection kernel :math:`K=VV^{\top}` where :math:`V^{\top}V = I_r` and :math:`r=\\operatorname{rank}(\\mathbf{K})`.
+    """ Sample from projection :math:`\\operatorname{DPP}(K)` using the eigendecomposition of the projection kernel :math:`K=VV^{\\top}` where :math:`V^{\\top}V = I_r` and :math:`r=\\operatorname{rank}(\\mathbf{K})`.
     It performs sequential Gram-Schmidt orthogonalization of the rows of the eigenvectors.
 
     :param eig_vecs:
-        Eigenvectors used to form projection kernel :math:`K=VV^{\top}`.
+        Eigenvectors used to form projection kernel :math:`K=VV^{\\top}`.
     :type eig_vecs:
         array_like
 
@@ -663,7 +663,11 @@ def proj_dpp_sampler_eig_KuTa12(eig_vecs, size=None, random_state=None):
     return sampl.tolist()
 
 
-def dpp_vfx_sampler(intermediate_sample_info, X_data, eval_L, random_state=None, **params):
+def dpp_vfx_sampler(intermediate_sample_info,
+                    X_data,
+                    eval_L,
+                    random_state=None,
+                    **params):
     """ First pre-compute quantities necessary for the vfx rejection sampling loop, such as the inner Nystrom approximation, and the RLS of all elements in :math:`\\mathbf{L}`.
     Then, given the pre-computed information,run a rejection sampling loop to generate DPP samples.
 
@@ -771,7 +775,12 @@ def dpp_vfx_sampler(intermediate_sample_info, X_data, eval_L, random_state=None,
 
     return sampl, intermediate_sample_info
 
-def alpha_dpp_sampler(intermediate_sample_info, X_data, eval_L, random_state=None, **params):
+
+def alpha_dpp_sampler(intermediate_sample_info,
+                      X_data,
+                      eval_L,
+                      random_state=None,
+                      **params):
     """ First pre-compute quantities necessary for the alpha-dpp rejection sampling loop, such as the inner Nystrom
     approximation, and the and the initial rescaling alpha_hat for the binary search.
     Then, given the pre-computed information,run a rejection sampling loop to generate samples from DPP(alpha * L).
@@ -862,13 +871,20 @@ def alpha_dpp_sampler(intermediate_sample_info, X_data, eval_L, random_state=Non
     rng = check_random_state(random_state)
 
     if intermediate_sample_info is None:
-        intermediate_sample_info = alpha_dpp_sampling_precompute_constants(X_data=X_data, eval_L=eval_L,
-                                                                           rng=rng, **params)
+        intermediate_sample_info = alpha_dpp_sampling_precompute_constants(
+                                    X_data=X_data,
+                                    eval_L=eval_L,
+                                    rng=rng,
+                                    **params)
 
         r_func = params.get('r_func', lambda r: r)
         intermediate_sample_info = intermediate_sample_info._replace(r=r_func(intermediate_sample_info.deff_alpha_L_hat))
 
-    sampl, rej_count, intermediate_sample_info = alpha_dpp_sampling_do_sampling_loop(X_data, eval_L, intermediate_sample_info, rng, **params)
+    sampl, rej_count, intermediate_sample_info = alpha_dpp_sampling_do_sampling_loop(X_data,
+                                            eval_L,
+                                            intermediate_sample_info,
+                                            rng,
+                                            **params)
 
     return sampl, intermediate_sample_info
 
@@ -876,7 +892,12 @@ def alpha_dpp_sampler(intermediate_sample_info, X_data, eval_L, random_state=Non
 # k-DPPs #
 ##########
 
-def k_dpp_vfx_sampler(size, intermediate_sample_info, X_data, eval_L, random_state=None, **params):
+def k_dpp_vfx_sampler(size,
+                      intermediate_sample_info,
+                      X_data,
+                      eval_L,
+                      random_state=None,
+                      **params):
     """ First pre-compute quantities necessary for the vfx rejection sampling loop, such as the inner Nystrom approximation, and the RLS of all elements in :math:`\\mathbf{L}`.
     Then, given the pre-computed information,run a rejection sampling loop to generate DPP samples.
     To guarantee that the returned sample has size ``size``, we internally set desired_expected_size=size and
@@ -988,7 +1009,12 @@ def k_dpp_vfx_sampler(size, intermediate_sample_info, X_data, eval_L, random_sta
     max_iter_size_rejection = params.get('max_iter_size_rejection', 100)
 
     for size_rejection_iter in range(max_iter_size_rejection):
-        sampl, rej_count = vfx_sampling_do_sampling_loop(X_data, eval_L, intermediate_sample_info, rng, **params)
+        sampl, rej_count = vfx_sampling_do_sampling_loop(
+                                X_data,
+                                eval_L,
+                                intermediate_sample_info,
+                                rng,
+                                **params)
 
         intermediate_sample_info = intermediate_sample_info._replace(rej_to_first_sample=intermediate_sample_info.rej_to_first_sample + rej_count)
         if len(sampl) == size:
@@ -1002,7 +1028,12 @@ def k_dpp_vfx_sampler(size, intermediate_sample_info, X_data, eval_L, random_sta
     return sampl, intermediate_sample_info
 
 
-def alpha_k_dpp_sampler(size, intermediate_sample_info, X_data, eval_L, random_state=None, **params):
+def alpha_k_dpp_sampler(size,
+                        intermediate_sample_info,
+                        X_data,
+                        eval_L,
+                        random_state=None,
+                        **params):
     """ First pre-compute quantities necessary for the alpha-dpp rejection sampling loop, such as the inner Nystrom
     approximation, the and the initial rescaling alpha_hat for the binary search.
     Then, given the pre-computed information,run a rejection sampling loop to generate k-DPP samples.
@@ -1102,16 +1133,16 @@ def alpha_k_dpp_sampler(size, intermediate_sample_info, X_data, eval_L, random_s
     rng = check_random_state(random_state)
 
     if intermediate_sample_info is None or intermediate_sample_info.k != size:
-        intermediate_sample_info = alpha_dpp_sampling_precompute_constants(X_data=X_data,
-                                                                             eval_L=eval_L,
-                                                                             desired_expected_size=size,
-                                                                             rng=rng,
-                                                                             **params)
+        intermediate_sample_info = alpha_dpp_sampling_precompute_constants(
+                                        X_data=X_data,
+                                        eval_L=eval_L,
+                                        desired_expected_size=size,
+                                        rng=rng,
+                                        **params)
 
         r_func = params.get('r_func', lambda r: r)
 
         intermediate_sample_info = intermediate_sample_info._replace(r=r_func(intermediate_sample_info.deff_alpha_L_hat))
-
 
     max_iter_size_rejection = params.get('max_iter_size_rejection', 100)
     number_trial_search = np.ceil(np.sqrt(size)).astype('int')
@@ -1135,9 +1166,11 @@ def alpha_k_dpp_sampler(size, intermediate_sample_info, X_data, eval_L, random_s
 
     trial_count_overall = 0
     for size_rejection_iter in range(max_iter_size_rejection):
-        sampl, rej_count, intermediate_sample_info = alpha_dpp_sampling_do_sampling_loop(X_data, eval_L,
-                                                                                         intermediate_sample_info, rng,
-                                                                                         **params)
+        sampl, rej_count, intermediate_sample_info = alpha_dpp_sampling_do_sampling_loop(X_data,
+                                                eval_L,
+                                                intermediate_sample_info,
+                                                rng,
+                                                **params)
 
         trial_count += 1
         trial_count_overall += 1
@@ -1145,9 +1178,9 @@ def alpha_k_dpp_sampler(size, intermediate_sample_info, X_data, eval_L, random_s
         prog_bar.set_postfix(trial_count=trial_count,
                              alpha="{:.4}".format(intermediate_sample_info.alpha_hat),
                              alpha_switch=intermediate_sample_info.alpha_switches,
-                             k=size, k_emp=len(sampl),
-                             rej_count=rej_count,
-                             )
+                             k=size,
+                             k_emp=len(sampl),
+                             rej_count=rej_count)
         prog_bar.update()
 
         if len(sampl) == size:
@@ -1157,10 +1190,9 @@ def alpha_k_dpp_sampler(size, intermediate_sample_info, X_data, eval_L, random_s
             sample_count += 1
             if early_stop:
                 break
-        if len(sampl) < size:
-                under_k_count += 1
-        if len(sampl) > size:
-                over_k_count += 1
+
+        under_k_count += len(sampl) < size
+        over_k_count += len(sampl) > size
 
         if intermediate_sample_info.trial_to_first_sample == 0:
             intermediate_sample_info = intermediate_sample_info._replace(rej_to_first_sample=intermediate_sample_info.rej_to_first_sample + rej_count)
@@ -1297,12 +1329,12 @@ def elementary_symmetric_polynomials(eig_vals, size):
 
     # Initialize output array
     N = eig_vals.size
-    E_poly = np.zeros((size + 1, N + 1))
-    E_poly[0, :] = 1.0
+    E = np.zeros((size + 1, N + 1))
+    E[0, :] = 1.0
 
     # Recursive evaluation
-    for l in range(1, size + 1):
+    for k in range(1, size + 1):
         for n in range(1, N + 1):
-            E_poly[l, n] = E_poly[l, n-1] + eig_vals[n-1] * E_poly[l-1, n-1]
+            E[k, n] = E[k, n - 1] + eig_vals[n - 1] * E[k - 1, n - 1]
 
-    return E_poly
+    return E

@@ -30,19 +30,27 @@ import numpy as np
 from scipy.optimize import brentq
 from collections import namedtuple
 
-_IntermediateSampleInfo = namedtuple('_IntermediateSampleInfo',
-                                     ['alpha_star', 'logdet_I_A', 'q', 's', 'z', 'rls_estimate', 'rej_to_first_sample'])
+_IntermediateSampleInfo = namedtuple(
+    '_IntermediateSampleInfo',
+    ['alpha_star', 'logdet_I_A', 'q', 's', 'z',
+     'rls_estimate', 'rej_to_first_sample'])
 
-_IntermediateSampleInfoAlphaRescale = namedtuple('_IntermediateSampleInfoAlphaRescale',
-                                                 ['alpha_hat', 'alpha_min', 'alpha_max', 'k',
-                                                  'eigvecs_L_hat', 'eigvals_L_hat', 'deff_alpha_L_hat',
-                                                  'rls_upper_bound', 'rls_upper_bound_valid',
-                                                  'r',
-                                                  'dict_alphadpp', 'diag_L',
-                                                  'rej_to_first_sample', 'trial_to_first_sample', 'alpha_switches'])
+_IntermediateSampleInfoAlphaRescale = namedtuple(
+    '_IntermediateSampleInfoAlphaRescale',
+    ['alpha_hat', 'alpha_min', 'alpha_max', 'k',
+     'eigvecs_L_hat', 'eigvals_L_hat', 'deff_alpha_L_hat',
+     'rls_upper_bound', 'rls_upper_bound_valid',
+     'r',
+     'dict_alphadpp', 'diag_L',
+     'rej_to_first_sample', 'trial_to_first_sample', 'alpha_switches'])
 
 
-def estimate_rls_from_embedded_points(eigvec, eigvals, B_bar_T, diag_L, diag_L_hat, alpha_star):
+def estimate_rls_from_embedded_points(eigvec,
+                                      eigvals,
+                                      B_bar_T,
+                                      diag_L,
+                                      diag_L_hat,
+                                      alpha_star):
     """ Given embedded points, and a decomposition of embedded covariance matrix, estimate RLS.
     Note that this is a different estimator than the one used in BLESS (i.e. :func:`dppy.bless.estimate_rls_bless`),
     which we use here for efficiency because we can recycle already embedded points and eigen-decomposition.
@@ -74,7 +82,12 @@ def estimate_rls_from_embedded_points(eigvec, eigvals, B_bar_T, diag_L, diag_L_h
     return rls_estimate
 
 
-def estimate_rls_from_weighted_dict_eigendecomp(X_to_estimate, eval_L, dict_alphadpp, eigvec, eigvals, alpha_hat):
+def estimate_rls_from_weighted_dict_eigendecomp(X_to_estimate,
+                                                eval_L,
+                                                dict_alphadpp,
+                                                eigvec,
+                                                eigvals,
+                                                alpha_hat):
     """ Given embedded points, and a decomposition of embedded covariance matrix, estimate RLS.
     Note that this is a different estimator than the one used in BLESS (i.e. :func:`dppy.bless.estimate_rls_bless`),
     which we use here for efficiency because we can recycle already embedded points and eigen-decomposition.
@@ -99,9 +112,10 @@ def estimate_rls_from_weighted_dict_eigendecomp(X_to_estimate, eval_L, dict_alph
     L_DX = eval_L(dict_alphadpp.X, X_to_estimate)
     L_DX *= W_sqrt
     E = eigvec.T.dot(L_DX)
-    E *= np.sqrt(1.0/(alpha_hat * eigvals + 1.0)).reshape(-1, 1)
+    E *= np.sqrt(1.0 / (alpha_hat * eigvals + 1.0)).reshape(-1, 1)
 
-    rls_estimate = alpha_hat * (diag_L_to_estimate - alpha_hat * np.square(E, out=E).sum(axis=0))
+    rls_estimate = alpha_hat * (diag_L_to_estimate
+                                - alpha_hat * np.square(E, out=E).sum(axis=0))
 
     if not np.all(rls_estimate >= 0.0):
         raise ValueError('Some estimated RLS is negative, this should never happen. '
@@ -110,9 +124,14 @@ def estimate_rls_from_weighted_dict_eigendecomp(X_to_estimate, eval_L, dict_alph
     return rls_estimate
 
 
-def vfx_sampling_precompute_constants(X_data, eval_L, rng,
-                                      desired_expected_size=None, rls_oversample_dppvfx=4.0, rls_oversample_bless=4.0,
-                                      nb_iter_bless=None, verbose=True):
+def vfx_sampling_precompute_constants(X_data,
+                                      eval_L,
+                                      rng,
+                                      desired_expected_size=None,
+                                      rls_oversample_dppvfx=4.0,
+                                      rls_oversample_bless=4.0,
+                                      nb_iter_bless=None,
+                                      verbose=True):
     """Pre-compute quantities necessary for the vfx rejection sampling loop, such as the inner Nystrom approximation,
     and the RLS of all elements in L.
 
@@ -215,14 +234,14 @@ def vfx_sampling_precompute_constants(X_data, eval_L, rng,
     # we can use the fact the the non-zero eigenvalues of I + L_hat and I_A_mm are equal
     eigvals, eigvec = np.linalg.eigh(I_A_mm)
 
-    if not np.all(eigvals > 1.0):
+    if np.any(eigvals <= 1.0):
         raise ValueError('Some eigenvalues of L_hat are negative, this should never happen. '
                          'Minimum eig: {}'.format(np.min(eigvals - 1.0)))
 
     natural_expected_size = trace_L - trace_L_hat + np.sum((eigvals - 1.0) / eigvals)
 
-    if not natural_expected_size >= 0.0:
-        raise ValueError('natural_expected_size is negative, this should never happen. '
+    if natural_expected_size < 0.0:
+        raise ValueError('natural_expected_size < 0, this should never happen. '
                          'natural_expected_size: {}'.format(natural_expected_size))
 
     # s might naturally be too large, but we can rescale L to shrink it
@@ -237,29 +256,28 @@ def vfx_sampling_precompute_constants(X_data, eval_L, rng,
                          'in your set.\n'
                          'Increasing the expected sample size is currently not supported (only decreasing).\n'
                          'Please consider decreasing your k={} or changing L.'
-                         ' Estimated mean cardinality: {}'.format(desired_expected_size,
-                                                                  natural_expected_size))
+                         ' Estimated mean cardinality: {}'.format(desired_expected_size, natural_expected_size))
     else:
         # since this is monotone in alpha, we can simply use Brent's algorithm (bisection + tricks)
         # it is a root finding algorithm so we must create a function with a root in desired_expected_size
         def temp_func_with_root_in_desired_expected_size(x):
-            return (
-                    x * trace_L
+            return (x * trace_L
                     - x * trace_L_hat
                     + np.sum((eigvals - 1.0) / (eigvals - 1.0 + 1.0 / x))
-                    - desired_expected_size
-                   )
+                    - desired_expected_size)
 
-        alpha_star, opt_result = brentq(temp_func_with_root_in_desired_expected_size,
-                                        a=10.0 * np.finfo(np.float).eps,
-                                        b=1.0,
-                                        full_output=True)
+        alpha_star, opt_result = brentq(
+                                temp_func_with_root_in_desired_expected_size,
+                                a=10.0 * np.finfo(np.float).eps,
+                                b=1.0,
+                                full_output=True)
 
         if not opt_result.converged:
             raise ValueError('Could not find an appropriate rescaling for desired_expected_size.'
-                             '(Flag, Iter, Root): {}'.format((opt_result.flag,
-                                                              opt_result.iterations,
-                                                              opt_result.root)))
+                             '(Flag, Iter, Root): {}'.format(
+                                (opt_result.flag,
+                                 opt_result.iterations,
+                                 opt_result.root)))
 
     # adjust from I + A to I / alpha_star + A
     I_A_mm[np.diag_indices(m)] += 1.0 / alpha_star - 1.0
@@ -271,19 +289,19 @@ def vfx_sampling_precompute_constants(X_data, eval_L, rng,
                                                      diag_L_hat,
                                                      alpha_star)
 
-    if not np.all(rls_estimate >= 0.0):
-        raise ValueError('Some estimate l_i is negative, this should never happen. '
-                         'Minimum l_i: {}'.format(np.min(rls_estimate)))
+    if np.any(rls_estimate < 0.0):
+        raise ValueError(
+                'Some estimate l_i is negative, this should never happen. '
+                'Minimum l_i: {}'.format(np.min(rls_estimate)))
 
     # s is simply the sum of l_i, and it is our proxy for the expected sample size. If desired_expected_size
     # is set, s should be very close to it
     s = np.sum(rls_estimate)
-    if not s >= 0.0:
-        raise ValueError('s is negative, this should never happen. '
-                         's: {}'.format(s))
+    if s < 0.0:
+        raise ValueError('s < 0, this should never happen. s = {}'.format(s))
 
     # we need to compute z and logDet(I + L_hat)
-    z = np.sum((eigvals - 1/alpha_star) / eigvals)
+    z = np.sum((eigvals - 1.0 / alpha_star) / eigvals)
 
     # we need logdet(I + alpha * A) and we have eigvals(I / alpha_star + A) we can adjust using sum of logs
     logdet_I_A = np.sum(np.log(alpha_star * eigvals))
@@ -303,8 +321,13 @@ def vfx_sampling_precompute_constants(X_data, eval_L, rng,
     return result
 
 
-def vfx_sampling_do_sampling_loop(X_data, eval_L, intermediate_sample_info, rng,
-                                  max_iter=1000, verbose=True, **kwargs):
+def vfx_sampling_do_sampling_loop(X_data,
+                                  eval_L,
+                                  intermediate_sample_info,
+                                  rng,
+                                  max_iter=1000,
+                                  verbose=True,
+                                  **kwargs):
     """Given pre-computed information, run a rejection sampling loop to generate DPP samples.
         :param array_like X_data: dataset such that L = eval_L(X_data), out of which we are sampling objects
         according to a DPP
@@ -348,7 +371,10 @@ def vfx_sampling_do_sampling_loop(X_data, eval_L, intermediate_sample_info, rng,
             t = rng.poisson(lam=lam.astype('int'))
 
             # sample sigma subset
-            sigma = rng.choice(n, size=t, p=pc_state.rls_estimate / pc_state.s, replace=True)
+            sigma = rng.choice(n,
+                               size=t,
+                               p=pc_state.rls_estimate / pc_state.s,
+                               replace=True)
             sigma_uniq, sigma_uniq_count = np.unique(sigma, return_counts=True)
             X_sigma_uniq = X_data[sigma_uniq, :]
 
@@ -362,9 +388,12 @@ def vfx_sampling_do_sampling_loop(X_data, eval_L, intermediate_sample_info, rng,
             # = log(Det(W^2)) + log(Det(W^-2 + L_sigma))
             # = -log(Det(W^-2)) + log(Det(W^-2 + L_sigma))
 
-            W_square_inv = pc_state.q * pc_state.rls_estimate[sigma_uniq] / (pc_state.s * sigma_uniq_count)
+            W_square_inv = (pc_state.q
+                            * pc_state.rls_estimate[sigma_uniq]
+                            / (pc_state.s * sigma_uniq_count))
 
-            I_L_sigma = (pc_state.alpha_star * eval_L(X_sigma_uniq, X_sigma_uniq)
+            I_L_sigma = (pc_state.alpha_star
+                         * eval_L(X_sigma_uniq, X_sigma_uniq)
                          + np.diag(W_square_inv))
 
             s_logdet, logdet_I_L_sigma = np.linalg.slogdet(I_L_sigma)
@@ -417,9 +446,15 @@ def vfx_sampling_do_sampling_loop(X_data, eval_L, intermediate_sample_info, rng,
     return S, rej_iter
 
 
-def alpha_dpp_sampling_precompute_constants(X_data, eval_L, rng,
-                                            desired_expected_size=None, rls_oversample_alphadpp=4.0,
-                                            rls_oversample_bless=4.0, nb_iter_bless=None, verbose=True, **kwargs):
+def alpha_dpp_sampling_precompute_constants(X_data,
+                                            eval_L,
+                                            rng,
+                                            desired_expected_size=None,
+                                            rls_oversample_alphadpp=4.0,
+                                            rls_oversample_bless=4.0,
+                                            nb_iter_bless=None,
+                                            verbose=True,
+                                            **kwargs):
     """Pre-compute quantities necessary for the alpha-dpp rejection sampling loop, such as the
     inner Nystrom approximation, and the initial rescaling alpha_hat for the binary search.
         :param array_like X_data: dataset such that L = eval_L(X_data), out of which we aresampling objects according
@@ -512,18 +547,33 @@ def alpha_dpp_sampling_precompute_constants(X_data, eval_L, rng,
     # D_bless is used only to estimate all RLS
 
     if desired_expected_size is None:
-        dict_bless = bless(X_data, eval_L, 1.0, rls_oversample_bless, rng,
-                           nb_iter_bless=nb_iter_bless, verbose=verbose)
+        dict_bless = bless(X_data,
+                           eval_L,
+                           1.0,
+                           rls_oversample_bless,
+                           rng,
+                           nb_iter_bless=nb_iter_bless,
+                           verbose=verbose)
     else:
-        lam_max, lam_min, dict_bless = bless_size(X_data, eval_L, desired_expected_size, rls_oversample_bless, rng,
-                                                  nb_iter_bless=nb_iter_bless, verbose=verbose)
+        lam_max, lam_min, dict_bless = bless_size(X_data,
+                                                  eval_L,
+                                                  desired_expected_size,
+                                                  rls_oversample_bless,
+                                                  rng,
+                                                  nb_iter_bless=nb_iter_bless,
+                                                  verbose=verbose)
 
     # Phase 1: use estimate RLS to sample the dict_alphadpp dictionary, i.e. the one used to construct A
     # here theory says that to have high acceptance probability we need the oversampling factor to be ~deff^2
     # but even with constant oversampling factor we seem to accept fast
 
-    dict_alphadpp = reduce_lambda(X_data, eval_L, dict_bless, dict_bless.lam, rng,
-                                rls_oversample_parameter=rls_oversample_alphadpp)
+    dict_alphadpp = reduce_lambda(
+                            X_data,
+                            eval_L,
+                            dict_bless,
+                            dict_bless.lam,
+                            rng,
+                            rls_oversample_parameter=rls_oversample_alphadpp)
 
     # Phase 2: pre-compute L_hat, det(I + L_hat), etc.
     L_DD = eval_L(dict_alphadpp.X, dict_alphadpp.X)
@@ -535,14 +585,15 @@ def alpha_dpp_sampling_precompute_constants(X_data, eval_L, rng,
 
     eigvecs_L_hat, eigvals_L_hat = stable_filter(eigvecs_L_hat, eigvals_L_hat)
 
-    rls_estimate = estimate_rls_from_weighted_dict_eigendecomp(dict_alphadpp.X,
-                                                               eval_L,
-                                                               dict_alphadpp,
-                                                               eigvecs_L_hat,
-                                                               eigvals_L_hat,
-                                                               1.0/dict_alphadpp.lam)
+    rls_estimate = estimate_rls_from_weighted_dict_eigendecomp(
+                        dict_alphadpp.X,
+                        eval_L,
+                        dict_alphadpp,
+                        eigvecs_L_hat,
+                        eigvals_L_hat,
+                        1.0/dict_alphadpp.lam)
 
-    natural_expected_size = np.sum(rls_estimate/dict_alphadpp.probs)
+    natural_expected_size = np.sum(rls_estimate / dict_alphadpp.probs)
 
     if not natural_expected_size >= 0.0:
         raise ValueError('natural_expected_size is negative, this should never happen. '
@@ -560,13 +611,12 @@ def alpha_dpp_sampling_precompute_constants(X_data, eval_L, rng,
                          'in your set.\n'
                          'Increasing the expected sample size is currently not supported (only decreasing).\n'
                          'Please consider decreasing your k={} or changing L.'
-                         ' Estimated mean cardinality: {}'.format(desired_expected_size,
-                                                                  natural_expected_size))
+                         ' Estimated mean cardinality: {}'.format(desired_expected_size, natural_expected_size))
     else:
         # since this is monotone in alpha, we can simply use Brent's algorithm (bisection + tricks)
         # it is a root finding algorithm so we must create a function with a root in desired_expected_size
         def temp_func_with_root_in_desired_expected_size(x):
-            return np.sum(1 - 1/(x * eigvals_L_hat + 1.0)) - desired_expected_size
+            return np.sum(1.0 - 1.0 / (x * eigvals_L_hat + 1.0)) - desired_expected_size
 
         alpha_hat, opt_result = brentq(temp_func_with_root_in_desired_expected_size,
                                        a=10.0 * np.finfo(np.float).eps,
@@ -584,28 +634,29 @@ def alpha_dpp_sampling_precompute_constants(X_data, eval_L, rng,
                              'Please consider decreasing your k={} or changing L.'
                              ' alpha_hat: {}'.format(desired_expected_size, alpha_hat))
 
-    deff_alpha_L_hat = np.sum(1 - 1/(alpha_hat * eigvals_L_hat + 1.0))
+    deff_alpha_L_hat = np.sum(1.0 - 1.0 / (alpha_hat * eigvals_L_hat + 1.0))
 
     if desired_expected_size is None:
         alpha_min, alpha_max, k = alpha_hat, alpha_hat, -1
     else:
         alpha_min, alpha_max, k = 1.0 / lam_max, 1.0 / lam_min, desired_expected_size
 
-    result = _IntermediateSampleInfoAlphaRescale(alpha_hat=alpha_hat,
-                                                 alpha_min=alpha_min,
-                                                 alpha_max=alpha_max,
-                                                 k=k,
-                                                 eigvals_L_hat=eigvals_L_hat,
-                                                 eigvecs_L_hat=eigvecs_L_hat,
-                                                 deff_alpha_L_hat=deff_alpha_L_hat,
-                                                 diag_L=diag_L,
-                                                 rls_upper_bound=alpha_hat * diag_L,
-                                                 rls_upper_bound_valid=np.full((diag_L.shape[0],), False),
-                                                 r=-1,
-                                                 dict_alphadpp=dict_alphadpp,
-                                                 alpha_switches=0,
-                                                 trial_to_first_sample=0,
-                                                 rej_to_first_sample=0)
+    result = _IntermediateSampleInfoAlphaRescale(
+                    alpha_hat=alpha_hat,
+                    alpha_min=alpha_min,
+                    alpha_max=alpha_max,
+                    k=k,
+                    eigvals_L_hat=eigvals_L_hat,
+                    eigvecs_L_hat=eigvecs_L_hat,
+                    deff_alpha_L_hat=deff_alpha_L_hat,
+                    diag_L=diag_L,
+                    rls_upper_bound=alpha_hat * diag_L,
+                    rls_upper_bound_valid=np.full((diag_L.shape[0],), False),
+                    r=-1,
+                    dict_alphadpp=dict_alphadpp,
+                    alpha_switches=0,
+                    trial_to_first_sample=0,
+                    rej_to_first_sample=0)
 
     return result
 
@@ -661,19 +712,20 @@ def alpha_dpp_sampling_do_sampling_loop(X_data,
         for rej_iter in range(max_iter):
             # sample all s_i
             rls_bound_old = rls_bound.copy()
-            s_vec = rng.poisson(lam=pc_state.r * np.exp(1/pc_state.r) * rls_bound)
+            s_vec = rng.poisson(lam=pc_state.r * np.exp(1.0 / pc_state.r) * rls_bound)
 
             idx_active_items = s_vec.nonzero()[0]
 
             s_vec_filtered = s_vec.copy()
             idx_rls_to_recompute = idx_active_items[np.logical_not(rls_bound_valid[idx_active_items])]
             if len(idx_rls_to_recompute) > 0:
-                rls_estimate = estimate_rls_from_weighted_dict_eigendecomp(X_data[idx_rls_to_recompute, :],
-                                                                           eval_L,
-                                                                           pc_state.dict_alphadpp,
-                                                                           pc_state.eigvecs_L_hat,
-                                                                           pc_state.eigvals_L_hat,
-                                                                           pc_state.alpha_hat)
+                rls_estimate = estimate_rls_from_weighted_dict_eigendecomp(
+                                X_data[idx_rls_to_recompute, :],
+                                eval_L,
+                                pc_state.dict_alphadpp,
+                                pc_state.eigvecs_L_hat,
+                                pc_state.eigvals_L_hat,
+                                pc_state.alpha_hat)
 
                 if np.any(rls_estimate > rls_bound[idx_rls_to_recompute]):
                     raise ValueError('Some estimated RLS are larger than the pre-computed bound,'
@@ -708,10 +760,18 @@ def alpha_dpp_sampling_do_sampling_loop(X_data,
                 raise ValueError('logdet_I_L_sigma is negative, this should never happen. '
                                  's: {}'.format(s_logdet))
 
-            deff_alpha_L_hat = np.sum(1.0 - 1.0/(pc_state.alpha_hat * pc_state.eigvals_L_hat + 1.0))
-            log_det_alpha_L_hat = np.sum(np.log(1.0 + pc_state.alpha_hat * pc_state.eigvals_L_hat))
+            deff_alpha_L_hat = np.sum(1.0
+                                      - 1.0 / (pc_state.alpha_hat
+                                                * pc_state.eigvals_L_hat
+                                                + 1.0))
+            log_det_alpha_L_hat = np.sum(np.log(1.0
+                                                + (pc_state.alpha_hat
+                                                    * pc_state.eigvals_L_hat)))
 
-            acc_thresh = (deff_alpha_L_hat + logdet_I_L_sigma - log_det_alpha_L_hat - (t / pc_state.r)).item()
+            acc_thresh = (deff_alpha_L_hat
+                            + logdet_I_L_sigma
+                            - log_det_alpha_L_hat
+                            - (t / pc_state.r)).item()
 
             if acc_thresh >= 0.0:
                 raise ValueError('Accepting with probability larger than 1, this should never happen. '
@@ -719,7 +779,8 @@ def alpha_dpp_sampling_do_sampling_loop(X_data,
 
             accept = np.log(rng.rand()) <= acc_thresh
 
-            prog_bar.set_postfix(acc_thresh=np.exp(acc_thresh), rej_count=rej_iter)
+            prog_bar.set_postfix(acc_thresh=np.exp(acc_thresh),
+                                 rej_count=rej_iter)
             prog_bar.update()
 
             if accept:
