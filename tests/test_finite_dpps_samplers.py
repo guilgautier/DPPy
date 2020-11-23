@@ -360,7 +360,7 @@ class TestAdequationOfFiniteDppSamplers(unittest.TestCase):
             {'exact_dpp': {'vfx': {'verbose': False,
                                    'rls_oversample_bless': 5},
                            'alpha': {'verbose': False,
-                                   'rls_oversample_bless': 5},
+                                     'rls_oversample_bless': 5},
                            'GS': {}},
              'exact_k_dpp': {'vfx': {'size': k, 'verbose': False,
                                      'rls_oversample_bless': 5},
