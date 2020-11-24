@@ -103,7 +103,7 @@ How to cite this work?
 ======================
 
 We wrote a companion paper to
-`DPPy <https://github.com/guilgautier/DPPy>`__ which got accepted for publication in the `MLOSS <http://www.jmlr.org/mloss/>`__ track of JMLR.
+`DPPy <https://github.com/guilgautier/DPPy>`__ which got accepted for publication in the `MLOSS <http://www.jmlr.org/mloss/>`__ track of JMLR, see :cite:`GPBV19`.
 
 If you use this package, please consider citing it with this piece of
 BibTeX:

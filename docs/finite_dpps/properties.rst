@@ -154,6 +154,8 @@ Expectation
 		= \sum_{n=1}^N \lambda_n
 		= \sum_{n=1}^N \frac{\gamma_n}{1+\gamma_n}.
 
+The expected size of a DPP with likelihood matrix :math:`\mathbf{L}` is also related to the effective dimension :math:`d_{\text{eff}}(\mathbf{L}) = \operatorname{trace} (\mathbf{L}(\mathbf{L}+\mathbf{I})^{-1})= \operatorname{trace} \mathbf{K} = \mathbb{E}[|\mathcal{X}|]` of :math:`\mathbf{L}`, a quantity with many applications in randomized numerical linear algebra and statistical learning theory (see e.g., :cite:`DeCaVa19`).
+
 Variance
 --------
 

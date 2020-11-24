@@ -23,8 +23,10 @@ from dppy.exact_sampling import (dpp_sampler_generic_kernel,
                                  proj_dpp_sampler_kernel,
                                  proj_dpp_sampler_eig,
                                  dpp_vfx_sampler,
+                                 alpha_dpp_sampler,
                                  dpp_eig_vecs_selector,
                                  k_dpp_vfx_sampler,
+                                 alpha_k_dpp_sampler,
                                  k_dpp_eig_vecs_selector,
                                  elementary_symmetric_polynomials)
 
@@ -275,6 +277,7 @@ class FiniteDPP:
                 - ``'Chol'`` :cite:`Pou19` Algorithm 1
                 - ``'KuTa12'``: Algorithm 1 in :cite:`KuTa12`
                 - ``'vfx'``: the dpp-vfx rejection sampler in :cite:`DeCaVa19`
+                - ``'alpha'``: the alpha-dpp rejection sampler in :cite:`CaDeVa20`
 
         :type mode:
             string, default ``'GS'``
@@ -283,6 +286,7 @@ class FiniteDPP:
             Dictionary containing the parameters for exact samplers with keys
 
             - ``'random_state'`` (default None)
+
             - If ``mode='vfx'``
 
                 See :py:meth:`~dppy.exact_sampling.dpp_vfx_sampler` for a full list of all parameters accepted by 'vfx' sampling. We report here the most impactful
@@ -291,6 +295,16 @@ class FiniteDPP:
                 + ``'rls_oversample_bless'`` (default 4.0) Oversampling parameter used during bless's internal Nystrom approximation. This makes the one-time pre-processing slower and more memory intensive, but reduces variance and the number of rounds of rejections
 
                 Empirically, a small factor [2,10] seems to work for both parameters. It is suggested to start with a small number and increase if the algorithm fails to terminate.
+
+            - If ``mode='alpha'``
+
+                See :py:meth:`~dppy.exact_sampling.alpha_k_dpp_sampler` for a full list of all parameters accepted by 'alpha' sampling. We report here the most impactful
+
+                + ``'rls_oversample_alphadpp'`` (default 4.0) Oversampling parameter used to construct alpha-dpp's internal Nystrom approximation. This makes each rejection round slower and more memory intensive, but reduces variance and the number of rounds of rejections.
+                + ``'rls_oversample_bless'`` (default 4.0) Oversampling parameter used during bless's internal Nystrom approximation. This makes the one-time pre-processing slower and more memory intensive, but reduces variance and the number of rounds of rejections
+
+                Empirically, a small factor [2,10] seems to work for both parameters. It is suggested to start with
+                a small number and increase if the algorithm fails to terminate.
 
         :return:
             Returns a sample from the corresponding :class:`FiniteDPP <FiniteDPP>` object. In any case, the sample is appended to the :py:attr:`~FiniteDPP.list_of_samples` attribute as a list.
@@ -343,13 +357,36 @@ class FiniteDPP:
                 raise ValueError('The vfx sampler is currently only available with '
                                  '{"L_eval_X_data": (L_eval, X_data)} representation.')
 
-            params.pop("random_state", None)
+            r_state_outer = None
+            if "random_state" in params:
+                r_state_outer = params.pop("random_state", None)
+
             sampl, self.intermediate_sample_info = dpp_vfx_sampler(
                                                 self.intermediate_sample_info,
                                                 self.X_data,
                                                 self.eval_L,
                                                 random_state=rng,
                                                 **params)
+            if r_state_outer:
+                params["random_state"] = r_state_outer
+
+        elif self.sampling_mode == 'alpha':
+            if self.eval_L is None or self.X_data is None:
+                raise ValueError('The alpha sampler is currently only available with '
+                                 '{"L_eval_X_data": (L_eval, X_data)} representation.')
+
+            r_state_outer = None
+            if "random_state" in params:
+                r_state_outer = params.pop("random_state", None)
+
+            sampl, self.intermediate_sample_info = alpha_dpp_sampler(
+                                                self.intermediate_sample_info,
+                                                self.X_data,
+                                                self.eval_L,
+                                                random_state=rng,
+                                                **params)
+            if r_state_outer:
+                params["random_state"] = r_state_outer
 
         # If eigen decoposition of K, L or L_dual is available USE IT!
         elif self.K_eig_vals is not None:
@@ -384,7 +421,7 @@ class FiniteDPP:
             # L = Phi.T Phi = V Gamma V
             # implies Gamma = Theta and V = Phi.T W Theta^{-1/2}
             self.L_eig_vals, L_dual_eig_vecs = la.eigh(self.L_dual)
-            self.L_eig_vals = is_geq_0(self.L_eig_vals)
+            self.L_eig_vals = np.maximum(is_geq_0(self.L_eig_vals), 0.0)
             self.eig_vecs = self.L_gram_factor.T.dot(L_dual_eig_vecs
                                                     / np.sqrt(self.L_eig_vals))
             return self.sample_exact(mode=self.sampling_mode,
@@ -453,6 +490,7 @@ class FiniteDPP:
                 - ``'GS_bis'``: Slight modification of ``'GS'``
                 - ``'KuTa12'``: Algorithm 1 in :cite:`KuTa12`
                 - ``'vfx'``: the dpp-vfx rejection sampler in :cite:`DeCaVa19`
+                - ``'alpha'``: the alpha-dpp rejection sampler in :cite:`CaDeVa20`
 
         :type mode:
             string, default ``'GS'``
@@ -468,6 +506,16 @@ class FiniteDPP:
 
                 + ``'rls_oversample_dppvfx'`` (default 4.0) Oversampling parameter used to construct dppvfx's internal Nystrom approximation. This makes each rejection round slower and more memory intensive, but reduces variance and the number of rounds of rejections.
                 + ``'rls_oversample_bless'`` (default 4.0) Oversampling parameter used during bless's internal Nystrom approximation. This makes the one-time pre-processing slower and more memory intensive, but reduces variance and the number of rounds of rejections
+
+                Empirically, a small factor [2,10] seems to work for both parameters. It is suggested to start with
+                a small number and increase if the algorithm fails to terminate.
+
+            - If ``mode='alpha'``
+                See :py:meth:`~dppy.exact_sampling.alpha_k_dpp_sampler` for a full list of all parameters accepted by 'alpha' sampling. We report here the most impactful
+
+                + ``'rls_oversample_alphadpp'`` (default 4.0) Oversampling parameter used to construct alpha-dpp's internal Nystrom approximation. This makes each rejection round slower and more memory intensive, but reduces variance and the number of rounds of rejections.
+                + ``'rls_oversample_bless'`` (default 4.0) Oversampling parameter used during bless's internal Nystrom approximation. This makes the one-time pre-processing slower and more memory intensive, but reduces variance and the number of rounds of rejections
+                + ``'early_stop'`` (default False) Wheter to return as soon as a k-DPP sample is drawn, or to continue with alpha-dpp internal binary search to make subsequent sampling faster.
 
                 Empirically, a small factor [2,10] seems to work for both parameters. It is suggested to start with
                 a small number and increase if the algorithm fails to terminate.
@@ -505,7 +553,10 @@ class FiniteDPP:
             if self.eval_L is None or self.X_data is None:
                 raise ValueError("The vfx sampler is currently only available for the 'L_eval_X_data' representation.")
 
-            params.pop("random_state", None)
+            r_state_outer = None
+            if "random_state" in params:
+                r_state_outer = params.pop("random_state", None)
+
             sampl, self.intermediate_sample_info = k_dpp_vfx_sampler(
                                                 size,
                                                 self.intermediate_sample_info,
@@ -513,6 +564,28 @@ class FiniteDPP:
                                                 self.eval_L,
                                                 random_state=rng,
                                                 **params)
+
+            if r_state_outer:
+                params["random_state"] = r_state_outer
+
+        elif self.sampling_mode == 'alpha':
+            if self.eval_L is None or self.X_data is None:
+                raise ValueError("The alpha sampler is currently only available for the 'L_eval_X_data' representation.")
+
+            r_state_outer = None
+            if "random_state" in params:
+                r_state_outer = params.pop("random_state", None)
+
+            sampl, self.intermediate_sample_info = alpha_k_dpp_sampler(
+                                                size,
+                                                self.intermediate_sample_info,
+                                                self.X_data,
+                                                self.eval_L,
+                                                random_state=rng,
+                                                **params)
+
+            if r_state_outer:
+                params["random_state"] = r_state_outer
 
         # If DPP defined via projection kernel
         elif self.projection:
@@ -866,11 +939,9 @@ class FiniteDPP:
     def plot_kernel(self, kernel_type='correlation', save_path=''):
         """Display a heatmap of the kernel used to define the :class:`FiniteDPP` object (correlation kernel :math:`\\mathbf{K}` or likelihood kernel :math:`\\mathbf{L}`)
 
-        :param title:
-            Plot title
+        :param str kernel_type: Type of kernel (``'correlation'`` or ``'likelihood'``), default ``'correlation'``
 
-        :type title:
-            string
+        :param str save_path: Path to save plot, if empty (default) the plot is not saved.
         """
 
         if not kernel_type:
@@ -881,12 +952,10 @@ class FiniteDPP:
         if kernel_type == 'correlation':
             self.compute_K()
             nb_items, kernel_to_plot = self.K.shape[0], self.K
-            str_title = r'$K$ (correlation) kernel'
 
         elif kernel_type == 'likelihood':
             self.compute_L()
             nb_items, kernel_to_plot = self.L.shape[0], self.L
-            str_title = r'$L$ (likelihood) kernel'
 
         else:
             raise ValueError('kernel_type != "correlation" or "likelihood"')
@@ -906,8 +975,6 @@ class FiniteDPP:
 
         ax.set_xticklabels(ticks_label, minor=False)
         ax.set_yticklabels(ticks_label, minor=False)
-
-        # plt.title(title if title else str_title, y=1.1)
 
         plt.colorbar(heatmap)
 

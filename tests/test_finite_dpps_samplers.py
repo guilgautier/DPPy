@@ -359,9 +359,13 @@ class TestAdequationOfFiniteDppSamplers(unittest.TestCase):
         dict_sampler_mode_param =\
             {'exact_dpp': {'vfx': {'verbose': False,
                                    'rls_oversample_bless': 5},
+                           'alpha': {'verbose': False,
+                                     'rls_oversample_bless': 5},
                            'GS': {}},
              'exact_k_dpp': {'vfx': {'size': k, 'verbose': False,
                                      'rls_oversample_bless': 5},
+                             'alpha': {'size': k, 'verbose': False,
+                                       'rls_oversample_bless': 5},
                              'GS': {'size': k}}}
 
         adequation_to_check = ('uniqueness_of_items', 'cardinality', 'singleton', 'doubleton')
@@ -389,9 +393,13 @@ class TestAdequationOfFiniteDppSamplers(unittest.TestCase):
         dict_sampler_mode_param =\
             {'exact_dpp': {'vfx': {'verbose': False,
                                    'rls_oversample_bless': 10},
+                           'alpha': {'verbose': False,
+                                     'rls_oversample_bless': 5},
                            'GS': {}},
              'exact_k_dpp': {'vfx': {'size': k, 'verbose': False,
                                      'rls_oversample_bless': 10},
+                             'alpha': {'size': k, 'verbose': False,
+                                       'rls_oversample_bless': 5},
                              'GS': {'size': k}}}
 
         adequation_to_check = ('uniqueness_of_items', 'cardinality', 'singleton', 'doubleton')

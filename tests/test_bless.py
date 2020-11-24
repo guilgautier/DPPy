@@ -62,7 +62,7 @@ class TestBless(unittest.TestCase):
 
 
         np.testing.assert_almost_equal(rls_estimates_exact, rls_exact)
-        np.testing.assert_allclose(rls_estimates_approx, rls_exact, rtol=1/2.)
+        np.testing.assert_allclose(rls_estimates_approx, rls_exact, rtol=0.5)
 
     def test_reduce_lambda(self):
         N, d = 100, 5
@@ -77,15 +77,17 @@ class TestBless(unittest.TestCase):
         rls_estimates = estimate_rls_bless(dict_approx, X_data, example_eval_L_polynomial, lam)
         np.testing.assert_allclose(rls_estimates,
                                    rls_exact,
-                                   rtol=1/2.)
+                                   rtol=0.5)
 
         dict_reduced = reduce_lambda(X_data, example_eval_L_polynomial, dict_approx, lam_new, rng)
 
         rls_estimates_reduced = estimate_rls_bless(dict_reduced, X_data, example_eval_L_polynomial, lam_new)
-        rls_exact_reduced = la.solve(L_data + lam_new*np.eye(N), L_data).diagonal()
+        rls_exact_reduced = la.solve(L_data + lam_new * np.eye(N), L_data).diagonal()
+
         np.testing.assert_allclose(rls_estimates_reduced,
                                    rls_exact_reduced,
-                                   rtol=1/2.)
+                                   rtol=0.5)
+
         self.assertTrue(len(dict_reduced.idx) <= len(dict_approx.idx))
 
     def test_bless(self):
@@ -104,8 +106,13 @@ class TestBless(unittest.TestCase):
                              random_state=rng,
                              verbose=False)
 
-        rls_estimates = estimate_rls_bless(dict_reduced, X_data, example_eval_L_polynomial, lam)
-        np.testing.assert_allclose(rls_estimates, rls_exact, rtol=1/2.)
+        rls_estimates = estimate_rls_bless(dict_reduced,
+                                           X_data,
+                                           example_eval_L_polynomial,
+                                           lam)
+
+        np.testing.assert_allclose(rls_estimates, rls_exact, rtol=0.5)
+
         self.assertTrue(len(dict_reduced.idx) <= 5 * rls_exact.sum())
 
 
