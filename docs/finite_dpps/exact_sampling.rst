@@ -14,6 +14,10 @@ There exist three main types of exact sampling procedures:
 
 3. Recently, :cite:`DeCaVa19` have also proposed an alternative method to get exact samples: first sample an intermediate distribution and correct the bias by thinning the intermediate sample using a carefully designed DPP. This approach does not require a Cholesky/Eigen-decomposition of the DPP, but the runtime instead scale with the expected sample size of the DPP (see :ref:`finite_dpps_number_of_points`). It is presented in Section :ref:`finite_dpps_exact_sampling_intermediate_sampling_method`. A more refined procedure based on this approach was introduced in :cite:`CaDeVa20` for k-DPP sampling.
 
+In general, for small :math:`N` (i.e. less than 1000) spectral or cholesky samplers
+are recommended for numerical stability. For larger :math:`N` (i.e. up to millions)
+and moderate :math:`k` (i.e. in the hundreds) intermediate sampling is recommended for scalability.
+
 The following table summarizes the complexity of all exact samplers currently available,
 where the expected sample size :math:`\mathbb{E}[|X|]` is equal to :math:`k` for k-DPPs
 and :math:`d_{\text{eff}}` for random-sized DPPs.
@@ -27,11 +31,11 @@ and :math:`d_{\text{eff}}` for random-sized DPPs.
 |                       |``"GS_bis"``, |                                      |                                      |                                      |                                      | and depending on the DPP they can                                            |
 |                       |``"KuTa12"``  |                                      |                                      |                                      |                                      | have different numerical stability.                                          |
 +-----------------------+--------------+--------------------------------------+--------------------------------------+--------------------------------------+--------------------------------------+------------------------------------------------------------------------------+
-| Cholesky sampler      | ``"chol"``   | :math:`O(N^3)`                       |:math:`O(N^3)`                        |:math:`O(N d_{\text{eff}}^2)`         |:math:`O(N k^2)`                      | Also works for non-Hermitian DPPs.                                           |
+| Cholesky sampler      | ``"chol"``   | :math:`O(N^3)`                       |:math:`O(N^3)`                        |:math:`O(N^3)`                        |:math:`O(N^3)`                        | Also works for non-Hermitian DPPs.                                           |
 +-----------------------+--------------+--------------------------------------+--------------------------------------+--------------------------------------+--------------------------------------+------------------------------------------------------------------------------+
-| Intermediate sampler  | ``"vfx"``    | :math:`O(N d_{\text{eff}}^6)`        |:math:`O(N k^{10} + k^{15})`          |:math:`O(d_{\text{eff}}^6)`           |:math:`O(k^6)`                        | For `"alpha"` we report worst case runtime, but depending on the DPP         |
-+                       +--------------+--------------------------------------+--------------------------------------+--------------------------------------+--------------------------------------+ structure best case runtime can be much faster than `"vfx"`. For particularly|
-|                       | ``"alpha"``  | :math:`O(N d_{\text{eff}}^5)`        |:math:`O(N k^6/d_{\text{eff}} + k^9)` |:math:`O(d_{\text{eff}}^6)`           |:math:`O(k^6)`                        | ill-posed DPPs `"vfx"` can be more numerically stable.                       |
+| Intermediate sampler  | ``"vfx"``    | :math:`O(N d_{\text{eff}}^6)`        |:math:`O(N k^{10} + k^{15})`          |:math:`O(d_{\text{eff}}^6)`           |:math:`O(k^6)`                        | For ``"alpha"`` we report worst case runtime, but depending on the DPP       |
++                       +--------------+--------------------------------------+--------------------------------------+--------------------------------------+--------------------------------------+ structure best case runtime can be much faster than ``"vfx"``. For           |
+|                       | ``"alpha"``  | :math:`O(N d_{\text{eff}}^5)`        |:math:`O(N k^6/d_{\text{eff}} + k^9)` |:math:`O(d_{\text{eff}}^6)`           |:math:`O(k^6)`                        | particularly ill-posed DPPs ``"vfx"`` can be more numerically stable.        |
 +-----------------------+--------------+--------------------------------------+--------------------------------------+--------------------------------------+--------------------------------------+------------------------------------------------------------------------------+
 
 .. note::

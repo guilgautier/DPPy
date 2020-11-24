@@ -1190,9 +1190,10 @@ def alpha_k_dpp_sampler(size,
             sample_count += 1
             if early_stop:
                 break
-
-        under_k_count += len(sampl) < size
-        over_k_count += len(sampl) > size
+        if len(sampl) < size:
+            under_k_count += 1
+        if len(sampl) > size:
+            over_k_count += 1
 
         if intermediate_sample_info.trial_to_first_sample == 0:
             intermediate_sample_info = intermediate_sample_info._replace(rej_to_first_sample=intermediate_sample_info.rej_to_first_sample + rej_count)
