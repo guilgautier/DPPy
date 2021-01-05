@@ -22,84 +22,24 @@
     `Documentation on ReadTheDocs <https://dppy.readthedocs.io/en/latest/exotic_dpps/index.html>`_
 """
 
-import functools  # used for decorators to pass docstring
-
 import numpy as np
-
-from itertools import chain  # create graph edges from path
-
-# For class PoissonizedPlancherel
 from bisect import bisect_right  # for RSK
 
 from dppy.utils import check_random_state
 
 
-def ust_sampler_wilson(list_of_neighbors, root=None,
-                       random_state=None):
-    try:
-        import networkx as nx
-    except ImportError:
-        raise ValueError('The networkx package is required to sample spanning trees (see setup.py).')
+def ust_sampler_wilson(g, root=None, random_state=None):
+    """Generate a uniform spanning tree of g at root using [Wilson's algorithm](https://dl.acm.org/doi/10.1145/237814.237880).
 
-    rng = check_random_state(random_state)
+    :param g: Connected graph
+    :type g: nx.Graph
 
-    # Initialize the tree
-    wilson_tree_graph = nx.Graph()
-    nb_nodes = len(list_of_neighbors)
+    :param root: Any node of g, defaults to None. If None, the root is chosen uniformly at random among g.nodes.
+    :type root: list, optional
 
-    # Initialize the root, if root not specified start from any node
-    n0 = root if root else rng.choice(nb_nodes)  # size=1)[0]
-    # -1 = not visited / 0 = in path / 1 = in tree
-    state = -np.ones(nb_nodes, dtype=int)
-    state[n0] = 1
-    nb_nodes_in_tree = 1
-
-    path, branches = [], []  # branches of tree, temporary path
-
-    while nb_nodes_in_tree < nb_nodes:  # |Tree| = |V| - 1
-
-        # visit a neighbor of n0 uniformly at random
-        n1 = rng.choice(list_of_neighbors[n0])  # size=1)[0]
-
-        if state[n1] == -1:  # not visited => continue the walk
-
-            path.append(n1)  # add it to the path
-            state[n1] = 0  # mark it as in the path
-            n0 = n1  # continue the walk
-
-        if state[n1] == 0:  # loop on the path => erase the loop
-
-            knot = path.index(n1)  # find 1st appearence of n1 in the path
-            nodes_loop = path[knot + 1:]  # identify nodes forming the loop
-            del path[knot + 1:]  # erase the loop
-            state[nodes_loop] = -1  # mark loopy nodes as not visited
-            n0 = n1  # continue the walk
-
-        elif state[n1] == 1:  # hits the tree => new branch
-
-            if nb_nodes_in_tree == 1:
-                branches.append([n1] + path)  # initial branch of the tree
-            else:
-                branches.append(path + [n1])  # path as a new branch
-
-            state[path] = 1  # mark nodes in path as in the tree
-            nb_nodes_in_tree += len(path)
-
-            # Restart the walk from a random node among those not visited
-            nodes_not_visited = np.where(state == -1)[0]
-            if nodes_not_visited.size:
-                n0 = rng.choice(nodes_not_visited)  # size=1)[0]
-                path = [n0]
-
-    tree_edges = list(chain.from_iterable(map(lambda x: zip(x[:-1], x[1:]),
-                                              branches)))
-    wilson_tree_graph.add_edges_from(tree_edges)
-
-    return wilson_tree_graph
-
-
-def ust_sampler_aldous_broder(list_of_neighbors, root=None,
-                              random_state=None):
+    :return: uniform spanning tree of g
+    :rtype: nx.Graph
+    """
 
     try:
         import networkx as nx
@@ -108,35 +48,71 @@ def ust_sampler_aldous_broder(list_of_neighbors, root=None,
 
     rng = check_random_state(random_state)
 
-    # Initialize the tree
-    aldous_tree_graph = nx.Graph()
-    nb_nodes = len(list_of_neighbors)
+    if root is None:
+        nodes = list(g.nodes)
+        root = nodes[rng.randint(len(nodes))]
+    elif root not in g:
+        raise ValueError("root not in g.nodes")
 
-    # Initialize the root, if root not specified start from any node
-    n0 = root if root else rng.choice(nb_nodes)  # size=1)[0]
-    visited = np.zeros(nb_nodes, dtype=bool)
-    visited[n0] = True
-    nb_nodes_in_tree = 1
+    tree = {root}
+    successor = dict.fromkeys(g.nodes, None)
+    del successor[root]
 
-    tree_edges = np.zeros((nb_nodes - 1, 2), dtype=np.int)
+    for i in g.nodes:
+        # Run a natural random walk from i until it hits a node in tree
+        u = i
+        while u not in tree:
+            neighbors = list(g.neighbors(u))
+            successor[u] = neighbors[rng.randint(len(neighbors))]
+            u = successor[u]
 
-    while nb_nodes_in_tree < nb_nodes:
+        # Record Erase first loop created during the random walk
+        u = i
+        while u not in tree:
+            tree.add(u)
+            u = successor[u]
 
-        # visit a neighbor of n0 uniformly at random
-        n1 = rng.choice(list_of_neighbors[n0])  # size=1)[0]
+    return nx.from_edgelist(successor.items())
 
-        if visited[n1]:
-            pass  # continue the walk
-        else:  # create edge (n0, n1) and continue the walk
-            tree_edges[nb_nodes_in_tree - 1] = [n0, n1]
-            visited[n1] = True  # mark it as in the tree
-            nb_nodes_in_tree += 1
 
-        n0 = n1
+def ust_sampler_aldous_broder(g, root=None, random_state=None):
+    """Generate a uniform spanning tree of g at root using [Aldous](https://epubs.siam.org/doi/10.1137/0403039)-[Broder](https://doi.org/10.1109/SFCS.1989.63516)'s algorithm
 
-    aldous_tree_graph.add_edges_from(tree_edges)
+    :param g: Connected graph
+    :type g: nx.Graph
 
-    return aldous_tree_graph
+    :param root: Any node of g, defaults to None. If None, the root is chosen uniformly at random among g.nodes.
+    :type root: list, optional
+
+    :return: uniform spanning tree of g
+    :rtype: nx.Graph
+    """
+    try:
+        import networkx as nx
+    except ImportError:
+        raise ValueError('The networkx package is required to sample spanning trees (see setup.py).')
+    rng = check_random_state(random_state)
+
+    if root is None:
+        nodes = list(g.nodes)
+        root = nodes[rng.randint(len(nodes))]
+    elif root not in g:
+        raise ValueError("root not in g.nodes")
+
+    # Run a natural random walk from root a until all nodes are visited
+    tree = {root: None}
+    u = root
+    while len(tree) < g.number_of_nodes():
+        neighbors = list(g.neighbors(u))
+        v = neighbors[rng.randint(len(neighbors))]
+        # Record an edge when reaching an unvisited node
+        if v not in tree:
+            tree[v] = u
+        u = v
+
+    del tree[root]
+
+    return nx.from_edgelist(tree.items())
 
 
 def uniform_permutation(N, random_state=None):

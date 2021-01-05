@@ -1,5 +1,9 @@
 # Files
 .DS_Store
+.env*
+.venv*
+.vscode
+*.code-workspace
 
 .ipynb_checkpoints/
 *.ipynb

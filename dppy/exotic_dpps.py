@@ -464,7 +464,6 @@ class UST:
     """
 
     def __init__(self, graph):
-        # For Uniform Spanning Trees
         try:
             import networkx as nx
             self.nx = nx
@@ -474,19 +473,7 @@ class UST:
         if nx.is_connected(graph):
             self.graph = graph
         else:
-            raise ValueError('graph not connected')
-
-        self.nodes = list(self.graph.nodes())
-        self.nb_nodes = self.graph.number_of_nodes()  # len(self.graph)
-
-        self.edges = list(self.graph.edges())
-        self.nb_edges = self.graph.number_of_edges()  # len(self.edges)
-
-        self.edge_labels = {edge: r'$e_{}$'.format(i)
-                            for i, edge in enumerate(self.edges)}
-
-        self.neighbors = [list(graph.neighbors(v))
-                          for v in range(self.nb_nodes)]
+            raise ValueError('graph is not connected')
 
         self.sampling_mode = 'Wilson'  # Default (avoid eig_vecs computation)
         self._sampling_modes = {'markov-chain': ['Wilson', 'Aldous-Broder'],
@@ -500,29 +487,23 @@ class UST:
     def __str__(self):
 
         str_info = ['Uniform Spanning Tree measure on a graph with:',
-                    '- {} nodes'.format(self.nb_nodes),
-                    '- {} edges'.format(self.nb_edges),
+                    '- {} nodes'.format(self.graph.number_of_nodes()),
+                    '- {} edges'.format(self.graph.number_of_edges()),
                     'Sampling mode = {}'.format(self.sampling_mode),
                     'Number of samples = {}'.format(len(self.list_of_samples))]
 
         return '\n'.join(str_info)
-
-    # def info(self):
-    #     """ Print infos about the :class:`UST` object
-    #     """
-    #     print(self.__str__())
 
     def flush_samples(self):
         """ Empty the :py:attr:`list_of_samples` attribute.
         """
         self.list_of_samples = []
 
-    def sample(self, mode='Wilson', root=None, random_state=None):
+    def sample(self, mode='Wilson', random_state=None):
         """ Sample a spanning of the underlying graph uniformly at random.
         It generates a networkx graph object.
 
         :param mode:
-
             Markov-chain-based samplers:
 
             - ``'Wilson'``, ``'Aldous-Broder'``
@@ -531,14 +512,8 @@ class UST:
 
             - ``'GS'``, ``'GS_bis'``, ``'KuTa12'`` from eigenvectors
             - ``'Schur'``, ``'Chol'``, from :math:`\\mathbf{K}` correlation kernel
-
         :type mode:
             string, default ``'Wilson'``
-
-        :param root:
-            Starting node of the random walk when using Markov-chain-based samplers
-        :type root:
-            int
 
         :param random_state:
         :type random_state:
@@ -554,15 +529,14 @@ class UST:
         rng = check_random_state(random_state)
 
         self.sampling_mode = mode
+        sampl = self.nx.Graph()
 
         if self.sampling_mode in self._sampling_modes['markov-chain']:
             if self.sampling_mode == 'Wilson':
-                sampl = ust_sampler_wilson(self.neighbors,
-                                           random_state=rng)
+                sampl = ust_sampler_wilson(self.graph, random_state=rng)
 
             elif self.sampling_mode == 'Aldous-Broder':
-                sampl = ust_sampler_aldous_broder(self.neighbors,
-                                                  random_state=rng)
+                sampl = ust_sampler_aldous_broder(self.graph, random_state=rng)
 
         elif self.sampling_mode in self._sampling_modes['spectral-method']:
 
@@ -570,9 +544,8 @@ class UST:
             dpp_sample = proj_dpp_sampler_eig(self.kernel_eig_vecs,
                                               mode=self.sampling_mode,
                                               random_state=rng)
-
-            sampl = self.nx.Graph()
-            sampl.add_edges_from([self.edges[e] for e in dpp_sample])
+            edges = list(self.graph.edges)
+            sampl = self.nx.from_edgelist([edges[i] for i in dpp_sample])
 
         elif self.sampling_mode in self._sampling_modes['projection-K-kernel']:
 
@@ -581,8 +554,8 @@ class UST:
                                                  mode=self.sampling_mode,
                                                  random_state=rng)
 
-            sampl = self.nx.Graph()
-            sampl.add_edges_from([self.edges[e] for e in dpp_sample])
+            edges = list(self.graph.edges)
+            sampl = self.nx.from_edgelist([edges[i] for i in dpp_sample])
 
         else:
             err_print = '\n'.join(
@@ -592,6 +565,7 @@ class UST:
             raise ValueError()
 
         self.list_of_samples.append(sampl)
+        return sampl
 
     def compute_kernel(self):
         """ Compute the orthogonal projection kernel :math:`\\mathbf{K} = \\text{Inc}^+ \\text{Inc}` i.e. onto the span of the rows of the vertex-edge incidence matrix :math:`\\text{Inc}` of size :math:`|V| \\times |E|`.
@@ -603,24 +577,26 @@ class UST:
         .. seealso::
 
             - :py:meth:`plot_kernel`
+            - :py:meth:`compute_kernel_eig_vecs`
         """
-
+        # K = UU.T, with U = QR(Inc[:-1,:].T)
         if self.kernel is None:
-            self.compute_kernel_eig_vecs()  # U = QR(Inc[:-1,:].T)
-            # K = UU.T
-            self.kernel = self.kernel_eig_vecs.dot(self.kernel_eig_vecs.T)
+            U = self.compute_kernel_eig_vecs()
+            self.kernel = U.dot(U.T)
+
+        return self.kernel
 
     def compute_kernel_eig_vecs(self):
         """ See explaination in :func:`compute_kernel <compute_kernel>`
         """
-
         if self.kernel_eig_vecs is None:
-
             inc_mat = self.nx.incidence_matrix(self.graph, oriented=True)
             # Discard any row e.g. the last one
             A = inc_mat[:-1, :].toarray()
             # Orthonormalize rows of A
             self.kernel_eig_vecs, _ = qr(A.T, mode='economic')
+
+        return self.kernel_eig_vecs
 
     def plot(self, title=''):
         """ Display the last realization (spanning tree) of the corresponding :class:`UST` object.
@@ -642,17 +618,19 @@ class UST:
 
         pos = self.nx.circular_layout(self.graph)
         self.nx.draw_networkx(graph_to_plot,
-                         pos=pos,
-                         node_color='orange',
-                         with_labels=True,
-                         width=3)
+                              pos=pos,
+                              node_color='orange',
+                              with_labels=True,
+                              width=3)
 
-        edge_labs = {e: self.edge_labels[e if e in self.edges else e[::-1]]
-                     for e in graph_to_plot.edges()}
+        labels = {e: r'$e_{}$'.format(i)
+                  for i, e in enumerate(self.graph.edges)}
+        edge_labels = {e: labels[e if e in labels else e[::-1]]
+                       for e in graph_to_plot.edges}
         self.nx.draw_networkx_edge_labels(graph_to_plot,
-                                     pos=pos,
-                                     edge_labels=edge_labs,
-                                     font_size=20)
+                                          pos=pos,
+                                          edge_labels=edge_labels,
+                                          font_size=20)
 
         plt.axis('off')
 
@@ -673,25 +651,23 @@ class UST:
             - :func:`compute_kernel <compute_kernel>`
         """
 
-        # edge_lab = [r'$e_{}$'.format(i) for i in range(self.nb_edges)]
-        # edge_labels = dict(zip(self.edges, edge_lab))
-        # node_labels = dict(zip(self.nodes, self.nodes))
-
         plt.figure(figsize=(4, 4))
 
         pos = self.nx.circular_layout(self.graph)
         self.nx.draw_networkx(self.graph,
-                         pos=pos,
-                         node_color='orange',
-                         with_labels=True,
-                         width=3)
+                              pos=pos,
+                              node_color='orange',
+                              with_labels=True,
+                              width=3)
         # nx.draw_networkx_labels(self.graph,
         #                         pos,
         #                         node_labels)
+        edge_labels = {e: r'$e_{}$'.format(i)
+                       for i, e in enumerate(self.graph.edges)}
         self.nx.draw_networkx_edge_labels(self.graph,
-                                     pos=pos,
-                                     edge_labels=self.edge_labels,
-                                     font_size=20)
+                                          pos=pos,
+                                          edge_labels=edge_labels,
+                                          font_size=20)
 
         plt.axis('off')
 
@@ -720,7 +696,7 @@ class UST:
 
         ax.set_aspect('equal')
 
-        ticks = np.arange(self.nb_edges)
+        ticks = np.arange(self.graph.number_of_edges())
         ticks_label = [r'${}$'.format(tic) for tic in ticks]
 
         ax.xaxis.tick_top()
