@@ -558,11 +558,11 @@ class UST:
             sampl = self.nx.from_edgelist([edges[i] for i in dpp_sample])
 
         else:
-            err_print = '\n'.join(
+            err_print = '\n'.join([
                 'Invalid sampling mode',
                 'Chose from: {}'.format(self._sampling_modes.values()),
-                'Given {}'.format(mode))
-            raise ValueError()
+                'Given {}'.format(mode)])
+            raise ValueError(err_print)
 
         self.list_of_samples.append(sampl)
         return sampl
