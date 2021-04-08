@@ -19,6 +19,8 @@ import matplotlib.pyplot as plt
 
 from warnings import warn
 
+from dppy.schur_sampler import schur_sampler
+
 from dppy.exact_sampling import (dpp_sampler_generic_kernel,
                                  proj_dpp_sampler_kernel,
                                  proj_dpp_sampler_eig,
@@ -334,15 +336,7 @@ class FiniteDPP:
         self.sampling_mode = mode
 
         if self.sampling_mode == 'Schur':
-            if self.kernel_type == 'correlation' and self.projection:
-                self.compute_K()
-                sampl = proj_dpp_sampler_kernel(self.K, self.sampling_mode,
-                                                random_state=rng)
-            else:
-                err_print =\
-                    ['`Schur` sampling mode is only available for projection DPPs, i.e., `kernel_type="correlation"` and `projection=True`',
-                     'Given: {}'.format((self.kernel_type, self.projection))]
-                raise ValueError('\n'.join(err_print))
+            return schur_sampler(self, rng)
 
         elif self.sampling_mode == 'Chol':
             self.compute_K()
