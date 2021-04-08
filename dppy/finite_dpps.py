@@ -23,6 +23,7 @@ from dppy.schur_sampler import schur_sampler
 from dppy.chol_sampler import chol_sampler
 from dppy.vfx_sampler import vfx_sampler
 from dppy.alpha_sampler import alpha_sampler
+from dppy.spectral_sampler import spectral_sampler
 
 from dppy.exact_sampling import (dpp_sampler_generic_kernel,
                                  proj_dpp_sampler_kernel,
@@ -351,79 +352,8 @@ class FiniteDPP:
             return alpha_sampler(self, rng, **params)
 
         # If eigen decoposition of K, L or L_dual is available USE IT!
-        elif self.K_eig_vals is not None:
-            # Phase 1
-            if self.kernel_type == 'correlation' and self.projection:
-                V = self.eig_vecs[:, self.K_eig_vals > 0.5]
-            else:
-                V = dpp_eig_vecs_selector(self.K_eig_vals, self.eig_vecs,
-                                          random_state=rng)
-            # Phase 2
-            sampl = proj_dpp_sampler_eig(V, self.sampling_mode,
-                                         random_state=rng)
-
-        # elif self.L_dual_eig_vals is not None:
-        #     # Phase 1
-        #     V = dpp_eig_vecs_selector_L_dual(self.L_dual_eig_vals,
-        #                                      self.L_dual_eig_vecs,
-        #                                      self.L_gram_factor,
-        #                                      random_state=rng)
-        #     # Phase 2
-        #     sampl = proj_dpp_sampler_eig(V, self.sampling_mode,
-        #                                  random_state=rng)
-        #
-
-        elif self.L_eig_vals is not None:
-            self.K_eig_vals = self.L_eig_vals / (1.0 + self.L_eig_vals)
-            return self.sample_exact(mode=self.sampling_mode,
-                                     random_state=rng)
-
-        elif self.L_dual is not None:
-            # L_dual = Phi Phi.T = W Theta W.T
-            # L = Phi.T Phi = V Gamma V
-            # implies Gamma = Theta and V = Phi.T W Theta^{-1/2}
-            self.L_eig_vals, L_dual_eig_vecs = la.eigh(self.L_dual)
-            self.L_eig_vals = np.maximum(is_geq_0(self.L_eig_vals), 0.0)
-            self.eig_vecs = self.L_gram_factor.T.dot(L_dual_eig_vecs
-                                                    / np.sqrt(self.L_eig_vals))
-            return self.sample_exact(mode=self.sampling_mode,
-                                     random_state=rng)
-
-        # If DPP defined via projection correlation kernel K
-        # no eigendecomposition required
-        elif self.K is not None and self.projection:
-            sampl = proj_dpp_sampler_kernel(self.K, self.sampling_mode,
-                                            random_state=rng)
-
-        elif self.K is not None:
-            self.K_eig_vals, self.eig_vecs = la.eigh(self.K)
-            self.K_eig_vals = is_in_01(self.K_eig_vals)
-            return self.sample_exact(mode=self.sampling_mode,
-                                     random_state=rng)
-
-        elif self.L is not None:
-            self.L_eig_vals, self.eig_vecs = la.eigh(self.L)
-            self.L_eig_vals = is_geq_0(self.L_eig_vals)
-            return self.sample_exact(mode=self.sampling_mode,
-                                     random_state=rng)
-
-        # If DPP defined through correlation kernel with parameter 'A_zono'
-        # a priori you wish to use the zonotope approximate sampler
-        elif self.A_zono is not None:
-            warn('DPP defined via `A_zono`, apriori you want to use `sample_mcmc`, but you have called `sample_exact`')
-
-            self.K_eig_vals = np.ones(self.A_zono.shape[0])
-            self.eig_vecs, _ = la.qr(self.A_zono.T, mode='economic')
-            return self.sample_exact(mode=self.sampling_mode,
-                                     random_state=rng)
-
-        elif self.eval_L is not None and self.X_data is not None:
-            self.compute_L()
-            return self.sample_exact(mode=self.sampling_mode,
-                                     random_state=rng)
-
         else:
-            raise ValueError('None of the available samplers could be used based on the current DPP representation. This should never happen, please consider rasing an issue on github at https://github.com/guilgautier/DPPy/issues')
+            return spectral_sampler(self, rng)
 
         self.list_of_samples.append(sampl)
         return sampl
