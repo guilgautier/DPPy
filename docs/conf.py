@@ -43,11 +43,11 @@ release = ''
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = ['sphinx.ext.doctest','sphinx.ext.autodoc','sphinx.ext.viewcode',
-              'sphinx.ext.todo', # To Do snippet
-              'sphinx.ext.mathjax', # LaTeX math rendering
-              'sphinxcontrib.bibtex',# Bibliography management
-              'matplotlib.sphinxext.plot_directive'] # display plot
+extensions = ['sphinx.ext.doctest', 'sphinx.ext.autodoc', 'sphinx.ext.viewcode',
+              'sphinx.ext.todo',  # To Do snippet
+              'sphinx.ext.mathjax',  # LaTeX math rendering
+              'sphinxcontrib.bibtex',  # Bibliography management
+              'matplotlib.sphinxext.plot_directive']  # display plot
 
 todo_include_todos = True
 
@@ -143,7 +143,6 @@ latex_documents = [
      'Guillaume Gautier et al.', 'report')
 ]
 
-
 # -- Options for Epub output ----------------------------------------------
 
 # Bibliographic Dublin Core info.
@@ -165,14 +164,14 @@ epub_copyright = copyright
 epub_exclude_files = ['search.html']
 
 
-
 # Example configuration for intersphinx: refer to the Python standard library.
 intersphinx_mapping = {'https://docs.python.org/': None}
 
 
 def setup(app):
     app.add_stylesheet('custom.css')  # remove line numbers
-    app.add_javascript('copybutton.js') # show/hide prompt >>>
+    app.add_javascript('copybutton.js')  # show/hide prompt >>>
+
 
 # use :numref: for bibliography (instead of :ref:)
 numfig = True
