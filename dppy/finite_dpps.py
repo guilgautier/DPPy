@@ -20,6 +20,7 @@ import matplotlib.pyplot as plt
 from warnings import warn
 
 from dppy.schur_sampler import schur_sampler
+from dppy.chol_sampler import chol_sampler
 
 from dppy.exact_sampling import (dpp_sampler_generic_kernel,
                                  proj_dpp_sampler_kernel,
@@ -339,12 +340,7 @@ class FiniteDPP:
             return schur_sampler(self, rng)
 
         elif self.sampling_mode == 'Chol':
-            self.compute_K()
-            if self.kernel_type == 'correlation' and self.projection:
-                sampl = proj_dpp_sampler_kernel(self.K, self.sampling_mode,
-                                                random_state=rng)
-            else:
-                sampl, _ = dpp_sampler_generic_kernel(self.K, random_state=rng)
+            return chol_sampler(self, rng)
 
         elif self.sampling_mode == 'vfx':
             if self.eval_L is None or self.X_data is None:
