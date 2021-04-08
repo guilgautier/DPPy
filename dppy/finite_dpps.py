@@ -22,6 +22,7 @@ from warnings import warn
 from dppy.schur_sampler import schur_sampler
 from dppy.chol_sampler import chol_sampler
 from dppy.vfx_sampler import vfx_sampler
+from dppy.alpha_sampler import alpha_sampler
 
 from dppy.exact_sampling import (dpp_sampler_generic_kernel,
                                  proj_dpp_sampler_kernel,
@@ -347,22 +348,7 @@ class FiniteDPP:
             return vfx_sampler(self, rng, **params)
 
         elif self.sampling_mode == 'alpha':
-            if self.eval_L is None or self.X_data is None:
-                raise ValueError('The alpha sampler is currently only available with '
-                                 '{"L_eval_X_data": (L_eval, X_data)} representation.')
-
-            r_state_outer = None
-            if "random_state" in params:
-                r_state_outer = params.pop("random_state", None)
-
-            sampl, self.intermediate_sample_info = alpha_dpp_sampler(
-                                                self.intermediate_sample_info,
-                                                self.X_data,
-                                                self.eval_L,
-                                                random_state=rng,
-                                                **params)
-            if r_state_outer:
-                params["random_state"] = r_state_outer
+            return alpha_sampler(self, rng, **params)
 
         # If eigen decoposition of K, L or L_dual is available USE IT!
         elif self.K_eig_vals is not None:
