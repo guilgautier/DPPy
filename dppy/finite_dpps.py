@@ -340,10 +340,10 @@ class FiniteDPP:
         self.sampling_mode = mode
 
         if self.sampling_mode == 'Schur':
-            return schur_sampler(self, rng)
+            return schur_sampler(self, rng, **params)
 
         elif self.sampling_mode == 'Chol':
-            return chol_sampler(self, rng)
+            return chol_sampler(self, rng, **params)
 
         elif self.sampling_mode == 'vfx':
             return vfx_sampler(self, rng, **params)
@@ -351,9 +351,8 @@ class FiniteDPP:
         elif self.sampling_mode == 'alpha':
             return alpha_sampler(self, rng, **params)
 
-        # If eigen decoposition of K, L or L_dual is available USE IT!
         else:
-            return spectral_sampler(self, rng)
+            return spectral_sampler(self, rng, **params)
 
         self.list_of_samples.append(sampl)
         return sampl

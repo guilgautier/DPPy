@@ -1,7 +1,7 @@
 from .exact_sampling import dpp_eig_vecs_selector, proj_dpp_sampler_eig
 
 
-def spectral_sampler(dpp, rng):
+def spectral_sampler(dpp, rng, **params):
 
     if dpp.K_eig_vals is not None:
         # Phase 1

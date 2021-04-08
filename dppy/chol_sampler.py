@@ -2,7 +2,7 @@ from .exact_sampling import (
     proj_dpp_sampler_kernel, dpp_sampler_generic_kernel)
 
 
-def chol_sampler(dpp, rng):
+def chol_sampler(dpp, rng, **params):
     dpp.compute_K()
     if dpp.kernel_type == 'correlation' and dpp.projection:
         return proj_dpp_sampler_kernel(
