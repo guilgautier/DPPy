@@ -1,6 +1,8 @@
 # Files
-.DS_Store
+.env-dppy
+.vscode
 
+.DS_Store
 .ipynb_checkpoints/
 *.ipynb
 
