@@ -338,24 +338,26 @@ class FiniteDPP:
         rng = check_random_state(params.get('random_state', None))
 
         self.sampling_mode = mode
+        sampler = None
+        sampler = self.select_sampler_from_name(mode)
 
-        if self.sampling_mode == 'Schur':
-            return schur_sampler(self, rng, **params)
+        sample = sampler(self, rng, **params)
 
-        elif self.sampling_mode == 'Chol':
-            return chol_sampler(self, rng, **params)
+        self.list_of_samples.append(sample)
+        return sample
 
-        elif self.sampling_mode == 'vfx':
-            return vfx_sampler(self, rng, **params)
-
-        elif self.sampling_mode == 'alpha':
-            return alpha_sampler(self, rng, **params)
-
+    def select_sampler_from_name(self, mode):
+        if mode == 'Schur':
+            sampler = schur_sampler
+        elif mode == 'Chol':
+            sampler = chol_sampler
+        elif mode == 'vfx':
+            sampler = vfx_sampler
+        elif mode == 'alpha':
+            sampler = alpha_sampler
         else:
-            return spectral_sampler(self, rng, **params)
-
-        self.list_of_samples.append(sampl)
-        return sampl
+            sampler = spectral_sampler
+        return sampler
 
     def sample_exact_k_dpp(self, size, mode='GS', **params):
         """ Sample exactly from :math:`\\operatorname{k-DPP}`. A priori the :class:`FiniteDPP <FiniteDPP>` object was instanciated by its likelihood :math:`\\mathbf{L}` kernel so that

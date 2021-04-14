@@ -1,4 +1,10 @@
-from .exact_sampling import dpp_eig_vecs_selector, proj_dpp_sampler_eig
+import numpy as np
+import numpy.linalg as la
+from warnings import warn
+
+from .exact_sampling import (
+    dpp_eig_vecs_selector, proj_dpp_sampler_eig, proj_dpp_sampler_kernel)
+from .utils import (is_in_01, is_geq_0)
 
 
 def spectral_sampler(dpp, rng, **params):
@@ -9,7 +15,7 @@ def spectral_sampler(dpp, rng, **params):
             V = dpp.eig_vecs[:, dpp.K_eig_vals > 0.5]
         else:
             V = dpp_eig_vecs_selector(dpp.K_eig_vals, dpp.eig_vecs,
-                                    random_state=rng)
+                                      random_state=rng)
         # Phase 2
         return proj_dpp_sampler_eig(V, dpp.sampling_mode,
                                     random_state=rng)
@@ -37,7 +43,7 @@ def spectral_sampler(dpp, rng, **params):
         dpp.L_eig_vals, L_dual_eig_vecs = la.eigh(dpp.L_dual)
         dpp.L_eig_vals = np.maximum(is_geq_0(dpp.L_eig_vals), 0.0)
         dpp.eig_vecs = dpp.L_gram_factor.T.dot(L_dual_eig_vecs
-                                                / np.sqrt(dpp.L_eig_vals))
+                                               / np.sqrt(dpp.L_eig_vals))
         return dpp.sample_exact(mode=dpp.sampling_mode,
                                 random_state=rng)
 
@@ -45,7 +51,7 @@ def spectral_sampler(dpp, rng, **params):
     # no eigendecomposition required
     elif dpp.K is not None and dpp.projection:
         return proj_dpp_sampler_kernel(dpp.K, dpp.sampling_mode,
-                                        random_state=rng)
+                                       random_state=rng)
 
     elif dpp.K is not None:
         dpp.K_eig_vals, dpp.eig_vecs = la.eigh(dpp.K)
