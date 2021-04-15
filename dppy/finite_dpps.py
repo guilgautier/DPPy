@@ -581,7 +581,7 @@ class FiniteDPP:
 
         elif self.K is not None:
             self.K_eig_vals, self.eig_vecs = la.eigh(self.K)
-            self.K_eig_vals = check_in_01(self.K_eig_vals)
+            check_in_01(self.K_eig_vals)
             return self.sample_exact_k_dpp(size, self.sampling_mode,
                                            random_state=rng)
 
@@ -824,7 +824,7 @@ class FiniteDPP:
                 msg = '- eigendecomposition of K'
                 print(msg)
                 self.K_eig_vals, self.eig_vecs = la.eigh(self.K)
-                self.K_eig_vals = check_in_01(self.K_eig_vals)
+                check_in_01(self.K_eig_vals)
                 self.compute_L(msg=True)
 
             else:
