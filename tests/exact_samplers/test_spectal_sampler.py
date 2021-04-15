@@ -84,6 +84,15 @@ class TestSpectralSampler(unittest.TestCase):
 
         self.assertTrue(np.allclose(dpp.L_eig_vals, eig_vals))
 
+    def test_correlation_eig_vals_from_A_zono_equal_1(self):
+        A_zono = randn(self.r, self.N)
+
+        dpp = FiniteDPP("correlation", True, A_zono=A_zono)
+
+        sample = dpp.sample_exact(mode="GS")
+
+        self.assertTrue(np.allclose(dpp.K_eig_vals, np.ones(self.r)))
+
     # def test_likelihood_dual_eig_vals_to_likelihood_eig_vals(self):
     #     phi = randn(self.r, self.N)
     #     L_dual = phi.dot(phi.T)

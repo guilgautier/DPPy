@@ -34,7 +34,7 @@ def do_spectral_sampler(dpp, rng):
         return proj_dpp_sampler_kernel(dpp.K, dpp.sampling_mode,
                                        random_state=rng)
     else:
-        raise ValueError('None of the available samplers could be used based on the current DPP representation. This should never happen, please consider rasing an issue on github at https://github.com/guilgautier/DPPy/issues')
+        raise ValueError("Invalid dpp parameters. Spectral sampler requires spec")
 
 
 def compute_spectral_sampler_parameters(dpp):
@@ -55,8 +55,16 @@ def compute_spectral_sampler_parameters_step(dpp):
 
     Note: Sort of fixed point algorithm to find dpp.K_eig_vals and dpp.eig_vecs
     """
+    if dpp.K_eig_vals is not None:
+        return False
+
     if dpp.L_eig_vals is not None:
         dpp.K_eig_vals = dpp.L_eig_vals / (1.0 + dpp.L_eig_vals)
+        return False
+
+    elif dpp.K is not None:
+        dpp.K_eig_vals, dpp.eig_vecs = la.eigh(dpp.K)
+        check_in_01(dpp.K_eig_vals)
         return False
 
     elif dpp.L_dual is not None:
@@ -69,11 +77,6 @@ def compute_spectral_sampler_parameters_step(dpp):
         dpp.eig_vecs = dpp.L_gram_factor.T.dot(L_dual_eig_vecs
                                                / np.sqrt(dpp.L_eig_vals))
         return True
-
-    elif dpp.K is not None:
-        dpp.K_eig_vals, dpp.eig_vecs = la.eigh(dpp.K)
-        check_in_01(dpp.K_eig_vals)
-        return False
 
     elif dpp.L is not None:
         dpp.L_eig_vals, dpp.eig_vecs = la.eigh(dpp.L)
