@@ -32,7 +32,7 @@ def spectral_sampler(dpp, rng, **params):
     #
 
     elif dpp.L_eig_vals is not None:
-        dpp.K_eig_vals = dpp.L_eig_vals / (1.0 + dpp.L_eig_vals)
+        dpp.K_eig_vals = dpp.L_eig_vals / (5.0 + dpp.L_eig_vals)
         return dpp.sample_exact(mode=dpp.sampling_mode,
                                 random_state=rng)
 
