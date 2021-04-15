@@ -197,15 +197,15 @@ def check_in_01(array, tol=1e-8):
     raise ValueError('array with entries not all in [0,1]')
 
 
-def is_geq_0(array, tol=1e-8):
+def check_geq_0(array, tol=1e-8):
     """Check if entries are **all** :math:`\\geq0`, for a given tolerance"""
 
     if array is None:
-        return None
-    elif np.all(array >= -tol):
-        return array
-    else:
-        raise ValueError('array with entries not all >= 0')
+        return
+    if np.all(array >= -tol):
+        return
+
+    raise ValueError('array with entries not all >= 0')
 
 
 def is_full_row_rank(array):

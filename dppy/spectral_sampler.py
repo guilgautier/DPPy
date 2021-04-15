@@ -4,7 +4,7 @@ from warnings import warn
 
 from .exact_sampling import (
     dpp_eig_vecs_selector, proj_dpp_sampler_eig, proj_dpp_sampler_kernel)
-from .utils import (check_in_01, is_geq_0)
+from .utils import (check_in_01, check_geq_0)
 
 
 def spectral_sampler(dpp, rng, **params):
@@ -41,7 +41,7 @@ def spectral_sampler(dpp, rng, **params):
         # L = Phi.T Phi = V Gamma V
         # implies Gamma = Theta and V = Phi.T W Theta^{-1/2}
         dpp.L_eig_vals, L_dual_eig_vecs = la.eigh(dpp.L_dual)
-        dpp.L_eig_vals = np.maximum(is_geq_0(dpp.L_eig_vals), 0.0)
+        dpp.L_eig_vals = np.maximum(check_geq_0(dpp.L_eig_vals), 0.0)
         dpp.eig_vecs = dpp.L_gram_factor.T.dot(L_dual_eig_vecs
                                                / np.sqrt(dpp.L_eig_vals))
         return dpp.sample_exact(mode=dpp.sampling_mode,
@@ -61,7 +61,7 @@ def spectral_sampler(dpp, rng, **params):
 
     elif dpp.L is not None:
         dpp.L_eig_vals, dpp.eig_vecs = la.eigh(dpp.L)
-        dpp.L_eig_vals = is_geq_0(dpp.L_eig_vals)
+        dpp.L_eig_vals = check_geq_0(dpp.L_eig_vals)
         return dpp.sample_exact(mode=dpp.sampling_mode,
                                 random_state=rng)
 

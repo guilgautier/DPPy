@@ -208,7 +208,7 @@ class TestUtils(unittest.TestCase):
 
                     self.assertIn('not all in [0,1]', str(context.exception))
 
-    def test_is_geq_0(self):
+    def test_check_geq_0(self):
 
         N, lam = 100, 4
         tol = 1e-8
@@ -228,13 +228,13 @@ class TestUtils(unittest.TestCase):
                           (False, pm_poisson)]
 
         for idx, (flag, _input) in enumerate(list_of_inputs):
-            with self.subTest(index=idx, is_geq_0=flag):
+            with self.subTest(index=idx, check_geq_0=flag):
 
                 if flag:
-                    self.assertTrue(utils.is_geq_0(_input, tol) is _input)
+                    self.assertTrue(utils.check_geq_0(_input, tol) is _input)
                 else:
                     with self.assertRaises(ValueError) as context:
-                        utils.is_geq_0(_input, tol)
+                        utils.check_geq_0(_input, tol)
 
                     self.assertIn('not all >= 0', str(context.exception))
 
