@@ -132,7 +132,8 @@ class FiniteDPP:
         if self.projection:
             self.K_eig_vals = is_equal_to_O_or_1(e_vals)
         else:
-            self.K_eig_vals = check_in_01(e_vals)
+            check_in_01(e_vals)
+            self.K_eig_vals = e_vals
         self.eig_vecs = is_orthonormal_columns(e_vecs)
 
         self.A_zono = is_full_row_rank(params.get('A_zono', None))
@@ -147,7 +148,8 @@ class FiniteDPP:
         if self.projection:
             self.L_eig_vals = is_equal_to_O_or_1(e_vals)
         else:
-            self.L_eig_vals = check_geq_0(e_vals)
+            check_geq_0(e_vals)
+            self.L_eig_vals = e_vals
         if self.eig_vecs is None:  # K_eig_vecs = L_eig_vecs
             self.eig_vecs = is_orthonormal_columns(e_vecs)
 
@@ -565,7 +567,7 @@ class FiniteDPP:
             # L = Phi.T Phi = V Gamma V.T
             # implies Gamma = Theta and V = Phi.T W Theta^{-1/2}
             self.L_eig_vals, L_dual_eig_vecs = la.eigh(self.L_dual)
-            self.L_eig_vals = check_geq_0(self.L_eig_vals)
+            check_geq_0(self.L_eig_vals)
             self.eig_vecs =self.L_gram_factor.T.dot(L_dual_eig_vecs
                                                     / np.sqrt(self.L_eig_vals))
             return self.sample_exact_k_dpp(size, mode=self.sampling_mode,
@@ -573,7 +575,7 @@ class FiniteDPP:
 
         elif self.L is not None:
             self.L_eig_vals, self.eig_vecs = la.eigh(self.L)
-            self.L_eig_vals = check_geq_0(self.L_eig_vals)
+            check_geq_0(self.L_eig_vals)
             return self.sample_exact_k_dpp(size, self.sampling_mode,
                                            random_state=rng)
 
@@ -752,7 +754,7 @@ class FiniteDPP:
                 msg = '- eigendecomposition of L'
                 print(msg)
                 self.L_eig_vals, self.eig_vecs = la.eigh(self.L)
-                self.L_eig_vals = check_geq_0(self.L_eig_vals)
+                check_geq_0(self.L_eig_vals)
                 self.compute_K(msg=True)
 
             else:
