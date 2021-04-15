@@ -179,7 +179,7 @@ class TestUtils(unittest.TestCase):
 
                     self.assertIn('not all in {0,1}', str(context.exception))
 
-    def test_is_in_01(self):
+    def test_check_in_01(self):
 
         N, tol = 100, 1e-8
 
@@ -198,13 +198,13 @@ class TestUtils(unittest.TestCase):
                           (True, rndm.rand(N, N))]
 
         for idx, (flag, _input) in enumerate(list_of_inputs):
-            with self.subTest(index=idx, is_in_01=flag):
+            with self.subTest(index=idx, check_in_01=flag):
 
                 if flag:
-                    self.assertTrue(utils.is_in_01(_input, tol) is _input)
+                    self.assertTrue(utils.check_in_01(_input, tol) is _input)
                 else:
                     with self.assertRaises(ValueError) as context:
-                        utils.is_in_01(_input, tol)
+                        utils.check_in_01(_input, tol)
 
                     self.assertIn('not all in [0,1]', str(context.exception))
 

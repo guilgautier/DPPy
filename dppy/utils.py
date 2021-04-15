@@ -186,15 +186,15 @@ def is_equal_to_O_or_1(array, tol=1e-8):
         raise ValueError('array with entries not all in {0,1}')
 
 
-def is_in_01(array, tol=1e-8):
+def check_in_01(array, tol=1e-8):
     """Check if entries are **all** in :math:`[0, 1]`, for a given tolerance"""
 
     if array is None:
-        return None
-    elif np.all((-tol <= array) & (array <= 1.0 + tol)):
-        return array
-    else:
-        raise ValueError('array with entries not all in [0,1]')
+        return
+    if np.all((-tol <= array) & (array <= 1.0 + tol)):
+        return
+
+    raise ValueError('array with entries not all in [0,1]')
 
 
 def is_geq_0(array, tol=1e-8):

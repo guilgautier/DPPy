@@ -44,7 +44,7 @@ from dppy.utils import (check_random_state,
                         is_projection,
                         is_orthonormal_columns,
                         is_full_row_rank,
-                        is_in_01,
+                        check_in_01,
                         is_geq_0,
                         is_equal_to_O_or_1)
 
@@ -132,7 +132,7 @@ class FiniteDPP:
         if self.projection:
             self.K_eig_vals = is_equal_to_O_or_1(e_vals)
         else:
-            self.K_eig_vals = is_in_01(e_vals)
+            self.K_eig_vals = check_in_01(e_vals)
         self.eig_vecs = is_orthonormal_columns(e_vecs)
 
         self.A_zono = is_full_row_rank(params.get('A_zono', None))
@@ -579,7 +579,7 @@ class FiniteDPP:
 
         elif self.K is not None:
             self.K_eig_vals, self.eig_vecs = la.eigh(self.K)
-            self.K_eig_vals = is_in_01(self.K_eig_vals)
+            self.K_eig_vals = check_in_01(self.K_eig_vals)
             return self.sample_exact_k_dpp(size, self.sampling_mode,
                                            random_state=rng)
 
@@ -822,7 +822,7 @@ class FiniteDPP:
                 msg = '- eigendecomposition of K'
                 print(msg)
                 self.K_eig_vals, self.eig_vecs = la.eigh(self.K)
-                self.K_eig_vals = is_in_01(self.K_eig_vals)
+                self.K_eig_vals = check_in_01(self.K_eig_vals)
                 self.compute_L(msg=True)
 
             else:
