@@ -51,6 +51,15 @@ class TestSpectralSampler(unittest.TestCase):
 
         self.assertTrue(np.allclose(dpp.K_eig_vals, eig_vals))
 
+    def test_likelihood_eig_vals_initialization_is_valid(self):
+        eig_vecs, _ = qr(randn(self.N, self.r), mode="economic")
+        eig_vals = np.arange(1, self.r+1)
+
+        dpp = FiniteDPP("likelihood", False,
+                        L_eig_dec=(eig_vals, eig_vecs))
+
+        self.assertTrue(np.allclose(dpp.L_eig_vals, eig_vals))
+
     def test_likelihood_eig_vals_not_geq_0_from_L_raises_error(self):
         eig_vecs, _ = qr(randn(self.N, self.r), mode="economic")
         eig_vals = np.arange(1, self.r+1)
@@ -62,6 +71,18 @@ class TestSpectralSampler(unittest.TestCase):
 
         with self.assertRaises(ValueError):
             sample = dpp.sample_exact(mode="GS")
+
+    def test_likelihood_eig_vals_geq_0_from_L(self):
+        eig_vecs, _ = qr(randn(self.N, self.N), mode="economic")
+        eig_vals = 10.0 * np.sort(rand(self.N))
+
+        L = (eig_vecs * eig_vals).dot(eig_vecs.T)
+
+        dpp = FiniteDPP("likelihood", False, L=L)
+
+        sample = dpp.sample_exact(mode="GS")
+
+        self.assertTrue(np.allclose(dpp.L_eig_vals, eig_vals))
 
     # def test_likelihood_dual_eig_vals_to_likelihood_eig_vals(self):
     #     phi = randn(self.r, self.N)
@@ -75,7 +96,7 @@ class TestSpectralSampler(unittest.TestCase):
     #     self.assertTrue(np.allclose(
     #         dpp.K_eig_vals, eig_vals / (1.0 + eig_vals)))
 
-    # def test_likelihood_dual_eig_vals_to_correlation_eig_vals(self):
+    # def test_likelihood_dual_eig_vals_to_likelihood_eig_vals(self):
     #     eig_vecs, _ = qr(randn(self.N, self.r), mode="economic")
     #     eig_vals = np.arange(1, self.r+1)
 
