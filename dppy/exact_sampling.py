@@ -1,5 +1,5 @@
 # coding: utf8
-""" Implementation of finite DPP exact samplers derived from:
+"""Implementation of finite DPP exact samplers derived from:
 
 - the raw **projection** correlation :math:`K` kernel (no need for eigendecomposition)
 - the eigendecomposition of the correlation :math:`K` kernel
@@ -23,7 +23,11 @@ from dppy.intermediate_sampling import (vfx_sampling_precompute_constants,
 #####################
 # Sample projection DPP from kernel
 def proj_dpp_sampler_kernel(kernel, mode='GS', size=None, random_state=None):
-    """
+    """Generate an exact sample from projection :math:`\\operatorname{\\mathbf{K}}` where :math:`K=` ``kernel``, or from :math:`k-\\operatorname{\\mathbf{K}}` if :math:`k=` ``size`` is provided.
+
+    :param kernel: Projection kernel :math:`\\mathbf{K}^2 = \\mathbf{K}`
+    :type kernel: array_like
+
     .. seealso::
 
         - :func:`proj_dpp_sampler_kernel_GS <proj_dpp_sampler_kernel_GS>`
@@ -33,37 +37,34 @@ def proj_dpp_sampler_kernel(kernel, mode='GS', size=None, random_state=None):
 
     rng = check_random_state(random_state)
 
-    if size:
-        rank = np.rint(np.trace(kernel)).astype(int)
-        if size > rank:
-            raise ValueError('size k={} > rank={}'. format(size, rank))
+    rank = np.rint(np.trace(kernel)).astype(int)
+    if size is None:
+        size = rank
+    if size > rank:
+        raise ValueError('size k={} > rank={}'. format(size, rank))
 
-    # Sample from orthogonal projection kernel K = K^2 = K.H K
-    if mode == 'GS':  # Gram-Schmidt equiv Cholesky
-        sampl = proj_dpp_sampler_kernel_GS(kernel, size, rng)
+    if mode == 'GS':
+        return proj_dpp_sampler_kernel_GS(kernel, size, rng)
 
-    elif mode == 'Chol':  # Cholesky updates of Pou19
-        sampl = proj_dpp_sampler_kernel_Chol(kernel, size, rng)[0]
+    if mode == 'Chol':
+        return proj_dpp_sampler_kernel_Chol(kernel, size, rng)[0]
 
-    elif mode == 'Schur':  # Schur complement
-        sampl = proj_dpp_sampler_kernel_Schur(kernel, size, rng)
+    if mode == 'Schur':
+        return proj_dpp_sampler_kernel_Schur(kernel, size, rng)
 
-    else:
-        str_list = ['Invalid sampling mode, choose among:',
-                    '- "GS (default)',
-                    '- "Chol"',
-                    '- "Schur"',
-                    'Given "{}"'.format(mode)]
-        raise ValueError('\n'.join(str_list))
-
-    return sampl
+    str_list = ['Invalid sampling mode, choose among:',
+                '- "GS (default)',
+                '- "Chol"',
+                '- "Schur"',
+                'Given "{}"'.format(mode)]
+    raise ValueError('\n'.join(str_list))
 
 
 def proj_dpp_sampler_kernel_Chol(K, size=None, random_state=None):
-    """ Sample from:
+    """Sample from:
 
     - :math:`\\operatorname{DPP}(K)` with orthogonal projection **correlation** kernel :math:`K` if ``size`` is not provided
-    - :math:`\\operatorname{k-DPP}` with orthogonal projection **likelihood** kernel :math:`K` with :math:`k=` ``size`` is not provided
+    - :math:`\\operatorname{k-DPP}` with orthogonal projection **likelihood** kernel :math:`K` with :math:`k=` ``size`` is provided
 
     Chain rule is applied by performing Cholesky updates of :math:`K`.
 
@@ -93,24 +94,25 @@ def proj_dpp_sampler_kernel_Chol(K, size=None, random_state=None):
 
     .. seealso::
 
-        - :cite:`Pou19` Algorithm 3 and :ref:`catamari code <https://gitlab.com/hodge_star/catamari/blob/38718a1ea34872fb6567e019ece91fbeb5af5be1/include/catamari/dense_dpp/elementary_hermitian_dpp-impl.hpp#L37>`_ for the Hermitian swap routine.
+        #L37>`_ for the Hermitian swap routine.
+        - :cite:`Pou19` Algorithm 3 and :ref:`catamari code <https://gitlab.com/hodge_star/catamari/blob/38718a1ea34872fb6567e019ece91fbeb5af5be1/include/catamari/dense_dpp/elementary_hermitian_dpp-impl.hpp
         - :func:`proj_dpp_sampler_kernel_GS <proj_dpp_sampler_kernel_GS>`
         - :func:`proj_dpp_sampler_kernel_Schur <proj_dpp_sampler_kernel_Schur>`
     """
 
     rng = check_random_state(random_state)
 
-    hermitian = True if K.dtype.kind == 'c' else False
+    is_kernel_hermitian = np.iscomplexobj(K)
 
-    N, rank = len(K), np.rint(np.trace(K)).astype(int)
-    if size is None:  # full projection DPP
+    N = len(K)
+    rank = np.rint(np.trace(K)).astype(int)
+    if size is None:  # full projection DPP else k-DPP with k = size
         size = rank
-    # else: k-DPP with k = size
 
     A = K.copy()
     d = np.diagonal(A).astype(float)
 
-    orig_indices = np.arange(N)
+    ground_set = np.arange(N)
 
     for j in range(size):
 
@@ -131,8 +133,8 @@ def proj_dpp_sampler_kernel_Chol(K, size=None, random_state=None):
         # left swap
         A[[j, t], :j] = A[[t, j], :j]
 
-        # Swap positions j and t of orig_indices and d
-        orig_indices[[j, t]] = orig_indices[[t, j]]
+        # Swap positions j and t of ground_set and d
+        ground_set[[j, t]] = ground_set[[t, j]]
         d[[j, t]] = d[[t, j]]
 
         A[j, j] = np.sqrt(d[j])
@@ -144,16 +146,19 @@ def proj_dpp_sampler_kernel_Chol(K, size=None, random_state=None):
         A[j + 1:, j] -= A[j + 1:, :j].dot(A[j, :j].conj())
         A[j + 1:, j] /= A[j, j]
 
-        if hermitian:
+        if is_kernel_hermitian:
             d[j + 1:] -= A[j + 1:, j].real**2 + A[j + 1:, j].imag**2
         else:
             d[j + 1:] -= A[j + 1:, j]**2
 
-    return orig_indices[:size].tolist(), A[:size, :size]
+    sample = ground_set[:size].tolist()
+    log_likelihood = np.sum(np.log(np.diagonal(A[:size, :size]).real))
+
+    return sample, log_likelihood
 
 
 def proj_dpp_sampler_kernel_GS(K, size=None, random_state=None):
-    """ Sample from:
+    """Sample from:
 
     - :math:`\\operatorname{DPP}(K)` with orthogonal projection **correlation** kernel :math:`K` if ``size`` is not provided
     - :math:`\\operatorname{k-DPP}` with orthogonal projection **likelihood** kernel :math:`K` with :math:`k=` ``size`` is not provided
@@ -188,16 +193,14 @@ def proj_dpp_sampler_kernel_GS(K, size=None, random_state=None):
 
     rng = check_random_state(random_state)
 
-    # Initialization
-    # ground set size / rank(K) = Tr(K)
-    N, rank = len(K), np.rint(np.trace(K)).astype(int)
-    if size is None:  # full projection DPP
+    N = len(K)  # ground set size
+    rank = np.rint(np.trace(K)).astype(int)  # rank(K) = Tr(K)
+    if size is None:  # full projection DPP else k-DPP with k = size
         size = rank
-    # else: k-DPP with k = size
 
     ground_set = np.arange(N)
-    sampl = np.zeros(size, dtype=int)  # sample list
-    avail = np.ones(N, dtype=bool)  # available items
+    sample = np.zeros(size, dtype=int)
+    avail = np.full(N, fill_value=True, dtype=bool)
 
     c = np.zeros((N, size))
     norm_2 = K.diagonal().copy()  # residual norm^2
@@ -206,21 +209,24 @@ def proj_dpp_sampler_kernel_GS(K, size=None, random_state=None):
         j = rng.choice(ground_set[avail],
                        p=np.abs(norm_2[avail]) / (rank - it))
 
-        sampl[it] = j
+        sample[it] = j
         if it == size - 1:
             break
         # Update the Cholesky factor
         avail[j] = False
         c[avail, it] = (K[avail, j] - c[avail, :it].dot(c[j, :it]))\
-                       / np.sqrt(norm_2[j])
+            / np.sqrt(norm_2[j])
 
         norm_2[avail] -= c[avail, it]**2
 
-    return sampl.tolist()  # , np.prod(norm_2[sampl])
+    return sample.tolist()
+
+    # log_likelihood = np.sum(np.log(norm_2[sample]))
+    # return sample.tolist(), log_likelihood
 
 
 def proj_dpp_sampler_kernel_Schur(K, size=None, random_state=None):
-    """ Sample from:
+    """Sample from:
 
     - :math:`\\operatorname{DPP}(K)` with orthogonal projection **correlation** kernel :math:`K` if ``size`` is not provided
     - :math:`\\operatorname{k-DPP}` with orthogonal projection **likelihood** kernel :math:`K` with :math:`k=` ``size``
@@ -252,49 +258,40 @@ def proj_dpp_sampler_kernel_Schur(K, size=None, random_state=None):
 
     rng = check_random_state(random_state)
 
-    # Initialization
-    # ground set size / rank(K) = Tr(K)
-    N, rank = len(K), np.rint(np.trace(K)).astype(int)
-    if size is None:  # full projection DPP
+    N = len(K)  # ground set size
+    rank = np.rint(np.trace(K)).astype(int)  # rank(K) = Tr(K)
+    if size is None:  # full projection DPP else k-DPP with k = size
         size = rank
-    # else: k-DPP with k = size
 
     ground_set = np.arange(N)
-    sampl = np.zeros(size, dtype=int)  # sample list
-    avail = np.ones(N, dtype=bool)  # available items
+    sample = np.zeros(size, dtype=int)
+    avail = np.full(N, fill_value=True, dtype=bool)
 
     # Schur complement list i.e. residual norm^2
     schur_comp = K.diagonal().copy()
-    K_inv = np.zeros((size, size))
+    K_inv = np.zeros((size, size), dtype=float)
 
     for it in range(size):
-        # Pick a new item proportionally to residual norm^2
         j = rng.choice(ground_set[avail],
                        p=np.abs(schur_comp[avail]) / (rank - it))
-        # store the item and make it unavailasble
-        sampl[it], avail[j] = j, False
+        sample[it] = j
+        avail[j] = False
 
         # Update Schur complements K_ii - K_iY (K_Y)^-1 K_Yi
-        #
-        # 1) use Woodbury identity to update K[Y,Y]^-1 to K[Y+j,Y+j]^-1
-        # K[Y+j,Y+j]^-1 =
-        # [ K[Y,Y]^-1 + (K[Y,Y]^-1 K[Y,j] K[j,Y] K[Y,Y]^-1)/schur_j,
-        #      -K[Y,Y]^-1 K[Y,j]/schur_j]
-        # [ -K[j,Y] K[Y,Y]^-1/schur_j,
-        #      1/schur_j]
+        # 1. Use Woodbury identity to compute K[Y+j,Y+j]^-1 from K[Y,Y]^-1
         if it == 0:
             K_inv[0, 0] = 1.0 / K[j, j]
 
         elif it == 1:
-            i = sampl[0]
-            K_inv[:2, :2] = np.array([[K[j, j], -K[j, i]],
-                                      [-K[j, i], K[i, i]]])\
-                            / (K[i, i] * K[j, j] - K[j, i]**2)
+            i = sample[0]
+            K_inv[:2, :2] = (np.array([[K[j, j], -K[j, i]],
+                                      [-K[j, i], K[i, i]]])
+                             / (K[i, i] * K[j, j] - K[j, i]**2))
 
         elif it < size - 1:
-            temp = K_inv[:it, :it].dot(K[sampl[:it], j])  # K_Y^-1 K_Yj
+            temp = K_inv[:it, :it].dot(K[sample[:it], j])  # K_Y^-1 K_Yj
             # K_jj - K_jY K_Y^-1 K_Yj
-            schur_j = K[j, j] - K[j, sampl[:it]].dot(temp)
+            schur_j = K[j, j] - K[j, sample[:it]].dot(temp)
 
             K_inv[:it, :it] += np.outer(temp, temp / schur_j)
             K_inv[:it, it] = - temp / schur_j
@@ -304,23 +301,26 @@ def proj_dpp_sampler_kernel_Schur(K, size=None, random_state=None):
         else:  # it == size-1
             break  # no need to update for nothing
 
-        # 2) update Schur complements
+        # 2. Update Schur complements
         # K_ii - K_iY (K_Y)^-1 K_Yi for Y <- Y+j
-        K_iY = K[np.ix_(avail, sampl[:it + 1])]
-        schur_comp[avail] = K[avail, avail]\
-                        - inner1d(K_iY.dot(K_inv[:it+1, :it+1]), K_iY, axis=1)
+        K_iY = K[np.ix_(avail, sample[:it + 1])]
+        schur_comp[avail] = (
+            K[avail, avail]
+            - inner1d(K_iY.dot(K_inv[:it+1, :it+1]), K_iY, axis=1)
+        )
 
-    return sampl.tolist()
+    return sample.tolist()
+
+    # log_likelihood = np.sum(np.log(schur_comp[sample]))
+    # return sample.tolist(), log_likelihood
+
+####################################################
+# Generic sampler, based on the correlation kernel #
+####################################################
 
 
-##################
-# Generic kernel #
-##################
-
-# Directly from correlation kernel, without spectral decomposition
-##################################################################
 def dpp_sampler_generic_kernel(K, random_state=None):
-    """ Sample from generic :math:`\\operatorname{DPP}(\\mathbf{K})` with potentially non hermitian correlation kernel :math:`\\operatorname{DPP}(\\mathbf{K})` based on :math:`LU` factorization procedure.
+    """Generate an exact sample from generic :math:`\\operatorname{DPP}(\\mathbf{K})` with potentially non hermitian correlation kernel :math:`\\operatorname{DPP}(\\mathbf{K})` based on LU factorization procedure.
 
     :param K:
         Correlation kernel (potentially non hermitian).
@@ -328,8 +328,8 @@ def dpp_sampler_generic_kernel(K, random_state=None):
         array_like
 
     :return:
-        A sample :math:`\\mathcal{X}` from :math:`\\operatorname{DPP}(K)` and
-        the in-place :math:`LU factorization of :math:`K − I_{\\mathcal{X}^{c}}` where :math:`I_{\\mathcal{X}^{c}}` is the diagonal indicator matrix for the entries not in the sample :math:`\\mathcal{X}`.
+        An exact sample :math:`X \sim \\operatorname{DPP}(K)` and
+        the in-place LU factorization of :math:`K − I_{X^{c}}` where :math:`I_{X^{c}}` is the diagonal indicator matrix for the entries not in the sample :math:`X`.
     :rtype:
         list and array_like
 
@@ -339,46 +339,40 @@ def dpp_sampler_generic_kernel(K, random_state=None):
     """
 
     rng = check_random_state(random_state)
-
     A = K.copy()
     sample = []
 
     for j in range(len(A)):
-
         if rng.rand() < A[j, j]:
             sample.append(j)
         else:
-            A[j, j] -= 1
-
+            A[j, j] -= 1.0
         A[j + 1:, j] /= A[j, j]
         A[j + 1:, j + 1:] -= np.outer(A[j + 1:, j], A[j, j + 1:])
         # A[j+1:, j+1:] -=  np.einsum('i,j', A[j+1:, j], A[j, j+1:])
-
     return sample, A
 
-# From spectral decomposition
-#############################
+###################################################################
+# Spectral samplers based on the eigendecomposition of the kernel #
+###################################################################
 
 
 # Phase 1: subsample eigenvectors by drawing independent Bernoulli variables with parameter the eigenvalues of the correlation kernel K.
-def dpp_eig_vecs_selector(ber_params, eig_vecs,
-                          random_state=None):
-    """ Phase 1 of exact sampling procedure. Subsample eigenvectors :math:`V` of the initial kernel (correlation :math:`K`, resp. likelihood :math:`L`) to build a projection DPP with kernel :math:`U U^{\\top}` from which sampling is easy.
-    The selection is made based on a realization of Bernoulli variables with parameters to the eigenvalues of :math:`K`.
+def dpp_eig_vecs_selector(bernoulli_params, eig_vecs, random_state=None):
+    """Select columns of ``eig_vecs`` by sampling Bernoulli variables with parameters ``bernoulli_params``.
 
-    :param ber_params:
+    :param bernoulli_params:
         Parameters of Bernoulli variables
-        :math:`\\lambda^K=\\lambda^L/(1+\\lambda^L)
-    :type ber_params:
-        list, array_like
+    :type bernoulli_params:
+        array_like
 
     :param eig_vecs:
-        Collection of eigenvectors of the kernel :math:`K`, resp. :math:`L`
+        Eigenvectors, stored as columns of a 2d array
     :type eig_vecs:
         array_like
 
     :return:
-        selected eigenvectors
+        Selected eigenvectors
     :rtype:
         array_like
 
@@ -387,18 +381,13 @@ def dpp_eig_vecs_selector(ber_params, eig_vecs,
         - :func:`dpp_sampler_eig <dpp_sampler_eig>`
     """
     rng = check_random_state(random_state)
-
-    # Realisation of Bernoulli random variables with params ber_params
-    ind_sel = rng.rand(ber_params.size) < ber_params
-
-    return eig_vecs[:, ind_sel]
+    mask = rng.rand(bernoulli_params.size) < bernoulli_params
+    return eig_vecs[:, mask]
 
 
-# Phase 2:
-# Sample projection kernel VV.T where V are the eigvecs selected in Phase 1.
-def proj_dpp_sampler_eig(eig_vecs, mode='GS', size=None,
-                         random_state=None):
-    """ Sample from projection :math:`\\operatorname{DPP}(K)` using the eigendecomposition of the projection kernel :math:`K=VV^{\\top}` where :math:`V^{\\top}V = I_r` and :math:`r=\\operatorname{rank}(\\mathbf{K})`.
+# Phase 2: Sample from DPP with projection kernel VV.T where V are the eigenvectors selected in Phase 1.
+def proj_dpp_sampler_eig(eig_vecs, mode='GS', size=None, random_state=None):
+    """Generate an exact sample from projection :math:`\\operatorname{DPP}(K)` with orthogonal projection kernel given by :math:`K=VV^{\\top}` where :math:`V=` ``eig_vecs``, such that :math:`V^{\\top}V = I_r` and :math:`r=\\operatorname{rank}(\\mathbf{K})`.
 
     .. seealso::
 
@@ -415,36 +404,30 @@ def proj_dpp_sampler_eig(eig_vecs, mode='GS', size=None,
 
     rng = check_random_state(random_state)
 
-    if eig_vecs.shape[1]:
-        # Phase 2: Sample from projection kernel VV.T
-        # Chain rule, conditionals are updated using:
-        if mode == 'GS':  # Gram-Schmidt
-            sampl = proj_dpp_sampler_eig_GS(eig_vecs, size, rng)
+    if not eig_vecs.shape[1]:
+        return []  # np.empty((0,), dtype=int)
 
-        elif mode == 'GS_bis':  # Slight modif of 'GS'
-            sampl = proj_dpp_sampler_eig_GS_bis(eig_vecs, size, rng)
+    if mode == 'GS':  # Gram-Schmidt
+        return proj_dpp_sampler_eig_GS(eig_vecs, size, rng)
 
-        elif mode == 'KuTa12':  # cf Kulesza-Taskar
-            sampl = proj_dpp_sampler_eig_KuTa12(eig_vecs, size, rng)
+    if mode == 'GS_bis':  # Slight modification of 'GS'
+        return proj_dpp_sampler_eig_GS_bis(eig_vecs, size, rng)
 
-        else:
-            str_list = ['Invalid sampling mode, choose among:',
-                        '- "GS" (default)',
-                        '- "GS_bis"',
-                        '- "KuTa12"',
-                        'Given "{}"'.format(mode)]
-            raise ValueError('\n'.join(str_list))
-    else:
-        sampl = []
+    if mode == 'KuTa12':  # cf Kulesza-Taskar
+        return proj_dpp_sampler_eig_KuTa12(eig_vecs, size, rng)
 
-    return sampl
+    str_list = ['Invalid sampling mode, choose among:',
+                '- "GS" (default)',
+                '- "GS_bis"',
+                '- "KuTa12"',
+                'Given "{}"'.format(mode)]
+    raise ValueError('\n'.join(str_list))
 
 
 # Using Gram-Schmidt orthogonalization
-def proj_dpp_sampler_eig_GS(eig_vecs, size=None,
-                            random_state=None):
-    """ Sample from projection :math:`\\operatorname{DPP}(K)` using the eigendecomposition of the projection kernel :math:`K=VV^{\\top}` where :math:`V^{\\top}V = I_r` and :math:`r=\\operatorname{rank}(\\mathbf{K})`.
-    It performs sequential update of Cholesky decomposition, which is equivalent to Gram-Schmidt orthogonalization of the rows of the eigenvectors.
+def proj_dpp_sampler_eig_GS(eig_vecs, size=None, random_state=None):
+    """Generate an exact sample from projection :math:`\\operatorname{DPP}(K)` with orthogonal projection kernel :math:`K=VV^{\\top}` where :math:`V=` ``eig_vecs`` such that :math:`V^{\\top}V = I_r` and :math:`r=\\operatorname{rank}(\\mathbf{K})`.
+    Performs sequential Gram-Schmidt (GS) orthogonalization of the rows of the eigenvectors corresponding to the sampled items.
 
     :param eig_vecs:
         Eigenvectors used to form projection kernel :math:`K=VV^{\\top}`.
@@ -454,28 +437,26 @@ def proj_dpp_sampler_eig_GS(eig_vecs, size=None,
     :return:
         A sample from projection :math:`\\operatorname{DPP}(K)`.
     :rtype:
-        list, array_like
+        list
 
     .. seealso::
 
-        - cite:`TrBaAm18` Algorithm 3, :cite:`Gil14` Algorithm 2
+        - :cite:`Gil14` Algorithm 2 or :cite:`TrBaAm18` Algorithm 3
         - :func:`proj_dpp_sampler_eig_GS_bis <proj_dpp_sampler_eig_GS_bis>`
         - :func:`proj_dpp_sampler_eig_KuTa12 <proj_dpp_sampler_eig_KuTa12>`
     """
 
     rng = check_random_state(random_state)
 
-    # Initialization
     V = eig_vecs
 
     N, rank = V.shape  # ground set size / rank(K)
-    if size is None:  # full projection DPP
+    if size is None:  # full projection DPP else k-DPP with k = size
         size = rank
-    # else: k-DPP with k = size
 
     ground_set = np.arange(N)
-    sampl = np.zeros(size, dtype=int)  # sample list
-    avail = np.ones(N, dtype=bool)  # available items
+    sample = np.zeros(size, dtype=int)
+    avail = np.full(N, fill_value=True, dtype=bool)
 
     # Phase 1: Already performed!
     # Select eigvecs with Bernoulli variables with parameter = eigvals of K.
@@ -487,68 +468,64 @@ def proj_dpp_sampler_eig_GS(eig_vecs, size=None,
     norms_2 = inner1d(V, axis=1)  # ||V_i:||^2
 
     for it in range(size):
-        # Pick an item \propto this squred distance
+        # Pick an item \propto this squared distance
         j = rng.choice(ground_set[avail],
                        p=np.abs(norms_2[avail]) / (rank - it))
-        sampl[it] = j
+        sample[it] = j
+        avail[j] = False
+
         if it == size - 1:
             break
+
         # Cancel the contribution of V_j to the remaining feature vectors
-        avail[j] = False
-        c[avail, it] =\
-            (V[avail, :].dot(V[j, :]) - c[avail, :it].dot(c[j, :it]))\
+        c[avail, it] = (
+            (V[avail, :].dot(V[j, :]) - c[avail, :it].dot(c[j, :it]))
             / np.sqrt(norms_2[j])
+        )
 
         norms_2[avail] -= c[avail, it]**2  # update residual norm^2
 
-    return sampl.tolist()
+    return sample.tolist()
 
 
-# Slight modif of Gram-Schmidt above
+# Slight modification of proj_dpp_sampler_eig_GS above
 def proj_dpp_sampler_eig_GS_bis(eig_vecs, size=None, random_state=None):
-    """ Sample from projection :math:`\\operatorname{DPP}(K)` using the eigendecomposition of the projection kernel :math:`K=VV^{\\top}` where :math:`V^{\\top}V = I_r` and :math:`r=\\operatorname{rank}(\\mathbf{K})`.
-    It performs sequential Gram-Schmidt orthogonalization of the rows of the eigenvectors.
+    """Sample from projection :math:`\\operatorname{DPP}(K)` using the eigendecomposition of the orthogonal projection kernel :math:`K=VV^{\\top}` where :math:`V^{\\top}V = I_r` and :math:`r=\\operatorname{rank}(\\mathbf{K})`.
+    Sequential Gram-Schmidt orthogonalization is performed on the rows of the matrix of eigenvectors corresponding to the sampled items.
+    This is a slight modification of :func:`proj_dpp_sampler_eig_GS <proj_dpp_sampler_eig_GS>`.
 
     :param eig_vecs:
-        Eigenvectors used to form projection kernel :math:`K=VV^{\\top}`.
+        Eigenvectors of the projection kernel :math:`K=VV^{\\top}`.
     :type eig_vecs:
         array_like
 
     :return:
         A sample from projection :math:`\\operatorname{DPP}(K)`.
     :rtype:
-        list, array_like
+        list
 
     .. seealso::
 
-        - This is a slight modification of :func:`proj_dpp_sampler_eig_GS <proj_dpp_sampler_eig_GS>`
+        - :func:`proj_dpp_sampler_eig_GS <proj_dpp_sampler_eig_GS>`
         - :func:`proj_dpp_sampler_eig_KuTa12 <proj_dpp_sampler_eig_KuTa12>`
     """
-
     rng = check_random_state(random_state)
 
-    # Initialization
     V = eig_vecs.copy()
-
     N, rank = V.shape  # ground set size / rank(K)
-    if size is None:  # full projection DPP
+    if size is None:  # full projection DPP else k-DPP with k = size
         size = rank
-    # else: k-DPP with k = size
 
     ground_set = np.arange(N)
-    sampl = np.zeros(size, dtype=int)  # sample list
-    avail = np.ones(N, dtype=bool)  # available items
+    sample = np.zeros(size, dtype=int)
+    avail = np.full(N, fill_value=True, dtype=bool)
 
-    # Phase 1: Already performed!
-    # Select eigvecs with Bernoulli variables with parameter = eigvals of K.
-
-    # Phase 2: Chain rule
+    # Chain rule
     # Use Gram-Schmidt recursion to compute the Vol^2 of the parallelepiped spanned by the feature vectors associated to the sample
 
     # Matrix of the contribution of remaining vectors
     # <V_i, P_{V_Y}^{orthog} V_j>
-    contrib = np.zeros((N, size))
-
+    contrib = np.zeros((N, size), dtype=float)
     norms_2 = inner1d(V, axis=1)  # ||V_i:||^2
 
     for it in range(size):
@@ -557,7 +534,7 @@ def proj_dpp_sampler_eig_GS_bis(eig_vecs, size=None, random_state=None):
         # ||P_{V_Y}^{orthog} V_j||^2
         j = rng.choice(ground_set[avail],
                        p=np.abs(norms_2[avail]) / (rank - it))
-        sampl[it] = j
+        sample[it] = j
         if it == size - 1:
             break
         # Update the residual norm^2
@@ -567,13 +544,13 @@ def proj_dpp_sampler_eig_GS_bis(eig_vecs, size=None, random_state=None):
         #     =  |P_{V_Y}^{orthog} V_i|^2 -  ----------------------------
         #                                      |P_{V_Y}^{orthog} V_j|^2
         #
-        # 1) Orthogonalize V_j w.r.t. orthonormal basis of Span(V_Y)
+        # 1) Orthogonal part of V_j w.r.t. orthonormal basis of Span(V_Y)
         #    V'_j = P_{V_Y}^{orthog} V_j
         #         = V_j - <V_j,sum_Y V'_k>V'_k
         #         = V_j - sum_Y <V_j, V'_k> V'_k
         # Note V'_j is not normalized
         avail[j] = False
-        V[j, :] -= contrib[j, :it].dot(V[sampl[:it], :])
+        V[j, :] -= contrib[j, :it].dot(V[sample[:it], :])
 
         # 2) Compute <V_i, V'_j> = <V_i, P_{V_Y}^{orthog} V_j>
         contrib[avail, it] = V[avail, :].dot(V[j, :])
@@ -595,15 +572,15 @@ def proj_dpp_sampler_eig_GS_bis(eig_vecs, size=None, random_state=None):
         #                                   |P_{V_Y}^{orthog} V_j|^2
         norms_2[avail] -= contrib[avail, it]**2 / norms_2[j]
 
-    return sampl.tolist()
+    return sample.tolist()
 
 
 def proj_dpp_sampler_eig_KuTa12(eig_vecs, size=None, random_state=None):
-    """ Sample from :math:`\\operatorname{DPP}(K)` using the eigendecomposition of the similarity kernel :math:`K`.
-    It is based on the orthogonalization of the selected eigenvectors.
+    """Generate an exact sample from projection :math:`\\operatorname{DPP}(K)` with orthogonal projection kernel :math:`K=VV^{\\top}` where :math:`V=` ``eig_vecs`` such that :math:`V^{\\top}V = I_r` and :math:`r=\\operatorname{rank}(\\mathbf{K})`.
+    This corresponds to :cite:`KuTa12` Algorithm 1.
 
     :param eig_vals:
-        Collection of eigen values of the similarity kernel :math:`K`.
+        Collection of eigenvalues of the similarity kernel :math:`K`.
     :type eig_vals:
         list
 
@@ -626,27 +603,19 @@ def proj_dpp_sampler_eig_KuTa12(eig_vecs, size=None, random_state=None):
 
     rng = check_random_state(random_state)
 
-    # Initialization
     V = eig_vecs.copy()
-
     N, rank = V.shape  # ground set size / rank(K)
-    if size is None:  # full projection DPP
+    if size is None:  # full projection DPP else k-DPP with k = size
         size = rank
-    # else: k-DPP with k = size
 
-    sampl = np.zeros(size, dtype=int)  # sample list
-
-    # Phase 1: Already performed!
-    # Select eigvecs with Bernoulli variables with parameter the eigvals
-
-    # Phase 2: Chain rule
+    sample = np.full(size, fill_value=0, dtype=int)
     norms_2 = inner1d(V, axis=1)  # ||V_i:||^2
 
-    # Following [Algo 1, KuTa12], the aim is to compute the orhto complement of the subspace spanned by the selected eigenvectors to the canonical vectors \{e_i ; i \in Y\}. We proceed recursively.
+    # Following [Algo 1, KuTa12], the aim is to compute the ortho complement of the subspace spanned by the selected eigenvectors to the canonical vectors \{e_i ; i \in Y\}. We proceed recursively.
     for it in range(size):
 
         j = rng.choice(N, p=np.abs(norms_2) / (rank - it))
-        sampl[it] = j
+        sample[it] = j
         if it == size - 1:
             break
 
@@ -660,28 +629,28 @@ def proj_dpp_sampler_eig_KuTa12(eig_vecs, size=None, random_state=None):
 
         norms_2 = inner1d(V, axis=1)  # ||V_i:||^2
 
-    return sampl.tolist()
+    return sample.tolist()
 
 
-def dpp_vfx_sampler(intermediate_sample_info,
+def dpp_vfx_sampler(info,
                     X_data,
                     eval_L,
                     random_state=None,
                     **params):
-    """ First pre-compute quantities necessary for the vfx rejection sampling loop, such as the inner Nystrom approximation, and the RLS of all elements in :math:`\\mathbf{L}`.
+    """First pre-compute quantities necessary for the vfx rejection sampling loop, such as the inner Nyström approximation, and the RLS of all elements in :math:`\\mathbf{L}`.
     Then, given the pre-computed information,run a rejection sampling loop to generate DPP samples.
 
-    :param intermediate_sample_info:
+    :param info:
         If available, the pre-computed information necessary for the vfx rejection sampling loop.
         If ``None``, this function will compute and return an ``_IntermediateSampleInfo`` with fields
 
         - ``.alpha_star``: appropriate rescaling such that the expected sample size of :math:`\\operatorname{DPP}(\\alpha^* \\mathbf{L})` is equal to a user-indicated constant ``params['desired_expected_size']``, or 1.0 if no such constant was specified by the user.
-        - ``.logdet_I_A``: :math:`\\log \\det` of the Nystrom approximation of :math:`\\mathbf{L} + I`
+        - ``.logdet_I_A``: :math:`\\log \\det` of the Nyström approximation of :math:`\\mathbf{L} + I`
         - ``.q``: placeholder q constant used for vfx sampling, to be replaced by the user before the sampling loop
         - ``.s`` and ``.z``: approximations of the expected sample size of :math:`\\operatorname{DPP}(\\alpha^* \\mathbf{L})` to be used in the sampling loop. For more details see :cite:`DeCaVa19`
         - ``.rls_estimate``: approximations of the RLS of all elements in X (i.e. in :math:`\\mathbf{L}`)
 
-    :type intermediate_sample_info:
+    :type info:
         ``_IntermediateSampleInfo`` or ``None``, default ``None``
 
     :param array_like X_data:
@@ -712,15 +681,15 @@ def dpp_vfx_sampler(intermediate_sample_info,
 
         - ``'rls_oversample_dppvfx'`` (float, default 4.0)
 
-            Oversampling parameter used to construct dppvfx's internal Nystrom approximation.
+            Oversampling parameter used to construct dppvfx's internal Nyström approximation.
             The ``rls_oversample_dppvfx``:math:`\\geq 1` parameter is used to increase the rank of the approximation by a ``rls_oversample_dppvfx`` factor.
             This makes each rejection round slower and more memory intensive, but reduces variance and the number of rounds of rejections, so the actual runtime might increase or decrease.
             Empirically, a small factor ``rls_oversample_dppvfx``:math:`\\in [2,10]` seems to work.
             It is suggested to start with a small number and increase if the algorithm fails to terminate.
 
         - ``'rls_oversample_bless'`` (float, default 4.0)
-            Oversampling parameter used during bless's internal Nystrom approximation.
-            Note that this is a different Nystrom approximation than the one related to :func:`rls_oversample_dppvfx`, and can be tuned separately.
+            Oversampling parameter used during bless's internal Nyström approximation.
+            Note that this is a different Nyström approximation than the one related to :func:`rls_oversample_dppvfx`, and can be tuned separately.
             The ``rls_oversample_bless``:math:`\\geq 1` parameter is used to increase the rank of the approximation by a ``rls_oversample_bless`` factor.
             This makes the one-time pre-processing slower and more memory intensive, but reduces variance and the number of rounds of rejections, so the actual runtime might increase or decrease.
             Empirically, a small factor ``rls_oversample_bless``:math:`\\in [2,10]` seems to work.
@@ -737,7 +706,7 @@ def dpp_vfx_sampler(intermediate_sample_info,
         - ``'verbose'`` (bool, default True)
 
             Controls verbosity of debug output, including progress bars.
-            If intermediate_sample_info is not provided, the first progress bar reports the inner execution of
+            If info is not provided, the first progress bar reports the inner execution of
             the bless algorithm, showing:
 
                 - lam: lambda value of the current iteration
@@ -754,42 +723,43 @@ def dpp_vfx_sampler(intermediate_sample_info,
             Maximum number of intermediate sample rejections before giving up.
 
     :return:
-        Sample from a DPP (as a list) and updated intermediate_sample_info
+        Sample from a DPP (as a list) and updated info
 
     :rtype:
         tuple(list, _IntermediateSampleInfo)
     """
     rng = check_random_state(random_state)
 
-    if intermediate_sample_info is None:
-        intermediate_sample_info = vfx_sampling_precompute_constants(
-                                    X_data=X_data,
-                                    eval_L=eval_L,
-                                    rng=rng,
-                                    **params)
+    if info is None:
+        info = vfx_sampling_precompute_constants(
+            X_data=X_data,
+            eval_L=eval_L,
+            rng=rng,
+            **params)
 
         q_func = params.get('q_func', lambda s: s * s)
-        intermediate_sample_info = intermediate_sample_info._replace(q=q_func(intermediate_sample_info.s))
+        info = info._replace(q=q_func(info.s))
 
-    sampl, rej_count = vfx_sampling_do_sampling_loop(X_data, eval_L, intermediate_sample_info, rng, **params)
+    sample, rej_count = vfx_sampling_do_sampling_loop(
+        X_data, eval_L, info, rng, **params)
 
-    return sampl, intermediate_sample_info
+    return sample, info
 
 
-def alpha_dpp_sampler(intermediate_sample_info,
+def alpha_dpp_sampler(info,
                       X_data,
                       eval_L,
                       random_state=None,
                       **params):
-    """ First pre-compute quantities necessary for the alpha-dpp rejection sampling loop, such as the inner Nystrom
+    """First pre-compute quantities necessary for the alpha-dpp rejection sampling loop, such as the inner Nyström
     approximation, and the and the initial rescaling alpha_hat for the binary search.
     Then, given the pre-computed information,run a rejection sampling loop to generate samples from DPP(alpha * L).
 
-    :param intermediate_sample_info:
+    :param info:
         If available, the pre-computed information necessary for the alpha-dpp rejection sampling loop.
         If ``None``, this function will compute and return an ``_IntermediateSampleInfoAlphaRescale`` (see :func:`alpha_dpp_sampling_precompute_constants`)
 
-    :type intermediate_sample_info:
+    :type info:
         ``_IntermediateSampleInfoAlphaRescale`` or ``None``, default ``None``
 
     :param array_like X_data:
@@ -820,15 +790,15 @@ def alpha_dpp_sampler(intermediate_sample_info,
 
         - ``'rls_oversample_alphadpp'`` (float, default 4.0)
 
-            Oversampling parameter used to construct alphadpp's internal Nystrom approximation.
+            Oversampling parameter used to construct alphadpp's internal Nyström approximation.
             The ``rls_oversample_alphadpp``:math:`\\geq 1` parameter is used to increase the rank of the approximation by a ``rls_oversample_alphadpp`` factor.
             This makes each rejection round slower and more memory intensive, but reduces variance and the number of rounds of rejections, so the actual runtime might increase or decrease.
             Empirically, a small factor ``rls_oversample_alphadpp``:math:`\\in [2,10]` seems to work.
             It is suggested to start with a small number and increase if the algorithm fails to terminate.
 
         - ``'rls_oversample_bless'`` (float, default 4.0)
-            Oversampling parameter used during bless's internal Nystrom approximation.
-            Note that this is a different Nystrom approximation than the one related to :func:`rls_oversample_alphadpp`, and can be tuned separately.
+            Oversampling parameter used during bless's internal Nyström approximation.
+            Note that this is a different Nyström approximation than the one related to :func:`rls_oversample_alphadpp`, and can be tuned separately.
             The ``rls_oversample_bless``:math:`\\geq 1` parameter is used to increase the rank of the approximation by a ``rls_oversample_bless`` factor.
             This makes the one-time pre-processing slower and more memory intensive, but reduces variance and the number of rounds of rejections, so the actual runtime might increase or decrease.
             Empirically, a small factor ``rls_oversample_bless``:math:`\\in [2,10]` seems to work.
@@ -846,7 +816,7 @@ def alpha_dpp_sampler(intermediate_sample_info,
         - ``'verbose'`` (bool, default True)
 
             Controls verbosity of debug output, including progress bars.
-            If intermediate_sample_info is not provided, the first progress bar reports the inner execution of
+            If info is not provided, the first progress bar reports the inner execution of
             the bless algorithm, showing:
 
                 - lam: lambda value of the current iteration
@@ -863,42 +833,40 @@ def alpha_dpp_sampler(intermediate_sample_info,
             Maximum number of intermediate sample rejections before giving up.
 
     :return:
-        Sample from a DPP (as a list) and updated intermediate_sample_info
+        Sample from a DPP (as a list) and updated info
 
     :rtype:
         tuple(list, _IntermediateSampleInfoAlphaRescale)
     """
     rng = check_random_state(random_state)
 
-    if intermediate_sample_info is None:
-        intermediate_sample_info = alpha_dpp_sampling_precompute_constants(
-                                    X_data=X_data,
-                                    eval_L=eval_L,
-                                    rng=rng,
-                                    **params)
+    if info is None:
+        info = alpha_dpp_sampling_precompute_constants(
+            X_data=X_data,
+            eval_L=eval_L,
+            rng=rng,
+            **params)
 
         r_func = params.get('r_func', lambda r: r)
-        intermediate_sample_info = intermediate_sample_info._replace(r=r_func(intermediate_sample_info.deff_alpha_L_hat))
+        info = info._replace(r=r_func(info.deff_alpha_L_hat))
 
-    sampl, rej_count, intermediate_sample_info = alpha_dpp_sampling_do_sampling_loop(X_data,
-                                            eval_L,
-                                            intermediate_sample_info,
-                                            rng,
-                                            **params)
+    sample, rej_count, info = alpha_dpp_sampling_do_sampling_loop(
+        X_data, eval_L, info, rng, **params)
 
-    return sampl, intermediate_sample_info
+    return sample, info
 
 ##########
 # k-DPPs #
 ##########
 
+
 def k_dpp_vfx_sampler(size,
-                      intermediate_sample_info,
+                      info,
                       X_data,
                       eval_L,
                       random_state=None,
                       **params):
-    """ First pre-compute quantities necessary for the vfx rejection sampling loop, such as the inner Nystrom approximation, and the RLS of all elements in :math:`\\mathbf{L}`.
+    """First pre-compute quantities necessary for the vfx rejection sampling loop, such as the inner Nyström approximation, and the RLS of all elements in :math:`\\mathbf{L}`.
     Then, given the pre-computed information,run a rejection sampling loop to generate DPP samples.
     To guarantee that the returned sample has size ``size``, we internally set desired_expected_size=size and
     then repeatedly invoke dpp_vfx_sampler until a sample of the correct size is returned,
@@ -906,17 +874,17 @@ def k_dpp_vfx_sampler(size,
 
     :param int size: The size of the sample (i.e. the k of k-DPPs)
 
-    :param intermediate_sample_info:
+    :param info:
         If available, the pre-computed information necessary for the vfx rejection sampling loop.
         If ``None``, this function will compute and return an ``_IntermediateSampleInfo`` with fields
 
         - ``.alpha_star``: appropriate rescaling such that the expected sample size of :math:`\\operatorname{DPP}(\\alpha^* \\mathbf{L})` is equal to a user-indicated constant ``params['desired_expected_size']``, or 1.0 if no such constant was specified by the user.
-        - ``.logdet_I_A``: :math:`\\log \\det` of the Nystrom approximation of :math:`\\mathbf{L} + I`
+        - ``.logdet_I_A``: :math:`\\log \\det` of the Nyström approximation of :math:`\\mathbf{L} + I`
         - ``.q``: placeholder q constant used for vfx sampling, to be replaced by the user before the sampling loop
         - ``.s`` and ``.z``: approximations of the expected sample size of :math:`\\operatorname{DPP}(\\alpha^* \\mathbf{L})` to be used in the sampling loop. For more details see :cite:`DeCaVa19`
         - ``.rls_estimate``: approximations of the RLS of all elements in X (i.e. in :math:`\\mathbf{L}`)
 
-    :type intermediate_sample_info:
+    :type info:
         ``_IntermediateSampleInfo`` or ``None``, default ``None``
 
     :param array_like X_data:
@@ -939,15 +907,15 @@ def k_dpp_vfx_sampler(size,
 
         - ``'rls_oversample_dppvfx'`` (float, default 4.0)
 
-            Oversampling parameter used to construct dppvfx's internal Nystrom approximation.
+            Oversampling parameter used to construct dppvfx's internal Nyström approximation.
             The ``rls_oversample_dppvfx``:math:`\\geq 1` parameter is used to increase the rank of the approximation by a ``rls_oversample_dppvfx`` factor.
             This makes each rejection round slower and more memory intensive, but reduces variance and the number of rounds of rejections, so the actual runtime might increase or decrease.
             Empirically, a small factor ``rls_oversample_dppvfx``:math:`\\in [2,10]` seems to work.
             It is suggested to start with a small number and increase if the algorithm fails to terminate.
 
         - ``'rls_oversample_bless'`` (float, default 4.0)
-            Oversampling parameter used during bless's internal Nystrom approximation.
-            Note that this is a different Nystrom approximation than the one related to :func:`rls_oversample_dppvfx`, and can be tuned separately.
+            Oversampling parameter used during bless's internal Nyström approximation.
+            Note that this is a different Nyström approximation than the one related to :func:`rls_oversample_dppvfx`, and can be tuned separately.
             The ``rls_oversample_bless``:math:`\\geq 1` parameter is used to increase the rank of the approximation by a ``rls_oversample_bless`` factor.
             This makes the one-time pre-processing slower and more memory intensive, but reduces variance and the number of rounds of rejections, so the actual runtime might increase or decrease.
             Empirically, a small factor ``rls_oversample_bless``:math:`\\in [2,10]` seems to work.
@@ -964,7 +932,7 @@ def k_dpp_vfx_sampler(size,
         - ``'verbose'`` (bool, default True)
 
             Controls verbosity of debug output, including progress bars.
-            If intermediate_sample_info is not provided, the first progress bar reports the inner execution of
+            If info is not provided, the first progress bar reports the inner execution of
             the bless algorithm, showing:
 
                 - lam: lambda value of the current iteration
@@ -986,55 +954,56 @@ def k_dpp_vfx_sampler(size,
 
 
     :return:
-        Sample from a DPP (as a list) and updated intermediate_sample_info
+        Sample from a DPP (as a list) and updated info
 
     :rtype:
         tuple(list, _IntermediateSampleInfo)
     """
     rng = check_random_state(random_state)
 
-    if (intermediate_sample_info is None
-        or not np.isclose(intermediate_sample_info.s, size).item()):
-        intermediate_sample_info = vfx_sampling_precompute_constants(
-                                    X_data=X_data,
-                                    eval_L=eval_L,
-                                    desired_expected_size=size,
-                                    rng=rng,
-                                    **params)
+    if (info is None) or (not np.isclose(info.s, size).item()):
+        info = vfx_sampling_precompute_constants(
+            X_data=X_data,
+            eval_L=eval_L,
+            desired_expected_size=size,
+            rng=rng,
+            **params)
 
         q_func = params.get('q_func', lambda s: s * s)
-
-        intermediate_sample_info = intermediate_sample_info._replace(q=q_func(intermediate_sample_info.s))
+        info = info._replace(q=q_func(info.s))
 
     max_iter_size_rejection = params.get('max_iter_size_rejection', 100)
 
-    for size_rejection_iter in range(max_iter_size_rejection):
-        sampl, rej_count = vfx_sampling_do_sampling_loop(
-                                X_data,
-                                eval_L,
-                                intermediate_sample_info,
-                                rng,
-                                **params)
+    for _ in range(max_iter_size_rejection):
+        sample, rej_count = vfx_sampling_do_sampling_loop(
+            X_data,
+            eval_L,
+            info,
+            rng,
+            **params)
 
-        intermediate_sample_info = intermediate_sample_info._replace(rej_to_first_sample=intermediate_sample_info.rej_to_first_sample + rej_count)
-        if len(sampl) == size:
+        tmp = info.rej_to_first_sample + rej_count
+        info = info._replace(rej_to_first_sample=tmp)
+        if len(sample) == size:
             break
     else:
-        raise ValueError('The vfx sampler reached the maximum number of rejections allowed '
-                         'for the k-DPP size rejection ({}), try to increase the q factor '
-                         '(see q_func parameter) or the Nystrom approximation accuracy '
-                         'see rls_oversample_* parameters).'.format(max_iter_size_rejection))
+        raise ValueError(
+            'The vfx sampler reached the maximum number of rejections allowed '
+            'for the k-DPP size rejection ({}), try to increase the q factor '
+            '(see q_func parameter) or the Nyström approximation accuracy '
+            'see rls_oversample_* parameters).'.format(max_iter_size_rejection)
+        )
 
-    return sampl, intermediate_sample_info
+    return sample, info
 
 
 def alpha_k_dpp_sampler(size,
-                        intermediate_sample_info,
+                        info,
                         X_data,
                         eval_L,
                         random_state=None,
                         **params):
-    """ First pre-compute quantities necessary for the alpha-dpp rejection sampling loop, such as the inner Nystrom
+    """First pre-compute quantities necessary for the alpha-dpp rejection sampling loop, such as the inner Nyström
     approximation, the and the initial rescaling alpha_hat for the binary search.
     Then, given the pre-computed information,run a rejection sampling loop to generate k-DPP samples.
     To guarantee that the returned sample has size ``size``, we internally set desired_expected_size=size and
@@ -1043,11 +1012,11 @@ def alpha_k_dpp_sampler(size,
 
     :param int size: The size of the sample (i.e. the k of k-DPPs)
 
-    :param intermediate_sample_info:
+    :param info:
         If available, the pre-computed information necessary for the alpha-dpp rejection sampling loop.
         If ``None``, this function will compute and return an ``_IntermediateSampleInfoAlphaRescale`` (see :func:`alpha_dpp_sampling_precompute_constants`)
 
-    :type intermediate_sample_info:
+    :type info:
         ``_IntermediateSampleInfoAlphaRescale`` or ``None``, default ``None``
 
     :param array_like X_data:
@@ -1070,24 +1039,23 @@ def alpha_k_dpp_sampler(size,
 
         - ``'rls_oversample_alphadpp'`` (float, default 4.0)
 
-            Oversampling parameter used to construct alphadpp's internal Nystrom approximation.
+            Oversampling parameter used to construct alphadpp's internal Nyström approximation.
             The ``rls_oversample_alphadpp``:math:`\\geq 1` parameter is used to increase the rank of the approximation by a ``rls_oversample_alphadpp`` factor.
             This makes each rejection round slower and more memory intensive, but reduces variance and the number of rounds of rejections, so the actual runtime might increase or decrease.
             Empirically, a small factor ``rls_oversample_alphadpp``:math:`\\in [2,10]` seems to work.
             It is suggested to start with a small number and increase if the algorithm fails to terminate.
 
         - ``'rls_oversample_bless'`` (float, default 4.0)
-            Oversampling parameter used during bless's internal Nystrom approximation.
-            Note that this is a different Nystrom approximation than the one related to :func:`rls_oversample_alphadpp`, and can be tuned separately.
+            Oversampling parameter used during bless's internal Nyström approximation.
+            Note that this is a different Nyström approximation than the one related to :func:`rls_oversample_alphadpp`, and can be tuned separately.
             The ``rls_oversample_bless``:math:`\\geq 1` parameter is used to increase the rank of the approximation by a ``rls_oversample_bless`` factor.
             This makes the one-time pre-processing slower and more memory intensive, but reduces variance and the number of rounds of rejections, so the actual runtime might increase or decrease.
             Empirically, a small factor ``rls_oversample_bless``:math:`\\in [2,10]` seems to work.
             It is suggested to start with a small number and increase if the algorithm fails to terminate or is not accurate.
 
         - ``'r_func'`` (function, default x: x)
-            Mapping from estimate expected size of the rescaled alpha-DPP to Poisson intensity used to choose size
-            of the intermediate sample. Larger intermediate sampler cause less efficient iterations but higher
-            acceptance probability.
+            Mapping from estimate expected size of the rescaled alpha-DPP to Poisson intensity used to choose size of the intermediate sample.
+            Larger intermediate sampler cause less efficient iterations but higher acceptance probability.
 
         - ``'nb_iter_bless'`` (int or None, default None)
 
@@ -1096,7 +1064,7 @@ def alpha_k_dpp_sampler(size,
         - ``'verbose'`` (bool, default True)
 
             Controls verbosity of debug output, including progress bars.
-            If intermediate_sample_info is not provided, the first progress bar reports the inner execution of
+            If info is not provided, the first progress bar reports the inner execution of
             the bless algorithm, showing:
 
                 - lam: lambda value of the current iteration
@@ -1110,10 +1078,9 @@ def alpha_k_dpp_sampler(size,
 
         - ``'early_stop'`` (bool, default False)
 
-            Wheter to return as soon as a first sample is accepted. If True, the sampling loop is interrupted
-            as soon as a k-DPP sample is generated. If False, the algorithm continues the binary search until
-            of a sufficiently good rescaling alpha is found. While this makes subsequent sampling faster, it is wasteful
-            in the case where a single k-DPP sample is desired.
+            Wheter to return as soon as a first sample is accepted. If True, the sampling loop is interrupted as soon as a k-DPP sample is generated.
+            If False, the algorithm continues the binary search until of a sufficiently good rescaling alpha is found.
+            While this makes subsequent sampling faster, it is wasteful in the case where a single k-DPP sample is desired.
 
         - ``'max_iter_size_rejection'`` (int, default 100)
 
@@ -1125,24 +1092,24 @@ def alpha_k_dpp_sampler(size,
 
 
     :return:
-        Sample from a DPP (as a list) and updated intermediate_sample_info
+        Sample from a DPP (as a list) and updated info
 
     :rtype:
         tuple(list, _IntermediateSampleInfoAlphaRescale)
     """
     rng = check_random_state(random_state)
 
-    if intermediate_sample_info is None or intermediate_sample_info.k != size:
-        intermediate_sample_info = alpha_dpp_sampling_precompute_constants(
-                                        X_data=X_data,
-                                        eval_L=eval_L,
-                                        desired_expected_size=size,
-                                        rng=rng,
-                                        **params)
+    if info is None or info.k != size:
+        info = alpha_dpp_sampling_precompute_constants(
+            X_data=X_data,
+            eval_L=eval_L,
+            desired_expected_size=size,
+            rng=rng,
+            **params)
 
         r_func = params.get('r_func', lambda r: r)
 
-        intermediate_sample_info = intermediate_sample_info._replace(r=r_func(intermediate_sample_info.deff_alpha_L_hat))
+        info = info._replace(r=r_func(info.deff_alpha_L_hat))
 
     max_iter_size_rejection = params.get('max_iter_size_rejection', 100)
     number_trial_search = np.ceil(np.sqrt(size)).astype('int')
@@ -1153,7 +1120,7 @@ def alpha_k_dpp_sampler(size,
     under_k_count = 0
     over_k_count = 0
 
-    ratio_alpha = intermediate_sample_info.alpha_max / intermediate_sample_info.alpha_min
+    ratio_alpha = info.alpha_max / info.alpha_min
     found_good_alpha = ratio_alpha <= stopping_ratio
 
     prog_bar = get_progress_bar(disable=not params.get('verbose', False))
@@ -1165,38 +1132,39 @@ def alpha_k_dpp_sampler(size,
     early_stop = params.get('early_stop', False)
 
     trial_count_overall = 0
-    for size_rejection_iter in range(max_iter_size_rejection):
-        sampl, rej_count, intermediate_sample_info = alpha_dpp_sampling_do_sampling_loop(X_data,
-                                                eval_L,
-                                                intermediate_sample_info,
-                                                rng,
-                                                **params)
+    for _ in range(max_iter_size_rejection):
+        sample, rej_count, info = alpha_dpp_sampling_do_sampling_loop(
+            X_data,
+            eval_L,
+            info,
+            rng,
+            **params)
 
         trial_count += 1
         trial_count_overall += 1
 
         prog_bar.set_postfix(trial_count=trial_count,
-                             alpha="{:.4}".format(intermediate_sample_info.alpha_hat),
-                             alpha_switch=intermediate_sample_info.alpha_switches,
+                             alpha="{:.4}".format(info.alpha_hat),
+                             alpha_switch=info.alpha_switches,
                              k=size,
-                             k_emp=len(sampl),
+                             k_emp=len(sample),
                              rej_count=rej_count)
         prog_bar.update()
 
-        if len(sampl) == size:
-            sampl_out = sampl
-            if intermediate_sample_info.trial_to_first_sample == 0:
-                intermediate_sample_info = intermediate_sample_info._replace(trial_to_first_sample=trial_count_overall)
+        if len(sample) == size:
+            sample_out = sample
+            if info.trial_to_first_sample == 0:
+                info = info._replace(trial_to_first_sample=trial_count_overall)
             sample_count += 1
             if early_stop:
                 break
-        if len(sampl) < size:
-            under_k_count += 1
-        if len(sampl) > size:
-            over_k_count += 1
 
-        if intermediate_sample_info.trial_to_first_sample == 0:
-            intermediate_sample_info = intermediate_sample_info._replace(rej_to_first_sample=intermediate_sample_info.rej_to_first_sample + rej_count)
+        under_k_count += len(sample) < size
+        over_k_count += len(sample) > size
+
+        if info.trial_to_first_sample == 0:
+            tmp = info.rej_to_first_sample + rej_count
+            info = info._replace(rej_to_first_sample=tmp)
 
         if sample_count == 2:
             found_good_alpha = True
@@ -1204,65 +1172,70 @@ def alpha_k_dpp_sampler(size,
 
         if trial_count == number_trial_search:
             if under_k_count > over_k_count:
-                intermediate_sample_info = intermediate_sample_info._replace(alpha_min=intermediate_sample_info.alpha_hat)
+                info = info._replace(alpha_min=info.alpha_hat)
             else:
-                intermediate_sample_info = intermediate_sample_info._replace(alpha_max=intermediate_sample_info.alpha_hat)
+                info = info._replace(alpha_max=info.alpha_hat)
 
-            geom_mean_alpha = np.sqrt(intermediate_sample_info.alpha_min * intermediate_sample_info.alpha_max)
-            diag_L = intermediate_sample_info.diag_L
-            intermediate_sample_info = intermediate_sample_info._replace(alpha_hat=geom_mean_alpha)
-            intermediate_sample_info = intermediate_sample_info._replace(rls_upper_bound=geom_mean_alpha * diag_L)
-            intermediate_sample_info = intermediate_sample_info._replace(rls_upper_bound_valid=np.full((diag_L.shape[0],), False))
+            geom_mean_alpha = np.sqrt(info.alpha_min * info.alpha_max)
+            info = info._replace(alpha_hat=geom_mean_alpha)
+            diag_L = info.diag_L
+            info = info._replace(rls_upper_bound=geom_mean_alpha * diag_L)
+            rls_ub_valid = np.full((diag_L.shape[0],), False)
+            info = info._replace(rls_upper_bound_valid=rls_ub_valid)
 
-            ratio_alpha = intermediate_sample_info.alpha_max/intermediate_sample_info.alpha_min
-            if ratio_alpha <= stopping_ratio and sample_count > 0:
-                found_good_alpha = True
+            ratio_alpha = info.alpha_max / info.alpha_min
+            found_good_alpha = (ratio_alpha <= stopping_ratio
+                                and sample_count > 0)
+            if found_good_alpha:
                 break
 
-            intermediate_sample_info = intermediate_sample_info._replace(alpha_switches=intermediate_sample_info.alpha_switches + 1)
+            info = info._replace(alpha_switches=info.alpha_switches + 1)
             trial_count = 0
             under_k_count = 0
             over_k_count = 0
     else:
-        raise ValueError('The alpha sampler reached the maximum number of rejections allowed '
-                         'for the k-DPP size rejection ({}), try to increase the r factor '
-                         '(see r_func parameter) or the Nystrom approximation accuracy '
-                         'see rls_oversample_* parameters).'.format(max_iter_size_rejection))
+        raise ValueError(
+            'The alpha sampler reached the maximum number of rejections allowed '
+            'for the k-DPP size rejection ({}), try to increase the r factor '
+            '(see r_func parameter) or the Nyström approximation accuracy '
+            'see rls_oversample_* parameters).'.format(max_iter_size_rejection)
+        )
     if found_good_alpha:
-        intermediate_sample_info = intermediate_sample_info._replace(alpha_min=intermediate_sample_info.alpha_hat)
-        intermediate_sample_info = intermediate_sample_info._replace(alpha_max=intermediate_sample_info.alpha_hat)
-        intermediate_sample_info = intermediate_sample_info._replace(alpha_switches=intermediate_sample_info.alpha_switches + 1)
+        info = info._replace(alpha_min=info.alpha_hat)
+        info = info._replace(alpha_max=info.alpha_hat)
+        info = info._replace(alpha_switches=info.alpha_switches + 1)
 
     if verbose_outer:
         params['verbose'] = verbose_outer
     else:
         params.pop('verbose')
 
-    return sampl_out, intermediate_sample_info
+    return sample_out, info
 
 
 def k_dpp_eig_vecs_selector(eig_vals, eig_vecs, size,
-                            E_poly=None, random_state=None):
-    """ Subsample eigenvectors V of the 'L' kernel to build a projection DPP with kernel V V.T from which sampling is easy. The selection is made based a realization of Bernoulli variables with parameters the eigenvalues of 'L' and evalutations of the elementary symmetric polynomials.
+                            esp=None, random_state=None):
+    """Select columns of ``eig_vecs`` by sampling Bernoulli variables with parameters derived from the computation of elementary symmetric polynomials ``esp`` of order 0 to ``size`` evaluated in ``eig_vals``.
+    This corresponds to :cite:`KuTa12` Algorithm 8.
 
     :param eig_vals:
-        Collection of eigen values of 'L' (likelihood) kernel.
+        Collection of eigenvalues (assumed non-negetive)
     :type eig_vals:
-        list, array_like
+        array_like
 
     :param eig_vecs:
-        Collection of eigenvectors of 'L' kernel.
+        Matrix of eigenvectors stored columnwise
     :type eig_vecs:
         array_like
 
     :param size:
-        Size :math:`k` of :math:`k`-DPP
+        Number of eigenvectors to be selected
     :type size:
         int
 
-    :param E_poly:
-        Evaluation of symmetric polynomials in the eigenvalues
-    :type E_poly:
+    :param esp:
+        Computation of the elementary symmetric polynomials previously evaluated in ``eig_vals`` and returned by :py:func:`elementary_symmetric_polynomials <elementary_symmetric_polynomials>`, default to None.
+    :type esp:
         array_like
 
     :return:
@@ -1282,43 +1255,40 @@ def k_dpp_eig_vecs_selector(eig_vals, eig_vecs, size,
     N, k = eig_vecs.shape[0], size
 
     # as in np.linalg.matrix_rank
-    tol = np.max(eig_vals) * N * np.finfo(np.float).eps
+    tol = np.max(eig_vals) * N * np.finfo(float).eps
     rank = np.count_nonzero(eig_vals > tol)
     if k > rank:
         raise ValueError('size k={} > rank={}'.format(k, rank))
 
-    if E_poly is None:
-        E_poly = elementary_symmetric_polynomials(eig_vals, k)
+    if esp is None:
+        esp = elementary_symmetric_polynomials(eig_vals, k)
 
-    ind_selected = np.zeros(k, dtype=int)
+    mask = np.zeros(k, dtype=int)
     for n in range(eig_vals.size, 0, -1):
-
-        if rng.rand() < eig_vals[n - 1] * E_poly[k - 1, n - 1] / E_poly[k, n]:
+        if rng.rand() < eig_vals[n - 1] * esp[k - 1, n - 1] / esp[k, n]:
             k -= 1
-            ind_selected[k] = n - 1
+            mask[k] = n - 1
             if k == 0:
                 break
 
-    return eig_vecs[:, ind_selected]
+    return eig_vecs[:, mask]
 
 
-# Evaluate the elementary symmetric polynomials
-def elementary_symmetric_polynomials(eig_vals, size):
-    """ Evaluate the elementary symmetric polynomials :math:`e_k` in the eigenvalues :math:`(\\lambda_1, \\cdots, \\lambda_N)`.
+def elementary_symmetric_polynomials(x, k):
+    """Evaluate the `elementary symmetric polynomials <https://en.wikipedia.org/wiki/Elementary_symmetric_polynomial>`_ :math:`[e_i(x_1, \\dots, x_m)]_{i=0, m=1}^{k, n}`.
 
-    :param eig_vals:
-        Collection of eigenvalues :math:`(\\lambda_1, \\cdots, \\lambda_N)` of the similarity kernel :math:`L`.
-    :type eig_vals:
-        list
+    :param x:
+        Points at which the elementary symmetric polynomials will be evaluated
+    :type x:
+        array_like
 
-    :param size:
-        Maximum degree of elementary symmetric polynomial.
-    :type size:
+    :param k:
+        Maximum degree of the elementary symmetric polynomials to be evaluated
+    :type k:
         int
 
     :return:
-        :math:`[E_{kn}]_{k=0, n=0}^{\text{size}, N}`
-        :math:`E_{kn} = e_k(\\lambda_1, \\cdots, \\lambda_n)`
+        Matrix of size :math:`(k+1, n)` containing the evaluation of the elementary symmetric polynomials :math:`[e_i(x_1, \\dots, x_m)]_{i=0, m=1}^{k, n}`
     :rtype:
         array_like
 
@@ -1329,13 +1299,13 @@ def elementary_symmetric_polynomials(eig_vals, size):
     """
 
     # Initialize output array
-    N = eig_vals.size
-    E = np.zeros((size + 1, N + 1))
+    n = x.size
+    E = np.zeros((k + 1, n + 1), dtype=float)
     E[0, :] = 1.0
 
     # Recursive evaluation
-    for k in range(1, size + 1):
-        for n in range(1, N + 1):
-            E[k, n] = E[k, n - 1] + eig_vals[n - 1] * E[k - 1, n - 1]
+    for i in range(1, k + 1):
+        for m in range(0, n):
+            E[i, m + 1] = E[i, m] + x[m] * E[i - 1, m]
 
     return E
