@@ -4,6 +4,7 @@
 - :class:`TestUtils`
 """
 
+from dppy import utils
 import unittest
 
 import numpy as np
@@ -14,12 +15,12 @@ from scipy.linalg import qr
 
 import sys
 sys.path.append('..')
-from dppy import utils
 
 
 class TestUtils(unittest.TestCase):
     """ Test
     """
+
     def test_inner1D_to_compute_inner_product_and_square_norms(self):
 
         shape = (10, 20, 30, 40)
@@ -201,7 +202,7 @@ class TestUtils(unittest.TestCase):
             with self.subTest(index=idx, check_in_01=flag):
 
                 if flag:
-                    self.assertTrue(utils.check_in_01(_input, tol) is _input)
+                    self.assertIsNone(utils.check_in_01(_input, tol))
                 else:
                     with self.assertRaises(ValueError) as context:
                         utils.check_in_01(_input, tol)
@@ -231,7 +232,7 @@ class TestUtils(unittest.TestCase):
             with self.subTest(index=idx, check_geq_0=flag):
 
                 if flag:
-                    self.assertTrue(utils.check_geq_0(_input, tol) is _input)
+                    self.assertIsNone(utils.check_geq_0(_input, tol))
                 else:
                     with self.assertRaises(ValueError) as context:
                         utils.check_geq_0(_input, tol)
@@ -266,14 +267,14 @@ class TestUtils(unittest.TestCase):
         X = rndm.randn(100, 20)
 
         np.testing.assert_almost_equal(
-          np.diag(utils.example_eval_L_linear(X)),
-          utils.evaluate_L_diagonal(utils.example_eval_L_linear, X))
+            np.diag(utils.example_eval_L_linear(X)),
+            utils.evaluate_L_diagonal(utils.example_eval_L_linear, X))
 
         X = rndm.rand(100, 1)
 
         np.testing.assert_almost_equal(
-          np.diag(utils.example_eval_L_min_kern(X)),
-          utils.evaluate_L_diagonal(utils.example_eval_L_min_kern, X))
+            np.diag(utils.example_eval_L_min_kern(X)),
+            utils.evaluate_L_diagonal(utils.example_eval_L_min_kern, X))
 
         pass
 

@@ -9,8 +9,6 @@ from scipy.linalg import qr
 
 from dppy.finite_dpps import FiniteDPP
 
-from dppy.utils import example_eval_L_linear
-
 
 class TestSpectralSampler(unittest.TestCase):
 
@@ -23,7 +21,7 @@ class TestSpectralSampler(unittest.TestCase):
         dpp = FiniteDPP("likelihood", False,
                         L_eig_dec=(eig_vals, eig_vecs))
 
-        sample = dpp.sample_exact(mode="GS")
+        dpp.sample_exact(mode="GS")
 
         self.assertTrue(np.allclose(
             dpp.K_eig_vals, eig_vals / (1.0 + eig_vals)))
@@ -37,7 +35,7 @@ class TestSpectralSampler(unittest.TestCase):
         dpp = FiniteDPP("correlation", False, K=K)
 
         with self.assertRaises(ValueError):
-            sample = dpp.sample_exact(mode="GS")
+            dpp.sample_exact(mode="GS")
 
     def test_correlation_eig_vals_in_01_from_K(self):
         eig_vecs, _ = qr(randn(self.N, self.N), mode="economic")
@@ -47,7 +45,7 @@ class TestSpectralSampler(unittest.TestCase):
 
         dpp = FiniteDPP("correlation", False, K=K)
 
-        sample = dpp.sample_exact(mode="GS")
+        dpp.sample_exact(mode="GS")
 
         self.assertTrue(np.allclose(dpp.K_eig_vals, eig_vals))
 
@@ -70,7 +68,7 @@ class TestSpectralSampler(unittest.TestCase):
         dpp = FiniteDPP("likelihood", False, L=L)
 
         with self.assertRaises(ValueError):
-            sample = dpp.sample_exact(mode="GS")
+            dpp.sample_exact(mode="GS")
 
     def test_likelihood_eig_vals_geq_0_from_L(self):
         eig_vecs, _ = qr(randn(self.N, self.N), mode="economic")
@@ -80,7 +78,7 @@ class TestSpectralSampler(unittest.TestCase):
 
         dpp = FiniteDPP("likelihood", False, L=L)
 
-        sample = dpp.sample_exact(mode="GS")
+        dpp.sample_exact(mode="GS")
 
         self.assertTrue(np.allclose(dpp.L_eig_vals, eig_vals))
 
@@ -89,7 +87,7 @@ class TestSpectralSampler(unittest.TestCase):
 
         dpp = FiniteDPP("correlation", True, A_zono=A_zono)
 
-        sample = dpp.sample_exact(mode="GS")
+        dpp.sample_exact(mode="GS")
 
         self.assertTrue(np.allclose(dpp.K_eig_vals, np.ones(self.r)))
 
@@ -100,7 +98,7 @@ class TestSpectralSampler(unittest.TestCase):
     #     dpp = FiniteDPP("likelihood", False,
     #                     L_dual=L_dual)
 
-    #     sample = dpp.sample_exact(mode="GS")
+    #     dpp.sample_exact(mode="GS")
 
     #     self.assertTrue(np.allclose(
     #         dpp.K_eig_vals, eig_vals / (1.0 + eig_vals)))
@@ -112,7 +110,7 @@ class TestSpectralSampler(unittest.TestCase):
     #     dpp = FiniteDPP("likelihood", False,
     #                     L_eig_dec=(eig_vals, eig_vecs))
 
-    #     sample = dpp.sample_exact(mode="GS")
+    #     dpp.sample_exact(mode="GS")
 
     #     self.assertTrue(np.allclose(
     #         dpp.K_eig_vals, eig_vals / (1.0 + eig_vals)))
