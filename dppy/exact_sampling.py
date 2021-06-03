@@ -12,17 +12,19 @@
 import numpy as np
 import scipy.linalg as la
 from dppy.utils import inner1d, check_random_state, get_progress_bar
-from dppy.intermediate_sampling import (vfx_sampling_precompute_constants,
-                                        vfx_sampling_do_sampling_loop,
-                                        alpha_dpp_sampling_precompute_constants,
-                                        alpha_dpp_sampling_do_sampling_loop)
+from dppy.intermediate_sampling import (
+    vfx_sampling_precompute_constants,
+    vfx_sampling_do_sampling_loop,
+    alpha_dpp_sampling_precompute_constants,
+    alpha_dpp_sampling_do_sampling_loop,
+)
 
 
 #####################
 # Projection kernel #
 #####################
 # Sample projection DPP from kernel
-def proj_dpp_sampler_kernel(kernel, mode='GS', size=None, random_state=None):
+def proj_dpp_sampler_kernel(kernel, mode="GS", size=None, random_state=None):
     """Generate an exact sample from projection :math:`\\operatorname{\\mathbf{K}}` where :math:`K=` ``kernel``, or from :math:`k-\\operatorname{\\mathbf{K}}` if :math:`k=` ``size`` is provided.
 
     :param kernel: Projection kernel :math:`\\mathbf{K}^2 = \\mathbf{K}`
@@ -41,23 +43,25 @@ def proj_dpp_sampler_kernel(kernel, mode='GS', size=None, random_state=None):
     if size is None:
         size = rank
     if size > rank:
-        raise ValueError('size k={} > rank={}'. format(size, rank))
+        raise ValueError("size k={} > rank={}".format(size, rank))
 
-    if mode == 'GS':
+    if mode == "GS":
         return proj_dpp_sampler_kernel_GS(kernel, size, rng)
 
-    if mode == 'Chol':
+    if mode == "Chol":
         return proj_dpp_sampler_kernel_Chol(kernel, size, rng)[0]
 
-    if mode == 'Schur':
+    if mode == "Schur":
         return proj_dpp_sampler_kernel_Schur(kernel, size, rng)
 
-    str_list = ['Invalid sampling mode, choose among:',
-                '- "GS (default)',
-                '- "Chol"',
-                '- "Schur"',
-                'Given "{}"'.format(mode)]
-    raise ValueError('\n'.join(str_list))
+    str_list = [
+        "Invalid sampling mode, choose among:",
+        '- "GS (default)',
+        '- "Chol"',
+        '- "Schur"',
+        'Given "{}"'.format(mode),
+    ]
+    raise ValueError("\n".join(str_list))
 
 
 def proj_dpp_sampler_kernel_Chol(K, size=None, random_state=None):
@@ -121,11 +125,11 @@ def proj_dpp_sampler_kernel_Chol(K, size=None, random_state=None):
 
         # Hermitian swap of indices j and t of A (may be written in a function)
         # bottom swap
-        A[t + 1:, [j, t]] = A[t + 1:, [t, j]]
+        A[t + 1 :, [j, t]] = A[t + 1 :, [t, j]]
         # inner swap
-        tmp = A[j + 1:t, j].copy()
-        np.conj(A[t, j + 1:t], out=A[j + 1:t, j])
-        np.conj(tmp, out=A[t, j + 1:t])
+        tmp = A[j + 1 : t, j].copy()
+        np.conj(A[t, j + 1 : t], out=A[j + 1 : t, j])
+        np.conj(tmp, out=A[t, j + 1 : t])
         # corner swap
         A[t, j] = A[t, j].conj()
         # diagonal swap
@@ -143,13 +147,13 @@ def proj_dpp_sampler_kernel_Chol(K, size=None, random_state=None):
             break
 
         # Form new column and update diagonal
-        A[j + 1:, j] -= A[j + 1:, :j].dot(A[j, :j].conj())
-        A[j + 1:, j] /= A[j, j]
+        A[j + 1 :, j] -= A[j + 1 :, :j].dot(A[j, :j].conj())
+        A[j + 1 :, j] /= A[j, j]
 
         if is_kernel_hermitian:
-            d[j + 1:] -= A[j + 1:, j].real**2 + A[j + 1:, j].imag**2
+            d[j + 1 :] -= A[j + 1 :, j].real ** 2 + A[j + 1 :, j].imag ** 2
         else:
-            d[j + 1:] -= A[j + 1:, j]**2
+            d[j + 1 :] -= A[j + 1 :, j] ** 2
 
     sample = ground_set[:size].tolist()
     log_likelihood = np.sum(np.log(np.diagonal(A[:size, :size]).real))
@@ -186,7 +190,7 @@ def proj_dpp_sampler_kernel_GS(K, size=None, random_state=None):
 
     .. seealso::
 
-        - cite:`TrBaAm18` Algorithm 3, :cite:`Gil14` Algorithm 2
+        - :cite:`TrBaAm18` Algorithm 3, :cite:`Gil14` Algorithm 2
         - :func:`proj_dpp_sampler_kernel_Schur <proj_dpp_sampler_kernel_Schur>`
         - :func:`proj_dpp_sampler_kernel_Chol <proj_dpp_sampler_kernel_Chol>`
     """
@@ -206,18 +210,16 @@ def proj_dpp_sampler_kernel_GS(K, size=None, random_state=None):
     norm_2 = K.diagonal().copy()  # residual norm^2
 
     for it in range(size):
-        j = rng.choice(ground_set[avail],
-                       p=np.abs(norm_2[avail]) / (rank - it))
+        j = rng.choice(ground_set[avail], p=np.abs(norm_2[avail]) / (rank - it))
 
         sample[it] = j
         if it == size - 1:
             break
         # Update the Cholesky factor
         avail[j] = False
-        c[avail, it] = (K[avail, j] - c[avail, :it].dot(c[j, :it]))\
-            / np.sqrt(norm_2[j])
+        c[avail, it] = (K[avail, j] - c[avail, :it].dot(c[j, :it])) / np.sqrt(norm_2[j])
 
-        norm_2[avail] -= c[avail, it]**2
+        norm_2[avail] -= c[avail, it] ** 2
 
     return sample.tolist()
 
@@ -272,8 +274,7 @@ def proj_dpp_sampler_kernel_Schur(K, size=None, random_state=None):
     K_inv = np.zeros((size, size), dtype=float)
 
     for it in range(size):
-        j = rng.choice(ground_set[avail],
-                       p=np.abs(schur_comp[avail]) / (rank - it))
+        j = rng.choice(ground_set[avail], p=np.abs(schur_comp[avail]) / (rank - it))
         sample[it] = j
         avail[j] = False
 
@@ -284,9 +285,9 @@ def proj_dpp_sampler_kernel_Schur(K, size=None, random_state=None):
 
         elif it == 1:
             i = sample[0]
-            K_inv[:2, :2] = (np.array([[K[j, j], -K[j, i]],
-                                      [-K[j, i], K[i, i]]])
-                             / (K[i, i] * K[j, j] - K[j, i]**2))
+            K_inv[:2, :2] = np.array([[K[j, j], -K[j, i]], [-K[j, i], K[i, i]]]) / (
+                K[i, i] * K[j, j] - K[j, i] ** 2
+            )
 
         elif it < size - 1:
             temp = K_inv[:it, :it].dot(K[sample[:it], j])  # K_Y^-1 K_Yj
@@ -294,7 +295,7 @@ def proj_dpp_sampler_kernel_Schur(K, size=None, random_state=None):
             schur_j = K[j, j] - K[j, sample[:it]].dot(temp)
 
             K_inv[:it, :it] += np.outer(temp, temp / schur_j)
-            K_inv[:it, it] = - temp / schur_j
+            K_inv[:it, it] = -temp / schur_j
             K_inv[it, :it] = K_inv[:it, it]
             K_inv[it, it] = 1.0 / schur_j
 
@@ -303,16 +304,16 @@ def proj_dpp_sampler_kernel_Schur(K, size=None, random_state=None):
 
         # 2. Update Schur complements
         # K_ii - K_iY (K_Y)^-1 K_Yi for Y <- Y+j
-        K_iY = K[np.ix_(avail, sample[:it + 1])]
-        schur_comp[avail] = (
-            K[avail, avail]
-            - inner1d(K_iY.dot(K_inv[:it+1, :it+1]), K_iY, axis=1)
+        K_iY = K[np.ix_(avail, sample[: it + 1])]
+        schur_comp[avail] = K[avail, avail] - inner1d(
+            K_iY.dot(K_inv[: it + 1, : it + 1]), K_iY, axis=1
         )
 
     return sample.tolist()
 
     # log_likelihood = np.sum(np.log(schur_comp[sample]))
     # return sample.tolist(), log_likelihood
+
 
 ####################################################
 # Generic sampler, based on the correlation kernel #
@@ -347,10 +348,11 @@ def dpp_sampler_generic_kernel(K, random_state=None):
             sample.append(j)
         else:
             A[j, j] -= 1.0
-        A[j + 1:, j] /= A[j, j]
-        A[j + 1:, j + 1:] -= np.outer(A[j + 1:, j], A[j, j + 1:])
+        A[j + 1 :, j] /= A[j, j]
+        A[j + 1 :, j + 1 :] -= np.outer(A[j + 1 :, j], A[j, j + 1 :])
         # A[j+1:, j+1:] -=  np.einsum('i,j', A[j+1:, j], A[j, j+1:])
     return sample, A
+
 
 ###################################################################
 # Spectral samplers based on the eigendecomposition of the kernel #
@@ -386,7 +388,7 @@ def dpp_eig_vecs_selector(bernoulli_params, eig_vecs, random_state=None):
 
 
 # Phase 2: Sample from DPP with projection kernel VV.T where V are the eigenvectors selected in Phase 1.
-def proj_dpp_sampler_eig(eig_vecs, mode='GS', size=None, random_state=None):
+def proj_dpp_sampler_eig(eig_vecs, mode="GS", size=None, random_state=None):
     """Generate an exact sample from projection :math:`\\operatorname{DPP}(K)` with orthogonal projection kernel given by :math:`K=VV^{\\top}` where :math:`V=` ``eig_vecs``, such that :math:`V^{\\top}V = I_r` and :math:`r=\\operatorname{rank}(\\mathbf{K})`.
 
     .. seealso::
@@ -407,21 +409,23 @@ def proj_dpp_sampler_eig(eig_vecs, mode='GS', size=None, random_state=None):
     if not eig_vecs.shape[1]:
         return []  # np.empty((0,), dtype=int)
 
-    if mode == 'GS':  # Gram-Schmidt
+    if mode == "GS":  # Gram-Schmidt
         return proj_dpp_sampler_eig_GS(eig_vecs, size, rng)
 
-    if mode == 'GS_bis':  # Slight modification of 'GS'
+    if mode == "GS_bis":  # Slight modification of 'GS'
         return proj_dpp_sampler_eig_GS_bis(eig_vecs, size, rng)
 
-    if mode == 'KuTa12':  # cf Kulesza-Taskar
+    if mode == "KuTa12":  # cf Kulesza-Taskar
         return proj_dpp_sampler_eig_KuTa12(eig_vecs, size, rng)
 
-    str_list = ['Invalid sampling mode, choose among:',
-                '- "GS" (default)',
-                '- "GS_bis"',
-                '- "KuTa12"',
-                'Given "{}"'.format(mode)]
-    raise ValueError('\n'.join(str_list))
+    str_list = [
+        "Invalid sampling mode, choose among:",
+        '- "GS" (default)',
+        '- "GS_bis"',
+        '- "KuTa12"',
+        'Given "{}"'.format(mode),
+    ]
+    raise ValueError("\n".join(str_list))
 
 
 # Using Gram-Schmidt orthogonalization
@@ -469,8 +473,7 @@ def proj_dpp_sampler_eig_GS(eig_vecs, size=None, random_state=None):
 
     for it in range(size):
         # Pick an item \propto this squared distance
-        j = rng.choice(ground_set[avail],
-                       p=np.abs(norms_2[avail]) / (rank - it))
+        j = rng.choice(ground_set[avail], p=np.abs(norms_2[avail]) / (rank - it))
         sample[it] = j
         avail[j] = False
 
@@ -479,11 +482,10 @@ def proj_dpp_sampler_eig_GS(eig_vecs, size=None, random_state=None):
 
         # Cancel the contribution of V_j to the remaining feature vectors
         c[avail, it] = (
-            (V[avail, :].dot(V[j, :]) - c[avail, :it].dot(c[j, :it]))
-            / np.sqrt(norms_2[j])
-        )
+            V[avail, :].dot(V[j, :]) - c[avail, :it].dot(c[j, :it])
+        ) / np.sqrt(norms_2[j])
 
-        norms_2[avail] -= c[avail, it]**2  # update residual norm^2
+        norms_2[avail] -= c[avail, it] ** 2  # update residual norm^2
 
     return sample.tolist()
 
@@ -532,8 +534,7 @@ def proj_dpp_sampler_eig_GS_bis(eig_vecs, size=None, random_state=None):
 
         # Pick an item proportionally to the residual norm^2
         # ||P_{V_Y}^{orthog} V_j||^2
-        j = rng.choice(ground_set[avail],
-                       p=np.abs(norms_2[avail]) / (rank - it))
+        j = rng.choice(ground_set[avail], p=np.abs(norms_2[avail]) / (rank - it))
         sample[it] = j
         if it == size - 1:
             break
@@ -570,7 +571,7 @@ def proj_dpp_sampler_eig_GS_bis(eig_vecs, size=None, random_state=None):
         #                                  <V_i,P_{V_Y}^{orthog} V_j>^2
         #   =  |P_{V_Y}^{orthog} V_i|^2 -  ----------------------------
         #                                   |P_{V_Y}^{orthog} V_j|^2
-        norms_2[avail] -= contrib[avail, it]**2 / norms_2[j]
+        norms_2[avail] -= contrib[avail, it] ** 2 / norms_2[j]
 
     return sample.tolist()
 
@@ -625,18 +626,14 @@ def proj_dpp_sampler_eig_KuTa12(eig_vecs, size=None, random_state=None):
         # Cancel the contribution of the remaining vectors on e_j, but stay in the subspace spanned by V i.e. get the subspace of V orthogonal to \{e_i ; i \in Y\}
         V -= np.outer(V[:, k] / V[j, k], V[j, :])
         # V_:j is set to 0 so we delete it and we can derive an orthononormal basis of the subspace under consideration
-        V, _ = la.qr(np.delete(V, k, axis=1), mode='economic')
+        V, _ = la.qr(np.delete(V, k, axis=1), mode="economic")
 
         norms_2 = inner1d(V, axis=1)  # ||V_i:||^2
 
     return sample.tolist()
 
 
-def dpp_vfx_sampler(info,
-                    X_data,
-                    eval_L,
-                    random_state=None,
-                    **params):
+def dpp_vfx_sampler(info, X_data, eval_L, random_state=None, **params):
     """First pre-compute quantities necessary for the vfx rejection sampling loop, such as the inner Nyström approximation, and the RLS of all elements in :math:`\\mathbf{L}`.
     Then, given the pre-computed information,run a rejection sampling loop to generate DPP samples.
 
@@ -732,25 +729,20 @@ def dpp_vfx_sampler(info,
 
     if info is None:
         info = vfx_sampling_precompute_constants(
-            X_data=X_data,
-            eval_L=eval_L,
-            rng=rng,
-            **params)
+            X_data=X_data, eval_L=eval_L, rng=rng, **params
+        )
 
-        q_func = params.get('q_func', lambda s: s * s)
+        q_func = params.get("q_func", lambda s: s * s)
         info = info._replace(q=q_func(info.s))
 
     sample, rej_count = vfx_sampling_do_sampling_loop(
-        X_data, eval_L, info, rng, **params)
+        X_data, eval_L, info, rng, **params
+    )
 
     return sample, info
 
 
-def alpha_dpp_sampler(info,
-                      X_data,
-                      eval_L,
-                      random_state=None,
-                      **params):
+def alpha_dpp_sampler(info, X_data, eval_L, random_state=None, **params):
     """First pre-compute quantities necessary for the alpha-dpp rejection sampling loop, such as the inner Nyström
     approximation, and the and the initial rescaling alpha_hat for the binary search.
     Then, given the pre-computed information,run a rejection sampling loop to generate samples from DPP(alpha * L).
@@ -842,30 +834,25 @@ def alpha_dpp_sampler(info,
 
     if info is None:
         info = alpha_dpp_sampling_precompute_constants(
-            X_data=X_data,
-            eval_L=eval_L,
-            rng=rng,
-            **params)
+            X_data=X_data, eval_L=eval_L, rng=rng, **params
+        )
 
-        r_func = params.get('r_func', lambda r: r)
+        r_func = params.get("r_func", lambda r: r)
         info = info._replace(r=r_func(info.deff_alpha_L_hat))
 
     sample, rej_count, info = alpha_dpp_sampling_do_sampling_loop(
-        X_data, eval_L, info, rng, **params)
+        X_data, eval_L, info, rng, **params
+    )
 
     return sample, info
+
 
 ##########
 # k-DPPs #
 ##########
 
 
-def k_dpp_vfx_sampler(size,
-                      info,
-                      X_data,
-                      eval_L,
-                      random_state=None,
-                      **params):
+def k_dpp_vfx_sampler(size, info, X_data, eval_L, random_state=None, **params):
     """First pre-compute quantities necessary for the vfx rejection sampling loop, such as the inner Nyström approximation, and the RLS of all elements in :math:`\\mathbf{L}`.
     Then, given the pre-computed information,run a rejection sampling loop to generate DPP samples.
     To guarantee that the returned sample has size ``size``, we internally set desired_expected_size=size and
@@ -963,24 +950,18 @@ def k_dpp_vfx_sampler(size,
 
     if (info is None) or (not np.isclose(info.s, size).item()):
         info = vfx_sampling_precompute_constants(
-            X_data=X_data,
-            eval_L=eval_L,
-            desired_expected_size=size,
-            rng=rng,
-            **params)
+            X_data=X_data, eval_L=eval_L, desired_expected_size=size, rng=rng, **params
+        )
 
-        q_func = params.get('q_func', lambda s: s * s)
+        q_func = params.get("q_func", lambda s: s * s)
         info = info._replace(q=q_func(info.s))
 
-    max_iter_size_rejection = params.get('max_iter_size_rejection', 100)
+    max_iter_size_rejection = params.get("max_iter_size_rejection", 100)
 
     for _ in range(max_iter_size_rejection):
         sample, rej_count = vfx_sampling_do_sampling_loop(
-            X_data,
-            eval_L,
-            info,
-            rng,
-            **params)
+            X_data, eval_L, info, rng, **params
+        )
 
         tmp = info.rej_to_first_sample + rej_count
         info = info._replace(rej_to_first_sample=tmp)
@@ -988,21 +969,16 @@ def k_dpp_vfx_sampler(size,
             break
     else:
         raise ValueError(
-            'The vfx sampler reached the maximum number of rejections allowed '
-            'for the k-DPP size rejection ({}), try to increase the q factor '
-            '(see q_func parameter) or the Nyström approximation accuracy '
-            'see rls_oversample_* parameters).'.format(max_iter_size_rejection)
+            "The vfx sampler reached the maximum number of rejections allowed "
+            "for the k-DPP size rejection ({}), try to increase the q factor "
+            "(see q_func parameter) or the Nyström approximation accuracy "
+            "see rls_oversample_* parameters).".format(max_iter_size_rejection)
         )
 
     return sample, info
 
 
-def alpha_k_dpp_sampler(size,
-                        info,
-                        X_data,
-                        eval_L,
-                        random_state=None,
-                        **params):
+def alpha_k_dpp_sampler(size, info, X_data, eval_L, random_state=None, **params):
     """First pre-compute quantities necessary for the alpha-dpp rejection sampling loop, such as the inner Nyström
     approximation, the and the initial rescaling alpha_hat for the binary search.
     Then, given the pre-computed information,run a rejection sampling loop to generate k-DPP samples.
@@ -1101,19 +1077,16 @@ def alpha_k_dpp_sampler(size,
 
     if info is None or info.k != size:
         info = alpha_dpp_sampling_precompute_constants(
-            X_data=X_data,
-            eval_L=eval_L,
-            desired_expected_size=size,
-            rng=rng,
-            **params)
+            X_data=X_data, eval_L=eval_L, desired_expected_size=size, rng=rng, **params
+        )
 
-        r_func = params.get('r_func', lambda r: r)
+        r_func = params.get("r_func", lambda r: r)
 
         info = info._replace(r=r_func(info.deff_alpha_L_hat))
 
-    max_iter_size_rejection = params.get('max_iter_size_rejection', 100)
-    number_trial_search = np.ceil(np.sqrt(size)).astype('int')
-    stopping_ratio = (1 + 1 / (size + 3) ** 2)
+    max_iter_size_rejection = params.get("max_iter_size_rejection", 100)
+    number_trial_search = np.ceil(np.sqrt(size)).astype("int")
+    stopping_ratio = 1 + 1 / (size + 3) ** 2
 
     sample_count = 0
     trial_count = 0
@@ -1123,32 +1096,31 @@ def alpha_k_dpp_sampler(size,
     ratio_alpha = info.alpha_max / info.alpha_min
     found_good_alpha = ratio_alpha <= stopping_ratio
 
-    prog_bar = get_progress_bar(disable=not params.get('verbose', False))
+    prog_bar = get_progress_bar(disable=not params.get("verbose", False))
     verbose_outer = None
-    if 'verbose' in params:
-        verbose_outer = params.pop('verbose')
-    params['verbose'] = False
+    if "verbose" in params:
+        verbose_outer = params.pop("verbose")
+    params["verbose"] = False
 
-    early_stop = params.get('early_stop', False)
+    early_stop = params.get("early_stop", False)
 
     trial_count_overall = 0
     for _ in range(max_iter_size_rejection):
         sample, rej_count, info = alpha_dpp_sampling_do_sampling_loop(
-            X_data,
-            eval_L,
-            info,
-            rng,
-            **params)
+            X_data, eval_L, info, rng, **params
+        )
 
         trial_count += 1
         trial_count_overall += 1
 
-        prog_bar.set_postfix(trial_count=trial_count,
-                             alpha="{:.4}".format(info.alpha_hat),
-                             alpha_switch=info.alpha_switches,
-                             k=size,
-                             k_emp=len(sample),
-                             rej_count=rej_count)
+        prog_bar.set_postfix(
+            trial_count=trial_count,
+            alpha="{:.4}".format(info.alpha_hat),
+            alpha_switch=info.alpha_switches,
+            k=size,
+            k_emp=len(sample),
+            rej_count=rej_count,
+        )
         prog_bar.update()
 
         if len(sample) == size:
@@ -1184,8 +1156,7 @@ def alpha_k_dpp_sampler(size,
             info = info._replace(rls_upper_bound_valid=rls_ub_valid)
 
             ratio_alpha = info.alpha_max / info.alpha_min
-            found_good_alpha = (ratio_alpha <= stopping_ratio
-                                and sample_count > 0)
+            found_good_alpha = ratio_alpha <= stopping_ratio and sample_count > 0
             if found_good_alpha:
                 break
 
@@ -1195,10 +1166,10 @@ def alpha_k_dpp_sampler(size,
             over_k_count = 0
     else:
         raise ValueError(
-            'The alpha sampler reached the maximum number of rejections allowed '
-            'for the k-DPP size rejection ({}), try to increase the r factor '
-            '(see r_func parameter) or the Nyström approximation accuracy '
-            'see rls_oversample_* parameters).'.format(max_iter_size_rejection)
+            "The alpha sampler reached the maximum number of rejections allowed "
+            "for the k-DPP size rejection ({}), try to increase the r factor "
+            "(see r_func parameter) or the Nyström approximation accuracy "
+            "see rls_oversample_* parameters).".format(max_iter_size_rejection)
         )
     if found_good_alpha:
         info = info._replace(alpha_min=info.alpha_hat)
@@ -1206,15 +1177,14 @@ def alpha_k_dpp_sampler(size,
         info = info._replace(alpha_switches=info.alpha_switches + 1)
 
     if verbose_outer:
-        params['verbose'] = verbose_outer
+        params["verbose"] = verbose_outer
     else:
-        params.pop('verbose')
+        params.pop("verbose")
 
     return sample_out, info
 
 
-def k_dpp_eig_vecs_selector(eig_vals, eig_vecs, size,
-                            esp=None, random_state=None):
+def k_dpp_eig_vecs_selector(eig_vals, eig_vecs, size, esp=None, random_state=None):
     """Select columns of ``eig_vecs`` by sampling Bernoulli variables with parameters derived from the computation of elementary symmetric polynomials ``esp`` of order 0 to ``size`` evaluated in ``eig_vals``.
     This corresponds to :cite:`KuTa12` Algorithm 8.
 
@@ -1258,7 +1228,7 @@ def k_dpp_eig_vecs_selector(eig_vals, eig_vecs, size,
     tol = np.max(eig_vals) * N * np.finfo(float).eps
     rank = np.count_nonzero(eig_vals > tol)
     if k > rank:
-        raise ValueError('size k={} > rank={}'.format(k, rank))
+        raise ValueError("size k={} > rank={}".format(k, rank))
 
     if esp is None:
         esp = elementary_symmetric_polynomials(eig_vals, k)
