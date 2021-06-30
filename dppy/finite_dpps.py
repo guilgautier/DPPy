@@ -13,6 +13,7 @@
     `Documentation on ReadTheDocs <https://dppy.readthedocs.io/en/latest/finite_dpps/index.html>`_
 """
 
+
 import numpy as np
 import scipy.linalg as la
 import matplotlib.pyplot as plt
@@ -23,15 +24,10 @@ from dppy.schur_sampler import schur_sampler
 from dppy.chol_sampler import chol_sampler
 from dppy.vfx_sampler import vfx_sampler
 from dppy.alpha_sampler import alpha_sampler
-from dppy.spectral_sampler import spectral_sampler
+from dppy.spectral_sampler import select_projection_dpp_eigen_sampler, spectral_sampler
+from dppy.projection_kernel_sampler import select_projection_dpp_kernel_sampler
 
 from dppy.exact_sampling import (
-    dpp_sampler_generic_kernel,
-    proj_dpp_sampler_kernel,
-    proj_dpp_sampler_eig,
-    dpp_vfx_sampler,
-    alpha_dpp_sampler,
-    dpp_eig_vecs_selector,
     k_dpp_vfx_sampler,
     alpha_k_dpp_sampler,
     k_dpp_eig_vecs_selector,
@@ -106,9 +102,9 @@ class FiniteDPP:
     ###############
     # Constructor #
     ###############
-    def __init__(self, kernel_type, projection=False, **params):
-
+    def __init__(self, kernel_type, projection=False, hermitian=True, **params):
         self.kernel_type = kernel_type
+        self.hermitian = hermitian
         self.projection = projection
         self.params_keys = set(params.keys())
         self.__check_args_coherence()
@@ -283,7 +279,7 @@ class FiniteDPP:
         self.size_k_dpp = 0
 
     # Exact sampling
-    def sample_exact(self, mode="GS", **params):
+    def sample_exact(self, mode="GS", random_state=None, **params):
         """Sample exactly from the corresponding :class:`FiniteDPP <FiniteDPP>` object.
 
         :param mode:
@@ -307,8 +303,6 @@ class FiniteDPP:
         :param dict params:
             Dictionary containing the parameters for exact samplers with keys
 
-            - ``'random_state'`` (default None)
-
             - If ``mode='vfx'``
 
                 See :py:meth:`~dppy.exact_sampling.dpp_vfx_sampler` for a full list of all parameters accepted by 'vfx' sampling. We report here the most impactful
@@ -330,7 +324,6 @@ class FiniteDPP:
 
         :return:
             Returns a sample from the corresponding :class:`FiniteDPP <FiniteDPP>` object. In any case, the sample is appended to the :py:attr:`~FiniteDPP.list_of_samples` attribute as a list.
-
         :rtype:
             list
 
@@ -351,29 +344,25 @@ class FiniteDPP:
             - :py:meth:`~FiniteDPP.sample_mcmc`
         """
 
-        rng = check_random_state(params.get("random_state", None))
-
-        self.sampling_mode = mode
-        sampler = None
-        sampler = self.select_sampler_from_name(mode)
-
+        sampler = self.select_exact_sampler(mode)
+        rng = check_random_state(random_state)
         sample = sampler(self, rng, **params)
 
+        self.sampling_mode = mode
         self.list_of_samples.append(sample)
         return sample
 
-    def select_sampler_from_name(self, mode):
-        if mode == "Schur":
-            sampler = schur_sampler
-        elif mode == "Chol":
-            sampler = chol_sampler
-        elif mode == "vfx":
-            sampler = vfx_sampler
-        elif mode == "alpha":
-            sampler = alpha_sampler
-        else:
-            sampler = spectral_sampler
-        return sampler
+    @staticmethod
+    def select_exact_sampler(name):
+        samplers = {
+            "spectral": spectral_sampler,
+            "vfx": vfx_sampler,
+            "alpha": alpha_sampler,
+            "Schur": schur_sampler,
+            "Chol": chol_sampler,
+        }
+        default = samplers["spectral"]
+        return samplers.get(name, default)
 
     def sample_exact_k_dpp(self, size, mode="GS", **params):
         """Sample exactly from :math:`\\operatorname{k-DPP}`. A priori the :class:`FiniteDPP <FiniteDPP>` object was instanciated by its likelihood :math:`\\mathbf{L}` kernel so that
@@ -458,7 +447,7 @@ class FiniteDPP:
         self.sampling_mode = mode
         self.size_k_dpp = size
 
-        if self.sampling_mode == "vfx":
+        if mode == "vfx":
             if self.eval_L is None or self.X_data is None:
                 raise ValueError(
                     "The vfx sampler is currently only available for the 'L_eval_X_data' representation."
@@ -480,7 +469,7 @@ class FiniteDPP:
             if r_state_outer:
                 params["random_state"] = r_state_outer
 
-        elif self.sampling_mode == "alpha":
+        elif mode == "alpha":
             if self.eval_L is None or self.X_data is None:
                 raise ValueError(
                     "The alpha sampler is currently only available for the 'L_eval_X_data' representation."
@@ -522,9 +511,9 @@ class FiniteDPP:
 
                 if self.K_eig_vals is not None:
                     # K_eig_vals > 0.5 below to get indices where e_vals = 1
-                    sampl = proj_dpp_sampler_eig(
+                    sampler = select_projection_dpp_eigen_sampler(mode)
+                    sampl = sampler(
                         eig_vecs=self.eig_vecs[:, self.K_eig_vals > 0.5],
-                        mode=self.sampling_mode,
                         size=size,
                         random_state=rng,
                     )
@@ -536,37 +525,30 @@ class FiniteDPP:
 
                     self.K_eig_vals = np.ones(rank)
                     self.eig_vecs, _ = la.qr(self.A_zono.T, mode="economic")
-
-                    sampl = proj_dpp_sampler_eig(
+                    sampler = select_projection_dpp_eigen_sampler(mode)
+                    sampl = sampler(
                         eig_vecs=self.eig_vecs,
-                        mode=self.sampling_mode,
                         size=size,
                         random_state=rng,
                     )
 
                 else:
-                    sampl = proj_dpp_sampler_kernel(
-                        kernel=self.K,
-                        mode=self.sampling_mode,
-                        size=size,
-                        random_state=rng,
-                    )
+                    sampler = select_projection_dpp_kernel_sampler(mode)
+                    sampl = sampler(self.K, size=size, random_state=rng)
 
             else:  # self.kernel_type == 'likelihood':
                 if self.L_eig_vals is not None:
                     # L_eig_vals > 0.5 below to get indices where e_vals = 1
-                    sampl = proj_dpp_sampler_eig(
+                    sampler = select_projection_dpp_eigen_sampler(mode)
+                    sampl = sampler(
                         eig_vecs=self.eig_vecs[:, self.L_eig_vals > 0.5],
-                        mode=self.sampling_mode,
                         size=size,
                         random_state=rng,
                     )
                 else:
                     self.compute_L()
-                    # size > rank treated internally in proj_dpp_sampler_kernel
-                    sampl = proj_dpp_sampler_kernel(
-                        self.L, mode=self.sampling_mode, size=size, random_state=rng
-                    )
+                    sampler = select_projection_dpp_kernel_sampler(mode)
+                    sampl = sampler(self.L, size=size, random_state=rng)
 
         # If eigen decoposition of K, L or L_dual is available USE IT!
         elif self.L_eig_vals is not None:
@@ -585,12 +567,13 @@ class FiniteDPP:
             )
             # Phase 2
             self.size_k_dpp = size
-            sampl = proj_dpp_sampler_eig(V, self.sampling_mode, random_state=rng)
+            sampler = select_projection_dpp_eigen_sampler(mode)
+            sampl = sampler(V, size=size, random_state=rng)
 
         elif self.K_eig_vals is not None:
             np.seterr(divide="raise")
             self.L_eig_vals = self.K_eig_vals / (1.0 - self.K_eig_vals)
-            return self.sample_exact_k_dpp(size, self.sampling_mode, random_state=rng)
+            return self.sample_exact_k_dpp(size, mode, random_state=rng)
 
         # Otherwise eigendecomposition is necessary
         elif self.L_dual is not None:
@@ -602,24 +585,22 @@ class FiniteDPP:
             self.eig_vecs = self.L_gram_factor.T.dot(
                 L_dual_eig_vecs / np.sqrt(self.L_eig_vals)
             )
-            return self.sample_exact_k_dpp(
-                size, mode=self.sampling_mode, random_state=rng
-            )
+            return self.sample_exact_k_dpp(size, mode=mode, random_state=rng)
 
         elif self.L is not None:
             self.L_eig_vals, self.eig_vecs = la.eigh(self.L)
             check_geq_0(self.L_eig_vals)
-            return self.sample_exact_k_dpp(size, self.sampling_mode, random_state=rng)
+            return self.sample_exact_k_dpp(size, mode, random_state=rng)
 
         elif self.K is not None:
             self.K_eig_vals, self.eig_vecs = la.eigh(self.K)
             check_in_01(self.K_eig_vals)
-            return self.sample_exact_k_dpp(size, self.sampling_mode, random_state=rng)
+            return self.sample_exact_k_dpp(size, mode, random_state=rng)
 
         elif self.eval_L is not None and self.X_data is not None:
             # In case mode!='vfx'
             self.compute_L()
-            return self.sample_exact_k_dpp(size, self.sampling_mode, random_state=rng)
+            return self.sample_exact_k_dpp(size, mode, random_state=rng)
 
         else:
             raise ValueError(

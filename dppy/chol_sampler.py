@@ -1,12 +1,13 @@
-from .exact_sampling import (
-    proj_dpp_sampler_kernel, dpp_sampler_generic_kernel)
+from .projection_kernel_sampler import projection_kernel_sampler
+from .generic_kernel_sampler import dpp_sampler_generic_kernel
 
 
-def chol_sampler(dpp, rng, **params):
-    dpp.compute_K()
-    if dpp.kernel_type == 'correlation' and dpp.projection:
-        return proj_dpp_sampler_kernel(
-            dpp.K, dpp.sampling_mode, random_state=rng)
+def chol_sampler(dpp, random_state, **params):
+    if dpp.kernel_type == "correlation" and dpp.hermitian and dpp.projection:
+        return projection_kernel_sampler(
+            dpp, mode="Chol", random_state=random_state, **params
+        )
     else:
-        sample, _ = dpp_sampler_generic_kernel(dpp.K, random_state=rng)
+        dpp.compute_K()
+        sample, _ = dpp_sampler_generic_kernel(dpp.K, random_state=random_state)
         return sample
