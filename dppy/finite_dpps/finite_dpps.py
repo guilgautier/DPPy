@@ -22,8 +22,8 @@ from warnings import warn
 
 from .schur_sampler import schur_sampler
 from .chol_sampler import chol_sampler
-from .vfx_sampler import vfx_sampler
-from .alpha_sampler import alpha_sampler
+from .vfx_sampler import vfx_sampler, k_dpp_vfx_sampler
+from .alpha_sampler import alpha_sampler, alpha_k_dpp_sampler
 from .spectral_sampler import (
     select_projection_dpp_eigen_sampler,
     spectral_sampler,
@@ -31,8 +31,6 @@ from .spectral_sampler import (
 from .projection_kernel_sampler import select_projection_dpp_kernel_sampler
 
 from .exact_sampling import (
-    k_dpp_vfx_sampler,
-    alpha_k_dpp_sampler,
     k_dpp_eig_vecs_selector,
     elementary_symmetric_polynomials,
 )
