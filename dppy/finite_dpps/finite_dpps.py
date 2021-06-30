@@ -20,23 +20,26 @@ import matplotlib.pyplot as plt
 
 from warnings import warn
 
-from dppy.schur_sampler import schur_sampler
-from dppy.chol_sampler import chol_sampler
-from dppy.vfx_sampler import vfx_sampler
-from dppy.alpha_sampler import alpha_sampler
-from dppy.spectral_sampler import select_projection_dpp_eigen_sampler, spectral_sampler
-from dppy.projection_kernel_sampler import select_projection_dpp_kernel_sampler
+from .schur_sampler import schur_sampler
+from .chol_sampler import chol_sampler
+from .vfx_sampler import vfx_sampler
+from .alpha_sampler import alpha_sampler
+from .spectral_sampler import (
+    select_projection_dpp_eigen_sampler,
+    spectral_sampler,
+)
+from .projection_kernel_sampler import select_projection_dpp_kernel_sampler
 
-from dppy.exact_sampling import (
+from .exact_sampling import (
     k_dpp_vfx_sampler,
     alpha_k_dpp_sampler,
     k_dpp_eig_vecs_selector,
     elementary_symmetric_polynomials,
 )
 
-from dppy.mcmc_sampling import dpp_sampler_mcmc, zonotope_sampler
+from .mcmc_sampling import dpp_sampler_mcmc, zonotope_sampler
 
-from dppy.utils import (
+from ..utils import (
     check_random_state,
     is_symmetric,
     is_projection,

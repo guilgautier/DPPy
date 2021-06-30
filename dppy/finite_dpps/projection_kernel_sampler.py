@@ -1,5 +1,5 @@
 import numpy as np
-from .utils import check_random_state, inner1d
+from ..utils import check_random_state, inner1d
 
 
 def projection_kernel_sampler(dpp, random_state=None, **params):

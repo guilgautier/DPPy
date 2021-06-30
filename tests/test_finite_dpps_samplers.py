@@ -20,7 +20,7 @@ import sys
 
 sys.path.append("..")
 
-from dppy.finite_dpps import FiniteDPP
+from dppy.finite_dpps.finite_dpps import FiniteDPP
 from dppy.utils import det_ST, example_eval_L_linear, example_eval_L_min_kern
 
 

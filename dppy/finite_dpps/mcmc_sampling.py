@@ -15,14 +15,14 @@ import time
 import numpy as np
 import scipy.linalg as la
 
-from dppy.utils import det_ST, check_random_state
+from ..utils import det_ST, check_random_state
 
 
 ############################################
 # Approximate samplers for projection DPPs #
 ############################################
-def dpp_sampler_mcmc(kernel, mode='AED', **params):
-    """ Interface function with initializations and samplers for MCMC schemes.
+def dpp_sampler_mcmc(kernel, mode="AED", **params):
+    """Interface function with initializations and samplers for MCMC schemes.
 
     .. seealso::
 
@@ -34,31 +34,29 @@ def dpp_sampler_mcmc(kernel, mode='AED', **params):
         - :func:`initialize_AD_and_E_sampler <initialize_AD_and_E_sampler>`
     """
 
-    rng = check_random_state(params.get('random_state', None))
+    rng = check_random_state(params.get("random_state", None))
 
-    s_init = params.get('s_init', None)
-    nb_iter = params.get('nb_iter', 10)
-    T_max = params.get('T_max', None)
-    size = params.get('size', None)  # = Tr(K) for projection correlation K
+    s_init = params.get("s_init", None)
+    nb_iter = params.get("nb_iter", 10)
+    T_max = params.get("T_max", None)
+    size = params.get("size", None)  # = Tr(K) for projection correlation K
 
-    if mode == 'AED':  # Add-Exchange-Delete S'=S+t, S-t+u, S-t
+    if mode == "AED":  # Add-Exchange-Delete S'=S+t, S-t+u, S-t
         if s_init is None:
             s_init = initialize_AED_sampler(kernel, random_state=rng)
-        sampl = add_exchange_delete_sampler(kernel, s_init, nb_iter, T_max,
-                                            random_state=rng)
+        sampl = add_exchange_delete_sampler(
+            kernel, s_init, nb_iter, T_max, random_state=rng
+        )
 
-    elif mode == 'AD':  # Add-Delete S'=S+t, S-t
+    elif mode == "AD":  # Add-Delete S'=S+t, S-t
         if s_init is None:
             s_init = initialize_AD_and_E_sampler(kernel, random_state=rng)
-        sampl = add_delete_sampler(kernel, s_init, nb_iter, T_max,
-                                   random_state=rng)
+        sampl = add_delete_sampler(kernel, s_init, nb_iter, T_max, random_state=rng)
 
-    elif mode == 'E':  # Exchange S'=S-t+u
+    elif mode == "E":  # Exchange S'=S-t+u
         if s_init is None:
-            s_init = initialize_AD_and_E_sampler(kernel, size,
-                                                 random_state=rng)
-        sampl = basis_exchange_sampler(kernel, s_init, nb_iter, T_max,
-                                       random_state=rng)
+            s_init = initialize_AD_and_E_sampler(kernel, size, random_state=rng)
+        sampl = basis_exchange_sampler(kernel, s_init, nb_iter, T_max, random_state=rng)
 
     return sampl
 
@@ -88,10 +86,14 @@ def initialize_AED_sampler(kernel, random_state=None):
             S0 = np.intersect1d(T, ground_set, assume_unique=True)
             det_S0 = det_ST(kernel, S0)
     else:
-        err_str = ['Initialization terminated unsuccessfully.',
-                   'After {} random trials, no initial set S0 satisfies det L_S0 > {}.'.format(nb_trials, tol),
-                   'You may consider passing your own initial state **{"s_init": S0}.']
-        raise ValueError('\n'.join(err_str))
+        err_str = [
+            "Initialization terminated unsuccessfully.",
+            "After {} random trials, no initial set S0 satisfies det L_S0 > {}.".format(
+                nb_trials, tol
+            ),
+            'You may consider passing your own initial state **{"s_init": S0}.',
+        ]
+        raise ValueError("\n".join(err_str))
 
     return S0.tolist()
 
@@ -117,23 +119,28 @@ def initialize_AD_and_E_sampler(kernel, size=None, random_state=None):
         if det_S0 > tol:
             break
         else:
-            S0 = rng.choice(N,
-                            size=size if size else rng.randint(1, N + 1),
-                            replace=False)
+            S0 = rng.choice(
+                N, size=size if size else rng.randint(1, N + 1), replace=False
+            )
             det_S0 = det_ST(kernel, S0)
     else:
-        err_str = ['Initialization terminated unsuccessfully.',
-                   'After {} random trials, no initial set S0 satisfies det L_S0 > {}.'.format(nb_trials, tol),
-                   'If you are sampling from a k-DPP, make sure k <= rank(L).' if size else '',
-                   'You may consider passing your own initial state **{"s_init": S0}.']
-        raise ValueError('\n'.join(err_str))
+        err_str = [
+            "Initialization terminated unsuccessfully.",
+            "After {} random trials, no initial set S0 satisfies det L_S0 > {}.".format(
+                nb_trials, tol
+            ),
+            "If you are sampling from a k-DPP, make sure k <= rank(L)." if size else "",
+            'You may consider passing your own initial state **{"s_init": S0}.',
+        ]
+        raise ValueError("\n".join(err_str))
 
     return S0.tolist()
 
 
-def add_exchange_delete_sampler(kernel, s_init=None, nb_iter=10, T_max=None,
-                                random_state=None):
-    """ MCMC sampler for generic DPPs, it is a mix of add/delete and basis exchange MCMC samplers.
+def add_exchange_delete_sampler(
+    kernel, s_init=None, nb_iter=10, T_max=None, random_state=None
+):
+    """MCMC sampler for generic DPPs, it is a mix of add/delete and basis exchange MCMC samplers.
 
     :param kernel:
         Kernel martrix
@@ -194,7 +201,7 @@ def add_exchange_delete_sampler(kernel, s_init=None, nb_iter=10, T_max=None,
         ratio = size_S0 / N  # Proportion of items in current sample
 
         # Add: S1 = S0 + t
-        if U < 0.5 * (1 - ratio)**2:
+        if U < 0.5 * (1 - ratio) ** 2:
             S1.append(t)  # S1 = S0 + t
             # Accept_reject the move
             det_S1 = det_ST(kernel, S1)  # det K_S1
@@ -206,7 +213,7 @@ def add_exchange_delete_sampler(kernel, s_init=None, nb_iter=10, T_max=None,
                 chain.append(S0)
 
         # Exchange: S1 = S0 - s + t
-        elif (0.5 * (1 - ratio)**2 <= U) & (U < 0.5 * (1 - ratio)):
+        elif (0.5 * (1 - ratio) ** 2 <= U) & (U < 0.5 * (1 - ratio)):
             del S1[s_ind]  # S1 = S0 - s
             S1.append(t)  # S1 = S1 + t = S0 - s + t
             # Accept_reject the move
@@ -219,7 +226,7 @@ def add_exchange_delete_sampler(kernel, s_init=None, nb_iter=10, T_max=None,
                 chain.append(S0)
 
         # Delete: S1 = S0 - s
-        elif (0.5 * (1 - ratio) <= U) & (U < 0.5 * (ratio**2 + (1 - ratio))):
+        elif (0.5 * (1 - ratio) <= U) & (U < 0.5 * (ratio ** 2 + (1 - ratio))):
             del S1[s_ind]  # S0 - s
             # Accept_reject the move
             det_S1 = det_ST(kernel, S1)  # det K_S1
@@ -240,9 +247,8 @@ def add_exchange_delete_sampler(kernel, s_init=None, nb_iter=10, T_max=None,
     return chain
 
 
-def add_delete_sampler(kernel, s_init, nb_iter=10, T_max=None,
-                       random_state=None):
-    """ MCMC sampler for generic DPP(kernel), it performs local moves by removing/adding one element at a time.
+def add_delete_sampler(kernel, s_init, nb_iter=10, T_max=None, random_state=None):
+    """MCMC sampler for generic DPP(kernel), it performs local moves by removing/adding one element at a time.
 
     :param kernel:
         Kernel martrix
@@ -323,9 +329,8 @@ def add_delete_sampler(kernel, s_init, nb_iter=10, T_max=None,
     return chain
 
 
-def basis_exchange_sampler(kernel, s_init, nb_iter=10, T_max=None,
-                           random_state=None):
-    """ MCMC sampler for projection DPPs, based on the basis exchange property.
+def basis_exchange_sampler(kernel, s_init, nb_iter=10, T_max=None, random_state=None):
+    """MCMC sampler for projection DPPs, based on the basis exchange property.
 
     :param kernel:
         Feature vector matrix, feature vectors are stacked columnwise.
@@ -416,7 +421,7 @@ def basis_exchange_sampler(kernel, s_init, nb_iter=10, T_max=None,
 # ZONOTOPE #
 ############
 def extract_basis(y_sol, eps=1e-5):
-    """ Subroutine of :func:`zonotope_sampler <zonotope_sampler>` to extract the tile of the zonotope
+    """Subroutine of :func:`zonotope_sampler <zonotope_sampler>` to extract the tile of the zonotope
     in which a point lies. It extracts the indices of entries of the solution
     of LP :eq:`eq:Px` that are in (0,1).
 
@@ -449,7 +454,7 @@ def extract_basis(y_sol, eps=1e-5):
 
 
 def zonotope_sampler(A_zono, **params):
-    """ MCMC based sampler for projection DPPs.
+    """MCMC based sampler for projection DPPs.
     The similarity matrix is the orthogonal projection matrix onto
     the row span of the feature vector matrix.
     Samples are of size equal to the ransampl_size of the projection matrix
@@ -487,21 +492,23 @@ def zonotope_sampler(A_zono, **params):
     try:
         from cvxopt import matrix, spmatrix, solvers
     except ImportError:
-        raise ValueError('The cvxopt package is required to use the zonotype sampler (see setup.py).')
+        raise ValueError(
+            "The cvxopt package is required to use the zonotype sampler (see setup.py)."
+        )
 
-    solvers.options['show_progress'] = params.get('show_progress', False)
-    solvers.options['glpk'] = {'msg_lev': params.get('show_progress', 'GLP_MSG_OFF')}
+    solvers.options["show_progress"] = params.get("show_progress", False)
+    solvers.options["glpk"] = {"msg_lev": params.get("show_progress", "GLP_MSG_OFF")}
 
-    rng = check_random_state(params.get('random_state', None))
+    rng = check_random_state(params.get("random_state", None))
 
     r, N = A_zono.shape  # Sizes of r=samples=rank(A_zono), N=ground set
     # Linear objective
-    c = matrix(params.get('lin_obj', rng.randn(N)))
+    c = matrix(params.get("lin_obj", rng.randn(N)))
     # Initial point x0 = A*u, u~U[0,1]^n
-    x0 = matrix(params.get('x_0', A_zono.dot(rng.rand(N))))
+    x0 = matrix(params.get("x_0", A_zono.dot(rng.rand(N))))
 
-    nb_iter = params.get('nb_iter', 10)
-    T_max = params.get('T_max', None)
+    nb_iter = params.get("nb_iter", 10)
+    T_max = params.get("T_max", None)
 
     ###################
     # Linear problems #
@@ -563,7 +570,7 @@ def zonotope_sampler(A_zono, **params):
     while len(B_x0) != r:
         # Initial tile B_x0
         # Solve P_x0(A,c)
-        y_star = solvers.lp(c, G, h, A, x0, solver='glpk')['x']
+        y_star = solvers.lp(c, G, h, A, x0, solver="glpk")["x"]
         # Get the tile
         B_x0 = extract_basis(np.asarray(y_star))
 
@@ -585,14 +592,14 @@ def zonotope_sampler(A_zono, **params):
         # Update the constraint [-d A] * [alpha,lambda] = x
         A_mM[:, 0] = -d
         # Find alpha_m/M
-        alpha_m = solvers.lp(c_mM, G_mM, h, A_mM, x0, solver='glpk')['x'][0]
-        alpha_M = solvers.lp(-c_mM, G_mM, h, A_mM, x0, solver='glpk')['x'][0]
+        alpha_m = solvers.lp(c_mM, G_mM, h, A_mM, x0, solver="glpk")["x"][0]
+        alpha_M = solvers.lp(-c_mM, G_mM, h, A_mM, x0, solver="glpk")["x"][0]
 
         # Propose x1 ~ U_{[x0+alpha_m*d, x0-alpha_M*d]}
         x1 = x0 + (alpha_m + (alpha_M - alpha_m) * rng.rand()) * d
         # Proposed tile B_x1
         # Solve P_x1(A,c)
-        y_star = solvers.lp(c, G, h, A, x1, solver='glpk')['x']
+        y_star = solvers.lp(c, G, h, A, x1, solver="glpk")["x"]
         # Get the tile
         B_x1 = extract_basis(np.asarray(y_star))
 

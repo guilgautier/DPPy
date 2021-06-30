@@ -11,8 +11,8 @@
 
 import numpy as np
 import scipy.linalg as la
-from dppy.utils import inner1d, check_random_state, get_progress_bar
-from dppy.intermediate_sampling import (
+from ..utils import inner1d, check_random_state, get_progress_bar
+from .intermediate_sampling import (
     vfx_sampling_precompute_constants,
     vfx_sampling_do_sampling_loop,
     alpha_dpp_sampling_precompute_constants,

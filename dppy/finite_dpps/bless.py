@@ -27,10 +27,16 @@
 import numpy as np
 from collections import namedtuple
 
-from .utils import check_random_state, stable_invert_root, get_progress_bar, evaluate_L_diagonal
+from ..utils import (
+    check_random_state,
+    stable_invert_root,
+    get_progress_bar,
+    evaluate_L_diagonal,
+)
 
-CentersDictionary = namedtuple('CentersDictionary',
-                               ('idx', 'X', 'probs', 'lam', 'rls_oversample'))
+CentersDictionary = namedtuple(
+    "CentersDictionary", ("idx", "X", "probs", "lam", "rls_oversample")
+)
 
 
 def estimate_rls_bless(D, X, eval_L, lam_new):
@@ -66,21 +72,22 @@ def estimate_rls_bless(D, X, eval_L, lam_new):
 
     # the diagonal entries of XX'(X'X + lam*S^(-2))^(-1)XX' are just the squared
     # ell-2 norm of the columns of (X'X + lam*S^(-2))^(-1/2)XX'
-    rls_estimate = (diag_norm - np.square(X_precond, out=X_precond).sum(axis=0)) / lam_new
+    rls_estimate = (
+        diag_norm - np.square(X_precond, out=X_precond).sum(axis=0)
+    ) / lam_new
 
     if np.any(rls_estimate < 0.0):
-        raise ValueError('Some estimated RLS is negative, this should never happen.'
-                         ' Min prob: {}'.format(np.min(rls_estimate)))
+        raise ValueError(
+            "Some estimated RLS is negative, this should never happen."
+            " Min prob: {}".format(np.min(rls_estimate))
+        )
 
     return rls_estimate
 
 
-def reduce_lambda(X_data,
-                  eval_L,
-                  intermediate_dict_bless,
-                  lam_new,
-                  rng,
-                  rls_oversample_parameter=None):
+def reduce_lambda(
+    X_data, eval_L, intermediate_dict_bless, lam_new, rng, rls_oversample_parameter=None
+):
     """Given a previously computed (eps, lambda)-accurate dictionary and a lambda' < lambda parameter,
      it constructs an (eps, lambda')-accurate dictionary using approximate RLS sampling.
     :param array_like X_data: dataset that we must approximate
@@ -92,7 +99,7 @@ def reduce_lambda(X_data,
     :return: An (eps, lam_new)-accurate dictionary with high probability
     :rtype:
         CentersDictionary
-     """
+    """
 
     n, d = X_data.shape
 
@@ -108,14 +115,16 @@ def reduce_lambda(X_data,
 
     # compute upper confidence bound on RLS of each sample, overestimate (oversample) by a rls_oversample factor
     # to boost success probability at the expenses of a larger sample (dictionary)
-    ucb = np.minimum(rls_oversample_parameter * diag / (diag + lam_new), 1.)
+    ucb = np.minimum(rls_oversample_parameter * diag / (diag + lam_new), 1.0)
 
     U = np.asarray(rng.rand(n)) <= ucb
     u = U.sum()
 
     if u <= 0:
-        raise ValueError('No point selected during uniform sampling step, try to increase rls_oversample_bless. '
-                         'Expected number of points: {:.3f}'.format(n * ucb.mean()))
+        raise ValueError(
+            "No point selected during uniform sampling step, try to increase rls_oversample_bless. "
+            "Expected number of points: {:.3f}".format(n * ucb.mean())
+        )
 
     X_U = X_data[U, :]
 
@@ -126,38 +135,49 @@ def reduce_lambda(X_data,
     probs_reject = probs / ucb[U]
 
     if np.any(probs < 0.0):
-        raise ValueError('Some estimated probability is negative, this should never happen. '
-                         'Min prob: {}'.format(np.min(probs_reject)))
+        raise ValueError(
+            "Some estimated probability is negative, this should never happen. "
+            "Min prob: {}".format(np.min(probs_reject))
+        )
 
     deff_estimate = probs_reject.sum() / rls_oversample_parameter
 
     if rls_oversample_parameter * deff_estimate < 1.0:
-        raise ValueError('Estimated deff is smaller than 1, you might want to reconsider your kernel. '
-                         'deff_estimate: {:.3f}'.format(rls_oversample_parameter * deff_estimate))
+        raise ValueError(
+            "Estimated deff is smaller than 1, you might want to reconsider your kernel. "
+            "deff_estimate: {:.3f}".format(rls_oversample_parameter * deff_estimate)
+        )
 
     selected = np.asarray(rng.rand(u)) <= probs_reject
     s = selected.sum()
     if s <= 0:
-        raise ValueError('No point selected during RLS sampling step, try to increase rls_oversample_bless. '
-                         'Expected number of points (rls_oversample_bless*deff): {:.3f}'.format(np.sum(probs_reject)))
+        raise ValueError(
+            "No point selected during RLS sampling step, try to increase rls_oversample_bless. "
+            "Expected number of points (rls_oversample_bless*deff): {:.3f}".format(
+                np.sum(probs_reject)
+            )
+        )
 
     intermediate_dict_bless_new = CentersDictionary(
-                                    idx=U.nonzero()[0][selected.nonzero()[0]],
-                                    X=X_U[selected, :],
-                                    probs=probs[selected],
-                                    lam=lam_new,
-                                    rls_oversample=rls_oversample_parameter)
+        idx=U.nonzero()[0][selected.nonzero()[0]],
+        X=X_U[selected, :],
+        probs=probs[selected],
+        lam=lam_new,
+        rls_oversample=rls_oversample_parameter,
+    )
 
     return intermediate_dict_bless_new
 
 
-def bless(X_data,
-          eval_L,
-          lam_final,
-          rls_oversample_param,
-          random_state=None,
-          nb_iter_bless=None,
-          verbose=True):
+def bless(
+    X_data,
+    eval_L,
+    lam_final,
+    rls_oversample_param,
+    random_state=None,
+    nb_iter_bless=None,
+    verbose=True,
+):
     """Returns a (eps, lambda)-accurate dictionary of Nystrom centers sampled according to approximate RLS.
 
     Given data X, a similarity function, and its related similarity matrix similarity_function(X, X),
@@ -220,7 +240,7 @@ def bless(X_data,
     n, d = X_data.shape
 
     if nb_iter_bless is None:
-        nb_iter_bless = np.ceil(np.log(n)).astype('int')
+        nb_iter_bless = np.ceil(np.log(n)).astype("int")
 
     diag_norm = np.asarray(evaluate_L_diagonal(eval_L, X_data))
     lam_init = n
@@ -237,11 +257,12 @@ def bless(X_data,
     ucb_init[0] = rls_oversample_param * 1.0
 
     intermediate_dict_bless = CentersDictionary(
-                idx=selected_init.nonzero()[0],
-                X=X_data[selected_init, :],
-                probs=np.ones(np.sum(selected_init)) * ucb_init[selected_init],
-                lam=lam_init,
-                rls_oversample=rls_oversample_param)
+        idx=selected_init.nonzero()[0],
+        X=X_data[selected_init, :],
+        probs=np.ones(np.sum(selected_init)) * ucb_init[selected_init],
+        lam=lam_init,
+        rls_oversample=rls_oversample_param,
+    )
 
     lam_sequence = list(np.geomspace(lam_final, lam_init, nb_iter_bless))
 
@@ -251,31 +272,33 @@ def bless(X_data,
     with get_progress_bar(total=len(lam_sequence), disable=not verbose) as t:
         while len(lam_sequence) > 0:
             lam_new = lam_sequence.pop()
-            intermediate_dict_bless = reduce_lambda(X_data,
-                                                    eval_L,
-                                                    intermediate_dict_bless,
-                                                    lam_new,
-                                                    rng)
+            intermediate_dict_bless = reduce_lambda(
+                X_data, eval_L, intermediate_dict_bless, lam_new, rng
+            )
             t.set_postfix(
-                    lam=int(lam_new),
-                    m=len(intermediate_dict_bless.probs),
-                    m_expected=int(intermediate_dict_bless.probs.mean() * n),
-                    probs_dist="({:.4}, {:.4}, {:.4})".format(
-                                intermediate_dict_bless.probs.mean(),
-                                intermediate_dict_bless.probs.max(),
-                                intermediate_dict_bless.probs.min()))
+                lam=int(lam_new),
+                m=len(intermediate_dict_bless.probs),
+                m_expected=int(intermediate_dict_bless.probs.mean() * n),
+                probs_dist="({:.4}, {:.4}, {:.4})".format(
+                    intermediate_dict_bless.probs.mean(),
+                    intermediate_dict_bless.probs.max(),
+                    intermediate_dict_bless.probs.min(),
+                ),
+            )
             t.update()
 
     return intermediate_dict_bless
 
 
-def bless_size(X_data,
-               eval_L,
-               size_final,
-               rls_oversample_param,
-               random_state=None,
-               nb_iter_bless=None,
-               verbose=True):
+def bless_size(
+    X_data,
+    eval_L,
+    size_final,
+    rls_oversample_param,
+    random_state=None,
+    nb_iter_bless=None,
+    verbose=True,
+):
     """Returns a (eps, lam_max)-accurate dictionary of Nystrom centers sampled according to approximate RLS.
     This variant automatically chooses the lambda parameter, and returns a [lam_min, lam_max] interval
     such that w.h.p. deff(lam_min) <= size_final/2 and 2*size_final <= deff(lam_max).
@@ -352,7 +375,7 @@ def bless_size(X_data,
     lam_min = lam_final
 
     if nb_iter_bless is None:
-        nb_iter_bless = np.ceil(np.log2(lam_init)).astype('int')
+        nb_iter_bless = np.ceil(np.log2(lam_init)).astype("int")
     lam_sequence = list(np.geomspace(lam_final, lam_init, nb_iter_bless))
 
     ucb_init = rls_oversample_param * diag_norm / (diag_norm + lam_init)
@@ -363,14 +386,15 @@ def bless_size(X_data,
 
     # force at least one sample to be selected
     selected_init[0] = 1
-    ucb_init[0] = rls_oversample_param * 1.
+    ucb_init[0] = rls_oversample_param * 1.0
 
     intermediate_dict_bless = CentersDictionary(
-                idx=selected_init.nonzero()[0],
-                X=X_data[selected_init, :],
-                probs=np.ones(np.sum(selected_init)) * ucb_init[selected_init],
-                lam=lam_init,
-                rls_oversample=rls_oversample_param)
+        idx=selected_init.nonzero()[0],
+        X=X_data[selected_init, :],
+        probs=np.ones(np.sum(selected_init)) * ucb_init[selected_init],
+        lam=lam_init,
+        rls_oversample=rls_oversample_param,
+    )
 
     # discard lam_init from the list, we already used it to initialize
     lam_new = lam_sequence.pop()
@@ -383,13 +407,12 @@ def bless_size(X_data,
 
             lam_new = lam_sequence.pop()
             intermediate_dict_bless = reduce_lambda(
-                                        X_data,
-                                        eval_L,
-                                        intermediate_dict_bless,
-                                        lam_new,
-                                        rng)
-            deff_hat_new = (len(intermediate_dict_bless.idx)
-                            / intermediate_dict_bless.rls_oversample)
+                X_data, eval_L, intermediate_dict_bless, lam_new, rng
+            )
+            deff_hat_new = (
+                len(intermediate_dict_bless.idx)
+                / intermediate_dict_bless.rls_oversample
+            )
 
             # check if the dictionary passed the lower threshold, in which case set it to last valid lambda
             if deff_hat_old <= (size_final - 1) / 2 <= deff_hat_new:
@@ -400,14 +423,16 @@ def bless_size(X_data,
                 break
 
             t.set_postfix(
-                    lam=int(lam_new),
-                    m=len(intermediate_dict_bless.probs),
-                    d_hat=deff_hat_new,
-                    m_expected=int(intermediate_dict_bless.probs.mean() * n),
-                    probs_dist="({:.4}, {:.4}, {:.4})".format(
-                                intermediate_dict_bless.probs.mean(),
-                                intermediate_dict_bless.probs.max(),
-                                intermediate_dict_bless.probs.min()))
+                lam=int(lam_new),
+                m=len(intermediate_dict_bless.probs),
+                d_hat=deff_hat_new,
+                m_expected=int(intermediate_dict_bless.probs.mean() * n),
+                probs_dist="({:.4}, {:.4}, {:.4})".format(
+                    intermediate_dict_bless.probs.mean(),
+                    intermediate_dict_bless.probs.max(),
+                    intermediate_dict_bless.probs.min(),
+                ),
+            )
             t.update()
 
     return lam_max, lam_min, intermediate_dict_bless

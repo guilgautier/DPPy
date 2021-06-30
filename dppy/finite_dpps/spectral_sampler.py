@@ -1,7 +1,7 @@
 import numpy as np
 import scipy.linalg as la
 
-from .utils import check_random_state, inner1d
+from ..utils import check_random_state, inner1d
 
 
 def spectral_sampler(dpp, random_state=None, **params):

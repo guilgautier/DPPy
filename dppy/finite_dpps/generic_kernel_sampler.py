@@ -1,5 +1,5 @@
 import numpy as np
-from .utils import check_random_state
+from ..utils import check_random_state
 
 
 def dpp_sampler_generic_kernel(K, random_state=None):
