@@ -1,9 +1,24 @@
 import numpy as np
-from ..utils import check_random_state
+from dppy.utils import check_random_state
 
 
-def dpp_sampler_generic_kernel(K, random_state=None):
-    """Generate an exact sample from generic :math:`\\operatorname{DPP}(\\mathbf{K})` with potentially non hermitian correlation kernel :math:`\\operatorname{DPP}(\\mathbf{K})` based on LU factorization procedure.
+def generic_correlation_kernel_sampler(dpp, random_state=None, **params):
+    dpp.compute_K()
+    sampler = select_generic_correlation_kernel_sampler(params.get("mode"))
+    return sampler(dpp.K, random_state=random_state, **params)
+
+
+# todo change name Chol to LU or Poulson (in docstrings too!)
+def select_generic_correlation_kernel_sampler(name):
+    samplers = {
+        "Chol": generic_correlation_kernel_sampler_Poulson,
+    }
+    default = samplers["Chol"]
+    return samplers.get(name, default)
+
+
+def generic_correlation_kernel_sampler_Poulson(K, random_state=None, **params):
+    r"""Generate an exact sample from generic :math:`\operatorname{DPP}(\mathbf{K})` with potentially non hermitian correlation kernel :math:`\operatorname{DPP}(\mathbf{K})` based on LU factorization procedure.
 
     :param K:
         Correlation kernel (potentially non hermitian).
@@ -11,10 +26,19 @@ def dpp_sampler_generic_kernel(K, random_state=None):
         array_like
 
     :return:
-        An exact sample :math:`X \sim \\operatorname{DPP}(K)` and
-        the in-place LU factorization of :math:`K − I_{X^{c}}` where :math:`I_{X^{c}}` is the diagonal indicator matrix for the entries not in the sample :math:`X`.
+        An exact sample :math:`X \sim \operatorname{DPP}(K)` and
+        the in-place LU factorization of :math:`K − I_{X^{c}}`, where :math:`I_{X^{c}}` is the diagonal indicator matrix for the entries not in the sample :math:`X`.
     :rtype:
         list and array_like
+
+    .. note::
+
+        The likelihood of the output sample :math:`X` is given by
+
+        .. math::
+
+            \mathbb{P}\!\left[ \mathcal{ X } = X \right]
+            = \det \left[ K − I_{X^{c}} \right]
 
     .. seealso::
 
@@ -22,13 +46,16 @@ def dpp_sampler_generic_kernel(K, random_state=None):
     """
     rng = check_random_state(random_state)
     A = K.copy()
+    N = len(A)
     sample = []
-    for j in range(len(A)):
+    for j in range(N):
         if rng.rand() < A[j, j]:
             sample.append(j)
         else:
             A[j, j] -= 1.0
-        A[j + 1 :, j] /= A[j, j]
-        A[j + 1 :, j + 1 :] -= np.outer(A[j + 1 :, j], A[j, j + 1 :])
+        J1 = slice(j + 1, N)
+        A[J1, j] /= A[j, j]
+        A[J1, J1] -= np.outer(A[J1, j], A[j, J1])
         # A[j+1:, j+1:] -=  np.einsum('i,j', A[j+1:, j], A[j, j+1:])
-    return sample, A
+    # log_likelihood = np.sum(np.log(np.diagonal(A)))
+    return sample, A  # , log_likelihood

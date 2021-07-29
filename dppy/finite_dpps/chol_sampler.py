@@ -1,13 +1,15 @@
-from .projection_kernel_sampler import projection_kernel_sampler
-from .generic_kernel_sampler import dpp_sampler_generic_kernel
+from dppy.finite_dpps.projection_kernel_sampler import projection_kernel_sampler
+from dppy.finite_dpps.generic_kernel_sampler import generic_correlation_kernel_sampler
 
 
 def chol_sampler(dpp, random_state, **params):
-    if dpp.kernel_type == "correlation" and dpp.hermitian and dpp.projection:
-        return projection_kernel_sampler(
-            dpp, mode="Chol", random_state=random_state, **params
-        )
+    params["mode"] = "Chol"
+    cond_K = dpp.kernel_type == "correlation"
+    cond_L = dpp.kernel_type == "likelihood" and params.get("size")
+    if dpp.projection and (cond_K or cond_L):
+        return projection_kernel_sampler(dpp, random_state=random_state, **params)
     else:
-        dpp.compute_K()
-        sample, _ = dpp_sampler_generic_kernel(dpp.K, random_state=random_state)
+        sample, _ = generic_correlation_kernel_sampler(
+            dpp, random_state=random_state, **params
+        )
         return sample
