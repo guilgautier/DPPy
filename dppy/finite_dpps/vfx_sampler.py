@@ -1,9 +1,11 @@
 import numpy as np
-from .intermediate_sampling import (
+
+from dppy.utils import check_random_state
+
+from dppy.finite_dpps.intermediate_sampling import (
     vfx_sampling_precompute_constants,
     vfx_sampling_do_sampling_loop,
 )
-from ..utils import check_random_state
 
 
 def vfx_sampler(dpp, rng, **params):

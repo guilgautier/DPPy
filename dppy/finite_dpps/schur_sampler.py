@@ -1,4 +1,4 @@
-from .projection_kernel_sampler import projection_kernel_sampler
+from dppy.finite_dpps.projection_kernel_sampler import projection_kernel_sampler
 
 
 def schur_sampler(dpp, random_state, **params):

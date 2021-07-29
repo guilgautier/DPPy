@@ -16,15 +16,11 @@ import numpy.random as rndm
 import scipy.linalg as la
 from scipy.stats import chisquare
 
-import sys
-
-sys.path.append("..")
-
 from dppy.finite_dpps.finite_dpps import FiniteDPP
 from dppy.utils import det_ST, example_eval_L_linear, example_eval_L_min_kern
 
 
-class TestConfiguration(object):
+class Configuration(object):
     def __init__(self, sampler, mode, mode_params, idx, proj, dpp_param):
         self.sampler = sampler
         self.mode = mode
@@ -194,7 +190,7 @@ class TestAdequationOfFiniteDppSamplers(unittest.TestCase):
         for sampler, modes in dict_sampler_mode_param.items():
             for mode, mode_params in modes.items():
                 for idx, (proj, dpp_param) in enumerate(list_dpp_params):
-                    yield TestConfiguration(
+                    yield Configuration(
                         sampler, mode, mode_params, idx, proj, dpp_param
                     )
 

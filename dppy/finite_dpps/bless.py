@@ -27,7 +27,7 @@
 import numpy as np
 from collections import namedtuple
 
-from ..utils import (
+from dppy.utils import (
     check_random_state,
     stable_invert_root,
     get_progress_bar,

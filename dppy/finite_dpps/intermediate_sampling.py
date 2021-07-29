@@ -28,8 +28,8 @@ import numpy as np
 from scipy.optimize import brentq
 from collections import namedtuple
 
-from .bless import bless, reduce_lambda, bless_size
-from ..utils import (
+from dppy.finite_dpps.bless import bless, reduce_lambda, bless_size
+from dppy.utils import (
     stable_filter,
     stable_invert_root,
     evaluate_L_diagonal,

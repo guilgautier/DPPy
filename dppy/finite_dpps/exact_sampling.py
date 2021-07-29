@@ -10,7 +10,7 @@
 """
 
 import numpy as np
-from ..utils import check_random_state
+from dppy.utils import check_random_state
 
 ##########
 # k-DPPs #

@@ -1,6 +1,6 @@
 import numpy as np
-from ..utils import check_random_state, get_progress_bar
-from .intermediate_sampling import (
+from dppy.utils import check_random_state, get_progress_bar
+from dppy.finite_dpps.intermediate_sampling import (
     alpha_dpp_sampling_precompute_constants,
     alpha_dpp_sampling_do_sampling_loop,
 )

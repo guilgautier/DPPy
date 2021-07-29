@@ -8,22 +8,22 @@ import unittest
 import numpy as np
 import numpy.linalg as la
 
-import sys
-sys.path.append('..')
+from dppy.finite_dpps.bless import (
+    bless,
+    estimate_rls_bless,
+    reduce_lambda,
+    CentersDictionary,
+)
 
-from dppy.bless import (bless,
-                        estimate_rls_bless,
-                        reduce_lambda,
-                        CentersDictionary)
-
-from dppy.utils import (check_random_state,
-                        example_eval_L_polynomial,
-                        evaluate_L_diagonal)
+from dppy.utils import (
+    check_random_state,
+    example_eval_L_polynomial,
+    evaluate_L_diagonal,
+)
 
 
 class TestBless(unittest.TestCase):
-    """
-    """
+    """ """
 
     seed = 42
 
@@ -38,11 +38,13 @@ class TestBless(unittest.TestCase):
         # force at least one sample to be selected
         selected_init[0] = 1
 
-        return CentersDictionary(idx=selected_init.nonzero()[0],
-                                 X=X_data[selected_init, :],
-                                 probs=np.ones(np.sum(selected_init)) * init_rls_estimate[selected_init],
-                                 lam=n,
-                                 rls_oversample=rls_oversample)
+        return CentersDictionary(
+            idx=selected_init.nonzero()[0],
+            X=X_data[selected_init, :],
+            probs=np.ones(np.sum(selected_init)) * init_rls_estimate[selected_init],
+            lam=n,
+            rls_oversample=rls_oversample,
+        )
 
     def test_estimate_rls_bless(self):
         N, d = 100, 5
@@ -54,12 +56,19 @@ class TestBless(unittest.TestCase):
 
         rls_exact = la.solve(L_data + lam_new * np.eye(N), L_data).diagonal()
 
-        dict_exact = self.__create_lambda_acc_dictionary(X_data, example_eval_L_polynomial, 0.0, rng)
-        dict_approx = self.__create_lambda_acc_dictionary(X_data, example_eval_L_polynomial, lam, rng)
+        dict_exact = self.__create_lambda_acc_dictionary(
+            X_data, example_eval_L_polynomial, 0.0, rng
+        )
+        dict_approx = self.__create_lambda_acc_dictionary(
+            X_data, example_eval_L_polynomial, lam, rng
+        )
 
-        rls_estimates_exact = estimate_rls_bless(dict_exact, X_data, example_eval_L_polynomial, lam_new)
-        rls_estimates_approx = estimate_rls_bless(dict_approx, X_data, example_eval_L_polynomial, lam_new)
-
+        rls_estimates_exact = estimate_rls_bless(
+            dict_exact, X_data, example_eval_L_polynomial, lam_new
+        )
+        rls_estimates_approx = estimate_rls_bless(
+            dict_approx, X_data, example_eval_L_polynomial, lam_new
+        )
 
         np.testing.assert_almost_equal(rls_estimates_exact, rls_exact)
         np.testing.assert_allclose(rls_estimates_approx, rls_exact, rtol=0.5)
@@ -73,20 +82,24 @@ class TestBless(unittest.TestCase):
         L_data = example_eval_L_polynomial(X_data)
 
         rls_exact = la.solve(L_data + lam * np.eye(N), L_data).diagonal()
-        dict_approx = self.__create_lambda_acc_dictionary(X_data, example_eval_L_polynomial, lam, rng)
-        rls_estimates = estimate_rls_bless(dict_approx, X_data, example_eval_L_polynomial, lam)
-        np.testing.assert_allclose(rls_estimates,
-                                   rls_exact,
-                                   rtol=0.5)
+        dict_approx = self.__create_lambda_acc_dictionary(
+            X_data, example_eval_L_polynomial, lam, rng
+        )
+        rls_estimates = estimate_rls_bless(
+            dict_approx, X_data, example_eval_L_polynomial, lam
+        )
+        np.testing.assert_allclose(rls_estimates, rls_exact, rtol=0.5)
 
-        dict_reduced = reduce_lambda(X_data, example_eval_L_polynomial, dict_approx, lam_new, rng)
+        dict_reduced = reduce_lambda(
+            X_data, example_eval_L_polynomial, dict_approx, lam_new, rng
+        )
 
-        rls_estimates_reduced = estimate_rls_bless(dict_reduced, X_data, example_eval_L_polynomial, lam_new)
+        rls_estimates_reduced = estimate_rls_bless(
+            dict_reduced, X_data, example_eval_L_polynomial, lam_new
+        )
         rls_exact_reduced = la.solve(L_data + lam_new * np.eye(N), L_data).diagonal()
 
-        np.testing.assert_allclose(rls_estimates_reduced,
-                                   rls_exact_reduced,
-                                   rtol=0.5)
+        np.testing.assert_allclose(rls_estimates_reduced, rls_exact_reduced, rtol=0.5)
 
         self.assertTrue(len(dict_reduced.idx) <= len(dict_approx.idx))
 
@@ -99,17 +112,18 @@ class TestBless(unittest.TestCase):
 
         rls_exact = la.solve(L_data + lam * np.eye(N), L_data).diagonal()
 
-        dict_reduced = bless(X_data,
-                             example_eval_L_polynomial,
-                             lam_final=lam,
-                             rls_oversample_param=5,
-                             random_state=rng,
-                             verbose=False)
+        dict_reduced = bless(
+            X_data,
+            example_eval_L_polynomial,
+            lam_final=lam,
+            rls_oversample_param=5,
+            random_state=rng,
+            verbose=False,
+        )
 
-        rls_estimates = estimate_rls_bless(dict_reduced,
-                                           X_data,
-                                           example_eval_L_polynomial,
-                                           lam)
+        rls_estimates = estimate_rls_bless(
+            dict_reduced, X_data, example_eval_L_polynomial, lam
+        )
 
         np.testing.assert_allclose(rls_estimates, rls_exact, rtol=0.5)
 
@@ -121,5 +135,5 @@ def main():
     unittest.main()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

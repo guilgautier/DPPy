@@ -15,7 +15,7 @@ import time
 import numpy as np
 import scipy.linalg as la
 
-from ..utils import det_ST, check_random_state
+from dppy.utils import det_ST, check_random_state
 
 
 ############################################
