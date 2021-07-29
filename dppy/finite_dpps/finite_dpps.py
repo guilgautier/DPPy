@@ -20,24 +20,24 @@ import matplotlib.pyplot as plt
 
 from warnings import warn
 
-from .schur_sampler import schur_sampler
-from .chol_sampler import chol_sampler
-from .vfx_sampler import vfx_sampler, k_dpp_vfx_sampler
-from .alpha_sampler import alpha_sampler, alpha_k_dpp_sampler
-from .spectral_sampler import (
-    select_projection_dpp_eigen_sampler,
+from dppy.finite_dpps.schur_sampler import schur_sampler
+from dppy.finite_dpps.chol_sampler import chol_sampler
+from dppy.finite_dpps.vfx_sampler import vfx_sampler, k_dpp_vfx_sampler
+from dppy.finite_dpps.alpha_sampler import alpha_sampler, alpha_k_dpp_sampler
+from dppy.finite_dpps.spectral_sampler import (
+    select_projection_eigen_sampler,
     spectral_sampler,
 )
-from .projection_kernel_sampler import select_projection_dpp_kernel_sampler
+from dppy.finite_dpps.projection_kernel_sampler import select_orthogonal_projection_kernel_sampler
 
-from .exact_sampling import (
+from dppy.finite_dpps.exact_sampling import (
     k_dpp_eig_vecs_selector,
     elementary_symmetric_polynomials,
 )
 
-from .mcmc_sampling import dpp_sampler_mcmc, zonotope_sampler
+from dppy.finite_dpps.mcmc_sampling import dpp_sampler_mcmc, zonotope_sampler
 
-from ..utils import (
+from dppy.utils import (
     check_random_state,
     is_symmetric,
     is_projection,
@@ -345,8 +345,8 @@ class FiniteDPP:
             - :py:meth:`~FiniteDPP.sample_mcmc`
         """
 
-        sampler = self.select_exact_sampler(mode)
         rng = check_random_state(random_state)
+        sampler = self.select_exact_sampler(mode)
         sample = sampler(self, rng, **params)
 
         self.sampling_mode = mode
@@ -512,7 +512,7 @@ class FiniteDPP:
 
                 if self.K_eig_vals is not None:
                     # K_eig_vals > 0.5 below to get indices where e_vals = 1
-                    sampler = select_projection_dpp_eigen_sampler(mode)
+                    sampler = select_projection_eigen_sampler(mode)
                     sampl = sampler(
                         eig_vecs=self.eig_vecs[:, self.K_eig_vals > 0.5],
                         size=size,
@@ -526,7 +526,7 @@ class FiniteDPP:
 
                     self.K_eig_vals = np.ones(rank)
                     self.eig_vecs, _ = la.qr(self.A_zono.T, mode="economic")
-                    sampler = select_projection_dpp_eigen_sampler(mode)
+                    sampler = select_projection_eigen_sampler(mode)
                     sampl = sampler(
                         eig_vecs=self.eig_vecs,
                         size=size,
@@ -534,13 +534,13 @@ class FiniteDPP:
                     )
 
                 else:
-                    sampler = select_projection_dpp_kernel_sampler(mode)
+                    sampler = select_orthogonal_projection_kernel_sampler(mode)
                     sampl = sampler(self.K, size=size, random_state=rng)
 
             else:  # self.kernel_type == 'likelihood':
                 if self.L_eig_vals is not None:
                     # L_eig_vals > 0.5 below to get indices where e_vals = 1
-                    sampler = select_projection_dpp_eigen_sampler(mode)
+                    sampler = select_projection_eigen_sampler(mode)
                     sampl = sampler(
                         eig_vecs=self.eig_vecs[:, self.L_eig_vals > 0.5],
                         size=size,
@@ -548,7 +548,7 @@ class FiniteDPP:
                     )
                 else:
                     self.compute_L()
-                    sampler = select_projection_dpp_kernel_sampler(mode)
+                    sampler = select_orthogonal_projection_kernel_sampler(mode)
                     sampl = sampler(self.L, size=size, random_state=rng)
 
         # If eigen decoposition of K, L or L_dual is available USE IT!
@@ -568,7 +568,7 @@ class FiniteDPP:
             )
             # Phase 2
             self.size_k_dpp = size
-            sampler = select_projection_dpp_eigen_sampler(mode)
+            sampler = select_projection_eigen_sampler(mode)
             sampl = sampler(V, size=size, random_state=rng)
 
         elif self.K_eig_vals is not None:

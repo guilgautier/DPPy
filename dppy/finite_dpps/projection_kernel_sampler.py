@@ -1,57 +1,74 @@
 import numpy as np
-from ..utils import check_random_state, inner1d
+from dppy.utils import check_random_state, inner1d
 
 
 def projection_kernel_sampler(dpp, random_state=None, **params):
     assert dpp.projection
-    dpp.compute_K()
-    sampler = select_projection_dpp_kernel_sampler(params.get("mode"))
-    return sampler(dpp.K, params.get("size"), random_state)
+
+    size = params.get("size")
+    if size:
+        dpp.compute_L()
+        kernel = dpp.L
+    else:
+        dpp.compute_K()
+        kernel = dpp.K
+
+    mode = params.get("mode")
+    if dpp.hermitian:
+        sampler = select_orthogonal_projection_kernel_sampler(mode)
+    else:
+        sampler = select_generic_projection_kernel_sampler(mode)
+
+    return sampler(kernel, size=size, random_state=random_state)
 
 
-def select_projection_dpp_kernel_sampler(name):
+def select_generic_projection_kernel_sampler(name):
     """Select a sampler for projection DPP define via its correlation kernel
 
-    - :func:`proj_dpp_sampler_kernel_GS <proj_dpp_sampler_kernel_GS>`
-    - :func:`proj_dpp_sampler_kernel_Schur <proj_dpp_sampler_kernel_Schur>`
-    - :func:`proj_dpp_sampler_kernel_Chol <proj_dpp_sampler_kernel_Chol>`
+    - :func:`projection_kernel_sampler_Schur <projection_kernel_sampler_Schur>`
     """
     samplers = {
-        "GS": proj_dpp_sampler_kernel_GS,
-        "Chol": proj_dpp_sampler_kernel_Chol,
-        "Schur": proj_dpp_sampler_kernel_Schur,
+        "Schur": projection_kernel_sampler_Schur,
+    }
+    default = samplers["Schur"]
+    return samplers.get(name, default)
+
+
+def select_orthogonal_projection_kernel_sampler(name):
+    """Select a sampler for projection DPP define via its correlation kernel
+
+    - :func:`projection_kernel_sampler_GS <projection_kernel_sampler_GS>`
+    - :func:`projection_kernel_sampler_Schur <projection_kernel_sampler_Schur>`
+    - :func:`projection_kernel_sampler_Chol <projection_kernel_sampler_Chol>`
+    """
+    samplers = {
+        "GS": projection_kernel_sampler_GS,
+        "Chol": projection_kernel_sampler_Chol,
+        "Schur": projection_kernel_sampler_Schur,
     }
     default = samplers["GS"]
     return samplers.get(name, default)
 
 
-def proj_dpp_sampler_kernel_Chol(K, size=None, random_state=None):
-    """Sample from:
+def projection_kernel_sampler_Chol(K, size=None, random_state=None):
+    """Generate an exact sample from :math:`\\operatorname{DPP}(K)`, or :math:`\\operatorname{k-DPP}(K)` with :math:`k=` ``size`` (if ``size`` is provided), where :math:`K` is an orthogonal projection `kernel`.
 
-    - :math:`\\operatorname{DPP}(K)` with orthogonal projection **correlation** kernel :math:`K` if ``size`` is not provided
-    - :math:`\\operatorname{k-DPP}` with orthogonal projection **likelihood** kernel :math:`K` with :math:`k=` ``size`` is provided
-
-    Chain rule is applied by performing Cholesky updates of :math:`K`.
+    The chain rule is applied by performing Cholesky updates following :cite:`Pou19` Algorithm 3.
 
     :param K:
         Orthogonal projection kernel.
     :type K:
         array_like
 
-    :param k:
-        Size of the sample.
-        Default is :math:`k=\\operatorname{trace}(K)=\\operatorname{rank}(K)`.
-    :type k:
+    :param size:
+        Size of the output sample (if ``size`` is provided), otherwise :math:`k=\\operatorname{trace}(K)=\\operatorname{rank}(K)`.
+    :type size:
         int
 
     :return:
-        If ``size`` is not provided (None),
-            A sample :math:`\\mathcal{X}` from :math:`\\operatorname{DPP}(K)`.
-        If ``size`` is provided,
-            A sample :math:`\\mathcal{X}` from :math:`\\operatorname{k-DPP}(K)`.
-        along with in-place Cholesky factorization of :math:`\\mathbf{K}_{\\mathcal{X} }`
+        An exact sample from the corresponding :math:`\\operatorname{DPP}(K)` or :math:`\\operatorname{k-DPP}(K)`.
     :rtype:
-        list and array_like
+        list
 
     .. caution::
 
@@ -59,23 +76,22 @@ def proj_dpp_sampler_kernel_Chol(K, size=None, random_state=None):
 
     .. seealso::
 
-        #L37>`_ for the Hermitian swap routine.
-        - :cite:`Pou19` Algorithm 3 and :ref:`catamari code <https://gitlab.com/hodge_star/catamari/blob/38718a1ea34872fb6567e019ece91fbeb5af5be1/include/catamari/dense_dpp/elementary_hermitian_dpp-impl.hpp
-        - :func:`proj_dpp_sampler_kernel_GS <proj_dpp_sampler_kernel_GS>`
-        - :func:`proj_dpp_sampler_kernel_Schur <proj_dpp_sampler_kernel_Schur>`
+        - :cite:`Pou19` Algorithm 3 and :ref:`catamari code <https://gitlab.com/hodge_star/catamari/blob/38718a1ea34872fb6567e019ece91fbeb5af5be1/include/catamari/dense_dpp/elementary_hermitian_dpp-impl.hpp#L37>`_ for the Hermitian swap routine.
+        - :func:`projection_kernel_sampler_GS <projection_kernel_sampler_GS>`
+        - :func:`projection_kernel_sampler_Schur <projection_kernel_sampler_Schur>`
     """
 
     rng = check_random_state(random_state)
 
-    N = len(K)
     rank = np.rint(np.trace(K)).astype(int)
     if size is None:  # full projection DPP else k-DPP with k = size
         size = rank
     assert size <= rank
 
     A = K.copy()
-    d = np.diagonal(A).astype(float)
+    d = np.copy(A.diagonal().real)
 
+    N = len(A)
     ground_set = np.arange(N)
 
     for j in range(size):
@@ -83,23 +99,27 @@ def proj_dpp_sampler_kernel_Chol(K, size=None, random_state=None):
         # Sample from pivot index and permute
         t = rng.choice(range(j, N), p=np.abs(d[j:]) / (rank - j))
 
-        # Hermitian swap of indices j and t of A (may be written in a function)
+        # Hermitian swap of indices j and t of A
         # bottom swap
-        A[t + 1 :, [j, t]] = A[t + 1 :, [t, j]]
+        j_t = [j, t]
+        t_j = j_t[::-1]
+        T1 = slice(t + 1, N)
+        A[T1, j_t] = A[T1, t_j]
         # inner swap
-        tmp = A[j + 1 : t, j].copy()
-        np.conj(A[t, j + 1 : t], out=A[j + 1 : t, j])
-        np.conj(tmp, out=A[t, j + 1 : t])
+        J1 = slice(j + 1, t)
+        tmp = A[J1, j].copy()
+        np.conj(A[t, J1], out=A[J1, j])
+        np.conj(tmp, out=A[t, J1])
         # corner swap
         A[t, j] = A[t, j].conj()
         # diagonal swap
-        A[[j, t], [j, t]] = A[[t, j], [t, j]].real
+        A[j_t, j_t] = A[t_j, t_j].real
         # left swap
-        A[[j, t], :j] = A[[t, j], :j]
+        A[j_t, :j] = A[t_j, :j]
 
-        # Swap positions j and t of ground_set and d
-        ground_set[[j, t]] = ground_set[[t, j]]
-        d[[j, t]] = d[[t, j]]
+        # Swap positions j and t
+        ground_set[j_t] = ground_set[t_j]
+        d[j_t] = d[t_j]
 
         A[j, j] = np.sqrt(d[j])
 
@@ -107,25 +127,21 @@ def proj_dpp_sampler_kernel_Chol(K, size=None, random_state=None):
             break
 
         # Form new column and update diagonal
-        A[j + 1 :, j] -= A[j + 1 :, :j].dot(A[j, :j].conj())
-        A[j + 1 :, j] /= A[j, j]
-
+        J2 = slice(j + 1, N)
+        A[J2, j] -= A[J2, :j].dot(A[j, :j].conj())
+        A[J2, j] /= A[j, j]
         if np.iscomplexobj(A):
-            d[j + 1 :] -= A[j + 1 :, j].real ** 2 + A[j + 1 :, j].imag ** 2
+            d[J2] -= A[J2, j].real ** 2 + A[J2, j].imag ** 2
         else:
-            d[j + 1 :] -= A[j + 1 :, j] ** 2
+            d[J2] -= A[J2, j] ** 2
 
     sample = ground_set[:size].tolist()
-    log_likelihood = np.sum(np.log(np.diagonal(A[:size, :size]).real))
-
+    # log_likelihood = np.sum(np.log(np.diagonal(A[:size, :size]).real))
     return sample  # , log_likelihood
 
 
-def proj_dpp_sampler_kernel_GS(K, size=None, random_state=None):
-    """Sample from:
-
-    - :math:`\\operatorname{DPP}(K)` with orthogonal projection **correlation** kernel :math:`K` if ``size`` is not provided
-    - :math:`\\operatorname{k-DPP}` with orthogonal projection **likelihood** kernel :math:`K` with :math:`k=` ``size`` is not provided
+def projection_kernel_sampler_GS(K, size=None, random_state=None):
+    """Generate an exact sample from :math:`\\operatorname{DPP}(K)`, or :math:`\\operatorname{k-DPP}(K)` with :math:`k=` ``size`` (if ``size`` is provided), where :math:`K` is an orthogonal projection `kernel`.
 
     Chain rule is applied by performing sequential Gram-Schmidt orthogonalization or equivalently Cholesky decomposition updates of :math:`K`.
 
@@ -134,89 +150,21 @@ def proj_dpp_sampler_kernel_GS(K, size=None, random_state=None):
     :type K:
         array_like
 
-    :param k:
-        Size of the sample.
-        Default is :math:`k=\\operatorname{trace}(K)=\\operatorname{rank}(K)`.
-    :type k:
-        int
-
-    :return:
-        If ``size`` is not provided (None),
-            A sample from :math:`\\operatorname{DPP}(K)`.
-        If ``size`` is provided,
-            A sample from :math:`\\operatorname{k-DPP}(K)`.
-    :rtype:
-        array_like
-
-    .. seealso::
-
-        - :cite:`TrBaAm18` Algorithm 3, :cite:`Gil14` Algorithm 2
-        - :func:`proj_dpp_sampler_kernel_Schur <proj_dpp_sampler_kernel_Schur>`
-        - :func:`proj_dpp_sampler_kernel_Chol <proj_dpp_sampler_kernel_Chol>`
-    """
-
-    rng = check_random_state(random_state)
-
-    N = len(K)  # ground set size
-    rank = np.rint(np.trace(K)).astype(int)  # rank(K) = Tr(K)
-    if size is None:  # full projection DPP else k-DPP with k = size
-        size = rank
-    assert size <= rank
-
-    ground_set = np.arange(N)
-    sample = np.zeros(size, dtype=int)
-    avail = np.full(N, fill_value=True, dtype=bool)
-
-    c = np.zeros((N, size))
-    norm_2 = K.diagonal().copy()  # residual norm^2
-
-    for it in range(size):
-        j = rng.choice(ground_set[avail], p=np.abs(norm_2[avail]) / (rank - it))
-
-        sample[it] = j
-        if it == size - 1:
-            break
-        # Update the Cholesky factor
-        avail[j] = False
-        c[avail, it] = (K[avail, j] - c[avail, :it].dot(c[j, :it])) / np.sqrt(norm_2[j])
-
-        norm_2[avail] -= c[avail, it] ** 2
-
-    return sample.tolist()
-
-    # log_likelihood = np.sum(np.log(norm_2[sample]))
-    # return sample.tolist(), log_likelihood
-
-
-def proj_dpp_sampler_kernel_Schur(K, size=None, random_state=None):
-    """Sample from:
-
-    - :math:`\\operatorname{DPP}(K)` with orthogonal projection **correlation** kernel :math:`K` if ``size`` is not provided
-    - :math:`\\operatorname{k-DPP}` with orthogonal projection **likelihood** kernel :math:`K` with :math:`k=` ``size``
-
-    Chain rule is applied by computing the Schur complements.
-
-    :param K:
-        Orthogonal projection kernel.
-    :type K:
-        array_like
     :param size:
-        Size of the sample.
-        Default is :math:`k=\\operatorname{trace}(K)=\\operatorname{rank}(K)`.
+        Size of the output sample (if ``size`` is provided), otherwise :math:`k=\\operatorname{trace}(K)=\\operatorname{rank}(K)`.
     :type size:
         int
 
     :return:
-        If ``size`` is not provided (None),
-            A sample from :math:`\\operatorname{DPP}(K)`.
-        If ``size`` is provided,
-            A sample from :math:`\\operatorname{k-DPP}(K)`.
+        An exact sample from the corresponding :math:`\\operatorname{DPP}(K)` or :math:`\\operatorname{k-DPP}(K)`.
     :rtype:
-        array_like
+        list
 
     .. seealso::
-        - :func:`proj_dpp_sampler_kernel_GS <proj_dpp_sampler_kernel_GS>`
-        - :func:`proj_dpp_sampler_kernel_Chol <proj_dpp_sampler_kernel_Chol>`
+
+        - :cite:`TrBaAm18` Algorithm 3, :cite:`Gil14` Algorithm 2
+        - :func:`projection_kernel_sampler_Schur <projection_kernel_sampler_Schur>`
+        - :func:`projection_kernel_sampler_Chol <projection_kernel_sampler_Chol>`
     """
 
     rng = check_random_state(random_state)
@@ -227,50 +175,111 @@ def proj_dpp_sampler_kernel_Schur(K, size=None, random_state=None):
         size = rank
     assert size <= rank
 
-    ground_set = np.arange(N)
+    ground_set = np.arange(len(K))
+    rem = np.full_like(ground_set, fill_value=True, dtype=bool)
     sample = np.zeros(size, dtype=int)
-    avail = np.full(N, fill_value=True, dtype=bool)
 
-    # Schur complement list i.e. residual norm^2
-    schur_comp = K.diagonal().copy()
-    K_inv = np.zeros((size, size), dtype=float)
+    norm_2 = np.copy(K.diagonal().real)
+    c = np.zeros_like(K, shape=(N, size))
 
     for it in range(size):
-        j = rng.choice(ground_set[avail], p=np.abs(schur_comp[avail]) / (rank - it))
+        j = rng.choice(ground_set[rem], p=np.abs(norm_2[rem]) / (rank - it))
         sample[it] = j
-        avail[j] = False
+        rem[j] = False
+        if it == size - 1:
+            break
+
+        c[rem, it] = K[rem, j] - c[rem, :it].dot(c[j, :it])
+        c[rem, it] /= np.sqrt(norm_2[j])
+
+        norm_2[rem] -= c[rem, it] ** 2
+
+    # log_likelihood = np.sum(np.log(norm_2[sample]))
+    return sample.tolist()  # , log_likelihood
+
+
+def projection_kernel_sampler_Schur(K, size=None, random_state=None):
+    """Generate an exact sample from :math:`\\operatorname{DPP}(K)`, or :math:`\\operatorname{k-DPP}(K)` with :math:`k=` ``size`` (if ``size`` is provided), where :math:`K` is a projection kernel (not necessarily orthogonal).
+
+    The chain rule is applied by computing Schur complements explicitely, using Woodbury's formula.
+
+    :param K:
+        Projection kernel.
+    :type K:
+        array_like
+    :param size:
+        Size of the output sample (if ``size`` is provided), otherwise :math:`k=\\operatorname{trace}(K)=\\operatorname{rank}(K)`.
+    :type size:
+        int
+
+    :return:
+        An exact sample from the corresponding :math:`\\operatorname{DPP}(K)` or :math:`\\operatorname{k-DPP}(K)`.
+
+    :return:
+        If ``size`` is not provided (None),
+            A sample from :math:`\\operatorname{DPP}(K)`.
+        If ``size`` is provided,
+            A sample from :math:`\\operatorname{k-DPP}(K)`.
+    :rtype:
+        array_like
+
+    .. seealso::
+        - :func:`projection_kernel_sampler_GS <projection_kernel_sampler_GS>`
+        - :func:`projection_kernel_sampler_Chol <projection_kernel_sampler_Chol>`
+    """
+
+    rng = check_random_state(random_state)
+
+    rank = np.rint(np.trace(K)).astype(int)  # rank(K) = Tr(K)
+    if size is None:  # full projection DPP else k-DPP with k = size
+        size = rank
+    assert size <= rank
+
+    ground_set = np.arange(len(K))
+    rem = np.full_like(ground_set, fill_value=True, dtype=bool)
+    sample = np.zeros(size, dtype=int)
+
+    schur = np.copy(K.diagonal().real)
+    K1 = np.zeros_like(K, shape=(size, size))  # K^-1
+
+    for it in range(size):
+        j = rng.choice(ground_set[rem], p=np.abs(schur[rem]) / (rank - it))
+        sample[it] = j
+        rem[j] = False
 
         # Update Schur complements K_ii - K_iY (K_Y)^-1 K_Yi
         # 1. Use Woodbury identity to compute K[Y+j,Y+j]^-1 from K[Y,Y]^-1
         if it == 0:
-            K_inv[0, 0] = 1.0 / K[j, j]
+            K1[0, 0] = 1.0 / K[j, j]
 
         elif it == 1:
             i = sample[0]
-            K_inv[:2, :2] = np.array([[K[j, j], -K[j, i]], [-K[j, i], K[i, i]]])
-            K_inv[:2, :2] /= K[i, i] * K[j, j] - K[j, i] ** 2
+            K1[:2, :2] = np.array([[K[j, j], -K[j, i]], [-K[j, i], K[i, i]]])
+            K1[:2, :2] /= K[i, i] * K[j, j] - K[j, i] ** 2
 
         elif it < size - 1:
-            temp = K_inv[:it, :it].dot(K[sample[:it], j])  # K_Y^-1 K_Yj
-            # K_jj - K_jY K_Y^-1 K_Yj
-            schur_j = K[j, j] - K[j, sample[:it]].dot(temp)
+            # Compute K[Y+j,Y+j]^-1 from K[Y,Y]^-1, using Woodbury
+            Y = slice(0, it)
+            tmp1 = K1[Y, Y].dot(K[sample[Y], j])  # K1_Y K_Yj
+            # K_jj - K_jY K1_Y K_Yj
+            schur_j = K[j, j] - K[j, sample[Y]].dot(tmp1)
+            tmp2 = K[j, sample[Y]].dot(K1[Y, Y]) / schur_j  # K_jY K1_YY / schur
 
-            K_inv[:it, :it] += np.outer(temp, temp / schur_j)
-            K_inv[:it, it] = -temp / schur_j
-            K_inv[it, :it] = K_inv[:it, it]
-            K_inv[it, it] = 1.0 / schur_j
+            # K1[Y,Y] + K1[Y,Y] K[Y,j] K[j,Y] K1[Y,Y] / schur
+            K1[Y, Y] += np.outer(tmp1, tmp2)
+            K1[Y, it] = -tmp1 / schur_j  # - K1[Y,Y] K[Y,j] / schur
+            K1[it, Y] = -tmp2  # - K[j,Y] K1[Y,Y] / schur
+            K1[it, it] = 1.0 / schur_j
 
         else:  # it == size-1
             break  # no need to update for nothing
 
         # 2. Update Schur complements
         # K_ii - K_iY (K_Y)^-1 K_Yi for Y <- Y+j
-        K_iY = K[np.ix_(avail, sample[: it + 1])]
-        schur_comp[avail] = K[avail, avail] - inner1d(
-            K_iY.dot(K_inv[: it + 1, : it + 1]), K_iY, axis=1
-        )
+        Y = slice(0, it + 1)
+        K_iY = K[np.ix_(rem, sample[Y])]
+        K_Yi = K[np.ix_(sample[Y], rem)]
+        schur[rem] = K[rem, rem] - inner1d(K_iY.dot(K1[Y, Y]), K_Yi.T, axis=1)
 
-    return sample.tolist()
-
-    # log_likelihood = np.sum(np.log(schur_comp[sample]))
-    # return sample.tolist(), log_likelihood
+    # log_likelihood = np.sum(np.log(schur[sample]))
+    return sample.tolist()  # , log_likelihood
