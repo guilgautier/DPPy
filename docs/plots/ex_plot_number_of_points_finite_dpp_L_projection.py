@@ -34,4 +34,3 @@ ax.vlines(x, 0, hist, colors="b", lw=5, alpha=0.5, label="hist of sizes")
 ax.legend(loc="best", frameon=False)
 
 plt.title("p_value = {:.3f}".format(chisquare(hist, pdf)[1]))
-plt.show()
