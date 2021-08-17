@@ -60,7 +60,7 @@ Relation between correlation and likelihood kernels
 
 	from numpy.random import randn, rand
 	from scipy.linalg import qr
-	from dppy.finite_dpps import FiniteDPP
+	from dppy.finite_dpps.finite_dpps  import FiniteDPP
 
 	r, N = 4, 10
 	eig_vals = rand(r)  # 0< <1
@@ -75,7 +75,7 @@ Relation between correlation and likelihood kernels
 
 .. seealso::
 
-	.. currentmodule:: dppy.finite_dpps
+	.. currentmodule:: dppy.finite_dpps.finite_dpps
 
 	- :py:meth:`~FiniteDPP.compute_K`
 	- :py:meth:`~FiniteDPP.compute_L`
@@ -175,7 +175,7 @@ Variance
 
 	import numpy as np
 	from scipy.linalg import qr
-	from dppy.finite_dpps import FiniteDPP
+	from dppy.finite_dpps.finite_dpps  import FiniteDPP
 
 	rng = np.random.RandomState(1)
 
@@ -219,7 +219,7 @@ Special cases
 
 		import numpy as np
 		from scipy.linalg import qr
-		from dppy.finite_dpps import FiniteDPP
+		from dppy.finite_dpps.finite_dpps  import FiniteDPP
 
 		r, N = 4, 10
 		eig_vals = np.ones(r)

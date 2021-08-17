@@ -1,4 +1,4 @@
-.. currentmodule:: dppy.finite_dpps
+.. currentmodule:: dppy.finite_dpps.finite_dpps
 
 .. _finite_dpps_definition:
 
@@ -106,7 +106,7 @@ Projection DPPs
 		from numpy import ones
 		from numpy.random import randn
 		from scipy.linalg import qr
-		from dppy.finite_dpps import FiniteDPP
+		from dppy.finite_dpps.finite_dpps  import FiniteDPP
 
 		r, N = 4, 10
 

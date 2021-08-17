@@ -1,4 +1,4 @@
-.. currentmodule:: dppy.finite_dpps
+.. currentmodule:: dppy.finite_dpps.finite_dpps
 
 .. _finite_dpps_mcmc_sampling:
 
@@ -62,7 +62,7 @@ Mix of exchange and add-delete moves
 .. testcode::
 
   import numpy as np
-  from dppy.finite_dpps import FiniteDPP
+  from dppy.finite_dpps.finite_dpps  import FiniteDPP
 
   rng = np.random.RandomState(413121)
 
@@ -125,7 +125,7 @@ To recover the finite DPP samples one needs to identify the tile in which the su
 .. testcode::
 
   from numpy.random import RandomState
-  from dppy.finite_dpps import FiniteDPP
+  from dppy.finite_dpps.finite_dpps  import FiniteDPP
 
   rng = RandomState(413121)
 
@@ -166,7 +166,7 @@ To preserve the size :math:`k` of the samples of :math:`k\!\operatorname{-DPP}(\
 .. testcode::
 
   from numpy.random import RandomState
-  from dppy.finite_dpps import FiniteDPP
+  from dppy.finite_dpps.finite_dpps  import FiniteDPP
 
   rng = RandomState(123)
 
