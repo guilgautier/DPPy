@@ -18,7 +18,7 @@ def select_generic_correlation_kernel_sampler(name):
 
 
 def generic_correlation_kernel_sampler_Poulson(K, random_state=None, **params):
-    r"""Generate an exact sample from generic :math:`\operatorname{DPP}(\mathbf{K})` with potentially non hermitian correlation kernel :math:`\operatorname{DPP}(\mathbf{K})` based on LU factorization procedure.
+    r"""Generate an exact sample from generic :math:`\operatorname{DPP}(\mathbf{K})` with potentially non hermitian correlation kernel :math:`\mathbf{K}` based on LU factorization procedure.
 
     :param K:
         Correlation kernel (potentially non hermitian).
@@ -26,10 +26,9 @@ def generic_correlation_kernel_sampler_Poulson(K, random_state=None, **params):
         array_like
 
     :return:
-        An exact sample :math:`X \sim \operatorname{DPP}(K)` and
-        the in-place LU factorization of :math:`K − I_{X^{c}}`, where :math:`I_{X^{c}}` is the diagonal indicator matrix for the entries not in the sample :math:`X`.
+        An exact sample :math:`X \sim \operatorname{DPP}(\mathbf{K})`.
     :rtype:
-        list and array_like
+        list
 
     .. note::
 
@@ -58,4 +57,4 @@ def generic_correlation_kernel_sampler_Poulson(K, random_state=None, **params):
         A[J1, J1] -= np.outer(A[J1, j], A[j, J1])
         # A[j+1:, j+1:] -=  np.einsum('i,j', A[j+1:, j], A[j, j+1:])
     # log_likelihood = np.sum(np.log(np.diagonal(A)))
-    return sample, A  # , log_likelihood
+    return sample  # , A , log_likelihood

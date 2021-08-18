@@ -4,12 +4,14 @@ from dppy.finite_dpps.generic_kernel_sampler import generic_correlation_kernel_s
 
 def chol_sampler(dpp, random_state, **params):
     params["mode"] = "Chol"
+
     cond_K = dpp.kernel_type == "correlation"
     cond_L = dpp.kernel_type == "likelihood" and params.get("size")
+
     if dpp.projection and (cond_K or cond_L):
-        return projection_kernel_sampler(dpp, random_state=random_state, **params)
+        sampler = projection_kernel_sampler
     else:
-        sample, _ = generic_correlation_kernel_sampler(
-            dpp, random_state=random_state, **params
-        )
-        return sample
+        sampler = generic_correlation_kernel_sampler
+
+    sample = sampler(dpp, random_state=random_state, **params)
+    return sample
