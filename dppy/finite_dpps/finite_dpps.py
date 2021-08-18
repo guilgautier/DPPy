@@ -218,8 +218,8 @@ class FiniteDPP:
                 if "A_zono" in self.params_keys and not self.projection:
                     warn_print = [
                         "Weird setting:",
-                        "FiniteDPP(kernel_type={}, projection={}, **{"A_zono": A}) with projection=False",
-                        "When defined through "A_zono" we expect a projection DPP with correlation kernel K = A.T (AA.T)^-1 A`.",
+                        "FiniteDPP(kernel_type={}, projection={}, **{'A_zono': A}) with projection=False",
+                        "When defined through 'A_zono' we expect a projection DPP with correlation kernel K = A.T (AA.T)^-1 A`.",
                         "projection` switched to `True`",
                     ]
                     warn("\n".join(warn_print))
@@ -227,9 +227,9 @@ class FiniteDPP:
             else:
                 err_print = [
                     "Invalid parametrization of correlation kernel, choose:",
-                    "- {"K": K} 0 <= K <= I",
-                    "- {"K_eig_dec": (e_vals, e_vecs)} 0 <= e_vals <= 1",
-                    "- {"A_zono": A} A (dxN) s.t. K = A.T (AA.T)^-1 A",
+                    "- {'K': K} 0 <= K <= I",
+                    "- {'K_eig_dec': (e_vals, e_vecs)} 0 <= e_vals <= 1",
+                    "- {'A_zono': A} A (dxN) s.t. K = A.T (AA.T)^-1 A",
                     "Given: {}".format(self.params_keys),
                 ]
                 raise ValueError("\n".join(err_print))
@@ -243,10 +243,10 @@ class FiniteDPP:
             else:
                 err_print = [
                     "Invalid parametrization of likelihood kernel, choose:",
-                    "- {"L": L} L >= 0",
-                    "- {"L_eig_dec": (e_vals, e_vecs)} e_vals >= 0",
-                    "- {"L_gram_factor": Phi}, Phi (dxN) s.t. L = Phi.TPhi",
-                    "- {"L_eval_X_data": (eval_L, X_data)} X_data (dxN) and `eval_L` callable positive semi-definite kernel",
+                    "- {'L': L} L >= 0",
+                    "- {'L_eig_dec': (e_vals, e_vecs)} e_vals >= 0",
+                    "- {'L_gram_factor': Phi}, Phi (dxN) s.t. L = Phi.TPhi",
+                    "- {'L_eval_X_data': (eval_L, X_data)} X_data (dxN) and `eval_L` callable positive semi-definite kernel",
                     "Given: {}".format(self.params_keys),
                 ]
                 raise ValueError("\n".join(err_print))
@@ -819,10 +819,10 @@ class FiniteDPP:
             elif self.eval_L is not None:
                 warn_print = [
                     "Weird setting:",
-                    "FiniteDPP(.., **{"L_eval_X_data": (eval_L, X_data)})",
-                    "When using "L_eval_X_data", you are a priori working with a big `X_data` and not willing to compute the full likelihood kernel L",
+                    "FiniteDPP(.., **{'L_eval_X_data': (eval_L, X_data)})",
+                    "When using 'L_eval_X_data', you are a priori working with a big `X_data` and not willing to compute the full likelihood kernel L",
                     "Right now, the computation of L=eval_L(X_data) is performed but might be very expensive, this is at your own risk!",
-                    "You might also use FiniteDPP(.., **{"L": eval_L(X_data)})",
+                    "You might also use FiniteDPP(.., **{'L': eval_L(X_data)})",
                 ]
                 warn("\n".join(warn_print))
                 msg = "- L = eval_L(X_data, X_data)"
