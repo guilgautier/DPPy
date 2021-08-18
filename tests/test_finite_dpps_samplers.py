@@ -6,8 +6,6 @@
 
 import unittest
 
-from collections import namedtuple
-
 from itertools import chain  # to flatten list of samples
 
 import numpy as np
@@ -21,36 +19,36 @@ from dppy.utils import det_ST, example_eval_L_linear, example_eval_L_min_kern
 
 
 class Configuration(object):
-    def __init__(self, sampler, mode, mode_params, idx, proj, dpp_param):
-        self.sampler = sampler
-        self.mode = mode
-        self.mode_params = mode_params
+    def __init__(self, sampler_type, method, method_params, idx, proj, dpp_params):
+        self.sampler_type = sampler_type
+        self.method = method
+        self.method_params = method_params
         self.idx = idx
         self.proj = proj
-        self.dpp_param = dpp_param
+        self.dpp_params = dpp_params
 
     def create_dpp(self, kernel_type):
-        return FiniteDPP(kernel_type, projection=self.proj, **self.dpp_param)
+        return FiniteDPP(kernel_type, projection=self.proj, **self.dpp_params)
 
     def get_samples(self, dpp, nb_exact_samples):
 
-        if self.sampler.startswith("exact"):
+        if self.sampler_type.startswith("exact"):
             for _ in range(nb_exact_samples):
-                if self.sampler == "exact_dpp":
-                    dpp.sample_exact(mode=self.mode, **self.mode_params)
-                elif self.sampler == "exact_k_dpp":
-                    dpp.sample_exact_k_dpp(mode=self.mode, **self.mode_params)
+                if self.sampler_type == "exact_dpp":
+                    dpp.sample_exact(method=self.method, **self.method_params)
+                elif self.sampler_type == "exact_k_dpp":
+                    dpp.sample_exact_k_dpp(mode=self.method, **self.method_params)
                 else:
-                    raise ValueError(self.sampler)
+                    raise ValueError(self.sampler_type)
             return dpp.list_of_samples
 
-        elif self.sampler.startswith("mcmc"):
-            if self.sampler == "mcmc_dpp":
-                dpp.sample_mcmc(mode=self.mode, **self.mode_params)
-            elif self.sampler == "mcmc_k_dpp":
-                dpp.sample_mcmc_k_dpp(mode=self.mode, **self.mode_params)
+        elif self.sampler_type.startswith("mcmc"):
+            if self.sampler_type == "mcmc_dpp":
+                dpp.sample_mcmc(mode=self.method, **self.method_params)
+            elif self.sampler_type == "mcmc_k_dpp":
+                dpp.sample_mcmc_k_dpp(mode=self.method, **self.method_params)
             else:
-                raise ValueError(self.sampler)
+                raise ValueError(self.sampler_type)
             return dpp.list_of_samples[-1]
 
 
@@ -71,7 +69,7 @@ class TestAdequationOfFiniteDppSamplers(unittest.TestCase):
 
     phi = rndm.randn(rank, N)
 
-    adequation_to_check = (
+    adequations_to_check = (
         "uniqueness_of_items",
         "cardinality",
         "singleton",
@@ -85,23 +83,25 @@ class TestAdequationOfFiniteDppSamplers(unittest.TestCase):
         """
 
         if dpp.size_k_dpp:
-            return True, "We do not check inclusion probabilities for k-DPPs"
+            adeq = True
+            msg = "We do not check inclusion probabilities for k-DPPs"
         else:
             dpp.compute_K()
             N = len(dpp.K)
 
-            marginal_th = np.diag(dpp.K) / np.trace(dpp.K)
+            f_th = np.diag(dpp.K) / np.trace(dpp.K)
 
             samples_as_singletons = list(chain.from_iterable(samples))
-            marginal_emp, _ = np.histogram(
+            f_emp, _ = np.histogram(
                 samples_as_singletons, bins=range(N + 1), density=True
             )
 
-            _, pval = chisquare(f_obs=marginal_emp, f_exp=marginal_th)
+            _, pval = chisquare(f_obs=f_emp, f_exp=f_th)
 
-            msg = "pval = {}, emp = {}, th = {}".format(pval, marginal_emp, marginal_th)
+            adeq = pval > tol
+            msg = "pval = {}, emp = {}, th = {}".format(pval, f_emp, f_th)
 
-            return pval > tol, msg
+        return adeq, msg
 
     @staticmethod
     def doubleton_adequation(dpp, samples, tol=0.05):
@@ -121,19 +121,24 @@ class TestAdequationOfFiniteDppSamplers(unittest.TestCase):
             ]
 
             # det [[K_ii, K_ij], [K_ji, K_jj]]
-            marginal_th = [det_ST(dpp.K, list(d)) for d in doubletons]
+            f_th = np.array([det_ST(dpp.K, list(d)) for d in doubletons])
 
-            counts = [
-                sum([doubl.issubset(sampl) for sampl in samples])
-                for doubl in doubletons
-            ]
-            marginal_emp = np.array(counts) / len(samples)
+            counts = np.array(
+                [
+                    sum(doubl.issubset(sampl) for sampl in samples)
+                    for doubl in doubletons
+                ]
+            )
+            f_emp = counts / len(samples)
 
-            _, pval = chisquare(f_obs=marginal_emp, f_exp=marginal_th)
+            f_emp /= f_emp.sum()
+            f_th /= f_th.sum()
+            _, pval = chisquare(f_obs=f_emp, f_exp=f_th)
 
-            msg = "pval = {}, emp = {}, th = {}".format(pval, marginal_emp, marginal_th)
+            adeq = pval > tol
+            msg = "pval = {}, emp = {}, th = {}".format(pval, f_emp, f_th)
 
-            return pval > tol, msg
+            return adeq, msg
 
     @staticmethod
     def uniqueness_of_items(dpp, samples):
@@ -149,13 +154,13 @@ class TestAdequationOfFiniteDppSamplers(unittest.TestCase):
         """Check that the empirical cardinality of the samples is within a standard deviation to the true E[|X|] = Trace(K).
         For k-DPP, simply check that the samples have the prescribed cadinality"""
 
-        card_emp = np.array(list(map(len, samples)))
+        card_emp = np.array([len(sample) for sample in samples])
         mean_card_emp = np.mean(card_emp)
 
         if dpp.size_k_dpp:
             adeq = np.all(card_emp == dpp.size_k_dpp)
             msg = "|X|_emp = {}, |X|_th = {}".format(mean_card_emp, dpp.size_k_dpp)
-            return adeq, msg
+
         else:
             dpp.compute_K()
             # E[|X|] = Trace(K), Var[|X|] = Trace(K - K^2)
@@ -171,47 +176,41 @@ class TestAdequationOfFiniteDppSamplers(unittest.TestCase):
                 mean_card_emp, mean_card_th, std_card_th
             )
 
-            return adeq, msg
+        return adeq, msg
 
-    def adequation(self, typ, samples, dpp):
-        if typ == "uniqueness_of_items":
+    def check_adequation(self, name, samples, dpp):
+        if name == "uniqueness_of_items":
             return self.uniqueness_of_items(dpp, samples)
-        elif typ == "cardinality":
+        elif name == "cardinality":
             return self.cardinality_adequation(dpp, samples)
-        elif typ == "singleton":
+        elif name == "singleton":
             return self.singleton_adequation(dpp, samples)
-        elif typ == "doubleton":
+        elif name == "doubleton":
             return self.doubleton_adequation(dpp, samples)
 
-    def iter_configurations(
-        self, kernel_type, list_dpp_params, dict_sampler_mode_param
-    ):
+    def iter_configurations(self, list_dpp_params, sampler_method_params):
 
-        for sampler, modes in dict_sampler_mode_param.items():
-            for mode, mode_params in modes.items():
-                for idx, (proj, dpp_param) in enumerate(list_dpp_params):
+        for sampler_type, methods_params in sampler_method_params.items():
+            for method, params in methods_params:
+                for idx, (proj, dpp_params) in enumerate(list_dpp_params):
                     yield Configuration(
-                        sampler, mode, mode_params, idx, proj, dpp_param
+                        sampler_type, method, params, idx, proj, dpp_params
                     )
 
-    def run_adequation_tests(
-        self, kernel_type, list_dpp_params, dict_sampler_mode_param
-    ):
+    def run_adequation_tests(self, kernel_type, list_dpp_params, sampler_method_params):
 
-        for config in self.iter_configurations(
-            kernel_type, list_dpp_params, dict_sampler_mode_param
-        ):
+        for config in self.iter_configurations(list_dpp_params, sampler_method_params):
             # Initialize DPP and generate samples a single time
             # before performing checks for performance reasons (sampling is the bottleneck)
             dpp = config.create_dpp(kernel_type)
             samples = config.get_samples(dpp, self.nb_exact_samples)
-            for adeq_typ in self.adequation_to_check:
+            for adequation in self.adequations_to_check:
                 with self.subTest(
                     config=config,
-                    adequation=adeq_typ,
+                    adequation=adequation,
                 ):
-                    adeq, msg = self.adequation(adeq_typ, samples, dpp)
-                    self.assertTrue(True, msg)
+                    adeq, msg = self.check_adequation(adequation, samples, dpp)
+                    self.assertTrue(adeq, msg)
 
     def test_adequation_of_projection_dpp_K_zonotope_sampler(self):
 
@@ -219,9 +218,9 @@ class TestAdequationOfFiniteDppSamplers(unittest.TestCase):
         # projection, param
         list_dpp_params = [(True, {"A_zono": self.A_zono})]
 
-        dict_sampler_mode_param = {"mcmc_dpp": {"zonotope": {}}}
+        sampler_method_params = {"mcmc_dpp": (("zonotope", {}),)}
 
-        self.run_adequation_tests(kernel_type, list_dpp_params, dict_sampler_mode_param)
+        self.run_adequation_tests(kernel_type, list_dpp_params, sampler_method_params)
 
     def test_dpp_adequation_with_projection_correlation_kernel(self):
 
@@ -234,14 +233,20 @@ class TestAdequationOfFiniteDppSamplers(unittest.TestCase):
         ]
 
         k = self.rank
-        dict_sampler_mode_param = {
-            "exact_dpp": {"GS": {}, "Chol": {}, "Schur": {}},
-            "exact_k_dpp": {"GS": {"size": k}},
-            "mcmc_dpp": {"E": {"size": k, "nb_iter": self.nb_iter_mcmc}},
-            "mcmc_k_dpp": {"E": {"size": k, "nb_iter": self.nb_iter_mcmc}},
+        sampler_method_params = {
+            "exact_dpp": (
+                ("spectral", {"mode": "GS"}),
+                ("spectral", {"mode": "GS_bis"}),
+                ("spectral", {"mode": "KuTa12"}),
+                ("Chol", {}),
+                ("Schur", {}),
+            ),
+            "exact_k_dpp": (("GS", {"size": k}),),
+            "mcmc_dpp": (("E", {"size": k, "nb_iter": self.nb_iter_mcmc}),),
+            "mcmc_k_dpp": (("E", {"size": k, "nb_iter": self.nb_iter_mcmc}),),
         }
 
-        self.run_adequation_tests(kernel_type, list_dpp_params, dict_sampler_mode_param)
+        self.run_adequation_tests(kernel_type, list_dpp_params, sampler_method_params)
 
     def test_dpp_adequation_with_non_projection_correlation_kernel(self):
 
@@ -254,21 +259,26 @@ class TestAdequationOfFiniteDppSamplers(unittest.TestCase):
 
         k = self.rank // 2
 
-        dict_sampler_mode_param = {
-            "exact_dpp": {"GS": {}, "GS_bis": {}, "Chol": {}, "KuTa12": {}},
-            "exact_k_dpp": {
-                "GS": {"size": k},
-                "GS_bis": {"size": k},
-                "KuTa12": {"size": k},
-            },
-            "mcmc_dpp": {
-                "AD": {"nb_iter": self.nb_iter_mcmc},
-                "AED": {"nb_iter": self.nb_iter_mcmc},
-            },
-            "mcmc_k_dpp": {"E": {"size": k, "nb_iter": self.nb_iter_mcmc}},
+        sampler_method_params = {
+            "exact_dpp": (
+                ("spectral", {"mode": "GS"}),
+                ("spectral", {"mode": "GS_bis"}),
+                ("spectral", {"mode": "KuTa12"}),
+                ("Chol", {}),
+            ),
+            "exact_k_dpp": (
+                ("GS", {"size": k}),
+                ("GS_bis", {"size": k}),
+                ("KuTa12", {"size": k}),
+            ),
+            "mcmc_dpp": (
+                ("AD", {"nb_iter": self.nb_iter_mcmc}),
+                ("AED", {"nb_iter": self.nb_iter_mcmc}),
+            ),
+            "mcmc_k_dpp": (("E", {"size": k, "nb_iter": self.nb_iter_mcmc}),),
         }
 
-        self.run_adequation_tests(kernel_type, list_dpp_params, dict_sampler_mode_param)
+        self.run_adequation_tests(kernel_type, list_dpp_params, sampler_method_params)
 
     def test_dpp_adequation_with_projection_likelihood_kernel(self):
 
@@ -279,20 +289,26 @@ class TestAdequationOfFiniteDppSamplers(unittest.TestCase):
             (True, {"L_eig_dec": (self.e_vals_eq_01, self.e_vecs)}),
         ]
 
-        dict_sampler_mode_param = self.dict_spectral_sampler_configuration(k=self.rank)
-
-        self.run_adequation_tests(kernel_type, list_dpp_params, dict_sampler_mode_param)
-
-    def dict_spectral_sampler_configuration(self, k):
-        return {
-            "exact_dpp": {"GS": {}, "GS_bis": {}, "Chol": {}, "KuTa12": {}},
-            "exact_k_dpp": {"GS": {"size": k}},
-            "mcmc_dpp": {
-                "AD": {"nb_iter": self.nb_iter_mcmc},
-                "AED": {"nb_iter": self.nb_iter_mcmc},
-            },
-            "mcmc_k_dpp": {"E": {"size": k, "nb_iter": self.nb_iter_mcmc}},
+        sampler_method_params = {
+            "exact_dpp": (
+                ("spectral", {"mode": "GS"}),
+                ("spectral", {"mode": "GS_bis"}),
+                ("spectral", {"mode": "KuTa12"}),
+                ("Chol", {}),
+            ),
+            "exact_k_dpp": (
+                ("GS", {"size": self.rank}),
+                ("GS_bis", {"size": self.rank}),
+                ("KuTa12", {"size": self.rank}),
+            ),
+            "mcmc_dpp": (
+                ("AD", {"nb_iter": self.nb_iter_mcmc}),
+                ("AED", {"nb_iter": self.nb_iter_mcmc}),
+            ),
+            "mcmc_k_dpp": (("E", {"size": self.rank, "nb_iter": self.nb_iter_mcmc}),),
         }
+
+        self.run_adequation_tests(kernel_type, list_dpp_params, sampler_method_params)
 
     def test_dpp_adequation_with_non_projection_likelihood_kernel(self):
 
@@ -307,24 +323,27 @@ class TestAdequationOfFiniteDppSamplers(unittest.TestCase):
         ]  # L_gram_factor to test L_dual
 
         k = self.rank // 2
-
-        dict_sampler_mode_param = {
-            "exact_dpp": {"GS": {}, "GS_bis": {}, "KuTa12": {}},
-            "exact_k_dpp": {
-                "GS": {"size": k},
-                "GS_bis": {"size": k},
-                "KuTa12": {"size": k},
-            },
-            "mcmc_dpp": {
-                "AD": {"nb_iter": self.nb_iter_mcmc},
-                "AED": {"nb_iter": self.nb_iter_mcmc},
-            },
-            "mcmc_k_dpp": {"E": {"size": k, "nb_iter": self.nb_iter_mcmc}},
+        sampler_method_params = {
+            "exact_dpp": (
+                ("spectral", {"mode": "GS"}),
+                ("spectral", {"mode": "GS_bis"}),
+                ("spectral", {"mode": "KuTa12"}),
+            ),
+            "exact_k_dpp": (
+                ("GS", {"size": k}),
+                ("GS_bis", {"size": k}),
+                ("KuTa12", {"size": k}),
+            ),
+            "mcmc_dpp": (
+                ("AD", {"nb_iter": self.nb_iter_mcmc}),
+                ("AED", {"nb_iter": self.nb_iter_mcmc}),
+            ),
+            "mcmc_k_dpp": (("E", {"size": k, "nb_iter": self.nb_iter_mcmc}),),
         }
 
-        self.run_adequation_tests(kernel_type, list_dpp_params, dict_sampler_mode_param)
+        self.run_adequation_tests(kernel_type, list_dpp_params, sampler_method_params)
 
-    def test_adequation_vfx_sampler_linear_kernel(self):
+    def test_adequation_intermediate_sampler_linear_kernel(self):
 
         kernel_type = "likelihood"
 
@@ -341,22 +360,20 @@ class TestAdequationOfFiniteDppSamplers(unittest.TestCase):
 
         print("E[|X|]={}, k={}".format(exp_card, k))
 
-        dict_sampler_mode_param = {
-            "exact_dpp": {
-                "vfx": {"verbose": False, "rls_oversample_bless": 5},
-                "alpha": {"verbose": False, "rls_oversample_bless": 5},
-                "GS": {},
-            },
-            "exact_k_dpp": {
-                "vfx": {"size": k, "verbose": False, "rls_oversample_bless": 5},
-                "alpha": {"size": k, "verbose": False, "rls_oversample_bless": 5},
-                "GS": {"size": k},
-            },
+        sampler_method_params = {
+            "exact_dpp": (
+                ("vfx", {"verbose": False, "rls_oversample_bless": 5}),
+                ("alpha", {"verbose": False, "rls_oversample_bless": 5}),
+            ),
+            "exact_k_dpp": (
+                ("vfx", {"size": k, "verbose": False, "rls_oversample_bless": 5}),
+                ("alpha", {"size": k, "verbose": False, "rls_oversample_bless": 5}),
+            ),
         }
 
-        self.run_adequation_tests(kernel_type, list_dpp_params, dict_sampler_mode_param)
+        self.run_adequation_tests(kernel_type, list_dpp_params, sampler_method_params)
 
-    def test_adequation_vfx_sampler_min_kernel(self):
+    def test_adequation_intermediate_sampler_min_kernel(self):
 
         kernel_type = "likelihood"
 
@@ -373,20 +390,18 @@ class TestAdequationOfFiniteDppSamplers(unittest.TestCase):
 
         print("E[|X|]={}, k={}".format(exp_card, k))
 
-        dict_sampler_mode_param = {
-            "exact_dpp": {
-                "vfx": {"verbose": False, "rls_oversample_bless": 10},
-                "alpha": {"verbose": False, "rls_oversample_bless": 5},
-                "GS": {},
-            },
-            "exact_k_dpp": {
-                "vfx": {"size": k, "verbose": False, "rls_oversample_bless": 10},
-                "alpha": {"size": k, "verbose": False, "rls_oversample_bless": 5},
-                "GS": {"size": k},
-            },
+        sampler_method_params = {
+            "exact_dpp": (
+                ("vfx", {"verbose": False, "rls_oversample_bless": 5}),
+                ("alpha", {"verbose": False, "rls_oversample_bless": 5}),
+            ),
+            "exact_k_dpp": (
+                ("vfx", {"size": k, "verbose": False, "rls_oversample_bless": 5}),
+                ("alpha", {"size": k, "verbose": False, "rls_oversample_bless": 5}),
+            ),
         }
 
-        self.run_adequation_tests(kernel_type, list_dpp_params, dict_sampler_mode_param)
+        self.run_adequation_tests(kernel_type, list_dpp_params, sampler_method_params)
 
 
 def main():
