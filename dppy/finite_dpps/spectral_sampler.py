@@ -13,25 +13,25 @@ def spectral_sampler(dpp, random_state=None, **params):
 def do_spectral_sampler(dpp, random_state=None, **params):
     eig_vals, eig_vecs = dpp.K_eig_vals, dpp.eig_vecs
     V = select_eigen_vectors(eig_vals, eig_vecs, random_state=random_state)
-    sampler = select_projection_eigen_sampler(params.get("mode"))
+    sampler = select_projection_eigen_sampler(params.get("method"))
     return sampler(V, size=params.get("size"), random_state=random_state)
 
 
-def select_projection_eigen_sampler(name):
+def select_projection_eigen_sampler(method):
     samplers = {
         "GS": projection_eigen_sampler_GS,
         "GS_bis": projection_eigen_sampler_GS_bis,
         "KuTa12": projection_eigen_sampler_KuTa12,
     }
     default = samplers["GS"]
-    return samplers.get(name, default)
+    return samplers.get(method, default)
 
 
 def compute_spectral_sampler_parameters(dpp):
     """Compute eigenvalues and eigenvectors of correlation kernel K from various parametrizations of ``dpp``
 
     :param dpp: ``FiniteDPP`` object
-    :type dpp: ``FiniteDPP`` object
+    :type dpp: FiniteDPP
     """
     while compute_spectral_sampler_parameters_step(dpp):
         pass
@@ -85,7 +85,7 @@ def compute_spectral_sampler_parameters_step(dpp):
         return True
 
     raise ValueError(
-        "None of the available samplers could be used based on the current DPP representation. This should never happen, please consider rasing an issue on github at https://github.com/guilgautier/DPPy/issues"
+        "Failed to compute spectral sampler parameters (K eigenvalues and eigenvectors). This should never happen, please consider rasing an issue on github at https://github.com/guilgautier/DPPy/issues"
     )
 
 

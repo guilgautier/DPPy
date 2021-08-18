@@ -28,7 +28,9 @@ from dppy.finite_dpps.spectral_sampler import (
     select_projection_eigen_sampler,
     spectral_sampler,
 )
-from dppy.finite_dpps.projection_kernel_sampler import select_orthogonal_projection_kernel_sampler
+from dppy.finite_dpps.projection_kernel_sampler import (
+    select_orthogonal_projection_kernel_sampler,
+)
 
 from dppy.finite_dpps.exact_sampling import (
     k_dpp_eig_vecs_selector,
@@ -53,51 +55,47 @@ class FiniteDPP:
     """Finite DPP object parametrized by
 
     :param string kernel_type:
+        Indicate if the associated :math:`\operatorname{DPP}` is defined via its
 
-        - ``'correlation'`` :math:`\\mathbf{K}` kernel
-        - ``'likelihood'`` :math:`\\mathbf{L}` kernel
+        - ``"correlation"`` :math:`\\mathbf{K}` kernel, or
+        - ``"likelihood"`` :math:`\\mathbf{L}` kernel.
 
     :param projection:
-        Indicate whether the provided kernel is of projection type. This may be useful when the
-        :class:`FiniteDPP` object is defined through its correlation kernel :math:`\\mathbf{K}`.
+        Indicate if the associated kernel is of projection type, i.e., :math:`M^2 = M`.
     :type projection:
         bool, default ``False``
+
+    :param hermitian:
+        Indicate if the associated kernel is hermitian, i.e., :math:`M^\dagger = M`
+    :type hermitian:
+        bool, default ``True``
 
     :param params:
         Dictionary containing the parametrization of the underlying
 
         - correlation kernel
 
-            - ``{'K': K}``, with :math:`0 \\preceq \\mathbf{K} \\preceq I`
-            - ``{'K_eig_dec': (eig_vals, eig_vecs)}``, with :math:`0 \\leq eigvals \\leq 1`
-            - ``{'A_zono': A}``, with :math:`A (d \\times N)` and :math:`\\operatorname{rank}(A)=d`
+            - ``"K": K``, with :math:`\mathbf{K} (N \\times N)`. If ``hermitian=True`` then :math:`0 \\preceq \mathbf{K} \\preceq I` must be satisfied,
+            - ``"K_eig_dec": (eig_vals, eig_vecs)``, with :math:`0 \\leq eig_vals \\leq 1` and columns of eig_vecs must be orthonormal,
+            - ``"A_zono": A``, with :math:`A (d \\times N)` and :math:`\\operatorname{rank}(A)=d`.
 
         - likelihood kernel
 
-            - ``{'L': L}``, with :math:`\\mathbf{L}\\succeq 0`
-            - ``{'L_eig_dec': (eig_vals, eig_vecs)}``, with :math:`eigvals \\geq 0`
-            - ``{'L_gram_factor': Phi}``, with :math:`\\mathbf{L} = \\Phi^{ \\top} \\Phi`
-            - ``{'L_eval_X_data': (eval_L, X_data)}``, with :math:`\\mathbf{X}_{data}(N \\times d)` and
-              :math:`eval \\_ L` a likelihood function such that
-              :math:`\\mathbf{L} = eval \\_ L(\\mathbf{X}_{data}, \\{X}_{data})`. For a full description of the
-              requirements imposed on `eval_L`'s interface, see the documentation :func:`dppy.vfx_sampling.vfx_sampling_precompute_constants`.
-              For an example, see the implementation of any of the kernels provided by scikit-learn
-              (e.g. sklearn.gaussian_process.kernels.PairwiseKernel).
+            - ``"L": L``, with ``\\mathbf{L}`` :math:`\\succeq 0`
+            - ``"L_eig_dec": (eig_vals, eig_vecs)``, with ``eig_vals`` :math:`\\geq 0`,
+            - ``"L_gram_factor": Phi``, with :math:`\\mathbf{L} = \\Phi^{ \\top} \\Phi`,
+            - ``"L_eval_X_data": (eval_L, X_data)``, with :math:`X (N \\times d)` and ``eval_L`` a likelihood function such that :math:`\\mathbf{L} =` ``eval_L` :math:`(X, X)``.
+
+            For a full description of the requirements imposed on ``eval_L``"s interface, see the documentation :func:`dppy.intermediate_sampling.vfx_sampling_precompute_constants`.
+            For an example, see the implementation of any of the kernels provided by scikit-learn (e.g. sklearn.gaussian_process.kernels.PairwiseKernel).
+
     :type params:
         dict
-
-    .. caution::
-
-        For now we only consider real valued matrices :math:`\\mathbf{K}, \\mathbf{L}, A, \\Phi, \\mathbf{X}_{data}`.
 
     .. seealso::
 
         - :ref:`finite_dpps_definition`
         - :ref:`finite_dpps_exact_sampling`
-
-    .. todo::
-
-        add ``.kernel_rank`` attribute
     """
 
     ###############
@@ -220,8 +218,8 @@ class FiniteDPP:
                 if "A_zono" in self.params_keys and not self.projection:
                     warn_print = [
                         "Weird setting:",
-                        'FiniteDPP(kernel_type={}, projection={}, **{"A_zono": A}) with projection=False',
-                        'When defined through "A_zono" we expect a projection DPP with correlation kernel K = A.T (AA.T)^-1 A`.',
+                        "FiniteDPP(kernel_type={}, projection={}, **{"A_zono": A}) with projection=False",
+                        "When defined through "A_zono" we expect a projection DPP with correlation kernel K = A.T (AA.T)^-1 A`.",
                         "projection` switched to `True`",
                     ]
                     warn("\n".join(warn_print))
@@ -229,9 +227,9 @@ class FiniteDPP:
             else:
                 err_print = [
                     "Invalid parametrization of correlation kernel, choose:",
-                    '- {"K": K} 0 <= K <= I',
-                    '- {"K_eig_dec": (e_vals, e_vecs)} 0 <= e_vals <= 1',
-                    '- {"A_zono": A} A (dxN) s.t. K = A.T (AA.T)^-1 A',
+                    "- {"K": K} 0 <= K <= I",
+                    "- {"K_eig_dec": (e_vals, e_vecs)} 0 <= e_vals <= 1",
+                    "- {"A_zono": A} A (dxN) s.t. K = A.T (AA.T)^-1 A",
                     "Given: {}".format(self.params_keys),
                 ]
                 raise ValueError("\n".join(err_print))
@@ -245,10 +243,10 @@ class FiniteDPP:
             else:
                 err_print = [
                     "Invalid parametrization of likelihood kernel, choose:",
-                    '- {"L": L} L >= 0',
-                    '- {"L_eig_dec": (e_vals, e_vecs)} e_vals >= 0',
-                    '- {"L_gram_factor": Phi}, Phi (dxN) s.t. L = Phi.TPhi',
-                    '- {"L_eval_X_data": (eval_L, X_data)} X_data (dxN) and `eval_L` callable positive semi-definite kernel',
+                    "- {"L": L} L >= 0",
+                    "- {"L_eig_dec": (e_vals, e_vecs)} e_vals >= 0",
+                    "- {"L_gram_factor": Phi}, Phi (dxN) s.t. L = Phi.TPhi",
+                    "- {"L_eval_X_data": (eval_L, X_data)} X_data (dxN) and `eval_L` callable positive semi-definite kernel",
                     "Given: {}".format(self.params_keys),
                 ]
                 raise ValueError("\n".join(err_print))
@@ -279,46 +277,47 @@ class FiniteDPP:
         self.list_of_samples = []
         self.size_k_dpp = 0
 
-    # Exact sampling
-    def sample_exact(self, mode="GS", random_state=None, **params):
+    def sample_exact(self, method="spectral", random_state=None, **params):
         """Sample exactly from the corresponding :class:`FiniteDPP <FiniteDPP>` object.
+        Default sampling method="spectral" assumes the corresponding DPP is  hermitian.
 
-        :param mode:
+        :param method:
+            - ``"spectral"`` (default), see :ref:`finite_dpps_exact_sampling_spectral_method`.
+            It applies to ``FiniteDPP(..., hermitian=True, ...)``.
+            - ``"vfx"`` dpp-vfx rejection sampler of :cite:`DeCaVa19`, see :ref:`finite_dpps_exact_sampling_intermediate_sampling_method`. It applies to ``FiniteDPP("likelihood", hermitian=True, L_eval_X_data=(eval_L, X_data))``,
+            - ``"alpha"`` alpha-dpp rejection sampler :cite:`CaDeVa20`, see :ref:`finite_dpps_exact_sampling_intermediate_sampling_method`. It applies to ``FiniteDPP("likelihood", hermitian=True, L_eval_X_data=(eval_L, X_data))``.
+            - ``"Schur"``, conditionals are computed as Schur complements see :eq:`eq:chain_rule_schur`. It applies to ``FiniteDPP("correlation", projection=True, ...)``.
+            - ``"Chol"``, see :ref:`finite_dpps_exact_sampling_cholesky_method`
+                - :cite:`Pou19` Algorithm 3. It applies to ``FiniteDPP("correlation", projection=True, hermitian=True, ...)``.
+                - :cite:`Pou19` Algorithm 1. It applies generically to ``FiniteDPP("correlation", projection=False, ...)``.
 
-            - ``projection=True``:
-                - ``'GS'`` (default): Gram-Schmidt on the rows of :math:`\\mathbf{K}`.
-                - ``'Chol'`` :cite:`Pou19` Algorithm 3
-                - ``'Schur'``: when DPP defined from correlation kernel ``K``, use Schur complement to compute conditionals
-
-            - ``projection=False``:
-                - ``'GS'`` (default): Gram-Schmidt on the rows of the eigenvectors of :math:`\\mathbf{K}` selected in Phase 1.
-                - ``'GS_bis'``: Slight modification of ``'GS'``
-                - ``'Chol'`` :cite:`Pou19` Algorithm 1
-                - ``'KuTa12'``: Algorithm 1 in :cite:`KuTa12`
-                - ``'vfx'``: the dpp-vfx rejection sampler in :cite:`DeCaVa19`
-                - ``'alpha'``: the alpha-dpp rejection sampler in :cite:`CaDeVa20`
-
-        :type mode:
-            string, default ``'GS'``
+        :type method:
+            string, default ``"spectral"``
 
         :param dict params:
-            Dictionary containing the parameters for exact samplers with keys
+            Dictionary containing the parameters of the corresponding exact sampling method
 
-            - If ``mode='vfx'``
+            - For ``method="spectral"``
+                - ``"mode"``
+                    - ``"GS"`` (default): similar to Algorithm 2 of :cite:`Gil14`  and Algorithm 3 of :cite:`TrBaAm18`.
+                    - ``"GS_bis"``: slight modification of ``"GS"``
+                    - ``"KuTa12"``: corresponds to Algorithm 1 of :cite:`KuTa12`
 
-                See :py:meth:`~dppy.exact_sampling.dpp_vfx_sampler` for a full list of all parameters accepted by 'vfx' sampling. We report here the most impactful
+            - For ``method="vfx"``
 
-                + ``'rls_oversample_dppvfx'`` (default 4.0) Oversampling parameter used to construct dppvfx's internal Nystrom approximation. This makes each rejection round slower and more memory intensive, but reduces variance and the number of rounds of rejections.
-                + ``'rls_oversample_bless'`` (default 4.0) Oversampling parameter used during bless's internal Nystrom approximation. This makes the one-time pre-processing slower and more memory intensive, but reduces variance and the number of rounds of rejections
+                See :py:meth:`~dppy.exact_sampling.dpp_vfx_sampler` for a full list of all parameters accepted by "vfx" sampling. We report here the most impactful
+
+                + ``"rls_oversample_dppvfx"`` (default 4.0) Oversampling parameter used to construct dppvfx's internal Nystrom approximation. This makes each rejection round slower and more memory intensive, but reduces variance and the number of rounds of rejections.
+                + ``"rls_oversample_bless"`` (default 4.0) Oversampling parameter used during bless's internal Nystrom approximation. This makes the one-time pre-processing slower and more memory intensive, but reduces variance and the number of rounds of rejections
 
                 Empirically, a small factor [2,10] seems to work for both parameters. It is suggested to start with a small number and increase if the algorithm fails to terminate.
 
-            - If ``mode='alpha'``
+            - If ``method="alpha"``
 
-                See :py:meth:`~dppy.exact_sampling.alpha_k_dpp_sampler` for a full list of all parameters accepted by 'alpha' sampling. We report here the most impactful
+                See :py:meth:`~dppy.exact_sampling.alpha_k_dpp_sampler` for a full list of all parameters accepted by "alpha" sampling. We report here the most impactful
 
-                + ``'rls_oversample_alphadpp'`` (default 4.0) Oversampling parameter used to construct alpha-dpp's internal Nystrom approximation. This makes each rejection round slower and more memory intensive, but reduces variance and the number of rounds of rejections.
-                + ``'rls_oversample_bless'`` (default 4.0) Oversampling parameter used during bless's internal Nystrom approximation. This makes the one-time pre-processing slower and more memory intensive, but reduces variance and the number of rounds of rejections
+                + ``"rls_oversample_alphadpp"`` (default 4.0) Oversampling parameter used to construct alpha-dpp's internal Nystrom approximation. This makes each rejection round slower and more memory intensive, but reduces variance and the number of rounds of rejections.
+                + ``"rls_oversample_bless"`` (default 4.0) Oversampling parameter used during bless's internal Nystrom approximation. This makes the one-time pre-processing slower and more memory intensive, but reduces variance and the number of rounds of rejections
 
                 Empirically, a small factor [2,10] seems to work for both parameters. It is suggested to start with
                 a small number and increase if the algorithm fails to terminate.
@@ -346,15 +345,15 @@ class FiniteDPP:
         """
 
         rng = check_random_state(random_state)
-        sampler = self.select_exact_sampler(mode)
+        sampler = self._select_exact_sampler(method)
         sample = sampler(self, rng, **params)
 
-        self.sampling_mode = mode
+        self.sampling_mode = method
         self.list_of_samples.append(sample)
         return sample
 
     @staticmethod
-    def select_exact_sampler(name):
+    def _select_exact_sampler(method):
         samplers = {
             "spectral": spectral_sampler,
             "vfx": vfx_sampler,
@@ -363,7 +362,7 @@ class FiniteDPP:
             "Chol": chol_sampler,
         }
         default = samplers["spectral"]
-        return samplers.get(name, default)
+        return samplers.get(method, default)
 
     def sample_exact_k_dpp(self, size, mode="GS", **params):
         """Sample exactly from :math:`\\operatorname{k-DPP}`. A priori the :class:`FiniteDPP <FiniteDPP>` object was instanciated by its likelihood :math:`\\mathbf{L}` kernel so that
@@ -381,40 +380,40 @@ class FiniteDPP:
 
         :param mode:
             - ``projection=True``:
-                - ``'GS'`` (default): Gram-Schmidt on the rows of :math:`\\mathbf{K}`.
-                - ``'Schur'``: Use Schur complement to compute conditionals.
+                - ``"GS"`` (default): Gram-Schmidt on the rows of :math:`\\mathbf{K}`.
+                - ``"Schur"``: Use Schur complement to compute conditionals.
 
             - ``projection=False``:
-                - ``'GS'`` (default): Gram-Schmidt on the rows of the eigenvectors of :math:`\\mathbf{K}` selected in Phase 1.
-                - ``'GS_bis'``: Slight modification of ``'GS'``
-                - ``'KuTa12'``: Algorithm 1 in :cite:`KuTa12`
-                - ``'vfx'``: the dpp-vfx rejection sampler in :cite:`DeCaVa19`
-                - ``'alpha'``: the alpha-dpp rejection sampler in :cite:`CaDeVa20`
+                - ``"GS"`` (default): Gram-Schmidt on the rows of the eigenvectors of :math:`\\mathbf{K}` selected in Phase 1.
+                - ``"GS_bis"``: Slight modification of ``"GS"``
+                - ``"KuTa12"``: Algorithm 1 in :cite:`KuTa12`
+                - ``"vfx"``: the dpp-vfx rejection sampler in :cite:`DeCaVa19`
+                - ``"alpha"``: the alpha-dpp rejection sampler in :cite:`CaDeVa20`
 
         :type mode:
-            string, default ``'GS'``
+            string, default ``"GS"``
 
         :param dict params:
             Dictionary containing the parameters for exact samplers with keys
 
-            ``'random_state'`` (default None)
+            ``"random_state"`` (default None)
 
-            - If ``mode='vfx'``
+            - If ``mode="vfx"``
 
-                See :py:meth:`~dppy.exact_sampling.k_dpp_vfx_sampler` for a full list of all parameters accepted by 'vfx' sampling. We report here the most impactful
+                See :py:meth:`~dppy.exact_sampling.k_dpp_vfx_sampler` for a full list of all parameters accepted by "vfx" sampling. We report here the most impactful
 
-                + ``'rls_oversample_dppvfx'`` (default 4.0) Oversampling parameter used to construct dppvfx's internal Nystrom approximation. This makes each rejection round slower and more memory intensive, but reduces variance and the number of rounds of rejections.
-                + ``'rls_oversample_bless'`` (default 4.0) Oversampling parameter used during bless's internal Nystrom approximation. This makes the one-time pre-processing slower and more memory intensive, but reduces variance and the number of rounds of rejections
+                + ``"rls_oversample_dppvfx"`` (default 4.0) Oversampling parameter used to construct dppvfx's internal Nystrom approximation. This makes each rejection round slower and more memory intensive, but reduces variance and the number of rounds of rejections.
+                + ``"rls_oversample_bless"`` (default 4.0) Oversampling parameter used during bless's internal Nystrom approximation. This makes the one-time pre-processing slower and more memory intensive, but reduces variance and the number of rounds of rejections
 
                 Empirically, a small factor [2,10] seems to work for both parameters. It is suggested to start with
                 a small number and increase if the algorithm fails to terminate.
 
-            - If ``mode='alpha'``
-                See :py:meth:`~dppy.exact_sampling.alpha_k_dpp_sampler` for a full list of all parameters accepted by 'alpha' sampling. We report here the most impactful
+            - If ``mode="alpha"``
+                See :py:meth:`~dppy.exact_sampling.alpha_k_dpp_sampler` for a full list of all parameters accepted by "alpha" sampling. We report here the most impactful
 
-                + ``'rls_oversample_alphadpp'`` (default 4.0) Oversampling parameter used to construct alpha-dpp's internal Nystrom approximation. This makes each rejection round slower and more memory intensive, but reduces variance and the number of rounds of rejections.
-                + ``'rls_oversample_bless'`` (default 4.0) Oversampling parameter used during bless's internal Nystrom approximation. This makes the one-time pre-processing slower and more memory intensive, but reduces variance and the number of rounds of rejections
-                + ``'early_stop'`` (default False) Wheter to return as soon as a k-DPP sample is drawn, or to continue with alpha-dpp internal binary search to make subsequent sampling faster.
+                + ``"rls_oversample_alphadpp"`` (default 4.0) Oversampling parameter used to construct alpha-dpp's internal Nystrom approximation. This makes each rejection round slower and more memory intensive, but reduces variance and the number of rounds of rejections.
+                + ``"rls_oversample_bless"`` (default 4.0) Oversampling parameter used during bless's internal Nystrom approximation. This makes the one-time pre-processing slower and more memory intensive, but reduces variance and the number of rounds of rejections
+                + ``"early_stop"`` (default False) Wheter to return as soon as a k-DPP sample is drawn, or to continue with alpha-dpp internal binary search to make subsequent sampling faster.
 
                 Empirically, a small factor [2,10] seems to work for both parameters. It is suggested to start with
                 a small number and increase if the algorithm fails to terminate.
@@ -599,7 +598,7 @@ class FiniteDPP:
             return self.sample_exact_k_dpp(size, mode, random_state=rng)
 
         elif self.eval_L is not None and self.X_data is not None:
-            # In case mode!='vfx'
+            # In case mode!="vfx"
             self.compute_L()
             return self.sample_exact_k_dpp(size, mode, random_state=rng)
 
@@ -617,43 +616,43 @@ class FiniteDPP:
 
         :param string mode:
 
-            - ``'AED'`` Add-Exchange-Delete
-            - ``'AD'`` Add-Delete
-            - ``'E'`` Exchange
-            - ``'zonotope'`` Zonotope sampling
+            - ``"AED"`` Add-Exchange-Delete
+            - ``"AD"`` Add-Delete
+            - ``"E"`` Exchange
+            - ``"zonotope"`` Zonotope sampling
 
         :param dict params:
             Dictionary containing the parameters for MCMC samplers with keys
 
-            ``'random_state'`` (default None)
+            ``"random_state"`` (default None)
 
-            - If ``mode='AED','AD','E'``
+            - If ``mode="AED","AD","E"``
 
-                + ``'s_init'`` (default None) Starting state of the Markov chain
-                + ``'nb_iter'`` (default 10) Number of iterations of the chain
-                + ``'T_max'`` (default None) Time horizon
-                + ``'size'`` (default None) Size of the initial sample for ``mode='AD'/'E'``
+                + ``"s_init"`` (default None) Starting state of the Markov chain
+                + ``"nb_iter"`` (default 10) Number of iterations of the chain
+                + ``"T_max"`` (default None) Time horizon
+                + ``"size"`` (default None) Size of the initial sample for ``mode="AD"/"E"``
 
-                    * :math:`\\operatorname{rank}(\\mathbf{K})=\\operatorname{trace}(\\mathbf{K})` for projection :math:`\\mathbf{K}` (correlation) kernel and ``mode='E'``
+                    * :math:`\\operatorname{rank}(\\mathbf{K})=\\operatorname{trace}(\\mathbf{K})` for projection :math:`\\mathbf{K}` (correlation) kernel and ``mode="E"``
 
-            - If ``mode='zonotope'``:
+            - If ``mode="zonotope"``:
 
-                + ``'lin_obj'`` linear objective in main optimization problem (default np.random.randn(N))
-                + ``'x_0'`` initial point in zonotope (default A*u, u~U[0,1]^n)
-                + ``'nb_iter'`` (default 10) Number of iterations of the chain
-                + ``'T_max'`` (default None) Time horizon
+                + ``"lin_obj"`` linear objective in main optimization problem (default np.random.randn(N))
+                + ``"x_0"`` initial point in zonotope (default A*u, u~U[0,1]^n)
+                + ``"nb_iter"`` (default 10) Number of iterations of the chain
+                + ``"T_max"`` (default None) Time horizon
 
         :return:
             The last sample of the trajectory of Markov chain.
 
-            In any case, the full trajectory of the Markov chain, made of ``params['nb_iter']`` samples, is appended to the :py:attr:`~FiniteDPP.list_of_samples` attribute as a list of lists.
+            In any case, the full trajectory of the Markov chain, made of ``params["nb_iter"]`` samples, is appended to the :py:attr:`~FiniteDPP.list_of_samples` attribute as a list of lists.
 
         :rtype:
             list
 
         .. note::
 
-            Each time you call this method, the full trajectory of the Markov chain, made of ``params['nb_iter']`` samples, is appended to the :py:attr:`~FiniteDPP.list_of_samples` attribute as a list of lists.
+            Each time you call this method, the full trajectory of the Markov chain, made of ``params["nb_iter"]`` samples, is appended to the :py:attr:`~FiniteDPP.list_of_samples` attribute as a list of lists.
 
             The :py:attr:`~FiniteDPP.list_of_samples` attribute can be emptied using :py:meth:`~FiniteDPP.flush_samples`
 
@@ -714,7 +713,7 @@ class FiniteDPP:
         return chain[-1]
 
     def sample_mcmc_k_dpp(self, size, mode="E", **params):
-        """Calls :py:meth:`~sample_mcmc` with ``mode='E'`` and ``params['size'] = size``
+        """Calls :py:meth:`~sample_mcmc` with ``mode="E"`` and ``params["size"] = size``
 
         .. seealso::
 
@@ -820,10 +819,10 @@ class FiniteDPP:
             elif self.eval_L is not None:
                 warn_print = [
                     "Weird setting:",
-                    'FiniteDPP(.., **{"L_eval_X_data": (eval_L, X_data)})',
-                    'When using "L_eval_X_data", you are a priori working with a big `X_data` and not willing to compute the full likelihood kernel L',
+                    "FiniteDPP(.., **{"L_eval_X_data": (eval_L, X_data)})",
+                    "When using "L_eval_X_data", you are a priori working with a big `X_data` and not willing to compute the full likelihood kernel L",
                     "Right now, the computation of L=eval_L(X_data) is performed but might be very expensive, this is at your own risk!",
-                    'You might also use FiniteDPP(.., **{"L": eval_L(X_data)})',
+                    "You might also use FiniteDPP(.., **{"L": eval_L(X_data)})",
                 ]
                 warn("\n".join(warn_print))
                 msg = "- L = eval_L(X_data, X_data)"
@@ -860,7 +859,7 @@ class FiniteDPP:
     def plot_kernel(self, kernel_type="correlation", save_path=""):
         """Display a heatmap of the kernel used to define the :class:`FiniteDPP` object (correlation kernel :math:`\\mathbf{K}` or likelihood kernel :math:`\\mathbf{L}`)
 
-        :param str kernel_type: Type of kernel (``'correlation'`` or ``'likelihood'``), default ``'correlation'``
+        :param str kernel_type: Type of kernel (``"correlation"`` or ``"likelihood"``), default ``"correlation"``
 
         :param str save_path: Path to save plot, if empty (default) the plot is not saved.
         """
@@ -879,7 +878,7 @@ class FiniteDPP:
             nb_items, kernel_to_plot = self.L.shape[0], self.L
 
         else:
-            raise ValueError('kernel_type != "correlation" or "likelihood"')
+            raise ValueError("kernel_type != 'correlation' or 'likelihood'")
 
         heatmap = ax.pcolor(kernel_to_plot, cmap="jet", vmin=-0.3, vmax=1)
 
