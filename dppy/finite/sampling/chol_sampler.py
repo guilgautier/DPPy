@@ -1,5 +1,7 @@
-from dppy.finite_dpps.projection_kernel_sampler import projection_kernel_sampler
-from dppy.finite_dpps.generic_kernel_sampler import generic_correlation_kernel_sampler
+from dppy.finite.sampling.generic_kernel_sampler import (
+    generic_correlation_kernel_sampler,
+)
+from dppy.finite.sampling.projection_kernel_samplers import projection_kernel_sampler
 
 
 def chol_sampler(dpp, random_state, **params):

@@ -24,14 +24,15 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-import numpy as np
 from collections import namedtuple
+
+import numpy as np
 
 from dppy.utils import (
     check_random_state,
-    stable_invert_root,
-    get_progress_bar,
     evaluate_L_diagonal,
+    get_progress_bar,
+    stable_invert_root,
 )
 
 CentersDictionary = namedtuple(

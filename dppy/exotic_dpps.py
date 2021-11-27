@@ -17,29 +17,29 @@
 
 from abc import ABCMeta, abstractmethod
 
-import numpy as np
-from scipy.linalg import qr
-import matplotlib.pyplot as plt
-from matplotlib import collections as mc  # see plot_diagram
-
-from dppy.exotic_dpps_core import ust_sampler_wilson, ust_sampler_aldous_broder
-from dppy.finite_dpps.spectral_sampler import select_projection_eigen_sampler
-from dppy.finite_dpps.projection_kernel_sampler import (
-    select_orthogonal_projection_kernel_sampler,
-)
-
 # For DescentProcess
 from re import findall  # to convert class names to string in
 
-# from dppy.exotic_dpps_core import wrapper_plot_descent
+import matplotlib.pyplot as plt
+import numpy as np
+from matplotlib import collections as mc  # see plot_diagram
+from scipy.linalg import qr
 
-# For Poissonized Plancherel measure
-from dppy.exotic_dpps_core import RSK, xy_young_ru, limit_shape
-
-# For both Descent Processes and Poissonized Plancherel
-from dppy.exotic_dpps_core import uniform_permutation
-
+from dppy.exotic_dpps_core import (
+    RSK,
+    limit_shape,
+    uniform_permutation,
+    ust_sampler_aldous_broder,
+    ust_sampler_wilson,
+    xy_young_ru,
+)
+from dppy.finite.sampling.projection_kernel_samplers import (
+    select_orthogonal_projection_kernel_sampler,
+)
+from dppy.finite.sampling.spectral_sampler import select_projection_eigen_sampler
 from dppy.utils import check_random_state
+
+# from dppy.exotic_dpps_core import wrapper_plot_descent
 
 
 #####################

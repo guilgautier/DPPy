@@ -1,4 +1,5 @@
 import numpy as np
+
 from dppy.utils import check_random_state, inner1d
 
 

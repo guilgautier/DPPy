@@ -1,9 +1,9 @@
-import numpy as np
-from scipy.stats import binom, chisquare
-from scipy.linalg import qr
 import matplotlib.pyplot as plt
-from dppy.finite_dpps.finite_dpps import FiniteDPP
+import numpy as np
+from scipy.linalg import qr
+from scipy.stats import binom, chisquare
 
+from dppy.finite_dpps import FiniteDPP
 
 r, N = 5, 10
 e_vals = np.ones(r)

@@ -56,26 +56,26 @@ Relation between correlation and likelihood kernels
 			\det \mathbf{K}_S 1_{|S|=\operatorname{rank}(\mathbf{K})}
 			\quad \forall S\subset [N].
 
-.. code-block:: python
+.. .. code-block:: python
 
-	from numpy.random import randn, rand
-	from scipy.linalg import qr
-	from dppy.finite_dpps.finite_dpps  import FiniteDPP
+.. 	from numpy.random import randn, rand
+.. 	from scipy.linalg import qr
+.. 	from dppy.finite_dpps import FiniteDPP
 
-	r, N = 4, 10
-	eig_vals = rand(r)  # 0< <1
-	eig_vecs, _ = qr(randn(N, r), mode='economic')
+.. 	r, N = 4, 10
+.. 	eig_vals = rand(r)  # 0< <1
+.. 	eig_vecs, _ = qr(randn(N, r), mode='economic')
 
-	DPP = FiniteDPP('correlation', **{'K_eig_dec': (eig_vals, eig_vecs)})
-	DPP.compute_L()
+.. 	DPP = FiniteDPP('correlation', **{'K_eig_dec': (eig_vals, eig_vecs)})
+.. 	DPP.compute_L()
 
-	# - L (likelihood) kernel computed via:
-	# - eig_L = eig_K/(1-eig_K)
-	# - U diag(eig_L) U.T
+.. 	# - L (likelihood) kernel computed via:
+.. 	# - eig_L = eig_K/(1-eig_K)
+.. 	# - U diag(eig_L) U.T
 
 .. seealso::
 
-	.. currentmodule:: dppy.finite_dpps.finite_dpps
+	.. currentmodule:: dppy.finite_dpps
 
 	- :py:meth:`~FiniteDPP.compute_K`
 	- :py:meth:`~FiniteDPP.compute_L`
@@ -171,37 +171,35 @@ Variance
 
 	Expectation and variance of :ref:`continuous_dpps_linear_statistics`.
 
-.. testcode::
+	.. testcode::
 
-	import numpy as np
-	from scipy.linalg import qr
-	from dppy.finite_dpps.finite_dpps  import FiniteDPP
+		import numpy as np
 
-	rng = np.random.RandomState(1)
+		from dppy.finite_dpps import FiniteDPP
+		from scipy.linalg import qr
 
-	r, N = 5, 10
-	eig_vals = rng.rand(r) # 0< <1
-	eig_vecs, _ = qr(rng.randn(N, r), mode='economic')
+		rng = np.random.RandomState(1)
 
-	dpp_K = FiniteDPP('correlation', projection=False,
-	                **{'K_eig_dec': (eig_vals, eig_vecs)})
+		r, N = 5, 10
+		eig_vals = rng.rand(r) # 0< <1
+		eig_vecs, _ = qr(rng.randn(N, r), mode='economic')
 
-	nb_samples = 2000
-	for _ in range(nb_samples):
-	    dpp_K.sample_exact(random_state=rng)
+		dpp_K = FiniteDPP('correlation', projection=False, **{'K_eig_dec': (eig_vals, eig_vecs)})
 
-	sizes = list(map(len, dpp_K.list_of_samples))
-	print('E[|X|]:\n emp={:.3f}, theo={:.3f}'
-	      .format(np.mean(sizes), np.sum(eig_vals)))
-	print('Var[|X|]:\n emp={:.3f}, theo={:.3f}'
-	      .format(np.var(sizes), np.sum(eig_vals*(1-eig_vals))))
+		nb_samples = 2000
+		for _ in range(nb_samples):
+		    dpp_K.sample_exact(random_state=rng)
 
-.. testoutput::
+		sizes = list(map(len, dpp_K.list_of_samples))
+		print('E[|X|]:\n emp={:.3f}, theo={:.3f}'.format(np.mean(sizes), np.sum(eig_vals)))
+		print('Var[|X|]:\n emp={:.3f}, theo={:.3f}'.format(np.var(sizes), np.sum(eig_vals*(1-eig_vals))))
 
-	E[|X|]:
-	 emp=1.581, theo=1.587
-	Var[|X|]:
-	 emp=0.795, theo=0.781
+	.. testoutput::
+
+		E[|X|]:
+		emp=1.581, theo=1.587
+		Var[|X|]:
+		emp=0.795, theo=0.781
 
 Special cases
 -------------
@@ -219,14 +217,13 @@ Special cases
 
 		import numpy as np
 		from scipy.linalg import qr
-		from dppy.finite_dpps.finite_dpps  import FiniteDPP
+		from dppy.finite_dpps  import FiniteDPP
 
 		r, N = 4, 10
 		eig_vals = np.ones(r)
 		eig_vecs, _ = qr(rng.randn(N, r), mode='economic')
 
-		DPP = FiniteDPP('correlation', projection=True,
-		                **{'K_eig_dec': (eig_vals, eig_vecs)})
+		DPP = FiniteDPP('correlation', projection=True, **{'K_eig_dec': (eig_vals, eig_vecs)})
 
 		for _ in range(1000):
 		    DPP.sample_exact()
@@ -234,7 +231,7 @@ Special cases
 		sizes = list(map(len, DPP.list_of_samples))
 		# np.array(DPP.list_of_samples).shape = (1000, 4)
 
-		assert([np.mean(sizes), np.var(sizes)] == [r, 0])
+		assert [np.mean(sizes), np.var(sizes)] == [r, 0]
 
 	.. important::
 

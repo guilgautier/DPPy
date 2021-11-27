@@ -12,10 +12,11 @@
 """
 
 import time
+
 import numpy as np
 import scipy.linalg as la
 
-from dppy.utils import det_ST, check_random_state
+from dppy.utils import check_random_state, det_ST
 
 
 ############################################
@@ -490,7 +491,7 @@ def zonotope_sampler(A_zono, **params):
     """
     # For zonotope sampler
     try:
-        from cvxopt import matrix, spmatrix, solvers
+        from cvxopt import matrix, solvers, spmatrix
     except ImportError:
         raise ValueError(
             "The cvxopt package is required to use the zonotype sampler (see setup.py)."

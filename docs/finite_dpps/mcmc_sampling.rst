@@ -1,4 +1,4 @@
-.. currentmodule:: dppy.finite_dpps.finite_dpps
+.. currentmodule:: dppy.finite_dpps
 
 .. _finite_dpps_mcmc_sampling:
 
@@ -17,9 +17,9 @@ At state :math:`S\subset [N]`, propose :math:`S'` different from :math:`S` by at
 
 .. math::
 
-  s \sim \mathcal{U}_{S}
-  \quad \text{and} \quad
-  t \sim \mathcal{U}_{[N]\setminus S}.
+    s \sim \mathcal{U}_{S}
+    \quad \text{and} \quad
+    t \sim \mathcal{U}_{[N]\setminus S}.
 
 Then perform
 
@@ -32,7 +32,7 @@ Pure exchange moves
 
 .. math::
 
-  S' \leftrightarrow S \setminus s \cup t.
+    S' \leftrightarrow S \setminus s \cup t.
 
 .. _finite_dpps_mcmc_sampling_AD:
 
@@ -41,8 +41,8 @@ Add-Delete
 
 Pure addition/deletion moves
 
-  - Add :math:`S' \leftrightarrow S \cup t`
-  - Delete :math:`S' \leftrightarrow S \setminus s`
+- Add :math:`S' \leftrightarrow S \cup t`
+- Delete :math:`S' \leftrightarrow S \setminus s`
 
 .. _finite_dpps_mcmc_sampling_AED:
 
@@ -51,40 +51,40 @@ Add-Exchange-Delete
 
 Mix of exchange and add-delete moves
 
-  - Delete :math:`S' \leftrightarrow S \setminus s`
-  - Exchange :math:`S' \leftrightarrow S \setminus s \cup t`
-  - Add :math:`S' \leftrightarrow S \cup t`
+- Delete :math:`S' \leftrightarrow S \setminus s`
+- Exchange :math:`S' \leftrightarrow S \setminus s \cup t`
+- Add :math:`S' \leftrightarrow S \cup t`
 
 .. hint::
 
-  Because moves are allowed between subsets having at most 2 different elements, transitions are very local inducing correlation, however *fast* mixing was proved.
+    Because moves are allowed between subsets having at most 2 different elements, transitions are very local inducing correlation, however *fast* mixing was proved.
 
 .. testcode::
 
-  import numpy as np
-  from dppy.finite_dpps.finite_dpps  import FiniteDPP
+    import numpy as np
+    from dppy.finite_dpps import FiniteDPP
 
-  rng = np.random.RandomState(413121)
+    rng = np.random.RandomState(413121)
 
-  r, N = 4, 10
+    r, N = 4, 10
 
-  # Random feature vectors
-  Phi = rng.randn(r, N)
-  L = Phi.T.dot(Phi)
-  DPP = FiniteDPP('likelihood', **{'L': L})
+    # Random feature vectors
+    Phi = rng.randn(r, N)
+    L = Phi.T.dot(Phi)
+    DPP = FiniteDPP("likelihood", **{"L": L})
 
-  DPP.sample_mcmc('AED', random_state=rng)  # AED, AD, E
-  print(DPP.list_of_samples)  # list of trajectories, here there's only one
+    DPP.sample_mcmc("AED", random_state=rng)  # AED, AD, E
+    print(DPP.list_of_samples)  # list of trajectories, here there's only one
 
 .. testoutput::
 
-  [[[0, 2, 3, 6], [0, 2, 3, 6], [0, 2, 3, 6], [0, 2, 3, 6], [0, 2, 3, 6], [0, 2, 3, 6], [0, 2, 6, 9], [0, 2, 6, 9], [2, 6, 9], [2, 6, 9]]]
+    [[[0, 2, 3, 6], [0, 2, 3, 6], [0, 2, 3, 6], [0, 2, 3, 6], [0, 2, 3, 6], [0, 2, 3, 6], [0, 2, 6, 9], [0, 2, 6, 9], [2, 6, 9], [2, 6, 9]]]
 
 .. seealso::
 
-  - :py:meth:`~FiniteDPP.sample_mcmc`
-  - :cite:`AnGhRe16`, :cite:`LiJeSr16c` and :cite:`LiJeSr16d`
-  - :ref:`Exact samplers for DPPs <finite_dpps_exact_sampling>`
+    - :py:meth:`~FiniteDPP.sample_mcmc`
+    - :cite:`AnGhRe16`, :cite:`LiJeSr16c` and :cite:`LiJeSr16d`
+    - :ref:`Exact samplers for DPPs <finite_dpps_exact_sampling>`
 
 .. _finite_dpps_mcmc_sampling_zonotope:
 
@@ -95,20 +95,20 @@ Zonotope
 
 .. math::
 
-  \mathbf{K} = \Phi^{\top} [\Phi \Phi^{\top}]^{-1} \Phi,
+    \mathbf{K} = \Phi^{\top} [\Phi \Phi^{\top}]^{-1} \Phi,
 
 where :math:`\Phi`, is the underlying :math:`r\times N` feature matrix satisfying :math:`\operatorname{rank}(\Phi)=\operatorname{rank}(\mathbf{K})=r`.
 
 In this setting the :ref:`continuous_dpps_number_of_points` is almost surely equal to :math:`r` and we have
 
 .. math::
-  :label: eq:zonotope_marginal
+    :label: eq:zonotope_marginal
 
-  \mathbb{P}[\mathcal{X}=S]
-  = \det \mathbf{K}_S 1_{|S|=r}
-  = \frac{\det^2\Phi_{:S}}{\det\Phi \Phi^{\top}} 1_{|S|=r}
-  = \frac{\operatorname{Vol}^2 \{\phi_s\}_{s\in S}}
-      {\det\Phi \Phi^{\top}} 1_{|S|=r}.
+    \mathbb{P}[\mathcal{X}=S]
+    = \det \mathbf{K}_S 1_{|S|=r}
+    = \frac{\det^2\Phi_{:S}}{\det\Phi \Phi^{\top}} 1_{|S|=r}
+    = \frac{\operatorname{Vol}^2 \{\phi_s\}_{s\in S}}
+        {\det\Phi \Phi^{\top}} 1_{|S|=r}.
 
 The original finite ground set is embedded into a continuous domain called a zonotope.
 The hit-and-run procedure is used to move across this polytope and visit the different tiles.
@@ -116,41 +116,41 @@ To recover the finite DPP samples one needs to identify the tile in which the su
 
 .. hint::
 
-  Sampling from a *projection* DPP boils down to solving randomized linear programs (LPs).
+    Sampling from a *projection* DPP boils down to solving randomized linear programs (LPs).
 
 .. important::
 
-  For its LPs solving needs DPPy uses the :code:`cvxopt` library, but :code:`cvxopt` is not installed by default when installing DPPy. Please refer to the `installation instructions <https://github.com/guilgautier/DPPy#installation>`_ on GitHub for more details on how to install the necessary dependencies.
+    For its LPs solving needs DPPy uses the :code:`cvxopt` library, but :code:`cvxopt` is not installed by default when installing DPPy. Please refer to the `installation instructions <https://github.com/guilgautier/DPPy#installation>`_ on GitHub for more details on how to install the necessary dependencies.
 
 .. testcode::
 
-  from numpy.random import RandomState
-  from dppy.finite_dpps.finite_dpps  import FiniteDPP
+    from numpy.random import RandomState
+    from dppy.finite_dpps import FiniteDPP
 
-  rng = RandomState(413121)
+    rng = RandomState(413121)
 
-  r, N = 4, 10
-  A = rng.randn(r, N)
+    r, N = 4, 10
+    A = rng.randn(r, N)
 
-  DPP = FiniteDPP('correlation', projection=True, **{'A_zono': A})
+    DPP = FiniteDPP("correlation", projection=True, **{"A_zono": A})
 
-  DPP.sample_mcmc('zonotope', random_state=rng)
-  print(DPP.list_of_samples)  # list of trajectories, here there's only one
+    DPP.sample_mcmc("zonotope", random_state=rng)
+    print(DPP.list_of_samples)  # list of trajectories, here there's only one
 
 .. testoutput::
 
-  [[[2, 4, 5, 7], [2, 4, 5, 7], [2, 4, 5, 7], [1, 4, 5, 7], [1, 4, 5, 7], [1, 4, 5, 7], [0, 4, 7, 8], [0, 2, 7, 9], [0, 2, 7, 9], [2, 4, 5, 7]]]
+    [[[2, 4, 5, 7], [2, 4, 5, 7], [2, 4, 5, 7], [1, 4, 5, 7], [1, 4, 5, 7], [1, 4, 5, 7], [0, 4, 7, 8], [0, 2, 7, 9], [0, 2, 7, 9], [2, 4, 5, 7]]]
 
 .. note::
 
-  On the one hand, the :ref:`finite_dpps_mcmc_sampling_zonotope` perspective on sampling *projection* DPPs yields a better exploration of the state space.
-  Using hit-and-run, moving to any other state is possible but at the cost of solving LPs at each step.
-  On the other hand, the :ref:`finite_dpps_mcmc_sampling_add_exchange_delete` view allows to perform cheap but local moves.
+    On the one hand, the :ref:`finite_dpps_mcmc_sampling_zonotope` perspective on sampling *projection* DPPs yields a better exploration of the state space.
+    Using hit-and-run, moving to any other state is possible but at the cost of solving LPs at each step.
+    On the other hand, the :ref:`finite_dpps_mcmc_sampling_add_exchange_delete` view allows to perform cheap but local moves.
 
 .. seealso::
 
-  - :py:meth:`~FiniteDPP.sample_mcmc`
-  - :cite:`GaBaVa17`
+    - :py:meth:`~FiniteDPP.sample_mcmc`
+    - :cite:`GaBaVa17`
 
 .. _finite_dpps_mcmc_sampling_k_dpps:
 
@@ -161,32 +161,32 @@ To preserve the size :math:`k` of the samples of :math:`k\!\operatorname{-DPP}(\
 
 .. caution::
 
-  :math:`k` must satisfy :math:`k \leq \operatorname{rank}(L)`
+    :math:`k` must satisfy :math:`k \leq \operatorname{rank}(L)`
 
 .. testcode::
 
-  from numpy.random import RandomState
-  from dppy.finite_dpps.finite_dpps  import FiniteDPP
+    from numpy.random import RandomState
+    from dppy.finite_dpps import FiniteDPP
 
-  rng = RandomState(123)
+    rng = RandomState(123)
 
-  r, N = 5, 10
+    r, N = 5, 10
 
-  # Random feature vectors
-  Phi = rng.randn(r, N)
-  L = Phi.T.dot(Phi)
-  DPP = FiniteDPP('likelihood', **{'L': L})
+    # Random feature vectors
+    Phi = rng.randn(r, N)
+    L = Phi.T.dot(Phi)
+    DPP = FiniteDPP("likelihood", **{"L": L})
 
-  k = 3
-  DPP.sample_mcmc_k_dpp(size=k, random_state=rng)
-  print(DPP.list_of_samples)  # list of trajectories, here there's only one
+    k = 3
+    DPP.sample_mcmc_k_dpp(size=k, random_state=rng)
+    print(DPP.list_of_samples)  # list of trajectories, here there's only one
 
 .. testoutput::
 
-  [[[7, 2, 5], [7, 2, 5], [7, 2, 9], [7, 8, 9], [7, 8, 9], [7, 8, 2], [7, 8, 2], [6, 8, 2], [1, 8, 2], [1, 8, 2]]]
+    [[[7, 2, 5], [7, 2, 5], [7, 2, 9], [7, 8, 9], [7, 8, 9], [7, 8, 2], [7, 8, 2], [6, 8, 2], [1, 8, 2], [1, 8, 2]]]
 
 .. seealso::
 
-  - :py:meth:`~FiniteDPP.sample_mcmc_k_dpp`
-  - :cite:`LiJeSr16a` for a core-set perspective
-  - :ref:`Exact sampling of k-DPPs <finite_dpps_exact_sampling_k_dpps>`
+    - :py:meth:`~FiniteDPP.sample_mcmc_k_dpp`
+    - :cite:`LiJeSr16a` for a core-set perspective
+    - :ref:`Exact sampling of k-DPPs <finite_dpps_exact_sampling_k_dpps>`

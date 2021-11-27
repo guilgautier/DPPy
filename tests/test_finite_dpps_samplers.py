@@ -5,16 +5,14 @@
 """
 
 import unittest
-
 from itertools import chain  # to flatten list of samples
 
 import numpy as np
 import numpy.random as rndm
-
 import scipy.linalg as la
 from scipy.stats import chisquare
 
-from dppy.finite_dpps.finite_dpps import FiniteDPP
+from dppy.finite_dpps import FiniteDPP
 from dppy.utils import det_ST, example_eval_L_linear, example_eval_L_min_kern
 
 

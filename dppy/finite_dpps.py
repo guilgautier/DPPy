@@ -14,40 +14,35 @@
 """
 
 
-import numpy as np
-import scipy.linalg as la
-import matplotlib.pyplot as plt
-
 from warnings import warn
 
-from dppy.finite_dpps.schur_sampler import schur_sampler
-from dppy.finite_dpps.chol_sampler import chol_sampler
-from dppy.finite_dpps.vfx_sampler import vfx_sampler, k_dpp_vfx_sampler
-from dppy.finite_dpps.alpha_sampler import alpha_sampler, alpha_k_dpp_sampler
-from dppy.finite_dpps.spectral_sampler import (
+import matplotlib.pyplot as plt
+import numpy as np
+import scipy.linalg as la
+
+from dppy.finite.sampling.alpha_sampler import alpha_k_dpp_sampler, alpha_sampler
+from dppy.finite.sampling.chol_sampler import chol_sampler
+from dppy.finite.sampling.projection_kernel_samplers import (
+    select_orthogonal_projection_kernel_sampler,
+)
+from dppy.finite.sampling.schur_sampler import schur_sampler
+from dppy.finite.sampling.spectral_sampler import (
+    k_dpp_eig_vecs_selector,
     select_projection_eigen_sampler,
     spectral_sampler,
 )
-from dppy.finite_dpps.projection_kernel_sampler import (
-    select_orthogonal_projection_kernel_sampler,
-)
-
-from dppy.finite_dpps.exact_sampling import (
-    k_dpp_eig_vecs_selector,
-    elementary_symmetric_polynomials,
-)
-
-from dppy.finite_dpps.mcmc_sampling import dpp_sampler_mcmc, zonotope_sampler
-
+from dppy.finite.sampling.vfx_sampler import k_dpp_vfx_sampler, vfx_sampler
+from dppy.mcmc_sampling import dpp_sampler_mcmc, zonotope_sampler
 from dppy.utils import (
-    check_random_state,
-    is_symmetric,
-    is_projection,
-    is_orthonormal_columns,
-    is_full_row_rank,
-    check_in_01,
     check_geq_0,
+    check_in_01,
+    check_random_state,
+    elementary_symmetric_polynomials,
     is_equal_to_O_or_1,
+    is_full_row_rank,
+    is_orthonormal_columns,
+    is_projection,
+    is_symmetric,
 )
 
 
@@ -86,7 +81,7 @@ class FiniteDPP:
             - ``"L_gram_factor": Phi``, with :math:`\\mathbf{L} = \\Phi^{ \\top} \\Phi`,
             - ``"L_eval_X_data": (eval_L, X_data)``, with :math:`X (N \\times d)` and ``eval_L`` a likelihood function such that :math:`\\mathbf{L} =` ``eval_L` :math:`(X, X)``.
 
-            For a full description of the requirements imposed on ``eval_L``"s interface, see the documentation :func:`dppy.intermediate_sampling.vfx_sampling_precompute_constants`.
+            For a full description of the requirements imposed on ``eval_L``"s interface, see the documentation :func:`dppy.finite.sampling.vfx_sampler.vfx_sampling_precompute_constants`.
             For an example, see the implementation of any of the kernels provided by scikit-learn (e.g. sklearn.gaussian_process.kernels.PairwiseKernel).
 
     :type params:
@@ -201,7 +196,7 @@ class FiniteDPP:
         if not isinstance(self.projection, bool):
             err_print = [
                 "`projection` argument is not boolean",
-                "Given: {}".format(self.is_projection),
+                "Given: {}".format(self.projection),
             ]
             raise ValueError("\n".join(err_print))
 
@@ -278,12 +273,10 @@ class FiniteDPP:
         self.size_k_dpp = 0
 
     def sample_exact(self, method="spectral", random_state=None, **params):
-        """Sample exactly from the corresponding :class:`FiniteDPP <FiniteDPP>` object.
-        Default sampling method="spectral" assumes the corresponding DPP is  hermitian.
+        """Sample exactly from the corresponding :class:`FiniteDPP <FiniteDPP>` object. Default sampling method="spectral" assumes the corresponding DPP is  hermitian.
 
         :param method:
-            - ``"spectral"`` (default), see :ref:`finite_dpps_exact_sampling_spectral_method`.
-            It applies to ``FiniteDPP(..., hermitian=True, ...)``.
+            - ``"spectral"`` (default), see :ref:`finite_dpps_exact_sampling_spectral_method`. It applies to ``FiniteDPP(..., hermitian=True, ...)``.
             - ``"vfx"`` dpp-vfx rejection sampler of :cite:`DeCaVa19`, see :ref:`finite_dpps_exact_sampling_intermediate_sampling_method`. It applies to ``FiniteDPP("likelihood", hermitian=True, L_eval_X_data=(eval_L, X_data))``,
             - ``"alpha"`` alpha-dpp rejection sampler :cite:`CaDeVa20`, see :ref:`finite_dpps_exact_sampling_intermediate_sampling_method`. It applies to ``FiniteDPP("likelihood", hermitian=True, L_eval_X_data=(eval_L, X_data))``.
             - ``"Schur"``, conditionals are computed as Schur complements see :eq:`eq:chain_rule_schur`. It applies to ``FiniteDPP("correlation", projection=True, ...)``.
@@ -358,11 +351,11 @@ class FiniteDPP:
             "spectral": spectral_sampler,
             "vfx": vfx_sampler,
             "alpha": alpha_sampler,
-            "Schur": schur_sampler,
-            "Chol": chol_sampler,
+            "schur": schur_sampler,
+            "chol": chol_sampler,
         }
         default = samplers["spectral"]
-        return samplers.get(method, default)
+        return samplers.get(method.lower(), default)
 
     def sample_exact_k_dpp(self, size, mode="GS", **params):
         """Sample exactly from :math:`\\operatorname{k-DPP}`. A priori the :class:`FiniteDPP <FiniteDPP>` object was instanciated by its likelihood :math:`\\mathbf{L}` kernel so that

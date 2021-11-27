@@ -6,11 +6,11 @@
 
 
 import unittest
-
-import numpy as np
 from itertools import combinations
 
-from dppy.finite_dpps.exact_sampling import elementary_symmetric_polynomials as e_k
+import numpy as np
+
+from dppy.utils import elementary_symmetric_polynomials as e_k
 
 
 class TestElementarySymmetricPolynomials(unittest.TestCase):
