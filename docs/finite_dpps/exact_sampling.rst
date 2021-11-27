@@ -447,7 +447,8 @@ Main idea
 =========
 
 This method requires access to the correlation kernel :math:`\mathbf{K}` to perform a bottom-up chain rule on sets: starting from the empty set, each item in turn is decided to be added or excluded from the sample.
-This can be summarized as the exploration of the binary probability tree displayed in `this Figure <fig:cholesky_chain_rule_sets>`.
+This can be summarized as the exploration of the bin
+ary probability tree displayed in `this Figure <fig:cholesky_chain_rule_sets>`.
 
 .. figure:: ../_images/cholesky_chain_rule_sets.png
    :width: 80%
