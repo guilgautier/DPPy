@@ -33,10 +33,12 @@ from dppy.exotic_dpps_core import (
     ust_sampler_wilson,
     xy_young_ru,
 )
-from dppy.finite.sampling.projection_kernel_samplers import (
-    select_orthogonal_projection_kernel_sampler,
+from dppy.finite.exact_samplers.projection_eigen_samplers import (
+    select_sampler_eigen_projection,
 )
-from dppy.finite.sampling.spectral_sampler import select_projection_eigen_sampler
+from dppy.finite.exact_samplers.projection_kernel_samplers import (
+    select_sampler_orthogonal_projection_kernel,
+)
 from dppy.utils import check_random_state
 
 # from dppy.exotic_dpps_core import wrapper_plot_descent
@@ -593,7 +595,7 @@ class UST:
         elif self.sampling_mode in self._sampling_modes["spectral-method"]:
 
             self.compute_kernel_eig_vecs()
-            sampler = select_projection_eigen_sampler(self.sampling_mode)
+            sampler = select_sampler_eigen_projection(self.sampling_mode)
             dpp_sample = sampler(self.kernel_eig_vecs, random_state=rng)
 
             sampl = self.nx.Graph()
@@ -602,7 +604,7 @@ class UST:
         elif self.sampling_mode in self._sampling_modes["projection-K-kernel"]:
 
             self.compute_kernel()
-            sampler = select_orthogonal_projection_kernel_sampler(self.sampling_mode)
+            sampler = select_sampler_orthogonal_projection_kernel(self.sampling_mode)
             dpp_sample = sampler(self.kernel, random_state=rng)
 
             sampl = self.nx.Graph()

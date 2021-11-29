@@ -4,6 +4,16 @@ import scipy.linalg as la
 from dppy.utils import check_random_state, inner1d
 
 
+def select_sampler_eigen_projection(mode):
+    samplers = {
+        "GS": projection_eigen_sampler_GS,
+        "GS_bis": projection_eigen_sampler_GS_bis,
+        "KuTa12": projection_eigen_sampler_KuTa12,
+    }
+    default = samplers["GS"]
+    return samplers.get(mode, default)
+
+
 # Phase 2: sample from the projection DPP selected in phase 1
 def projection_eigen_sampler_GS(eig_vecs, size=None, random_state=None):
     """Generate an exact sample from projection :math:`\\operatorname{DPP}(K)` with orthogonal projection kernel :math:`K=VV^{\\top}` where :math:`V=` ``eig_vecs`` such that :math:`V^{\\top}V = I_r` and :math:`r=\\operatorname{rank}(\\mathbf{K})`.

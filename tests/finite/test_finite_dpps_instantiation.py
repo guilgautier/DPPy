@@ -14,7 +14,7 @@ import numpy as np
 import numpy.random as rndm
 import scipy.linalg as la
 
-from dppy.finite_dpps import FiniteDPP
+from dppy.finite.dpp import FiniteDPP
 
 
 class FiniteDppWithCorrelationKernel(unittest.TestCase):

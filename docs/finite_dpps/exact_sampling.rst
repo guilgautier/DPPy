@@ -200,7 +200,7 @@ The cost of getting one sample from a **projection** DPP is of order :math:`\mat
 
 		import numpy as np
 		from scipy.linalg import qr
-		from dppy.finite_dpps import FiniteDPP
+		from dppy.finite.dpp import FiniteDPP
 
 		seed = 0
 		rng = np.random.RandomState(seed)
@@ -245,7 +245,7 @@ The cost of getting one sample from a **projection** DPP is of order :math:`\mat
 
 		import numpy as np
 		from scipy.linalg import qr
-		from dppy.finite_dpps import FiniteDPP
+		from dppy.finite.dpp import FiniteDPP
 
 		seed = 0
 		rng = np.random.RandomState(seed)
@@ -331,7 +331,7 @@ In practice
 
 		from numpy.random import RandomState
 		from scipy.linalg import qr
-		from dppy.finite_dpps import FiniteDPP
+		from dppy.finite.dpp import FiniteDPP
 
 		rng = RandomState(0)
 
@@ -370,7 +370,7 @@ In practice
 
 		from numpy.random import RandomState
 		from scipy.linalg import qr
-		from dppy.finite_dpps import FiniteDPP
+		from dppy.finite.dpp import FiniteDPP
 
 		rng = RandomState(0)
 
@@ -416,7 +416,7 @@ In practice
 
 		from numpy.random import RandomState
 		from scipy.linalg import qr
-		from dppy.finite_dpps import FiniteDPP
+		from dppy.finite.dpp import FiniteDPP
 
 		rng = RandomState(0)
 
@@ -535,7 +535,7 @@ In practice
 
 		from numpy.random import RandomState
 		from scipy.linalg import qr
-		from dppy.finite_dpps import FiniteDPP
+		from dppy.finite.dpp import FiniteDPP
 
 		rng = RandomState(1)
 
@@ -591,7 +591,7 @@ In practice
 .. testcode::
 
     from numpy.random import RandomState
-    from dppy.finite_dpps import FiniteDPP
+    from dppy.finite.dpp import FiniteDPP
     from dppy.utils import example_eval_L_linear
 
     rng = RandomState(1)
@@ -691,7 +691,7 @@ Sampling :math:`k\!\operatorname{-DPP}(\mathbf{L})` from :math:`\mathbf{L} \succ
 	.. testcode::
 
 		import numpy as np
-		from dppy.finite_dpps import FiniteDPP
+		from dppy.finite.dpp import FiniteDPP
 
 		rng = np.random.RandomState(1)
 

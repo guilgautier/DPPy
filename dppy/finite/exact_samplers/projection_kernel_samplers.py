@@ -9,53 +9,51 @@ def projection_kernel_sampler(dpp, random_state=None, **params):
     size = params.get("size")
     if dpp.kernel_type == "likelihood":
         if not size:
-            raise ValueError(
-                "size !> 0. projection_kernel_sampler only applies to k-DPP(L) with orthogonal projection L kernel."
-            )
+            raise ValueError("k-DPP(L) with orthogonal projection L kernel.")
         dpp.compute_L()
         kernel = dpp.L
-    else:  # dpp.kernel_type == "correlation":
+    elif dpp.kernel_type == "correlation":
         dpp.compute_K()
         kernel = dpp.K
 
     mode = params.get("mode")
     if dpp.hermitian:
-        sampler = select_orthogonal_projection_kernel_sampler(mode)
+        sampler = select_sampler_orthogonal_projection_kernel(mode)
     else:
-        sampler = select_generic_projection_kernel_sampler(mode)
+        sampler = select_sampler_generic_projection_kernel(mode)
 
     return sampler(kernel, size=size, random_state=random_state)
 
 
-def select_generic_projection_kernel_sampler(mode):
+def select_sampler_generic_projection_kernel(mode):
     """Select a sampler for projection DPP define via its correlation kernel K satisfying :math:`K^2 = K`.
 
-    - :func:`projection_kernel_sampler_Schur <projection_kernel_sampler_Schur>`
+    - :func:`projection_kernel_sampler_schur <projection_kernel_sampler_schur>`
     """
     samplers = {
-        "Schur": projection_kernel_sampler_Schur,
+        "schur": projection_kernel_sampler_schur,
     }
-    default = samplers["Schur"]
-    return samplers.get(mode, default)
+    default = samplers["schur"]
+    return samplers.get(mode.lower(), default)
 
 
-def select_orthogonal_projection_kernel_sampler(mode):
+def select_sampler_orthogonal_projection_kernel(mode):
     """Select a sampler for projection DPP define via its correlation kernel
 
     - :func:`orthogonal_projection_kernel_sampler_GS <orthogonal_projection_kernel_sampler_GS>`
-    - :func:`projection_kernel_sampler_Schur <projection_kernel_sampler_Schur>`
-    - :func:`orthogonal_projection_kernel_sampler_Chol <orthogonal_projection_kernel_sampler_Chol>`
+    - :func:`projection_kernel_sampler_schur <projection_kernel_sampler_schur>`
+    - :func:`orthogonal_projection_kernel_sampler_cholesky <orthogonal_projection_kernel_sampler_cholesky>`
     """
     samplers = {
-        "GS": orthogonal_projection_kernel_sampler_GS,
-        "Chol": orthogonal_projection_kernel_sampler_Chol,
-        "Schur": projection_kernel_sampler_Schur,
+        "gs": orthogonal_projection_kernel_sampler_GS,
+        "chol": orthogonal_projection_kernel_sampler_cholesky,
+        "shur": projection_kernel_sampler_schur,
     }
-    default = samplers["GS"]
-    return samplers.get(mode, default)
+    default = samplers["gs"]
+    return samplers.get(mode.lower(), default)
 
 
-def orthogonal_projection_kernel_sampler_Chol(K, size=None, random_state=None):
+def orthogonal_projection_kernel_sampler_cholesky(K, size=None, random_state=None):
     """Generate an exact sample from :math:`\\operatorname{DPP}(K)`, or :math:`\\operatorname{k-DPP}(K)` with :math:`k=` ``size`` (if ``size`` is provided), where :math:`K` is an orthogonal projection `kernel`.
 
     The chain rule is applied by performing Cholesky updates following :cite:`Pou19` Algorithm 3.
@@ -83,7 +81,7 @@ def orthogonal_projection_kernel_sampler_Chol(K, size=None, random_state=None):
 
         - :cite:`Pou19` Algorithm 3 and :ref:`catamari code <https://gitlab.com/hodge_star/catamari/blob/38718a1ea34872fb6567e019ece91fbeb5af5be1/include/catamari/dense_dpp/elementary_hermitian_dpp-impl.hpp#L37>`_ for the Hermitian swap routine.
         - :func:`orthogonal_projection_kernel_sampler_GS <orthogonal_projection_kernel_sampler_GS>`
-        - :func:`projection_kernel_sampler_Schur <projection_kernel_sampler_Schur>`
+        - :func:`projection_kernel_sampler_schur <projection_kernel_sampler_schur>`
     """
 
     rng = check_random_state(random_state)
@@ -168,8 +166,8 @@ def orthogonal_projection_kernel_sampler_GS(K, size=None, random_state=None):
     .. seealso::
 
         - :cite:`TrBaAm18` Algorithm 3, :cite:`Gil14` Algorithm 2
-        - :func:`projection_kernel_sampler_Schur <projection_kernel_sampler_Schur>`
-        - :func:`orthogonal_projection_kernel_sampler_Chol <orthogonal_projection_kernel_sampler_Chol>`
+        - :func:`projection_kernel_sampler_schur <projection_kernel_sampler_schur>`
+        - :func:`orthogonal_projection_kernel_sampler_cholesky <orthogonal_projection_kernel_sampler_cholesky>`
     """
 
     rng = check_random_state(random_state)
@@ -203,7 +201,7 @@ def orthogonal_projection_kernel_sampler_GS(K, size=None, random_state=None):
     return sample.tolist()  # , log_likelihood
 
 
-def projection_kernel_sampler_Schur(K, size=None, random_state=None):
+def projection_kernel_sampler_schur(K, size=None, random_state=None):
     """Generate an exact sample from :math:`\\operatorname{DPP}(K)`, or :math:`\\operatorname{k-DPP}(K)` with :math:`k=` ``size`` (if ``size`` is provided), where :math:`K` is a projection kernel (not necessarily orthogonal).
 
     The chain rule is applied by computing Schur complements explicitely, using Woodbury's formula.
@@ -230,7 +228,7 @@ def projection_kernel_sampler_Schur(K, size=None, random_state=None):
 
     .. seealso::
         - :func:`orthogonal_projection_kernel_sampler_GS <orthogonal_projection_kernel_sampler_GS>`
-        - :func:`orthogonal_projection_kernel_sampler_Chol <orthogonal_projection_kernel_sampler_Chol>`
+        - :func:`orthogonal_projection_kernel_sampler_cholesky <orthogonal_projection_kernel_sampler_cholesky>`
     """
 
     rng = check_random_state(random_state)

@@ -2,7 +2,7 @@
 from numpy.random import rand, randn
 from scipy.linalg import qr
 
-from dppy.finite_dpps import FiniteDPP
+from dppy.finite.dpp import FiniteDPP
 
 r, N = 4, 10
 e_vecs, _ = qr(randn(N, r), mode="economic")

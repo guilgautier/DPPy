@@ -106,7 +106,7 @@ Projection DPPs
 		from numpy import ones
 		from numpy.random import randn
 		from scipy.linalg import qr
-		from dppy.finite_dpps import FiniteDPP
+		from dppy.finite.dpp import FiniteDPP
 
 		r, N = 4, 10
 

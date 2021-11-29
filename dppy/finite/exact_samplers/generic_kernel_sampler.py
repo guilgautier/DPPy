@@ -12,10 +12,10 @@ def generic_correlation_kernel_sampler(dpp, random_state=None, **params):
 # todo change name Chol to LU or Poulson (in docstrings too!)
 def select_generic_correlation_kernel_sampler(name):
     samplers = {
-        "Chol": generic_correlation_kernel_sampler_Poulson,
+        "chol": generic_correlation_kernel_sampler_Poulson,
     }
-    default = samplers["Chol"]
-    return samplers.get(name, default)
+    default = samplers["chol"]
+    return samplers.get(name.lower(), default)
 
 
 def generic_correlation_kernel_sampler_Poulson(K, random_state=None, **params):

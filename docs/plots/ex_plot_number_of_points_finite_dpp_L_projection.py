@@ -3,7 +3,7 @@ import numpy as np
 from scipy.linalg import qr
 from scipy.stats import binom, chisquare
 
-from dppy.finite_dpps import FiniteDPP
+from dppy.finite.dpp import FiniteDPP
 
 r, N = 5, 10
 e_vals = np.ones(r)

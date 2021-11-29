@@ -12,7 +12,7 @@ import numpy.random as rndm
 import scipy.linalg as la
 from scipy.stats import chisquare
 
-from dppy.finite_dpps import FiniteDPP
+from dppy.finite.dpp import FiniteDPP
 from dppy.utils import det_ST, example_eval_L_linear, example_eval_L_min_kern
 
 
@@ -35,7 +35,7 @@ class Configuration(object):
                 if self.sampler_type == "exact_dpp":
                     dpp.sample_exact(method=self.method, **self.method_params)
                 elif self.sampler_type == "exact_k_dpp":
-                    dpp.sample_exact_k_dpp(mode=self.method, **self.method_params)
+                    dpp.sample_exact_k_dpp(method=self.method, **self.method_params)
                 else:
                     raise ValueError(self.sampler_type)
             return dpp.list_of_samples
@@ -239,7 +239,7 @@ class TestAdequationOfFiniteDppSamplers(unittest.TestCase):
                 ("Chol", {}),
                 ("Schur", {}),
             ),
-            "exact_k_dpp": (("GS", {"size": k}),),
+            "exact_k_dpp": (("spectral", {"mode": "GS", "size": k}),),
             "mcmc_dpp": (("E", {"size": k, "nb_iter": self.nb_iter_mcmc}),),
             "mcmc_k_dpp": (("E", {"size": k, "nb_iter": self.nb_iter_mcmc}),),
         }
@@ -265,9 +265,9 @@ class TestAdequationOfFiniteDppSamplers(unittest.TestCase):
                 ("Chol", {}),
             ),
             "exact_k_dpp": (
-                ("GS", {"size": k}),
-                ("GS_bis", {"size": k}),
-                ("KuTa12", {"size": k}),
+                ("spectral", {"mode": "GS", "size": k}),
+                ("spectral", {"mode": "GS_bis", "size": k}),
+                ("spectral", {"mode": "KuTa12", "size": k}),
             ),
             "mcmc_dpp": (
                 ("AD", {"nb_iter": self.nb_iter_mcmc}),
@@ -295,9 +295,9 @@ class TestAdequationOfFiniteDppSamplers(unittest.TestCase):
                 ("Chol", {}),
             ),
             "exact_k_dpp": (
-                ("GS", {"size": self.rank}),
-                ("GS_bis", {"size": self.rank}),
-                ("KuTa12", {"size": self.rank}),
+                ("spectral", {"mode": "GS", "size": self.rank}),
+                ("spectral", {"mode": "GS_bis", "size": self.rank}),
+                ("spectral", {"mode": "KuTa12", "size": self.rank}),
             ),
             "mcmc_dpp": (
                 ("AD", {"nb_iter": self.nb_iter_mcmc}),
@@ -328,9 +328,9 @@ class TestAdequationOfFiniteDppSamplers(unittest.TestCase):
                 ("spectral", {"mode": "KuTa12"}),
             ),
             "exact_k_dpp": (
-                ("GS", {"size": k}),
-                ("GS_bis", {"size": k}),
-                ("KuTa12", {"size": k}),
+                ("spectral", {"mode": "GS", "size": k}),
+                ("spectral", {"mode": "GS_bis", "size": k}),
+                ("spectral", {"mode": "KuTa12", "size": k}),
             ),
             "mcmc_dpp": (
                 ("AD", {"nb_iter": self.nb_iter_mcmc}),

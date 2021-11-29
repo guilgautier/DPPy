@@ -20,24 +20,25 @@ import matplotlib.pyplot as plt
 import numpy as np
 import scipy.linalg as la
 
-from dppy.finite.sampling.alpha_sampler import alpha_k_dpp_sampler, alpha_sampler
-from dppy.finite.sampling.chol_sampler import chol_sampler
-from dppy.finite.sampling.projection_kernel_samplers import (
-    select_orthogonal_projection_kernel_sampler,
+# EXACT
+from dppy.finite.exact_samplers.alpha_samplers import (
+    alpha_sampler_dpp,
+    alpha_sampler_k_dpp,
 )
-from dppy.finite.sampling.schur_sampler import schur_sampler
-from dppy.finite.sampling.spectral_sampler import (
-    k_dpp_eig_vecs_selector,
-    select_projection_eigen_sampler,
-    spectral_sampler,
-)
-from dppy.finite.sampling.vfx_sampler import k_dpp_vfx_sampler, vfx_sampler
+from dppy.finite.exact_samplers.chol_sampler import chol_sampler
+from dppy.finite.exact_samplers.schur_sampler import schur_sampler
+from dppy.finite.exact_samplers.spectral_sampler_dpp import spectral_sampler
+from dppy.finite.exact_samplers.spectral_sampler_k_dpp import spectral_sampler_k_dpp
+from dppy.finite.exact_samplers.vfx_samplers import vfx_sampler_dpp, vfx_sampler_k_dpp
+
+# MCMC
 from dppy.mcmc_sampling import dpp_sampler_mcmc, zonotope_sampler
+
+# UTILS
 from dppy.utils import (
     check_geq_0,
     check_in_01,
     check_random_state,
-    elementary_symmetric_polynomials,
     is_equal_to_O_or_1,
     is_full_row_rank,
     is_orthonormal_columns,
@@ -81,7 +82,7 @@ class FiniteDPP:
             - ``"L_gram_factor": Phi``, with :math:`\\mathbf{L} = \\Phi^{ \\top} \\Phi`,
             - ``"L_eval_X_data": (eval_L, X_data)``, with :math:`X (N \\times d)` and ``eval_L`` a likelihood function such that :math:`\\mathbf{L} =` ``eval_L` :math:`(X, X)``.
 
-            For a full description of the requirements imposed on ``eval_L``"s interface, see the documentation :func:`dppy.finite.sampling.vfx_sampler.vfx_sampling_precompute_constants`.
+            For a full description of the requirements imposed on ``eval_L``"s interface, see the documentation :func:`dppy.finite.exact_samplers.vfx_samplers.vfx_sampling_precompute_constants`.
             For an example, see the implementation of any of the kernels provided by scikit-learn (e.g. sklearn.gaussian_process.kernels.PairwiseKernel).
 
     :type params:
@@ -93,9 +94,6 @@ class FiniteDPP:
         - :ref:`finite_dpps_exact_sampling`
     """
 
-    ###############
-    # Constructor #
-    ###############
     def __init__(self, kernel_type, projection=False, hermitian=True, **params):
         self.kernel_type = kernel_type
         self.hermitian = hermitian
@@ -254,9 +252,6 @@ class FiniteDPP:
             ]
             raise ValueError("\n".join(err_print))
 
-    ##################
-    # Object methods #
-    ##################
     def info(self):
         """Display infos about the :class:`FiniteDPP` object"""
         print(self.__str__())
@@ -298,7 +293,7 @@ class FiniteDPP:
 
             - For ``method="vfx"``
 
-                See :py:meth:`~dppy.exact_sampling.dpp_vfx_sampler` for a full list of all parameters accepted by "vfx" sampling. We report here the most impactful
+                See :py:meth:`~dppy.finite.exact_samplers.vfx_samplers.vfx_sampler_dpp` for a full list of all parameters accepted by "vfx" sampling. We report here the most impactful
 
                 + ``"rls_oversample_dppvfx"`` (default 4.0) Oversampling parameter used to construct dppvfx's internal Nystrom approximation. This makes each rejection round slower and more memory intensive, but reduces variance and the number of rounds of rejections.
                 + ``"rls_oversample_bless"`` (default 4.0) Oversampling parameter used during bless's internal Nystrom approximation. This makes the one-time pre-processing slower and more memory intensive, but reduces variance and the number of rounds of rejections
@@ -307,7 +302,7 @@ class FiniteDPP:
 
             - If ``method="alpha"``
 
-                See :py:meth:`~dppy.exact_sampling.alpha_k_dpp_sampler` for a full list of all parameters accepted by "alpha" sampling. We report here the most impactful
+                See :py:meth:`~dppy.finite.exact_samplers.alpha_samplers.alpha_sampler_k_dpp` for a full list of all parameters accepted by "alpha" sampling. We report here the most impactful
 
                 + ``"rls_oversample_alphadpp"`` (default 4.0) Oversampling parameter used to construct alpha-dpp's internal Nystrom approximation. This makes each rejection round slower and more memory intensive, but reduces variance and the number of rounds of rejections.
                 + ``"rls_oversample_bless"`` (default 4.0) Oversampling parameter used during bless's internal Nystrom approximation. This makes the one-time pre-processing slower and more memory intensive, but reduces variance and the number of rounds of rejections
@@ -338,7 +333,7 @@ class FiniteDPP:
         """
 
         rng = check_random_state(random_state)
-        sampler = self._select_exact_sampler(method)
+        sampler = self._select_sampler_exact_dpp(method)
         sample = sampler(self, rng, **params)
 
         self.sampling_mode = method
@@ -346,18 +341,18 @@ class FiniteDPP:
         return sample
 
     @staticmethod
-    def _select_exact_sampler(method):
+    def _select_sampler_exact_dpp(method):
         samplers = {
             "spectral": spectral_sampler,
-            "vfx": vfx_sampler,
-            "alpha": alpha_sampler,
+            "vfx": vfx_sampler_dpp,
+            "alpha": alpha_sampler_dpp,
             "schur": schur_sampler,
             "chol": chol_sampler,
         }
         default = samplers["spectral"]
         return samplers.get(method.lower(), default)
 
-    def sample_exact_k_dpp(self, size, mode="GS", **params):
+    def sample_exact_k_dpp(self, size, method="spectral", random_state=None, **params):
         """Sample exactly from :math:`\\operatorname{k-DPP}`. A priori the :class:`FiniteDPP <FiniteDPP>` object was instanciated by its likelihood :math:`\\mathbf{L}` kernel so that
 
         .. math::
@@ -393,7 +388,7 @@ class FiniteDPP:
 
             - If ``mode="vfx"``
 
-                See :py:meth:`~dppy.exact_sampling.k_dpp_vfx_sampler` for a full list of all parameters accepted by "vfx" sampling. We report here the most impactful
+                See :py:meth:`~dppy.finite.exact_samplers.vfx_sampler_k_dpp` for a full list of all parameters accepted by "vfx" sampling. We report here the most impactful
 
                 + ``"rls_oversample_dppvfx"`` (default 4.0) Oversampling parameter used to construct dppvfx's internal Nystrom approximation. This makes each rejection round slower and more memory intensive, but reduces variance and the number of rounds of rejections.
                 + ``"rls_oversample_bless"`` (default 4.0) Oversampling parameter used during bless's internal Nystrom approximation. This makes the one-time pre-processing slower and more memory intensive, but reduces variance and the number of rounds of rejections
@@ -402,7 +397,7 @@ class FiniteDPP:
                 a small number and increase if the algorithm fails to terminate.
 
             - If ``mode="alpha"``
-                See :py:meth:`~dppy.exact_sampling.alpha_k_dpp_sampler` for a full list of all parameters accepted by "alpha" sampling. We report here the most impactful
+                See :py:meth:`~dppy.finite.exact_samplers.alpha_samplers.alpha_sampler_k_dpp` for a full list of all parameters accepted by "alpha" sampling. We report here the most impactful
 
                 + ``"rls_oversample_alphadpp"`` (default 4.0) Oversampling parameter used to construct alpha-dpp's internal Nystrom approximation. This makes each rejection round slower and more memory intensive, but reduces variance and the number of rounds of rejections.
                 + ``"rls_oversample_bless"`` (default 4.0) Oversampling parameter used during bless's internal Nystrom approximation. This makes the one-time pre-processing slower and more memory intensive, but reduces variance and the number of rounds of rejections
@@ -435,175 +430,27 @@ class FiniteDPP:
             - :py:meth:`~FiniteDPP.sample_mcmc_k_dpp`
         """
 
-        rng = check_random_state(params.get("random_state", None))
+        rng = check_random_state(random_state)
+        self.sampling_mode = method
+        sampler = self._select_sampler_exact_k_dpp(method)
+        sample = sampler(self, size, rng, **params)
 
-        self.sampling_mode = mode
         self.size_k_dpp = size
+        self.list_of_samples.append(sample)
+        return sample
 
-        if mode == "vfx":
-            if self.eval_L is None or self.X_data is None:
-                raise ValueError(
-                    "The vfx sampler is currently only available for the 'L_eval_X_data' representation."
-                )
+    @staticmethod
+    def _select_sampler_exact_k_dpp(method):
+        samplers = {
+            "spectral": spectral_sampler_k_dpp,
+            "vfx": vfx_sampler_k_dpp,
+            "alpha": alpha_sampler_k_dpp,
+            "schur": schur_sampler,
+            "chol": chol_sampler,
+        }
+        default = samplers["spectral"]
+        return samplers.get(method.lower(), default)
 
-            r_state_outer = None
-            if "random_state" in params:
-                r_state_outer = params.pop("random_state", None)
-
-            sampl, self.intermediate_sample_info = k_dpp_vfx_sampler(
-                size,
-                self.intermediate_sample_info,
-                self.X_data,
-                self.eval_L,
-                random_state=rng,
-                **params
-            )
-
-            if r_state_outer:
-                params["random_state"] = r_state_outer
-
-        elif mode == "alpha":
-            if self.eval_L is None or self.X_data is None:
-                raise ValueError(
-                    "The alpha sampler is currently only available for the 'L_eval_X_data' representation."
-                )
-
-            r_state_outer = None
-            if "random_state" in params:
-                r_state_outer = params.pop("random_state", None)
-
-            sampl, self.intermediate_sample_info = alpha_k_dpp_sampler(
-                size,
-                self.intermediate_sample_info,
-                self.X_data,
-                self.eval_L,
-                random_state=rng,
-                **params
-            )
-
-            if r_state_outer:
-                params["random_state"] = r_state_outer
-
-        # If DPP defined via projection kernel
-        elif self.projection:
-            if self.kernel_type == "correlation":
-
-                if self.K_eig_vals is not None:
-                    rank = np.rint(np.sum(self.K_eig_vals)).astype(int)
-                elif self.A_zono is not None:
-                    rank = self.A_zono.shape[0]
-                else:  # self.K is not None
-                    rank = np.rint(np.trace(self.K)).astype(int)
-
-                if size != rank:
-                    raise ValueError(
-                        "size k={} != rank={} for projection correlation K kernel".format(
-                            size, rank
-                        )
-                    )
-
-                if self.K_eig_vals is not None:
-                    # K_eig_vals > 0.5 below to get indices where e_vals = 1
-                    sampler = select_projection_eigen_sampler(mode)
-                    sampl = sampler(
-                        eig_vecs=self.eig_vecs[:, self.K_eig_vals > 0.5],
-                        size=size,
-                        random_state=rng,
-                    )
-
-                elif self.A_zono is not None:
-                    warn(
-                        "DPP defined via `A_zono`, apriori you want to use `sampl_mcmc`, but you have called `sample_exact`"
-                    )
-
-                    self.K_eig_vals = np.ones(rank)
-                    self.eig_vecs, _ = la.qr(self.A_zono.T, mode="economic")
-                    sampler = select_projection_eigen_sampler(mode)
-                    sampl = sampler(
-                        eig_vecs=self.eig_vecs,
-                        size=size,
-                        random_state=rng,
-                    )
-
-                else:
-                    sampler = select_orthogonal_projection_kernel_sampler(mode)
-                    sampl = sampler(self.K, size=size, random_state=rng)
-
-            else:  # self.kernel_type == 'likelihood':
-                if self.L_eig_vals is not None:
-                    # L_eig_vals > 0.5 below to get indices where e_vals = 1
-                    sampler = select_projection_eigen_sampler(mode)
-                    sampl = sampler(
-                        eig_vecs=self.eig_vecs[:, self.L_eig_vals > 0.5],
-                        size=size,
-                        random_state=rng,
-                    )
-                else:
-                    self.compute_L()
-                    sampler = select_orthogonal_projection_kernel_sampler(mode)
-                    sampl = sampler(self.L, size=size, random_state=rng)
-
-        # If eigen decoposition of K, L or L_dual is available USE IT!
-        elif self.L_eig_vals is not None:
-
-            # Phase 1
-            # Precompute elementary symmetric polynomials
-            if self.esp is None or self.size_k_dpp < size:
-                self.esp = elementary_symmetric_polynomials(self.L_eig_vals, size)
-            # Select eigenvectors
-            V = k_dpp_eig_vecs_selector(
-                self.L_eig_vals,
-                self.eig_vecs,
-                size=size,
-                esp=self.esp,
-                random_state=rng,
-            )
-            # Phase 2
-            self.size_k_dpp = size
-            sampler = select_projection_eigen_sampler(mode)
-            sampl = sampler(V, size=size, random_state=rng)
-
-        elif self.K_eig_vals is not None:
-            np.seterr(divide="raise")
-            self.L_eig_vals = self.K_eig_vals / (1.0 - self.K_eig_vals)
-            return self.sample_exact_k_dpp(size, mode, random_state=rng)
-
-        # Otherwise eigendecomposition is necessary
-        elif self.L_dual is not None:
-            # L_dual = Phi Phi.T = W Theta W.T
-            # L = Phi.T Phi = V Gamma V.T
-            # implies Gamma = Theta and V = Phi.T W Theta^{-1/2}
-            self.L_eig_vals, L_dual_eig_vecs = la.eigh(self.L_dual)
-            check_geq_0(self.L_eig_vals)
-            self.eig_vecs = self.L_gram_factor.T.dot(
-                L_dual_eig_vecs / np.sqrt(self.L_eig_vals)
-            )
-            return self.sample_exact_k_dpp(size, mode=mode, random_state=rng)
-
-        elif self.L is not None:
-            self.L_eig_vals, self.eig_vecs = la.eigh(self.L)
-            check_geq_0(self.L_eig_vals)
-            return self.sample_exact_k_dpp(size, mode, random_state=rng)
-
-        elif self.K is not None:
-            self.K_eig_vals, self.eig_vecs = la.eigh(self.K)
-            check_in_01(self.K_eig_vals)
-            return self.sample_exact_k_dpp(size, mode, random_state=rng)
-
-        elif self.eval_L is not None and self.X_data is not None:
-            # In case mode!="vfx"
-            self.compute_L()
-            return self.sample_exact_k_dpp(size, mode, random_state=rng)
-
-        else:
-            raise ValueError(
-                "None of the available samplers could be used based on the current DPP representation. This should never happen, please consider rasing an issue on github at https://github.com/guilgautier/DPPy/issues"
-            )
-
-        self.list_of_samples.append(sampl)
-        return sampl
-
-    # Approximate sampling
     def sample_mcmc(self, mode, **params):
         """Run a MCMC with stationary distribution the corresponding :class:`FiniteDPP <FiniteDPP>` object.
 
@@ -753,7 +600,7 @@ class FiniteDPP:
                 )
                 print(msg)
                 self.K_eig_vals = np.ones(self.A_zono.shape[0])
-                self.eig_vecs, _ = la.qr(self.A_zono.T, mode="economic")
+                self.eig_vecs, *_ = la.qr(self.A_zono.T, mode="economic")
                 self.K = self.eig_vecs.dot(self.eig_vecs.T)
 
             elif self.L_eig_vals is not None:
