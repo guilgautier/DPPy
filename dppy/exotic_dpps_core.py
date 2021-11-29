@@ -24,22 +24,22 @@
 
 import functools  # used for decorators to pass docstring
 
-import numpy as np
-
-from itertools import chain  # create graph edges from path
-
 # For class PoissonizedPlancherel
 from bisect import bisect_right  # for RSK
+from itertools import chain  # create graph edges from path
+
+import numpy as np
 
 from dppy.utils import check_random_state
 
 
-def ust_sampler_wilson(list_of_neighbors, root=None,
-                       random_state=None):
+def ust_sampler_wilson(list_of_neighbors, root=None, random_state=None):
     try:
         import networkx as nx
     except ImportError:
-        raise ValueError('The networkx package is required to sample spanning trees (see setup.py).')
+        raise ValueError(
+            "The networkx package is required to sample spanning trees (see setup.py)."
+        )
 
     rng = check_random_state(random_state)
 
@@ -70,8 +70,8 @@ def ust_sampler_wilson(list_of_neighbors, root=None,
         if state[n1] == 0:  # loop on the path => erase the loop
 
             knot = path.index(n1)  # find 1st appearence of n1 in the path
-            nodes_loop = path[knot + 1:]  # identify nodes forming the loop
-            del path[knot + 1:]  # erase the loop
+            nodes_loop = path[knot + 1 :]  # identify nodes forming the loop
+            del path[knot + 1 :]  # erase the loop
             state[nodes_loop] = -1  # mark loopy nodes as not visited
             n0 = n1  # continue the walk
 
@@ -91,20 +91,20 @@ def ust_sampler_wilson(list_of_neighbors, root=None,
                 n0 = rng.choice(nodes_not_visited)  # size=1)[0]
                 path = [n0]
 
-    tree_edges = list(chain.from_iterable(map(lambda x: zip(x[:-1], x[1:]),
-                                              branches)))
+    tree_edges = list(chain.from_iterable(map(lambda x: zip(x[:-1], x[1:]), branches)))
     wilson_tree_graph.add_edges_from(tree_edges)
 
     return wilson_tree_graph
 
 
-def ust_sampler_aldous_broder(list_of_neighbors, root=None,
-                              random_state=None):
+def ust_sampler_aldous_broder(list_of_neighbors, root=None, random_state=None):
 
     try:
         import networkx as nx
     except ImportError:
-        raise ValueError('The networkx package is required to sample spanning trees (see setup.py).')
+        raise ValueError(
+            "The networkx package is required to sample spanning trees (see setup.py)."
+        )
 
     rng = check_random_state(random_state)
 
@@ -137,31 +137,6 @@ def ust_sampler_aldous_broder(list_of_neighbors, root=None,
     aldous_tree_graph.add_edges_from(tree_edges)
 
     return aldous_tree_graph
-
-
-def uniform_permutation(N, random_state=None):
-    """ Draw a perputation :math:`\\sigma \\in \\mathfrak{S}_N` uniformly at random using Fisher-Yates' algorithm
-
-    .. seealso::
-
-        - `Fisher–Yates_shuffle <https://en.wikipedia.org/wiki/Fisher%E2%80%93Yates_shuffle>_
-
-        - `Numpy shuffle <https://github.com/numpy/numpy/blob/d429f0fe16c0407509b1f20d997bf94f1027f61b/numpy/random/mtrand.pyx#L4027>_`
-    """
-    rng = check_random_state(random_state)
-
-    sigma = np.arange(N)
-    for i in range(N - 1, 0, -1):  # reversed(range(1, N))
-        j = rng.randint(0, i + 1)
-        if j == i:
-            continue
-        sigma[j], sigma[i] = sigma[i], sigma[j]
-
-    # for i in range(N - 1):
-    #     j = rng.randint(i, N)
-    #     sigma[j], sigma[i] = sigma[i], sigma[j]
-
-    return sigma
 
 
 def RSK(sequence):
@@ -209,7 +184,7 @@ def RSK(sequence):
 
 
 def xy_young_ru(young_diag):
-    """ Compute the xy coordinates of the boxes defining the young diagram, using the russian convention.
+    """Compute the xy coordinates of the boxes defining the young diagram, using the russian convention.
 
     :param young_diag:
         points
@@ -240,10 +215,10 @@ def xy_young_ru(young_diag):
     y_vert = intertwine(np.zeros_like(y_vert), y_vert)
 
     xy_young_fr = np.column_stack(
-        [np.hstack([x_hor, x_vert]), np.hstack([y_hor, y_vert])])
+        [np.hstack([x_hor, x_vert]), np.hstack([y_hor, y_vert])]
+    )
 
-    rot_45_and_scale = np.array([[1.0, -1.0],
-                                 [1.0, 1.0]])
+    rot_45_and_scale = np.array([[1.0, -1.0], [1.0, 1.0]])
 
     return xy_young_fr.dot(rot_45_and_scale.T)
 
@@ -279,8 +254,9 @@ def limit_shape(x):
     abs_x_gt2 = np.abs(x) >= 2.0
 
     w_x[abs_x_gt2] = np.abs(x[abs_x_gt2])
-    w_x[~abs_x_gt2] = x[~abs_x_gt2] * np.arcsin(0.5 * x[~abs_x_gt2])\
-                      + np.sqrt(4.0 - x[~abs_x_gt2]**2)
+    w_x[~abs_x_gt2] = x[~abs_x_gt2] * np.arcsin(0.5 * x[~abs_x_gt2]) + np.sqrt(
+        4.0 - x[~abs_x_gt2] ** 2
+    )
     w_x[~abs_x_gt2] *= 2.0 / np.pi
 
     return w_x
