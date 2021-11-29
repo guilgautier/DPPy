@@ -16,7 +16,7 @@ def projection_kernel_sampler(dpp, random_state=None, **params):
         dpp.compute_K()
         kernel = dpp.K
 
-    mode = params.get("mode")
+    mode = params.get("mode", "")
     if dpp.hermitian:
         sampler = select_sampler_orthogonal_projection_kernel(mode)
     else:

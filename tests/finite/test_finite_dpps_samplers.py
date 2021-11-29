@@ -262,7 +262,7 @@ class TestAdequationOfFiniteDppSamplers(unittest.TestCase):
                 ("spectral", {"mode": "GS"}),
                 ("spectral", {"mode": "GS_bis"}),
                 ("spectral", {"mode": "KuTa12"}),
-                ("Chol", {}),
+                ("generic", {}),
             ),
             "exact_k_dpp": (
                 ("spectral", {"mode": "GS", "size": k}),

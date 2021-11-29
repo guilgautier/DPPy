@@ -26,6 +26,7 @@ from dppy.finite.exact_samplers.alpha_samplers import (
     alpha_sampler_k_dpp,
 )
 from dppy.finite.exact_samplers.chol_sampler import chol_sampler
+from dppy.finite.exact_samplers.generic_samplers import generic_sampler
 from dppy.finite.exact_samplers.schur_sampler import schur_sampler
 from dppy.finite.exact_samplers.spectral_sampler_dpp import spectral_sampler
 from dppy.finite.exact_samplers.spectral_sampler_k_dpp import spectral_sampler_k_dpp
@@ -271,13 +272,12 @@ class FiniteDPP:
         """Sample exactly from the corresponding :class:`FiniteDPP <FiniteDPP>` object. Default sampling method="spectral" assumes the corresponding DPP is  hermitian.
 
         :param method:
-            - ``"spectral"`` (default), see :ref:`finite_dpps_exact_sampling_spectral_method`. It applies to ``FiniteDPP(..., hermitian=True, ...)``.
+            - ``"spectral"`` (default), see :ref:`finite_dpps_exact_sampling_spectral_method`. It applies to hermitian DPPs: ``FiniteDPP(..., hermitian=True, ...)``.
             - ``"vfx"`` dpp-vfx rejection sampler of :cite:`DeCaVa19`, see :ref:`finite_dpps_exact_sampling_intermediate_sampling_method`. It applies to ``FiniteDPP("likelihood", hermitian=True, L_eval_X_data=(eval_L, X_data))``,
             - ``"alpha"`` alpha-dpp rejection sampler :cite:`CaDeVa20`, see :ref:`finite_dpps_exact_sampling_intermediate_sampling_method`. It applies to ``FiniteDPP("likelihood", hermitian=True, L_eval_X_data=(eval_L, X_data))``.
             - ``"Schur"``, conditionals are computed as Schur complements see :eq:`eq:chain_rule_schur`. It applies to ``FiniteDPP("correlation", projection=True, ...)``.
-            - ``"Chol"``, see :ref:`finite_dpps_exact_sampling_cholesky_method`
-                - :cite:`Pou19` Algorithm 3. It applies to ``FiniteDPP("correlation", projection=True, hermitian=True, ...)``.
-                - :cite:`Pou19` Algorithm 1. It applies generically to ``FiniteDPP("correlation", projection=False, ...)``.
+            - ``"Chol"``, see :ref:`finite_dpps_exact_sampling_cholesky_method`. It refers to :cite:`Pou19` Algorithm 1 (see ``"generic"``) and Algorithm 3 which applies to``FiniteDPP("correlation", projection=True, hermitian=true, ...)``.
+            - ``"generic"``, see :ref:`finite_dpps_exact_sampling_cholesky_method`, applies to generic (hermitian or not) finite DPPs, :cite:`Pou19` Algorithm 1.
 
         :type method:
             string, default ``"spectral"``
@@ -285,13 +285,13 @@ class FiniteDPP:
         :param dict params:
             Dictionary containing the parameters of the corresponding exact sampling method
 
-            - For ``method="spectral"``
+            - ``method="spectral"``
                 - ``"mode"``
                     - ``"GS"`` (default): similar to Algorithm 2 of :cite:`Gil14`  and Algorithm 3 of :cite:`TrBaAm18`.
                     - ``"GS_bis"``: slight modification of ``"GS"``
                     - ``"KuTa12"``: corresponds to Algorithm 1 of :cite:`KuTa12`
 
-            - For ``method="vfx"``
+            - ``method="vfx"``
 
                 See :py:meth:`~dppy.finite.exact_samplers.vfx_samplers.vfx_sampler_dpp` for a full list of all parameters accepted by "vfx" sampling. We report here the most impactful
 
@@ -300,7 +300,7 @@ class FiniteDPP:
 
                 Empirically, a small factor [2,10] seems to work for both parameters. It is suggested to start with a small number and increase if the algorithm fails to terminate.
 
-            - If ``method="alpha"``
+            - ``method="alpha"``
 
                 See :py:meth:`~dppy.finite.exact_samplers.alpha_samplers.alpha_sampler_k_dpp` for a full list of all parameters accepted by "alpha" sampling. We report here the most impactful
 
@@ -321,10 +321,6 @@ class FiniteDPP:
 
             The :py:attr:`~FiniteDPP.list_of_samples` attribute can be emptied using :py:meth:`~FiniteDPP.flush_samples`
 
-        .. caution::
-
-            The underlying kernel :math:`\\mathbf{K}`, resp. :math:`\\mathbf{L}` must be real valued for now.
-
         .. seealso::
 
             - :ref:`finite_dpps_exact_sampling`
@@ -340,17 +336,17 @@ class FiniteDPP:
         self.list_of_samples.append(sample)
         return sample
 
-    @staticmethod
-    def _select_sampler_exact_dpp(method):
+    def _select_sampler_exact_dpp(self, method):
         samplers = {
             "spectral": spectral_sampler,
             "vfx": vfx_sampler_dpp,
             "alpha": alpha_sampler_dpp,
             "schur": schur_sampler,
             "chol": chol_sampler,
+            "generic": generic_sampler,
         }
-        default = samplers["spectral"]
-        return samplers.get(method.lower(), default)
+        default = "spectral" if self.hermitian else "generic"
+        return samplers.get(method.lower(), samplers[default])
 
     def sample_exact_k_dpp(self, size, method="spectral", random_state=None, **params):
         """Sample exactly from :math:`\\operatorname{k-DPP}`. A priori the :class:`FiniteDPP <FiniteDPP>` object was instanciated by its likelihood :math:`\\mathbf{L}` kernel so that

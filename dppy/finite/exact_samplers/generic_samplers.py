@@ -3,22 +3,22 @@ import numpy as np
 from dppy.utils import check_random_state
 
 
-def generic_correlation_kernel_sampler(dpp, random_state=None, **params):
+def generic_sampler(dpp, random_state=None, **params):
     dpp.compute_K()
-    sampler = select_generic_correlation_kernel_sampler(params.get("mode"))
+    mode = params.get("mode", "")
+    sampler = select_generic_sampler(mode)
     return sampler(dpp.K, random_state=random_state, **params)
 
 
-# todo change name Chol to LU or Poulson (in docstrings too!)
-def select_generic_correlation_kernel_sampler(name):
+def select_generic_sampler(mode):
     samplers = {
-        "chol": generic_correlation_kernel_sampler_Poulson,
+        "lu": generic_correlation_kernel_sampler_lu,
     }
-    default = samplers["chol"]
-    return samplers.get(name.lower(), default)
+    default = samplers["lu"]
+    return samplers.get(mode.lower(), default)
 
 
-def generic_correlation_kernel_sampler_Poulson(K, random_state=None, **params):
+def generic_correlation_kernel_sampler_lu(K, random_state=None, **params):
     r"""Generate an exact sample from generic :math:`\operatorname{DPP}(\mathbf{K})` with potentially non hermitian correlation kernel :math:`\mathbf{K}` based on LU factorization procedure.
 
     :param K:
