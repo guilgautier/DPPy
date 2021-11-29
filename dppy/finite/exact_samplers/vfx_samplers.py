@@ -30,7 +30,7 @@ from collections import namedtuple
 import numpy as np
 from scipy.optimize import brentq
 
-from dppy.bless import bless, bless_size, reduce_lambda
+from dppy.finite.bless import bless, bless_size, reduce_lambda
 from dppy.utils import (
     check_random_state,
     evaluate_L_diagonal,
@@ -48,7 +48,7 @@ def estimate_rls_from_embedded_points(
     eigvec, eigvals, B_bar_T, diag_L, diag_L_hat, alpha_star
 ):
     """Given embedded points, and a decomposition of embedded covariance matrix, estimate RLS.
-    Note that this is a different estimator than the one used in BLESS (i.e. :func:`dppy.bless.estimate_rls_bless`),
+    Note that this is a different estimator than the one used in BLESS (i.e. :func:`dppy.finite.bless.estimate_rls_bless`),
     which we use here for efficiency because we can recycle already embedded points and eigen-decomposition.
 
     :param array_like eigvec: eigenvectors of I_A_mm = B_bar_T*B_bar_T.T + lam I, see :func:`vfx_sampling_precompute_constants`

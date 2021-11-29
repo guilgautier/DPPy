@@ -9,7 +9,12 @@ import unittest
 import numpy as np
 import numpy.linalg as la
 
-from dppy.bless import CentersDictionary, bless, estimate_rls_bless, reduce_lambda
+from dppy.finite.bless import (
+    CentersDictionary,
+    bless,
+    estimate_rls_bless,
+    reduce_lambda,
+)
 from dppy.utils import (
     check_random_state,
     evaluate_L_diagonal,
