@@ -6,19 +6,16 @@
 
 
 import unittest
-
-import numpy as np
 from itertools import combinations
 
-import sys
-sys.path.append('..')
+import numpy as np
 
-from dppy.exact_sampling import elementary_symmetric_polynomials as e_k
+from dppy.utils import elementary_symmetric_polynomials as e_k
 
 
 class TestElementarySymmetricPolynomials(unittest.TestCase):
-    """ Test the recursive evaluations of the elementary symmetric polynomials used for sampling k-DPPs :ref:`finite_dpps_exact_sampling_k_dpps`
-    """
+    """Test the recursive evaluations of the elementary symmetric polynomials used for sampling k-DPPs :ref:`finite_dpps_exact_sampling_k_dpps`"""
+
     def test_elementary_symmetric_polynomials(self):
         """
         .. math::
@@ -37,8 +34,9 @@ class TestElementarySymmetricPolynomials(unittest.TestCase):
 
             for n in range(1, N + 1):
 
-                E[k, n] = np.sum([np.prod(lmbda_s)
-                                  for lmbda_s in combinations(lmbda[:n], k)])
+                E[k, n] = np.sum(
+                    [np.prod(lmbda_s) for lmbda_s in combinations(lmbda[:n], k)]
+                )
 
         self.assertTrue(np.allclose(E, e_k(lmbda, N)))
 
@@ -48,5 +46,5 @@ def main():
     unittest.main()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

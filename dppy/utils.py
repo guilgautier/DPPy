@@ -1,9 +1,10 @@
 from string import ascii_lowercase
+
 import numpy as np
 from numpy.linalg import det, matrix_rank
 
 
-def check_random_state(seed):
+def check_random_state(seed: object) -> np.random.RandomState:
     """Turn seed into a np.random.RandomState instance
     Parameters
     ----------
@@ -12,6 +13,10 @@ def check_random_state(seed):
         If seed is an int, return a new RandomState instance seeded with seed.
         If seed is already a RandomState instance, return it.
         Otherwise raise ValueError.
+
+    Returns
+    -------
+    np.random.RandomState
 
     .. seealso::
 
@@ -23,12 +28,38 @@ def check_random_state(seed):
         return np.random.RandomState(seed)
     if isinstance(seed, np.random.RandomState):
         return seed
-    raise ValueError('%r cannot be used to seed a numpy.random.RandomState'
-                     ' instance' % seed)
+    raise ValueError(
+        "%r cannot be used to seed a numpy.random.RandomState" " instance" % seed
+    )
+
+
+def uniform_permutation(n, random_state=None):
+    r"""Draw a permutation :math:`\sigma \in \mathfrak{S}_n` uniformly at random using ``numpy.xxx.permutation(n)``.
+
+    .. seealso::
+
+        - `Fisher–Yates <https://en.wikipedia.org/wiki/Fisher%E2%80%93Yates_shuffle>_ algorithm.
+    """
+    rng = check_random_state(random_state)
+    sigma = rng.permutation(n)
+    return sigma
+
+    # sigma = np.arange(n)
+    # for i in range(n - 1, 0, -1):  # reversed(range(1, n))
+    #     j = rng.randint(0, i + 1)
+    #     if j == i:
+    #         continue
+    #     sigma[j], sigma[i] = sigma[i], sigma[j]
+
+    # for i in range(n - 1):
+    #     j = rng.randint(i, n)
+    #     sigma[j], sigma[i] = sigma[i], sigma[j]
+
+    # return sigma
 
 
 def inner1d(arr1, arr2=None, axis=0):
-    """ Efficient equivalent to ``(arr1**2).sum(axis)`` or ``(arr1*arr2).sum(axis)`` for ``arr1.shape == arr2.shape``.
+    """Efficient equivalent to ``(arr1**2).sum(axis)`` or ``(arr1*arr2).sum(axis)`` for ``arr1.shape == arr2.shape``.
     Expected to be used with arrays of same shape and mainly with 1D or 2D arrays but works for upto 26D arrays...
 
     If ``arr1.shape == arr2.shape``, then ``inner1d(arr1, arr2, arr1.ndim)`` replaces ``numpy.core.umath_tests.inner1d(arr1, arr2)``
@@ -61,7 +92,7 @@ def inner1d(arr1, arr2=None, axis=0):
 
     ndim = arr1.ndim
     sym = ascii_lowercase[:ndim]
-    subscripts = sym + ',' + sym + '->' + sym.replace(sym[axis], '')
+    subscripts = sym + "," + sym + "->" + sym.replace(sym[axis], "")
 
     if arr2 is None:
         return np.einsum(subscripts, arr1, arr1)
@@ -70,7 +101,7 @@ def inner1d(arr1, arr2=None, axis=0):
 
 
 def det_ST(array, S, T=None):
-    """ Compute :math:`\\det M_{S, T} = \\det [M_{ij}]_{i\\inS, j\\in T}`
+    """Compute :math:`\\det M_{S, T} = \\det [M_{ij}]_{i\\inS, j\\in T}`
 
     :param array:
         Matrix
@@ -110,7 +141,7 @@ def is_square(array):
     if len(shape) == 2 and len(set(shape)) == 1:
         return array
     else:
-        raise ValueError('array not 2D square: shape={}'.format(shape))
+        raise ValueError("array not 2D square: shape={}".format(shape))
 
 
 def is_symmetric(array):
@@ -126,7 +157,7 @@ def is_symmetric(array):
     if np.allclose(M.T, M):
         return array
     else:
-        raise ValueError('array not symmetric: M.T != M')
+        raise ValueError("array not symmetric: M.T != M")
 
 
 def is_projection(array, col_idx=None):
@@ -146,7 +177,7 @@ def is_projection(array, col_idx=None):
     if np.allclose(inner1d(M_j), Mjj):
         return array
     else:
-        raise ValueError('array not seem to be a projection: M^2 != M')
+        raise ValueError("array not seem to be a projection: M^2 != M")
 
 
 def is_orthonormal_columns(array, col_idx=None):
@@ -163,7 +194,7 @@ def is_orthonormal_columns(array, col_idx=None):
     if np.allclose(U.T.dot(U), np.eye(len(col_idx))):
         return array
     else:
-        raise ValueError('array does not seem orthonormal: M.T M != I')
+        raise ValueError("array does not seem orthonormal: M.T M != I")
 
 
 def is_equal_to_O_or_1(array, tol=1e-8):
@@ -179,29 +210,29 @@ def is_equal_to_O_or_1(array, tol=1e-8):
     if np.all(equal_0_or_1):
         return array
     else:
-        raise ValueError('array with entries not all in {0,1}')
+        raise ValueError("array with entries not all in {0,1}")
 
 
-def is_in_01(array, tol=1e-8):
+def check_in_01(array, tol=1e-8):
     """Check if entries are **all** in :math:`[0, 1]`, for a given tolerance"""
 
     if array is None:
-        return None
-    elif np.all((-tol <= array) & (array <= 1.0 + tol)):
-        return array
-    else:
-        raise ValueError('array with entries not all in [0,1]')
+        return
+    if np.all((-tol <= array) & (array <= 1.0 + tol)):
+        return
+
+    raise ValueError("array with entries not all in [0,1]")
 
 
-def is_geq_0(array, tol=1e-8):
+def check_geq_0(array, tol=1e-8):
     """Check if entries are **all** :math:`\\geq0`, for a given tolerance"""
 
     if array is None:
-        return None
-    elif np.all(array >= -tol):
-        return array
-    else:
-        raise ValueError('array with entries not all >= 0')
+        return
+    if np.all(array >= -tol):
+        return
+
+    raise ValueError("array with entries not all >= 0")
 
 
 def is_full_row_rank(array):
@@ -211,38 +242,58 @@ def is_full_row_rank(array):
         return None
 
     d, N = array.shape
-    err_print = 'array (size = dxN) is not full row rank'
+    err_print = "array (size = dxN) is not full row rank"
 
     if d > N:
-        raise ValueError(err_print + 'd(={}) > N(={})'.format(d, N))
+        raise ValueError(err_print + "d(={}) > N(={})".format(d, N))
     else:
         rank = matrix_rank(array)
         if rank == d:
             return array
         else:
-            raise ValueError(err_print + 'd(={}) != rank(={})'.format(d, rank))
+            raise ValueError(err_print + "d(={}) != rank(={})".format(d, rank))
 
 
-def stable_invert_root(eigenvec, eigenval):
-    """ Given eigendecomposition of a PSD matrix, compute a representation of the pseudo-inverse square root
-    of the matrix using numerically stable operations. In particular, eigenvalues which are near-zero
-    and the associated eigenvectors are dropped from the pseudo-inverse.
-    """
+def stable_filter(eigenvec, eigenval):
+    """Given eigendecomposition of a PSD matrix, compute a reduced (thin) version containing only stable eigenvalues."""
     n = eigenvec.shape[0]
 
     if eigenvec.shape != (n, n) or eigenval.shape != (n,):
-        raise ValueError('array sizes of {} eigenvectors and {} eigenvalues do not match'.format(eigenvec.shape, eigenval.shape))
+        raise ValueError(
+            "array sizes of {} eigenvectors and {} eigenvalues do not match".format(
+                eigenvec.shape, eigenval.shape
+            )
+        )
 
     # threshold formula taken from pinv2's implementation of numpy/scipy
-    thresh = eigenval.max() * max(eigenval.shape) * np.finfo(eigenval.dtype).eps
-    stable_eig = np.logical_not(np.isclose(eigenval, 0., atol=thresh))
-    m = sum(stable_eig)
+    thresh = np.abs(eigenval).max() * max(eigenval.shape) * np.finfo(eigenval.dtype).eps
+    stable_eig = np.logical_not(np.isclose(eigenval, 0.0, atol=thresh))
 
+    if np.any(eigenval <= -thresh):
+        raise ValueError(
+            "Some eigenvalues of a PSD matrix are negative, this should never happen. "
+            "Minimum eig: {}".format(np.min(eigenval))
+        )
+
+    m = sum(stable_eig)
     eigenvec_thin = eigenvec[:, stable_eig]
     eigenval_thin = eigenval[stable_eig]
-
     if eigenvec_thin.shape != (n, m) or eigenval_thin.shape != (m,):
-        raise ValueError('array sizes of {} eigenvectors and {} eigenvalues do not match'.format(eigenvec.shape, eigenval.shape))
+        raise ValueError(
+            "array sizes of {} eigenvectors and {} eigenvalues do not match".format(
+                eigenvec.shape, eigenval.shape
+            )
+        )
+
+    return eigenvec_thin, eigenval_thin
+
+
+def stable_invert_root(eigenvec, eigenval):
+    """Given eigendecomposition of a PSD matrix, compute a representation of the pseudo-inverse square root
+    of the matrix using numerically stable operations. In particular, eigenvalues which are near-zero
+    and the associated eigenvectors are dropped from the pseudo-inverse.
+    """
+    eigenvec_thin, eigenval_thin = stable_filter(eigenvec, eigenval)
 
     eigenval_thin_inv_root = (1 / np.sqrt(eigenval_thin)).reshape(-1, 1)
 
@@ -251,6 +302,7 @@ def stable_invert_root(eigenvec, eigenval):
 
 def get_progress_bar(total=-1, disable=False, **kwargs):
     """Helper function to get a tqdm progress bar (or a simple fallback otherwise)"""
+
     class ProgBar(object):
         def __init__(self, total=-1, disable=False, **kwargs):
             self.disable = disable
@@ -282,13 +334,14 @@ def get_progress_bar(total=-1, disable=False, **kwargs):
                 if len(print_str) < 80:
                     print_str = print_str + " " * (80 - len(print_str))
 
-                print(print_str, end='\r', flush=True)
+                print(print_str, end="\r", flush=True)
 
             if self.t == self.total:
                 print("")
 
     try:
         from tqdm import tqdm
+
         progress_bar = tqdm(total=total, disable=disable)
     except ImportError:
         progress_bar = ProgBar(total=total, disable=disable)
@@ -337,5 +390,41 @@ def example_eval_L_min_kern(X, Y=None):
         Y = np.atleast_2d(Y)
         assert Y.shape[1] == 1 and np.all((0 <= Y) & (Y <= 1))
 
-    return np.minimum(np.repeat(X, Y.size, axis=1),
-                      np.repeat(Y.T, X.size, axis=0))
+    return np.minimum(np.repeat(X, Y.size, axis=1), np.repeat(Y.T, X.size, axis=0))
+
+
+def elementary_symmetric_polynomials(x, k):
+    """Evaluate the `elementary symmetric polynomials <https://en.wikipedia.org/wiki/Elementary_symmetric_polynomial>`_ :math:`[e_i(x_1, \\dots, x_m)]_{i=0, m=1}^{k, n}`.
+
+    :param x:
+        Points at which the elementary symmetric polynomials will be evaluated
+    :type x:
+        array_like
+
+    :param k:
+        Maximum degree of the elementary symmetric polynomials to be evaluated
+    :type k:
+        int
+
+    :return:
+        Matrix of size :math:`(k+1, n)` containing the evaluation of the elementary symmetric polynomials :math:`[e_i(x_1, \\dots, x_m)]_{i=0, m=1}^{k, n}`
+    :rtype:
+        array_like
+
+    .. seealso::
+
+        - :cite:`KuTa12` Algorithm 7
+        - `Wikipedia <https://en.wikipedia.org/wiki/Elementary_symmetric_polynomial>`_
+    """
+
+    # Initialize output array
+    n = x.size
+    E = np.zeros((k + 1, n + 1), dtype=float)
+    E[0, :] = 1.0
+
+    # Recursive evaluation
+    for i in range(1, k + 1):
+        for m in range(0, n):
+            E[i, m + 1] = E[i, m] + x[m] * E[i - 1, m]
+
+    return E

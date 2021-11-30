@@ -8,11 +8,35 @@ Exact sampling
 Consider a finite DPP defined by its correlation kernel :math:`\mathbf{K}` :eq:`eq:inclusion_proba_DPP_K` or likelihood kernel :math:`\mathbf{L}` :eq:`eq:likelihood_DPP_L`.
 There exist three main types of exact sampling procedures:
 
-1. The spectral method requires the eigendecomposition of the correlation kernel :math:`\mathbf{K}` or the likelihood kernel :math:`\mathbf{L}`. It is based on the fact that :ref:`generic DPPs are mixtures of projection DPPs <finite_dpps_mixture>` together with the application of the chain rule to sample projection DPPs. It is presented in Section :ref:`finite_dpps_exact_sampling_spectral_method`.
+1. The spectral method (used by default) requires the eigendecomposition of the correlation kernel :math:`\mathbf{K}` or the likelihood kernel :math:`\mathbf{L}`. It is based on the fact that :ref:`generic DPPs are mixtures of projection DPPs <finite_dpps_mixture>` together with the application of the chain rule to sample projection DPPs. It is presented in Section :ref:`finite_dpps_exact_sampling_spectral_method`.
 
-2. A Cholesky-based procedure which requires the correlation kernel :math:`\mathbf{K}` (even non-Hermitian!). It boilds down to applying the chain rule on sets; where each item in turn is decided to be excluded or included in the sample. It is presented in Section :ref:`finite_dpps_exact_sampling_cholesky_method`.
+2. A Cholesky-based procedure which requires the correlation kernel :math:`\mathbf{K}` (even non-Hermitian!). It boils down to applying the chain rule on sets; where each item in turn is decided to be excluded or included in the sample. It is presented in Section :ref:`finite_dpps_exact_sampling_cholesky_method`.
 
-3. Recently, :cite:`DeCaVa19` have also proposed an alternative method to get exact samples: first sample an intermediate distribution and correct the bias by thinning the intermediate sample using a carefully designed DPP. It is presented in Section :ref:`finite_dpps_exact_sampling_intermediate_sampling_method`.
+3. Recently, :cite:`DeCaVa19` have also proposed an alternative method to get exact samples: first sample an intermediate distribution and correct the bias by thinning the intermediate sample using a carefully designed DPP. This approach does not require a Cholesky/Eigen-decomposition of the DPP, but the runtime instead scale with the expected sample size of the DPP (see :ref:`finite_dpps_number_of_points`). It is presented in Section :ref:`finite_dpps_exact_sampling_intermediate_sampling_method`. A more refined procedure based on this approach was introduced in :cite:`CaDeVa20` for k-DPP sampling.
+
+In general, for small :math:`N` (i.e. less than 1000) spectral or cholesky samplers
+are recommended for numerical stability. For larger :math:`N` (i.e. up to millions)
+and moderate :math:`k` (i.e. in the hundreds) intermediate sampling is recommended for scalability.
+
+The following table summarizes the complexity of all exact samplers currently available,
+where the expected sample size :math:`\mathbb{E}[|X|]` is equal to :math:`k` for k-DPPs
+and :math:`d_{\text{eff}}` for random-sized DPPs.
+
++-----------------------+--------------+--------------------------------------+--------------------------------------+--------------------------------------+--------------------------------------+------------------------------------------------------------------------------+
+|                       | ``mode=``    | Time to first sample                                                        |Time to subsequent samples                                                   | Notes                                                                        |
++                       +              +--------------------------------------+--------------------------------------+--------------------------------------+--------------------------------------+                                                                              +
+|                       |              | DPP                                  |  k-DPP                               | DPP                                  |  k-DPP                               |                                                                              |
++=======================+==============+======================================+======================================+======================================+======================================+==============================================================================+
+| Spectral sampler      |``"GS"``,     | :math:`O(N^3)`                       |:math:`O(N^3)`                        |:math:`O(N d_{\text{eff}}^2)`         |:math:`O(N k^2)`                      | The three variants differ slightly,                                          |
+|                       |``"GS_bis"``, |                                      |                                      |                                      |                                      | and depending on the DPP they can                                            |
+|                       |``"KuTa12"``  |                                      |                                      |                                      |                                      | have different numerical stability.                                          |
++-----------------------+--------------+--------------------------------------+--------------------------------------+--------------------------------------+--------------------------------------+------------------------------------------------------------------------------+
+| Cholesky sampler      | ``"chol"``   | :math:`O(N^3)`                       |:math:`O(N^3)`                        |:math:`O(N^3)`                        |:math:`O(N^3)`                        | Also works for non-Hermitian DPPs.                                           |
++-----------------------+--------------+--------------------------------------+--------------------------------------+--------------------------------------+--------------------------------------+------------------------------------------------------------------------------+
+| Intermediate sampler  | ``"vfx"``    | :math:`O(N d_{\text{eff}}^6)`        |:math:`O(N k^{10} + k^{15})`          |:math:`O(d_{\text{eff}}^6)`           |:math:`O(k^6)`                        | For ``"alpha"`` we report worst case runtime, but depending on the DPP       |
++                       +--------------+--------------------------------------+--------------------------------------+--------------------------------------+--------------------------------------+ structure best case runtime can be much faster than ``"vfx"``. For           |
+|                       | ``"alpha"``  | :math:`O(N d_{\text{eff}}^5)`        |:math:`O(N k^6/d_{\text{eff}} + k^9)` |:math:`O(d_{\text{eff}}^6)`           |:math:`O(k^6)`                        | particularly ill-posed DPPs ``"vfx"`` can be more numerically stable.        |
++-----------------------+--------------+--------------------------------------+--------------------------------------+--------------------------------------+--------------------------------------+------------------------------------------------------------------------------+
 
 .. note::
 
@@ -109,48 +133,47 @@ Geometrical interpretation
 	Since :math:`\mathbf{K}` is an **orthogonal projection** matrix,
 	the following Gram factorizations provide an insightful geometrical interpretation of the chain rule mechanism :eq:`eq:chain_rule_K`:
 
-	1. Using :math:`\mathbf{K} = \mathbf{K}^2`
-	and :math:`\mathbf{K}^{\dagger}=\mathbf{K}`, we have :math:`\mathbf{K} = \mathbf{K} \mathbf{K}^{\dagger}`, so that the chain rule :eq:`eq:chain_rule_K` becomes
+	1. Using :math:`\mathbf{K} = \mathbf{K}^2` and :math:`\mathbf{K}^{\dagger}=\mathbf{K}`, we have :math:`\mathbf{K} = \mathbf{K} \mathbf{K}^{\dagger}`, so that the chain rule :eq:`eq:chain_rule_K` becomes
 
-	.. math::
-		:label: eq:chain_rule_dist2_K
+		.. math::
+			:label: eq:chain_rule_dist2_K
 
-		\mathbb{P}[(s_1, \dots, s_r)]
-		&=	\frac{1}{r!}
-			\operatorname{Volume}^2(
-			\mathbf{K}_{s_{1},:}, \dots, \mathbf{K}_{s_{r},:}
-			)\\
-		&=	\dfrac{\left\| \mathbf{K}_{s_1,:} \right\|^2}{r}
-			\prod_{i=2}^{r}
-			\dfrac{
-				\operatorname{distance}^2
-				(\mathbf{K}_{s_{i},:},
-				\operatorname{Span}
-					\left\{
-					\mathbf{K}_{s_{1},:}, \dots, \mathbf{K}_{s_{i-1},:}
-					\right\}
-			}{r-(i-1)}.
+			\mathbb{P}[(s_1, \dots, s_r)]
+			&=	\frac{1}{r!}
+				\operatorname{Volume}^2(
+				\mathbf{K}_{s_{1},:}, \dots, \mathbf{K}_{s_{r},:}
+				)\\
+			&=	\dfrac{\left\| \mathbf{K}_{s_1,:} \right\|^2}{r}
+				\prod_{i=2}^{r}
+				\dfrac{
+					\operatorname{distance}^2
+					(\mathbf{K}_{s_{i},:},
+					\operatorname{Span}
+						\left\{
+						\mathbf{K}_{s_{1},:}, \dots, \mathbf{K}_{s_{i-1},:}
+						\right\}
+				}{r-(i-1)}.
 
 	2. Using the eigendecomposition, we can write :math:`\mathbf{K} = U U^{\dagger}` where :math:`U^{\dagger} U = I_r`, so that the chain rule :eq:`eq:chain_rule_K` becomes
 
-	.. math::
-		:label: eq:chain_rule_dist2_U
+		.. math::
+			:label: eq:chain_rule_dist2_U
 
-		\mathbb{P}[(s_1, \dots, s_r)]
-		&=	\frac{1}{r!}
-			\operatorname{Volume}^2(
-			U_{s_{1},:}, \dots, U_{s_{r},:}
-			)\\
-		&= \dfrac{\left\| U_{s_1,:} \right\|^2}{r}
-			\prod_{i=2}^{r}
-			\dfrac{
-				\operatorname{distance}^2
-				(U_{s_{i},:},
-				\operatorname{Span}
-					\left\{
-					U_{s_{1},:}, \dots, U_{s_{i-1},:}
-					\right\}
-			}{r-(i-1)}.
+			\mathbb{P}[(s_1, \dots, s_r)]
+			&=	\frac{1}{r!}
+				\operatorname{Volume}^2(
+				U_{s_{1},:}, \dots, U_{s_{r},:}
+				)\\
+			&= \dfrac{\left\| U_{s_1,:} \right\|^2}{r}
+				\prod_{i=2}^{r}
+				\dfrac{
+					\operatorname{distance}^2
+					(U_{s_{i},:},
+					\operatorname{Span}
+						\left\{
+						U_{s_{1},:}, \dots, U_{s_{i-1},:}
+						\right\}
+				}{r-(i-1)}.
 
 	In other words, the chain rule formulated as :eq:`eq:chain_rule_dist2_K` and :eq:`eq:chain_rule_dist2_U` is akin to do Gram-Schmidt orthogonalization of the *feature vectors* :math:`\mathbf{K}_{i,:}` or :math:`\mathbf{U}_{i,:}`.
 	These formulations can also be understood as an application of the base :math:`\times` height formula.
@@ -177,7 +200,7 @@ The cost of getting one sample from a **projection** DPP is of order :math:`\mat
 
 		import numpy as np
 		from scipy.linalg import qr
-		from dppy.finite_dpps import FiniteDPP
+		from dppy.finite.dpp import FiniteDPP
 
 		seed = 0
 		rng = np.random.RandomState(seed)
@@ -222,7 +245,7 @@ The cost of getting one sample from a **projection** DPP is of order :math:`\mat
 
 		import numpy as np
 		from scipy.linalg import qr
-		from dppy.finite_dpps import FiniteDPP
+		from dppy.finite.dpp import FiniteDPP
 
 		seed = 0
 		rng = np.random.RandomState(seed)
@@ -308,7 +331,7 @@ In practice
 
 		from numpy.random import RandomState
 		from scipy.linalg import qr
-		from dppy.finite_dpps import FiniteDPP
+		from dppy.finite.dpp import FiniteDPP
 
 		rng = RandomState(0)
 
@@ -347,7 +370,7 @@ In practice
 
 		from numpy.random import RandomState
 		from scipy.linalg import qr
-		from dppy.finite_dpps import FiniteDPP
+		from dppy.finite.dpp import FiniteDPP
 
 		rng = RandomState(0)
 
@@ -393,7 +416,7 @@ In practice
 
 		from numpy.random import RandomState
 		from scipy.linalg import qr
-		from dppy.finite_dpps import FiniteDPP
+		from dppy.finite.dpp import FiniteDPP
 
 		rng = RandomState(0)
 
@@ -424,7 +447,8 @@ Main idea
 =========
 
 This method requires access to the correlation kernel :math:`\mathbf{K}` to perform a bottom-up chain rule on sets: starting from the empty set, each item in turn is decided to be added or excluded from the sample.
-This can be summarized as the exploration of the binary probability tree displayed in :numref:`fig:cholesky_chain_rule_sets`.
+This can be summarized as the exploration of the bin
+ary probability tree displayed in `this Figure <fig:cholesky_chain_rule_sets>`.
 
 .. figure:: ../_images/cholesky_chain_rule_sets.png
    :width: 80%
@@ -507,30 +531,30 @@ In practice
 
 		return sample, A
 
-.. testcode::
+	.. testcode::
 
-	from numpy.random import RandomState
-	from scipy.linalg import qr
-	from dppy.finite_dpps import FiniteDPP
+		from numpy.random import RandomState
+		from scipy.linalg import qr
+		from dppy.finite.dpp import FiniteDPP
 
-	rng = RandomState(1)
+		rng = RandomState(1)
 
-	r, N = 4, 10
-	eig_vals = rng.rand(r)
-	eig_vecs, _ = qr(rng.randn(N, r), mode='economic')
+		r, N = 4, 10
+		eig_vals = rng.rand(r)
+		eig_vecs, _ = qr(rng.randn(N, r), mode='economic')
 
-	DPP = FiniteDPP(kernel_type='correlation',
-					projection=False,
-					**{'K': (eig_vecs*eig_vals).dot(eig_vecs.T)})
+		DPP = FiniteDPP(kernel_type='correlation',
+						projection=False,
+						**{'K': (eig_vecs*eig_vals).dot(eig_vecs.T)})
 
-	for _ in range(10):
-		DPP.sample_exact(mode='Chol', random_state=rng)
+		for _ in range(10):
+			DPP.sample_exact(mode='Chol', random_state=rng)
 
-	print(DPP.list_of_samples)
+		print(DPP.list_of_samples)
 
-.. testoutput::
+	.. testoutput::
 
-	[[2, 9], [0], [2], [6], [4, 9], [2, 7, 9], [0], [1, 9], [0, 1, 2], [2]]
+		[[2, 9], [0], [2], [6], [4, 9], [2, 7, 9], [0], [1, 9], [0, 1, 2], [2]]
 
 .. seealso::
 
@@ -551,7 +575,7 @@ This method is based on the concept of a **distortion-free intermediate sample**
 
 	\mathbb{P}[i \in \mathcal{X}] = \big[\mathbf{L}(I + \mathbf{L})^{-1}\big]_{ii}=\tau_i,\quad i\text{th 1-ridge leverage score}.
 
-Suppose that we draw a sample of :math:`t` points i.i.d. proportional to ridge leverage scores, i.e., :math:`\sigma=(\sigma_1, \sigma_2,...,\sigma_t)` such that :math:`\mathbb{P}[\sigma_j=i]\propto\tau_i`. Intuitively, this sample is similar fo :math:`\mathcal{X}\sim \operatorname{DPP}(\mathbf{L})` except that it "ignores" all the dependencies between the points. However, if we sample sufficiently many points i.i.d. according to RLS, then a proper sample :math:`\mathcal{X}` will likely be contained within it. This can be formally shown for :math:`t = O(\mathbb{E}[|\mathcal{X}|]^2)`. When :math:`\mathbb{E}[|\mathcal{X}|]^2\ll N`, then this allows us to reduce the size of the DPP kernel :math:`\mathbf{L}` from :math:`N\times N` to a much smaller size :math:`\mathbf{\tilde{L}}` :math:`t\times t`. Making this sampling exact requires considerably more care, because even with a large :math:`t` there is always a small probability that the i.i.d. sample :math:`\sigma` is not sufficiently diverse. We guard against this possibility by rejection sampling.
+Suppose that we draw a sample :math:`\sigma` of :math:`t` points i.i.d. proportional to ridge leverage scores, i.e., :math:`\sigma=(\sigma_1, \sigma_2,...,\sigma_t)` such that :math:`\mathbb{P}[\sigma_j=i]\propto\tau_i`. Intuitively, this sample is similar fo :math:`\mathcal{X}\sim \operatorname{DPP}(\mathbf{L})` because the marginals are the same, but it "ignores" all the dependencies between the points. However, if we sample sufficiently many points i.i.d. according to RLS, then a proper sample :math:`\mathcal{X}` will likely be contained within :math:`\sigma`. This can be formally shown for :math:`t = O(\mathbb{E}[|\mathcal{X}|]^2)`. When :math:`\mathbb{E}[|\mathcal{X}|]^2\ll N`, then this allows us to reduce the size of the DPP kernel :math:`\mathbf{L}` from :math:`N\times N` to a much smaller size :math:`\mathbf{\tilde{L}}` :math:`t\times t`. Making this sampling exact requires considerably more care, because even with a large :math:`t` there is always a small probability that the i.i.d. sample :math:`\sigma` is not sufficiently diverse. We guard against this possibility by rejection sampling.
 
 .. important::
    Use this method for sampling  :math:`\mathcal{X} \sim \operatorname{DPP}(\mathbf{L})` when :math:`\mathbb{E}\left[|\mathcal{X}|\right]\ll\sqrt{N}`.
@@ -559,24 +583,27 @@ Suppose that we draw a sample of :math:`t` points i.i.d. proportional to ridge l
    - Preprocessing costs :math:`\mathcal{O}\big(N\cdot \text{poly}(\mathbb{E}\left[|\mathcal{X}|\right])\, \text{polylog}(N)\big)`.
    - Each sample costs :math:`\mathcal{O}\big(\mathbb{E}[|\mathcal{X}|]^6\big)`.
 
+   There are two implementations of intermediate sampling available in :code:`dppy`: the :code:`mode='vfx'` sampler and the :code:`mode='alpha'` sampler.
+
 In practice
 ===========
 
 .. testcode::
 
     from numpy.random import RandomState
-    from dppy.finite_dpps import FiniteDPP
+    from dppy.finite.dpp import FiniteDPP
     from dppy.utils import example_eval_L_linear
 
     rng = RandomState(1)
 
     r, N = 4, 10
 
-    DPP = FiniteDPP('likelihood',
-            **{'L_eval_X_data': (example_eval_L_linear, rng.randn(N, r))})
+    DPP = FiniteDPP(
+        "likelihood", **{"L_eval_X_data": (example_eval_L_linear, rng.randn(N, r))}
+    )
 
     for _ in range(10):
-        DPP.sample_exact(mode='vfx', random_state=rng, verbose=False)
+        DPP.sample_exact(mode="vfx", random_state=rng, verbose=False)
 
     print(DPP.list_of_samples)
 
@@ -600,19 +627,17 @@ Given, the RLS :math:`\tau_1,\dots,\tau_N`, the normalization constant :math:`\d
 
 It can be shown that :math:`\mathcal{X}` is distributed exactly according to :math:`\operatorname{DPP}(\mathbf{L})` and the expected number of rejections is a small constant. The intermediate likelihood kernel :math:`\tilde{\mathbf L}_\sigma` forms a :math:`t\times t` DPP subproblem that can be solved using any other DPP sampler.
 
-   - Since the size of the intermediate sample is :math:`t=\mathcal{O}(\mathbb{E}[\mathcal{X}]^2)`, the primary cost of the sampling is computing :math:`\det(I+\tilde{\mathbf L}_\sigma)` which takes :math:`\mathcal{O}(t^3)=\mathcal{O}(\mathbb{E}[\mathcal{X}]^6)` time. This is also the expected cost of sampling from :math:`\operatorname{DPP}(\tilde{\mathbf{L}}_{\sigma})` if we use, for example, the spectral method.
-   - The algorithm requires precomputing the RLS :math:`\tau_1,\dots,\tau_n` and :math:`\det(I+\mathbf L)`. Computing them exactly takes :math:`\mathcal{O}(N^3)`, however, surprisingly, if we use sufficiently accurate approximations then the exactness of the sampling can be retained (details in :cite:`DeCaVa19`). Efficient methods for approximating leverage scores (see :cite:`RuCaCaRo18`) bring the precomputing cost down to :math:`\mathcal{O}(N \text{poly}(\mathbb{E}\left[|\mathcal{X}|\right]) \text{polylog}(N))`.
-   - When :math:`\mathbb{E}[|\mathcal{X}|]` is sufficiently small, the entire sampling procedure only looks at a small fraction of the entries of :math:`\mathbf{L}`. This makes the method useful when we want to avoid constructing the entire likelihood kernel.
-   - When the likelihood kernel is given implicitly via a matrix :math:`\mathbf{X}` such that :math:`\mathbf{L}=\mathbf{X}\mathbf{X}^\top` (dual formulation) then a version of this method is given by :cite:`Dere19`
-   - A variant of this method also exists for projection DPPs :cite:`DeWaHs18`
-
+	- Since the size of the intermediate sample is :math:`t=\mathcal{O}(\mathbb{E}[\mathcal{X}]^2)`, the primary cost of the sampling is computing :math:`\det(I+\tilde{\mathbf L}_\sigma)` which takes :math:`\mathcal{O}(t^3)=\mathcal{O}(\mathbb{E}[\mathcal{X}]^6)` time. This is also the expected cost of sampling from :math:`\operatorname{DPP}(\tilde{\mathbf{L}}_{\sigma})` if we use, for example, the spectral method.
+	- The algorithm requires precomputing the RLS :math:`\tau_1,\dots,\tau_n` and :math:`\det(I+\mathbf L)`. Computing them exactly takes :math:`\mathcal{O}(N^3)`, however, surprisingly, if we use sufficiently accurate approximations then the exactness of the sampling can be retained (details in :cite:`DeCaVa19`). Efficient methods for approximating leverage scores (see :cite:`RuCaCaRo18`) bring the precomputing cost down to :math:`\mathcal{O}(N \text{poly}(\mathbb{E}\left[|\mathcal{X}|\right]) \text{polylog}(N))`.
+	- When :math:`\mathbb{E}[|\mathcal{X}|]` is sufficiently small, the entire sampling procedure only looks at a small fraction of the entries of :math:`\mathbf{L}`. This makes the method useful when we want to avoid constructing the entire likelihood kernel.
+	- When the likelihood kernel is given implicitly via a matrix :math:`\mathbf{X}` such that :math:`\mathbf{L}=\mathbf{X}\mathbf{X}^\top` (dual formulation) then a version of this method is given by :cite:`Dere19`
+	- A variant of this method also exists for projection DPPs :cite:`DeWaHs18`
 
 .. seealso::
 
 	- :cite:`DeCaVa19` (Likelihood kernel)
 	- :cite:`Dere19` (Dual formulation)
 	- :cite:`DeWaHs18` (Projection DPP)
-
 
 .. _finite_dpps_exact_sampling_k_dpps:
 
@@ -642,22 +667,19 @@ Sampling :math:`k\!\operatorname{-DPP}(\mathbf{L})` from :math:`\mathbf{L} \succ
 
 	**Step** :ref:`1. <finite_dpps_exact_sampling_spectral_method_step_1>` is replaced by Algorithm 8 of :cite:`KuTa12` which we illustrate with the following pseudo-code
 
-		.. code-block:: python
+	.. code-block:: python
 
-			# Algorithm 8 of Kulesza Taskar (2012).
-			# This is a pseudo-code of in particular Python indexing is not respected everywhere
+		# Algorithm 8 of Kulesza Taskar (2012).
+		# This is a pseudo-code of in particular Python indexing is not respected everywhere
 
-			B = set({})
-			l = k
-
-			for n in range(N, 0, -1):
-
-			  if Unif(0,1) < gamma[n] * E[l-1, n-1] / E[l, n]:
-			    l -= 1
-			    B.union({n})
-
-			    if l == 0:
-			      break
+		B = set({})
+		l = k
+		for n in range(N, 0, -1):
+			if Unif(0,1) < gamma[n] * E[l-1, n-1] / E[l, n]:
+				l -= 1
+				B.union({n})
+			if l == 0:
+				break
 
 	**Step** :ref:`2. <finite_dpps_exact_sampling_spectral_method_step_2>` is adapted to: sample from the **projection** DPP with correlation kernel defined by its eigenvectors :math:`V_{:,\mathcal{B}}`, with a cost of order :math:`\mathcal{O}(N k^2)`.
 
@@ -666,27 +688,27 @@ Sampling :math:`k\!\operatorname{-DPP}(\mathbf{L})` from :math:`\mathbf{L} \succ
 	Step 0. must be performed once and for all in :math:`\mathcal{O}(N^3 + Nk)`.
 	Then the cost of getting one sample by applying Steps 1. and 2. is :math:`\mathcal{O}(N k^2)`.
 
-.. testcode::
+	.. testcode::
 
-	import numpy as np
-	from dppy.finite_dpps import FiniteDPP
+		import numpy as np
+		from dppy.finite.dpp import FiniteDPP
 
-	rng = np.random.RandomState(1)
+		rng = np.random.RandomState(1)
 
-	r, N = 5, 10
-	# Random feature vectors
-	Phi = rng.randn(r, N)
-	DPP = FiniteDPP('likelihood', **{'L': Phi.T.dot(Phi)})
+		r, N = 5, 10
+		# Random feature vectors
+		Phi = rng.randn(r, N)
+		DPP = FiniteDPP('likelihood', **{'L': Phi.T.dot(Phi)})
 
-	k = 4
-	for _ in range(10):
-	    DPP.sample_exact_k_dpp(size=k, random_state=rng)
+		k = 4
+		for _ in range(10):
+			DPP.sample_exact_k_dpp(size=k, random_state=rng)
 
-	print(DPP.list_of_samples)
+		print(DPP.list_of_samples)
 
-.. testoutput::
+	.. testoutput::
 
-	[[1, 8, 5, 7], [3, 8, 5, 9], [5, 3, 1, 8], [5, 8, 2, 9], [1, 2, 9, 6], [1, 0, 2, 3], [7, 0, 3, 5], [8, 3, 7, 6], [0, 2, 3, 7], [1, 3, 7, 5]]
+		[[1, 8, 5, 7], [3, 8, 5, 9], [5, 3, 1, 8], [5, 8, 2, 9], [1, 2, 9, 6], [1, 0, 2, 3], [7, 0, 3, 5], [8, 3, 7, 6], [0, 2, 3, 7], [1, 3, 7, 5]]
 
 .. seealso::
 
@@ -725,24 +747,24 @@ Caution
 
 1. First keep in mind that, the ultimate goal is to draw a **subset** :math:`S=\{ s_{1}, \dots, s_{k} \} \sim k\!\operatorname{-DPP}(\mathbf{L})` with probability :eq:`eq:likelihood_kDPP_L`
 
-.. math::
-	:label: eq:caution_likelihood_kDPP_L
+	.. math::
+		:label: eq:caution_likelihood_kDPP_L
 
-	\mathbb{P}[\mathcal{X}=S]
-	= \frac{1}{e_k(\mathbf{L})} \det \mathbf{L}_S 1_{|S|=k}.
+		\mathbb{P}[\mathcal{X}=S]
+		= \frac{1}{e_k(\mathbf{L})} \det \mathbf{L}_S 1_{|S|=k}.
 
 2. Now, if we were to use the chain rule :eq:`eq:chain_rule_caution` this would correspond to sampling sequentially the items :math:`s_1, \dots, s_{k}`, so that the resulting **vector** :math:`(s_{1}, \dots, s_{k})` has probability
 
-.. math::
-	:label: eq:chain_rule_caution_vector
+	.. math::
+		:label: eq:chain_rule_caution_vector
 
-	\mathbb{Q}[(s_{1}, \dots, s_{k})]
-	&= \dfrac{\mathbf{L}_{s_1,s_1}}{Z_1}
-		\prod_{i=2}^{k}
-			\dfrac{
-				\mathbf{L}_{s_i, s_i} - \mathbf{L}_{s_i, S_{i-1}} {\mathbf{L}_{S_{i-1}}}^{-1} \mathbf{L}_{S_{i-1}, s_i}
-				}{Z_i(s_{1}, \dots, s_{i-1})}\\
-	&= \frac{1}{Z(s_{1}, \dots, s_{k})} \det \mathbf{L}_S.
+		\mathbb{Q}[(s_{1}, \dots, s_{k})]
+		&= \dfrac{\mathbf{L}_{s_1,s_1}}{Z_1}
+			\prod_{i=2}^{k}
+				\dfrac{
+					\mathbf{L}_{s_i, s_i} - \mathbf{L}_{s_i, S_{i-1}} {\mathbf{L}_{S_{i-1}}}^{-1} \mathbf{L}_{S_{i-1}, s_i}
+					}{Z_i(s_{1}, \dots, s_{i-1})}\\
+		&= \frac{1}{Z(s_{1}, \dots, s_{k})} \det \mathbf{L}_S.
 
 Contrary to :math:`Z_1=\operatorname{trace}(\mathbf{L})`, the normalizations :math:`Z_i(s_{1}, \dots, s_{i-1})` of the successive conditionals depend, *a priori*, on the order :math:`s_{1}, \dots, s_{k}` were selected. For this reason we denote the global normalization constant :math:`Z(s_{1}, \dots, s_{k})`.
 
@@ -855,79 +877,79 @@ where the last equality is a simple computation of the `elementary symmetric pol
 
 	This shows that, when :math:`\mathbf{L}` is an orthogonal projection matrix, the order the items :math:`s_1, \dots, s_r` were selected by the chain rule :eq:`eq:chain_rule_caution_vector` can be forgotten, so that :math:`\{s_1, \dots, s_r\}` can be considered as valid sample of :math:`k\!\operatorname{-DPP}(\mathbf{L})`.
 
-.. code-block:: python
+	.. code-block:: python
 
-	# For our toy example, this sub-optimized implementation is enough
-	# to illustrate that the chain rule applied to sample k-DPP(L)
-	# draws s_1, ..., s_k sequentially, with joint probability
-	# P[(s_1, ..., s_k)] = det L_S / Z(s_1, ..., s_k)
-	#
-	# 1. is exchangeable when L is an orthogonal projection matrix
-	#    P[(s1, s2)] = P[(s_2, s_1)]
-	# 2. is a priori NOT exchangeable for a generic L >= 0
-	#    P[(s1, s2)] /= P[(s_2, s_1)]
+		# For our toy example, this sub-optimized implementation is enough
+		# to illustrate that the chain rule applied to sample k-DPP(L)
+		# draws s_1, ..., s_k sequentially, with joint probability
+		# P[(s_1, ..., s_k)] = det L_S / Z(s_1, ..., s_k)
+		#
+		# 1. is exchangeable when L is an orthogonal projection matrix
+		#    P[(s1, s2)] = P[(s_2, s_1)]
+		# 2. is a priori NOT exchangeable for a generic L >= 0
+		#    P[(s1, s2)] /= P[(s_2, s_1)]
 
-	import numpy as np
-	import scipy.linalg as LA
-	from itertools import combinations, permutations
+		import numpy as np
+		import scipy.linalg as LA
+		from itertools import combinations, permutations
 
-	k, N = 2, 4
-	potential_samples = list(combinations(range(N), k))
+		k, N = 2, 4
+		potential_samples = list(combinations(range(N), k))
 
-	rank_L = 3
+		rank_L = 3
 
-	rng = np.random.RandomState(1)
+		rng = np.random.RandomState(1)
 
-	eig_vecs, _ = LA.qr(rng.randn(N, rank_L), mode='economic')
+		eig_vecs, _ = LA.qr(rng.randn(N, rank_L), mode='economic')
 
-	for projection in [True, False]:
+		for projection in [True, False]:
 
-	    eig_vals = 1.0 + (0.0 if projection else 2 * rng.rand(rank_L))
-	    L = (eig_vecs * eig_vals).dot(eig_vecs.T)
+			eig_vals = 1.0 + (0.0 if projection else 2 * rng.rand(rank_L))
+			L = (eig_vecs * eig_vals).dot(eig_vecs.T)
 
-	    proba = np.zeros((N, N))
-	    Z_1 = np.trace(L)
+			proba = np.zeros((N, N))
+			Z_1 = np.trace(L)
 
-	    for S in potential_samples:
+			for S in potential_samples:
 
-	        for s in permutations(S):
+				for s in permutations(S):
 
-	            proba[s] = LA.det(L[np.ix_(s, s)])
+					proba[s] = LA.det(L[np.ix_(s, s)])
 
-	            Z_2_s0 = np.trace(L - L[:, s[:1]].dot(LA.inv(L[np.ix_(s[:1], s[:1])])).dot(L[s[:1], :]))
+					Z_2_s0 = np.trace(L - L[:, s[:1]].dot(LA.inv(L[np.ix_(s[:1], s[:1])])).dot(L[s[:1], :]))
 
-	            proba[s] /= Z_1 * Z_2_s0
+					proba[s] /= Z_1 * Z_2_s0
 
-	    print('L is {}projection'.format('' if projection else 'NOT '))
+			print('L is {}projection'.format('' if projection else 'NOT '))
 
-	    print('P[s0, s1]', proba, sep='\n')
-	    print('P[s0]', proba.sum(axis=0), sep='\n')
-	    print('P[s1]', proba.sum(axis=1), sep='\n')
+			print('P[s0, s1]', proba, sep='\n')
+			print('P[s0]', proba.sum(axis=0), sep='\n')
+			print('P[s1]', proba.sum(axis=1), sep='\n')
 
-	    print(proba.sum(), '\n' if projection else '')
+			print(proba.sum(), '\n' if projection else '')
 
-.. code-block:: python
+	.. code-block:: python
 
-    L is projection
-    P[s0, s1]
-    [[0.         0.09085976 0.01298634 0.10338529]
-     [0.09085976 0.         0.06328138 0.15368033]
-     [0.01298634 0.06328138 0.         0.07580691]
-     [0.10338529 0.15368033 0.07580691 0.        ]]
-    P[s0]
-    [0.20723139 0.30782147 0.15207463 0.33287252]
-    P[s1]
-    [0.20723139 0.30782147 0.15207463 0.33287252]
-    1.0000000000000002
+		L is projection
+		P[s0, s1]
+		[[0.         0.09085976 0.01298634 0.10338529]
+		[0.09085976 0.         0.06328138 0.15368033]
+		[0.01298634 0.06328138 0.         0.07580691]
+		[0.10338529 0.15368033 0.07580691 0.        ]]
+		P[s0]
+		[0.20723139 0.30782147 0.15207463 0.33287252]
+		P[s1]
+		[0.20723139 0.30782147 0.15207463 0.33287252]
+		1.0000000000000002
 
-    L is NOT projection
-    P[s0, s1]
-    [[0.         0.09986722 0.01463696 0.08942385]
-     [0.11660371 0.         0.08062998 0.20535251]
-     [0.01222959 0.05769901 0.         0.04170435]
-     [0.07995922 0.15726273 0.04463087 0.        ]]
-    P[s0]
-    [0.20879253 0.31482896 0.13989781 0.33648071]
-    P[s1]
-    [0.20392803 0.4025862  0.11163295 0.28185282]
-    1.0
+		L is NOT projection
+		P[s0, s1]
+		[[0.         0.09986722 0.01463696 0.08942385]
+		[0.11660371 0.         0.08062998 0.20535251]
+		[0.01222959 0.05769901 0.         0.04170435]
+		[0.07995922 0.15726273 0.04463087 0.        ]]
+		P[s0]
+		[0.20879253 0.31482896 0.13989781 0.33648071]
+		P[s1]
+		[0.20392803 0.4025862  0.11163295 0.28185282]
+		1.0

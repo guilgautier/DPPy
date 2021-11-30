@@ -1,54 +1,36 @@
-# coding: utf8
-""" Tests:
-
-- :class:`TestDescentProcesses` check that the marginal probability of selecting any integer is indeed given by the ``_bernoulli_param`` attribute
-"""
-
 import unittest
 
 import numpy as np
 
-import sys
-sys.path.append('..')
-
-from dppy.exotic_dpps import CarriesProcess, DescentProcess, VirtualDescentProcess
+from dppy.descent_processes import CarriesProcess, DescentProcess, VirtualDescentProcess
+from dppy.utils import check_random_state
 
 
 class TestDescentProcesses(unittest.TestCase):
-    """ Check that the marginal probability of selecting any integer is indeed given by the ``_bernoulli_param`` attribute
-    """
+    """Check that the marginal probability of selecting any integer is close to the theoretical ``marginal_descent_probability``"""
 
-    size = 10000
+    size = 50_000
     tol = 1e-2
-    seed = 0
 
-    def marginal_adequation(self, process):
+    def marginal_adequation(self, dpp):
+        rng = check_random_state(None)
+        sample = dpp.sample(size=self.size, random_state=rng)
+        p_hat = np.mean(sample[1:])
+        p_th = dpp.marginal_descent_probability
 
-        process.sample(size=self.size, random_state=self.seed)
-
-        p_hat = len(process.list_of_samples[-1]) / self.size
-        p_th = process._bernoulli_param
-
-        self.assertTrue(np.abs(p_hat - p_th) / p_th < self.tol,
-                        'p_hat={}, p_th={}'.format(p_hat, p_th))
+        self.assertTrue(
+            np.abs(p_hat - p_th) / p_th < self.tol,
+            "p_hat={}, p_th={}".format(p_hat, p_th),
+        )
 
     def test_carries_process(self):
-        process = CarriesProcess(base=10)
-        self.marginal_adequation(process)
+        dpp = CarriesProcess(base=10)
+        self.marginal_adequation(dpp)
 
     def test_descent_process(self):
-        process = DescentProcess()
-        self.marginal_adequation(process)
+        dpp = DescentProcess()
+        self.marginal_adequation(dpp)
 
     def test_virtual_descent_process(self):
-        process = VirtualDescentProcess(x_0=0.5)
-        self.marginal_adequation(process)
-
-
-def main():
-
-    unittest.main()
-
-
-if __name__ == '__main__':
-    main()
+        dpp = VirtualDescentProcess(x0=0.5)
+        self.marginal_adequation(dpp)

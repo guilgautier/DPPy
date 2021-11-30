@@ -1,9 +1,13 @@
 # Files
 .DS_Store
 
+# vscode
+.vscode
+*.code-workspace
+
+# notebooks
 .ipynb_checkpoints/
 *.ipynb
-
 notebooks/
 !notebooks/README.md
 !notebooks/Tuto_DPPy.ipynb

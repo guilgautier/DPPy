@@ -29,11 +29,11 @@ Inclusion probabilities
 
 We say that :math:`\mathcal{X} \sim \operatorname{DPP}(\mathbf{K})` with correlation kernel a complex matrix :math:`\mathbf{K}` if
 
-	.. math::
-		:label: eq:inclusion_proba_DPP_K
+.. math::
+	:label: eq:inclusion_proba_DPP_K
 
-		\mathbb{P}[S\subset \mathcal{X}] = \det \mathbf{K}_S,
-		\quad \forall S\subset [N],
+	\mathbb{P}[S\subset \mathcal{X}] = \det \mathbf{K}_S,
+	\quad \forall S\subset [N],
 
 where :math:`\mathbf{K}_S = [\mathbf{K}_{ij}]_{i,j\in S}` i.e. the square submatrix of :math:`\mathbf{K}` obtained by keeping only rows and columns indexed by :math:`S`.
 
@@ -106,7 +106,7 @@ Projection DPPs
 		from numpy import ones
 		from numpy.random import randn
 		from scipy.linalg import qr
-		from dppy.finite_dpps import FiniteDPP
+		from dppy.finite.dpp import FiniteDPP
 
 		r, N = 4, 10
 
