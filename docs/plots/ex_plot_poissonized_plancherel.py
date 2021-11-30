@@ -1,7 +1,6 @@
-from dppy.exotic_dpps import PoissonizedPlancherel
-
+from dppy.poissonized_plancherel import PoissonizedPlancherel
 
 theta = 500  # Poisson parameter
 pp = PoissonizedPlancherel(theta=theta)
-pp.sample()
-pp.plot_diagram(normalization=True)
+sample = pp.sample()
+pp.plot_diagram(sample, normalize=True)
