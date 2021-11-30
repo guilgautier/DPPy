@@ -1,13 +1,17 @@
 import matplotlib.pyplot as plt
+import networkx as nx
 import numpy as np
 from scipy.linalg import qr
 
-from dppy.exotic_dpps_core import ust_sampler_aldous_broder, ust_sampler_wilson
 from dppy.finite.exact_samplers.projection_eigen_samplers import (
     select_sampler_eigen_projection,
 )
 from dppy.finite.exact_samplers.projection_kernel_samplers import (
     select_sampler_orthogonal_projection_kernel,
+)
+from dppy.graph.uniform_spanning_tree_samplers import (
+    ust_sampler_aldous_broder,
+    ust_sampler_wilson,
 )
 from dppy.utils import check_random_state
 
@@ -32,15 +36,6 @@ class UST:
     """
 
     def __init__(self, graph):
-        try:
-            import networkx as nx
-
-            self.nx = nx
-        except ImportError:
-            raise ValueError(
-                "The networkx package is required to sample spanning trees (see setup.py)."
-            )
-
         if nx.is_connected(graph):
             self.graph = graph
         else:
@@ -103,7 +98,7 @@ class UST:
         rng = check_random_state(random_state)
 
         self.sampling_mode = mode
-        sampl = self.nx.Graph()
+        sampl = nx.Graph()
 
         if self.sampling_mode in self._sampling_modes["markov-chain"]:
             if self.sampling_mode == "Wilson":
@@ -118,7 +113,7 @@ class UST:
             sampler = select_sampler_eigen_projection(self.sampling_mode)
             dpp_sample = sampler(self.kernel_eig_vecs, random_state=rng)
             edges = list(self.graph.edges)
-            sampl = self.nx.from_edgelist([edges[i] for i in dpp_sample])
+            sampl = nx.from_edgelist([edges[i] for i in dpp_sample])
 
         elif self.sampling_mode in self._sampling_modes["projection-K-kernel"]:
 
@@ -127,7 +122,7 @@ class UST:
             dpp_sample = sampler(self.kernel, random_state=rng)
 
             edges = list(self.graph.edges)
-            sampl = self.nx.from_edgelist([edges[i] for i in dpp_sample])
+            sampl = nx.from_edgelist([edges[i] for i in dpp_sample])
 
         else:
             err_print = "\n".join(
@@ -164,7 +159,7 @@ class UST:
     def compute_kernel_eig_vecs(self):
         """See explaination in :func:`compute_kernel <compute_kernel>`"""
         if self.kernel_eig_vecs is None:
-            inc_mat = self.nx.incidence_matrix(self.graph, oriented=True)
+            inc_mat = nx.incidence_matrix(self.graph, oriented=True)
             # Discard any row e.g. the last one
             A = inc_mat[:-1, :].toarray()
             # Orthonormalize rows of A
@@ -190,8 +185,8 @@ class UST:
 
         plt.figure(figsize=(4, 4))
 
-        pos = self.nx.circular_layout(self.graph)
-        self.nx.draw_networkx(
+        pos = nx.circular_layout(self.graph)
+        nx.draw_networkx(
             graph_to_plot, pos=pos, node_color="orange", with_labels=True, width=3
         )
 
@@ -199,7 +194,7 @@ class UST:
         edge_labels = {
             e: labels[e if e in labels else e[::-1]] for e in graph_to_plot.edges
         }
-        self.nx.draw_networkx_edge_labels(
+        nx.draw_networkx_edge_labels(
             graph_to_plot, pos=pos, edge_labels=edge_labels, font_size=20
         )
 
@@ -224,15 +219,15 @@ class UST:
 
         plt.figure(figsize=(4, 4))
 
-        pos = self.nx.circular_layout(self.graph)
-        self.nx.draw_networkx(
+        pos = nx.circular_layout(self.graph)
+        nx.draw_networkx(
             self.graph, pos=pos, node_color="orange", with_labels=True, width=3
         )
         # nx.draw_networkx_labels(self.graph,
         #                         pos,
         #                         node_labels)
         edge_labels = {e: r"$e_{}$".format(i) for i, e in enumerate(self.graph.edges)}
-        self.nx.draw_networkx_edge_labels(
+        nx.draw_networkx_edge_labels(
             self.graph, pos=pos, edge_labels=edge_labels, font_size=20
         )
 

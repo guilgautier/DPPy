@@ -8,6 +8,8 @@
 """
 
 
+import networkx as nx
+
 from dppy.utils import check_random_state
 
 
@@ -23,14 +25,6 @@ def ust_sampler_wilson(g, root=None, random_state=None):
     :return: uniform spanning tree of g
     :rtype: nx.Graph
     """
-
-    try:
-        import networkx as nx
-    except ImportError:
-        raise ValueError(
-            "The networkx package is required to sample spanning trees (see setup.py)."
-        )
-
     rng = check_random_state(random_state)
 
     if root is None:
@@ -72,12 +66,7 @@ def ust_sampler_aldous_broder(g, root=None, random_state=None):
     :return: uniform spanning tree of g
     :rtype: nx.Graph
     """
-    try:
-        import networkx as nx
-    except ImportError:
-        raise ValueError(
-            "The networkx package is required to sample spanning trees (see setup.py)."
-        )
+
     rng = check_random_state(random_state)
 
     if root is None:
