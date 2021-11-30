@@ -9,7 +9,7 @@ In fact, one can discard any row of the vertex-edge incidence matrix - note  :ma
 
 .. seealso::
 
-    - :py:class:`~dppy.exotic_dpps.UST`
+    - :py:class:`~dppy.graph.uniform_spanning_tree.UST`
     - Wilson algorithm :cite:`PrWi98`
     - Aldous-Broder :cite:`Ald90`
     - :cite:`Lyo02`

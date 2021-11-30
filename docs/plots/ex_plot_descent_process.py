@@ -1,9 +1,8 @@
-from dppy.exotic_dpps import DescentProcess
-
+from dppy.descent_processes import DescentProcess
 
 dp = DescentProcess()
 
 size = 100
-dp.sample(size)
+sample = dp.sample(size)
 
-dp.plot(vs_bernoullis=True)
+dp.plot(sample)

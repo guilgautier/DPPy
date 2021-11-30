@@ -7,7 +7,7 @@ matplotlib
 # for the zonotope MCMC sampler
 cvxopt==1.2.1
 # for notebook on sampling spanning trees
-networkx 
+networkx
 # for the documentation
 sphinxcontrib-bibtex
 sphinx_rtd_theme

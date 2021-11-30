@@ -1,6 +1,6 @@
 from networkx import Graph
-from dppy.exotic_dpps import UST
 
+from dppy.graph.uniform_spanning_tree import UST
 
 # Build graph
 g = Graph()
