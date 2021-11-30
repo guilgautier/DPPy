@@ -1,10 +1,9 @@
-from dppy.exotic_dpps import CarriesProcess
-
+from dppy.descent_processes import CarriesProcess
 
 base = 10  # base
 cp = CarriesProcess(base)
 
 size = 100
-cp.sample(size)
+sample = cp.sample(size)
 
-cp.plot(vs_bernoullis=True)
+cp.plot(sample)

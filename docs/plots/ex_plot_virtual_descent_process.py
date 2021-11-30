@@ -1,9 +1,8 @@
-from dppy.exotic_dpps import VirtualDescentProcess
+from dppy.descent_processes import VirtualDescentProcess
 
-
-vdp = VirtualDescentProcess(x_0=0.5)
+vdp = VirtualDescentProcess(x0=0.5)
 
 size = 100
-vdp.sample(size)
+sample = vdp.sample(size)
 
-vdp.plot(vs_bernoullis=True)
+vdp.plot(sample)
