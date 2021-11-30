@@ -1,13 +1,3 @@
-# coding: utf8
-""" Core functions for
-
-- Uniform spanning trees
-
-    * :func:`ust_sampler_wilson`
-    * :func:`ust_sampler_aldous_broder`:
-"""
-
-
 import networkx as nx
 
 from dppy.utils import check_random_state
@@ -29,7 +19,7 @@ def ust_sampler_wilson(g, root=None, random_state=None):
 
     if root is None:
         nodes = list(g.nodes)
-        root = nodes[rng.randint(len(nodes))]
+        root = rng.choice(nodes)
     elif root not in g:
         raise ValueError("root not in g.nodes")
 
@@ -41,11 +31,11 @@ def ust_sampler_wilson(g, root=None, random_state=None):
         # Run a natural random walk from i until it hits a node in tree
         u = i
         while u not in tree:
-            neighbors = list(g.neighbors(u))
-            successor[u] = neighbors[rng.randint(len(neighbors))]
+            neighbors_u = list(g.neighbors(u))
+            successor[u] = rng.choice(neighbors_u)
             u = successor[u]
 
-        # Record Erase first loop created during the random walk
+        # Erase the loop created during the random walk
         u = i
         while u not in tree:
             tree.add(u)
@@ -71,21 +61,21 @@ def ust_sampler_aldous_broder(g, root=None, random_state=None):
 
     if root is None:
         nodes = list(g.nodes)
-        root = nodes[rng.randint(len(nodes))]
+        root = rng.choice(nodes)
     elif root not in g:
         raise ValueError("root not in g.nodes")
 
     # Run a natural random walk from root a until all nodes are visited
-    tree = {root: None}
+    successor = {root: None}
     u = root
-    while len(tree) < g.number_of_nodes():
-        neighbors = list(g.neighbors(u))
-        v = neighbors[rng.randint(len(neighbors))]
-        # Record an edge when reaching an unvisited node
-        if v not in tree:
-            tree[v] = u
+    while len(successor) < g.number_of_nodes():
+        neighbors_u = list(g.neighbors(u))
+        v = rng.choice(neighbors_u)
+        # Record the edge (u, v) when v is unvisited
+        if v not in successor:
+            successor[v] = u
         u = v
 
-    del tree[root]
+    del successor[root]
 
-    return nx.from_edgelist(tree.items())
+    return nx.from_edgelist(successor.items())

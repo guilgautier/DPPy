@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import networkx as nx
 import numpy as np
-from scipy.linalg import qr
+import scipy.linalg as la
 
 from dppy.finite.exact_samplers.projection_eigen_samplers import (
     select_sampler_eigen_projection,
@@ -36,10 +36,8 @@ class UST:
     """
 
     def __init__(self, graph):
-        if nx.is_connected(graph):
-            self.graph = graph
-        else:
-            raise ValueError("graph is not connected")
+        assert nx.is_connected(graph), "graph must be connected"
+        self.graph = graph
 
         self.sampling_mode = "Wilson"  # Default (avoid eig_vecs computation)
         self._sampling_modes = {
@@ -163,7 +161,7 @@ class UST:
             # Discard any row e.g. the last one
             A = inc_mat[:-1, :].toarray()
             # Orthonormalize rows of A
-            self.kernel_eig_vecs, _ = qr(A.T, mode="economic")
+            self.kernel_eig_vecs, _ = la.qr(A.T, mode="economic")
 
         return self.kernel_eig_vecs
 
