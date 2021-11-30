@@ -33,7 +33,7 @@ from dppy.finite.exact_samplers.spectral_sampler_k_dpp import spectral_sampler_k
 from dppy.finite.exact_samplers.vfx_samplers import vfx_sampler_dpp, vfx_sampler_k_dpp
 
 # MCMC
-from dppy.mcmc_sampling import dpp_sampler_mcmc, zonotope_sampler
+from dppy.finite.mcmc_samplers.mcmc_sampling import dpp_sampler_mcmc, zonotope_sampler
 
 # UTILS
 from dppy.utils import (
