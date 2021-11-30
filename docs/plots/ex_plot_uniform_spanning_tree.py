@@ -15,8 +15,8 @@ ust.plot_graph()
 
 # Display some samples
 for _ in range(3):
-    ust.sample()
-    ust.plot()
+    sample = ust.sample()
+    ust.plot(sample)
 
 # Display underlying kernel i.e. transfer current matrix
 ust.plot_kernel()

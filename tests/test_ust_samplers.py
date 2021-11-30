@@ -46,7 +46,6 @@ class UniformityOfSamplerForUniformSpanningTree(unittest.TestCase):
         """UST is a DPP associated to the projection kernel onto the row span of the vertex-edge-incidence matrix"""
         inc = incidence_matrix(self.ust.graph, oriented=True).todense()
         expected_kernel = np.linalg.pinv(inc).dot(inc)
-        self.ust.compute_kernel()
         self.assertTrue(np.allclose(self.ust.kernel, expected_kernel))
 
     @staticmethod
@@ -59,14 +58,21 @@ class UniformityOfSamplerForUniformSpanningTree(unittest.TestCase):
 
     def test_uniformity_adequation(self):
 
-        for sampler, sampler_modes in self.ust._sampling_modes.items():
-            for mode in sampler_modes:
-                with self.subTest(sampler=(sampler, mode)):
-                    self.ust.flush_samples()
-                    for _ in range(self.nb_samples):
-                        self.ust.sample(mode=mode)
+        samplers = (
+            "wilson",
+            "aldous-broder",
+            "spectral",
+            "schur",
+            "chol",
+            "generic",
+        )
 
-                    self.assertTrue(self.uniformity_adequation())
+        for method in samplers:
+            with self.subTest(method=method):
+                self.ust.flush_samples()
+                for _ in range(self.nb_samples):
+                    self.ust.sample(method=method)
+                self.assertTrue(self.uniformity_adequation())
 
     def uniformity_adequation(self, tol=0.05):
         """Perform chi-square test to check that the different spanning trees sampled have a uniform distribution"""

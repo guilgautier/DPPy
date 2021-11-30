@@ -1,14 +1,8 @@
 import matplotlib.pyplot as plt
 import networkx as nx
 import numpy as np
-import scipy.linalg as la
 
-from dppy.finite.exact_samplers.projection_eigen_samplers import (
-    select_sampler_eigen_projection,
-)
-from dppy.finite.exact_samplers.projection_kernel_samplers import (
-    select_sampler_orthogonal_projection_kernel,
-)
+from dppy.finite.dpp import FiniteDPP
 from dppy.graph.uniform_spanning_tree_samplers import (
     ust_sampler_aldous_broder,
     ust_sampler_wilson,
@@ -16,11 +10,8 @@ from dppy.graph.uniform_spanning_tree_samplers import (
 from dppy.utils import check_random_state
 
 
-##########################
-# Uniform Spanning Trees #
-##########################
 class UST:
-    """DPP on edges of a connected graph :math:`G` with correlation kernel the projection kernel onto the span of the rows of the incidence matrix :math:`\\text{Inc}` of :math:`G`.
+    r"""DPP on edges of a connected graph :math:`G` with correlation kernel the projection kernel onto the span of the rows of the incidence matrix :math:`\text{Inc}` of :math:`G`.
 
     This DPP corresponds to the uniform measure on spanning trees (UST) of :math:`G`.
 
@@ -39,16 +30,17 @@ class UST:
         assert nx.is_connected(graph), "graph must be connected"
         self.graph = graph
 
-        self.sampling_mode = "Wilson"  # Default (avoid eig_vecs computation)
-        self._sampling_modes = {
-            "markov-chain": ["Wilson", "Aldous-Broder"],
-            "spectral-method": ["GS"],
-            "projection-K-kernel": ["Schur", "Chol"],
-        }
-        self.list_of_samples = []
+        inc_mat = nx.incidence_matrix(graph, oriented=True)
+        A = inc_mat[:-1, :].toarray()
+        self._dpp = FiniteDPP(
+            kernel_type="correlation",
+            projection=True,
+            hermitian=True,
+            A_zono=A,
+        )
 
-        self.kernel = None
-        self.kernel_eig_vecs = None
+        self.sampling_method = "Wilson"  # Default (avoid eig_vecs computation)
+        self.list_of_samples = []
 
     def __str__(self):
 
@@ -56,116 +48,75 @@ class UST:
             "Uniform Spanning Tree measure on a graph with:",
             "- {} nodes".format(self.graph.number_of_nodes()),
             "- {} edges".format(self.graph.number_of_edges()),
-            "Sampling mode = {}".format(self.sampling_mode),
+            "Sampling method = {}".format(self.sampling_method),
             "Number of samples = {}".format(len(self.list_of_samples)),
         ]
 
         return "\n".join(str_info)
 
-    def flush_samples(self):
-        """Empty the :py:attr:`list_of_samples` attribute."""
-        self.list_of_samples = []
+    @property
+    def kernel(self):
+        r"""Compute the orthogonal projection kernel :math:`\mathbf{K} = \text{Inc}^+ \text{Inc}` i.e. onto the span of the rows of the vertex-edge incidence matrix :math:`\text{Inc}` of size :math:`|V| \times |E|`.
 
-    def sample(self, mode="Wilson", random_state=None):
-        """Sample a spanning of the underlying graph uniformly at random.
-        It generates a networkx graph object.
+        For a connected graph, :math:`\text{Inc}` has rank :math:`|V|-1` and any row can be discarded to get a basis of row space. If we note :math:`A` the amputated version of :math:`\text{Inc}`, then :math:`\text{Inc}^+ = A^{\top}[AA^{\top}]^{-1}`.
 
-        :param mode:
-            Markov-chain-based samplers:
-
-            - ``'Wilson'``, ``'Aldous-Broder'``
-
-            Chain-rule-based samplers:
-
-            - ``'GS'``, ``'GS_bis'``, ``'KuTa12'`` from eigenvectors
-            - ``'Schur'``, ``'Chol'``, from :math:`\\mathbf{K}` correlation kernel
-        :type mode:
-            string, default ``'Wilson'``
-
-        :param random_state:
-        :type random_state:
-            None, np.random, int, np.random.RandomState
-
-        .. seealso::
-
-            - Wilson :cite:`PrWi98`
-            - Aldous-Broder :cite:`Ald90`
-            - :py:meth:`~dppy.FiniteDPP.sample`
-        """
-
-        rng = check_random_state(random_state)
-
-        self.sampling_mode = mode
-        sampl = nx.Graph()
-
-        if self.sampling_mode in self._sampling_modes["markov-chain"]:
-            if self.sampling_mode == "Wilson":
-                sampl = ust_sampler_wilson(self.graph, random_state=rng)
-
-            elif self.sampling_mode == "Aldous-Broder":
-                sampl = ust_sampler_aldous_broder(self.graph, random_state=rng)
-
-        elif self.sampling_mode in self._sampling_modes["spectral-method"]:
-
-            self.compute_kernel_eig_vecs()
-            sampler = select_sampler_eigen_projection(self.sampling_mode)
-            dpp_sample = sampler(self.kernel_eig_vecs, random_state=rng)
-            edges = list(self.graph.edges)
-            sampl = nx.from_edgelist([edges[i] for i in dpp_sample])
-
-        elif self.sampling_mode in self._sampling_modes["projection-K-kernel"]:
-
-            self.compute_kernel()
-            sampler = select_sampler_orthogonal_projection_kernel(self.sampling_mode)
-            dpp_sample = sampler(self.kernel, random_state=rng)
-
-            edges = list(self.graph.edges)
-            sampl = nx.from_edgelist([edges[i] for i in dpp_sample])
-
-        else:
-            err_print = "\n".join(
-                [
-                    "Invalid sampling mode",
-                    "Chose from: {}".format(self._sampling_modes.values()),
-                    "Given {}".format(mode),
-                ]
-            )
-            raise ValueError(err_print)
-
-        self.list_of_samples.append(sampl)
-        return sampl
-
-    def compute_kernel(self):
-        """Compute the orthogonal projection kernel :math:`\\mathbf{K} = \\text{Inc}^+ \\text{Inc}` i.e. onto the span of the rows of the vertex-edge incidence matrix :math:`\\text{Inc}` of size :math:`|V| \\times |E|`.
-
-        In fact, for a connected graph, :math:`\\text{Inc}` has rank :math:`|V|-1` and any row can be discarded to get an basis of row space. If we note :math:`A` the amputated version of :math:`\\text{Inc}`, then :math:`\\text{Inc}^+ = A^{\\top}[AA^{\\top}]^{-1}`.
-
-        In practice, we orthogonalize the rows of :math:`A` to get the eigenvectors :math:`U` of :math:`\\mathbf{K}=UU^{\\top}`.
+        In practice, we orthogonalize the rows of :math:`A` to get the eigenvectors :math:`U` of :math:`\mathbf{K}=UU^{\top}`.
 
         .. seealso::
 
             - :py:meth:`plot_kernel`
             - :py:meth:`compute_kernel_eig_vecs`
         """
-        # K = UU.T, with U = QR(Inc[:-1,:].T)
-        if self.kernel is None:
-            U = self.compute_kernel_eig_vecs()
-            self.kernel = U.dot(U.T)
+        self._dpp.compute_K()
+        return self._dpp.K
 
-        return self.kernel
+    def flush_samples(self):
+        """Empty the :py:attr:`list_of_samples` attribute."""
+        self.list_of_samples = []
 
-    def compute_kernel_eig_vecs(self):
-        """See explaination in :func:`compute_kernel <compute_kernel>`"""
-        if self.kernel_eig_vecs is None:
-            inc_mat = nx.incidence_matrix(self.graph, oriented=True)
-            # Discard any row e.g. the last one
-            A = inc_mat[:-1, :].toarray()
-            # Orthonormalize rows of A
-            self.kernel_eig_vecs, _ = la.qr(A.T, mode="economic")
+    def sample(self, method="wilson", random_state=None, **params):
+        """Sample a spanning tree of the underlying graph, uniformly at random.
 
-        return self.kernel_eig_vecs
+        :param method:
+            - Markov-chain-based samplers: ``'wilson'`` :cite:`PrWi98`, or ``'aldous-broder'`` :cite:`Ald90`,
+            - DPP-based samplers: see :py:meth:`~dppy.finite.dpp.FiniteDPP.sample_exact`, default is ``"spectral"``.
+        :type method:
+            string, default ``'Wilson'``
 
-    def plot(self, title=""):
+        :param random_state:
+        :type random_state:
+            None, np.random, int, np.random.RandomState
+
+        :return:
+            Uniform spanning tree.
+        :rtype:
+            networkx.Graph
+        """
+        rng = check_random_state(random_state)
+
+        _method = method.lower()
+        markov_chain_samplers = {
+            "wilson": ust_sampler_wilson,
+            "aldous-broder": ust_sampler_aldous_broder,
+        }
+        if _method in markov_chain_samplers:
+            sampler = markov_chain_samplers[_method]
+            sample = sampler(self.graph, random_state=rng)
+        else:
+            dpp_sample = self._dpp.sample_exact(
+                method=_method, random_state=rng, **params
+            )
+            sample = self._dpp_sample_to_nx_graph(dpp_sample)
+
+        self.sampling_method = method
+        self.list_of_samples.append(sample)
+        return sample
+
+    def _dpp_sample_to_nx_graph(self, dpp_sample):
+        edges = list(self.graph.edges)
+        return nx.from_edgelist([edges[i] for i in dpp_sample])
+
+    def plot(self, sample, ax=None):
         """Display the last realization (spanning tree) of the corresponding :class:`UST` object.
 
         :param title:
@@ -179,29 +130,39 @@ class UST:
             - :py:meth:`sample`
         """
 
-        graph_to_plot = self.list_of_samples[-1]
+        if ax is None:
+            fig, ax = plt.subplots(figsize=(4, 4))
 
-        plt.figure(figsize=(4, 4))
+        plt.title(
+            "Uniform spanning tree generated with {} method".format(
+                self.sampling_method
+            )
+        )
 
         pos = nx.circular_layout(self.graph)
         nx.draw_networkx(
-            graph_to_plot, pos=pos, node_color="orange", with_labels=True, width=3
+            sample,
+            pos=pos,
+            node_color="orange",
+            with_labels=True,
+            width=3,
+            ax=ax,
         )
 
-        labels = {e: r"$e_{}$".format(i) for i, e in enumerate(self.graph.edges)}
-        edge_labels = {
-            e: labels[e if e in labels else e[::-1]] for e in graph_to_plot.edges
-        }
+        labs = {e: r"$e_{}$".format(i) for i, e in enumerate(self.graph.edges)}
+        edge_labs = {e: labs[e if e in labs else e[::-1]] for e in sample.edges}
         nx.draw_networkx_edge_labels(
-            graph_to_plot, pos=pos, edge_labels=edge_labels, font_size=20
+            sample,
+            pos=pos,
+            edge_labels=edge_labs,
+            font_size=20,
+            ax=ax,
         )
 
         plt.axis("off")
+        return ax
 
-        str_title = "A realization of UST with {} procedure".format(self.sampling_mode)
-        plt.title(title if title else str_title)
-
-    def plot_graph(self, title=""):
+    def plot_graph(self, ax=None):
         """Display the original graph defining the :class:`UST` object
 
         :param title:
@@ -209,33 +170,29 @@ class UST:
 
         :type title:
             string
-
-        .. seealso::
-
-            - :func:`compute_kernel <compute_kernel>`
         """
 
-        plt.figure(figsize=(4, 4))
+        if ax is None:
+            fig, ax = plt.subplots(figsize=(4, 4))
+        plt.title("Original graph")
 
         pos = nx.circular_layout(self.graph)
         nx.draw_networkx(
-            self.graph, pos=pos, node_color="orange", with_labels=True, width=3
+            self.graph, pos=pos, node_color="orange", with_labels=True, width=3, ax=ax
         )
         # nx.draw_networkx_labels(self.graph,
         #                         pos,
         #                         node_labels)
-        edge_labels = {e: r"$e_{}$".format(i) for i, e in enumerate(self.graph.edges)}
+        labs = {e: r"$e_{}$".format(i) for i, e in enumerate(self.graph.edges)}
         nx.draw_networkx_edge_labels(
-            self.graph, pos=pos, edge_labels=edge_labels, font_size=20
+            self.graph, pos=pos, edge_labels=labs, font_size=20, ax=ax
         )
 
         plt.axis("off")
+        return ax
 
-        str_title = "Original graph"
-        plt.title(title if title else str_title)
-
-    def plot_kernel(self, title=""):
-        """Display a heatmap of the underlying orthogonal projection kernel :math:`\\mathbf{K}` associated to the DPP underlying the :class:`UST` object
+    def plot_kernel(self, ax=None):
+        r"""Display a heatmap of the underlying orthogonal projection kernel :math:`\mathbf{K}` associated to the DPP underlying the :class:`UST` object
 
         :param title:
             Plot title
@@ -248,9 +205,12 @@ class UST:
             - :func:`compute_kernel <compute_kernel>`
         """
 
-        self.compute_kernel()
+        if ax is None:
+            fig, ax = plt.subplots(figsize=(4, 4))
+        else:
+            fig = ax.get_figure()
 
-        fig, ax = plt.subplots(1, 1, figsize=(4, 4))
+        plt.title("Correlation K kernel: transfer current matrix", y=1.08)
 
         heatmap = ax.pcolor(self.kernel, cmap="jet")
 
@@ -268,9 +228,6 @@ class UST:
         ax.set_xticklabels(ticks_label, minor=False)
         ax.set_yticklabels(ticks_label, minor=False)
 
-        str_title = "Correlation K kernel: transfer current matrix"
-        plt.title(title if title else str_title, y=1.08)
-
         # Adapt size of colbar to plot
         # https://stackoverflow.com/questions/18195758/set-matplotlib-colorbar-size-to-match-graph
         cax = fig.add_axes(
@@ -282,3 +239,4 @@ class UST:
             ]
         )
         plt.colorbar(heatmap, cax=cax)
+        return ax
