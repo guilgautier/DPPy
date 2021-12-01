@@ -204,7 +204,7 @@ class TestAdequationOfFiniteDppSamplers(unittest.TestCase):
             samples = config.get_samples(dpp, self.nb_exact_samples)
             for adequation in self.adequations_to_check:
                 with self.subTest(
-                    config=config,
+                    config=config.__dict__,
                     adequation=adequation,
                 ):
                     adeq, msg = self.check_adequation(adequation, samples, dpp)
