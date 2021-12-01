@@ -538,7 +538,7 @@ class FiniteDPP:
         return self.sample_mcmc(method="e", random_state=None, **params)
 
     def compute_K(self):
-        """Alias of :py:meth:`~dppy.finite.dpp.FiniteDPP.compute_correlation_kernel`"""
+        """Alias of :py:meth:`~dppy.finite.dpp.FiniteDPP.compute_correlation_kernel`."""
         return self.compute_correlation_kernel()
 
     def compute_correlation_kernel(self):

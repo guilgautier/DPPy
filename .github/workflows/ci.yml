@@ -11,6 +11,7 @@ on:
       - master
       - v1-dev
     paths:
+      - "dppy/**"
       - "src/**"
       - "tests/**"
       - "pyproject.toml"
