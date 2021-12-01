@@ -73,16 +73,21 @@ def compute_spectral_sampler_parameters_k_dpp_step(dpp, size):
         dpp.L_eig_vals = dpp.K_eig_vals / (1.0 - dpp.K_eig_vals)
         return True
 
-    # Otherwise eigendecomposition is necessary
-    elif dpp.L_dual is not None:
-        # L_dual = Phi Phi.T = W Theta W.T
-        # L = Phi.T Phi = V Gamma V.T
-        # implies Gamma = Theta and V = Phi.T W Theta^{-1/2}
-        phi = dpp.L_gram_factor
-        eig_vals, eig_vecs = la.eigh(dpp.L_dual)
+    if dpp.L_gram_factor is not None:
+        # L_dual = Phi * Phi.T = W Theta W.T
+        # L = Phi.T Phi = V Gamma V
+        # then Gamma = Theta and V = Phi.T W Theta^{-1/2}
+        Phi = dpp.L_gram_factor
+        d, N = Phi.shape
+        if d >= N:
+            dpp.L = Phi.T.dot(Phi)
+            return True
+
+        L_dual = Phi.dot(Phi.T)
+        eig_vals, eig_vecs = la.eigh(L_dual)
         np.fmax(eig_vals, 0.0, out=eig_vals)
         dpp.L_eig_vals = eig_vals
-        dpp.eig_vecs = phi.T.dot(eig_vecs / np.sqrt(eig_vals))
+        dpp.eig_vecs = Phi.T.dot(eig_vecs / np.sqrt(eig_vals))
         return True
 
     elif dpp.L is not None:

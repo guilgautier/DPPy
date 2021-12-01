@@ -147,18 +147,6 @@ class FiniteDPP:
 
         # L' "dual" likelihood kernel, L' = Phi Phi.T, Phi = L_gram_factor
         self.L_gram_factor = params.get("L_gram_factor", None)
-        self.L_dual = None
-
-        if self.L_gram_factor is not None:
-            Phi = self.L_gram_factor
-            d, N = Phi.shape
-            if d < N:
-                self.L_dual = Phi.dot(Phi.T)
-                print("L_dual = Phi Phi.T was computed: Phi (dxN) with d<N")
-            else:
-                if self.L is None:
-                    self.L = Phi.T.dot(Phi)
-                    print("L = Phi.T Phi was computed: Phi (dxN) with d>=N")
 
         # L likelihood function representation
         # eval_L(X, Y) = L(X, Y)
