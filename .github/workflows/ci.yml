@@ -1,0 +1,86 @@
+# This is a basic workflow to help you get started with Actions
+# based on https://github.com/snok/install-poetry
+
+name: CI
+
+# Controls when the workflow will run
+on:
+  # Triggers the workflow on push or pull request events but only for the main branch
+  push:
+    branches:
+      - master
+      - v1-dev
+    paths:
+      - "src/**"
+      - "tests/**"
+      - "pyproject.toml"
+      - "poetry.toml"
+      - "poetry.lock"
+      - "!**.md"
+      - "!.github/workflows/docs.yml"
+  pull_request:
+    paths-ignore:
+      - "**.md"
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # This workflow contains a single job called "test"
+  test:
+    # The type of runner that the job will run on
+    strategy:
+      matrix:
+        os: ["ubuntu-latest"] #, "macos-latest"]
+        python-version: ["3.7", "3.8", "3.9"]
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      # https://github.com/actions/checkout
+      - name: Checkout project repository
+        uses: actions/checkout@v2
+
+      # https://github.com/actions/setup-python
+      - name: Install Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      # https://github.com/snok/install-poetry
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+
+        # with:
+        #   virtualenvs-create: true
+        #   virtualenvs-in-project: true
+
+      - name: Load cached venv
+        id: cached-poetry-dependencies
+        uses: actions/cache@v2
+        with:
+          path: .venv
+          key: venv-${{ runner.os }}-${{ hashFiles('**/poetry.lock') }}
+
+      - name: Install main (non-optional) and dev dependencies
+        # see [tool.poetry.dependencies] and [tool.poetry.dev-dependencies]
+        # in pyproject.toml
+        if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
+        run: poetry install --no-root
+
+      - name: Install package
+        run: poetry install
+
+      - name: Test with pytest and create coverage report
+        # Configuration of pytest [tool.pytest.ini_options] in pyproject.toml
+        # https://docs.pytest.org/en/latest/reference/customize.html#pyproject-toml
+        run: poetry run pytest --cov-report=xml
+
+      - name: Upload coverage to Codecov
+        # https://docs.codecov.com/docs
+        # https://github.com/codecov/codecov-action
+        uses: codecov/codecov-action@v2
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./coverage.xml
+          # generated using --cov-report=xml above
