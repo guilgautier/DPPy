@@ -22,6 +22,7 @@ classifiers = [
     'Topic :: Scientific/Engineering :: Artificial Intelligence',
     'License :: OSI Approved :: MIT License',
     'Programming Language :: Python',
+    'Programming Language :: Python :: 3.7',
     'Programming Language :: Python :: 3.8',
     'Programming Language :: Python :: 3.9',
 ] # https://pypi.org/classifiers/
@@ -51,6 +52,7 @@ sphinxcontrib-bibtex = { version = "^2.4.1", optional = true }
 pytest = "^6.2.5"
 pytest-cov = "^3.0.0"
 pytest-subtests = "^0.5.0"
+# pytest-sphinx = "^0.3.1"  # add --doctest-modules
 
 pre-commit = "^2.15.0"
 black = { extras = ["jupyter"], version = "^21.11b1" }
@@ -73,6 +75,7 @@ build-backend = "poetry.core.masonry.api"
 [tool.pytest.ini_options]
 # poetry run pytest
 minversion = "6.0"
+# add --doctest-modules flag for pytest-sphinx
 addopts = "-ra -q -vv --cov=dppy --cov-report=term-missing --cov-report=xml"
 testpaths = ["tests"]
 
