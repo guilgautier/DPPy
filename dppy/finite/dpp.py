@@ -25,9 +25,9 @@ from dppy.finite.exact_samplers.alpha_samplers import (
     alpha_sampler_dpp,
     alpha_sampler_k_dpp,
 )
-from dppy.finite.exact_samplers.chol_sampler import chol_sampler
+from dppy.finite.exact_samplers.chol_sampler import chol_sampler, chol_sampler_k_dpp
 from dppy.finite.exact_samplers.generic_samplers import generic_sampler
-from dppy.finite.exact_samplers.schur_sampler import schur_sampler
+from dppy.finite.exact_samplers.schur_sampler import schur_sampler, schur_sampler_k_dpp
 from dppy.finite.exact_samplers.spectral_sampler_dpp import spectral_sampler
 from dppy.finite.exact_samplers.spectral_sampler_k_dpp import spectral_sampler_k_dpp
 from dppy.finite.exact_samplers.vfx_samplers import vfx_sampler_dpp, vfx_sampler_k_dpp
@@ -446,8 +446,8 @@ class FiniteDPP:
             "spectral": spectral_sampler_k_dpp,
             "vfx": vfx_sampler_k_dpp,
             "alpha": alpha_sampler_k_dpp,
-            "schur": schur_sampler,
-            "chol": chol_sampler,
+            "schur": schur_sampler_k_dpp,
+            "chol": chol_sampler_k_dpp,
         }
         default = samplers["spectral"]
         return samplers.get(method.lower(), default)

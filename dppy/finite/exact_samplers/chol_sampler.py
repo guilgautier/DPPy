@@ -4,7 +4,7 @@ from dppy.finite.exact_samplers.projection_kernel_samplers import (
 )
 
 
-def chol_sampler(dpp, random_state, **params):
+def chol_sampler(dpp, random_state=None, **params):
     params["mode"] = "Chol"
 
     cond_K = dpp.kernel_type == "correlation"
@@ -17,3 +17,8 @@ def chol_sampler(dpp, random_state, **params):
 
     sample = sampler(dpp, random_state=random_state, **params)
     return sample
+
+
+def chol_sampler_k_dpp(dpp, size, random_state=None, **params):
+    params["size"] = size
+    return chol_sampler(dpp, random_state=None, **params)
