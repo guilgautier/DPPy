@@ -1,0 +1,88 @@
+[tool.poetry] # https://python-poetry.org/docs/pyproject/
+name = "DPPy"
+version = "1.0.0-alpha.1"
+description = "Determinantal Point Processes with Python."
+license = "MIT"
+authors = ["Guillaume Gautier <guillaume.gga@gmail.com>"]
+maintainers = ["Guillaume Gautier <guillaume.gga@gmail.com>"]
+readme = "README.rst" # path to README file (.md or .rst)
+homepage = "https://github.com/guilgautier/DPPy" # url
+repository = "https://github.com/guilgautier/DPPy" # url
+documentation = "https://dppy.readthedocs.io/en/latest/?badge=latest" # url
+keywords = [
+    "Determinantal Point Processes",
+    "Python",
+    "sampling schemes",
+    "random matrices",
+] # ["optimization", "gradrient descent"] at most 5 keywords
+classifiers = [
+    'Development Status :: 4 - Beta',
+    'Intended Audience :: Science/Research',
+    'Topic :: Scientific/Engineering :: Mathematics',
+    'Topic :: Scientific/Engineering :: Artificial Intelligence',
+    'License :: OSI Approved :: MIT License',
+    'Programming Language :: Python',
+    'Programming Language :: Python :: 3.8',
+    'Programming Language :: Python :: 3.9',
+] # https://pypi.org/classifiers/
+packages = []
+
+[tool.poetry.dependencies]
+# These packages are mandatory and form the core of this package’s distribution.
+python = ">=3.7,<3.11"
+
+# Documentation
+numpy = "^1.21.4"
+scipy = "^1.7.3"
+matplotlib = "^3.5.0"
+networkx = "^2.6.3"
+cvxopt = "^1.2.7"
+
+# poetry add --optional ...
+
+# Jupyter notebooks
+jupyter = { version = "^1.0.0", optional = true }
+
+Sphinx = { version = "^4.3.0", optional = true }
+sphinx-rtd-theme = { version = "^1.0.0", optional = true }
+sphinxcontrib-bibtex = { version = "^2.4.1", optional = true }
+
+[tool.poetry.dev-dependencies]
+pytest = "^6.2.5"
+pytest-cov = "^3.0.0"
+pytest-subtests = "^0.5.0"
+
+pre-commit = "^2.15.0"
+black = { extras = ["jupyter"], version = "^21.11b1" }
+isort = "^5.10.1"
+pydocstyle = "^6.1.1"
+pylint = "^2.12.1"
+rstcheck = "^3.3.1"
+
+# A list of all of the optional dependencies, some of which are included in the
+# below `extras`. They can be opted into by apps.
+[tool.poetry.extras]
+# poetry install -E name
+notebook = ["jupyter"]
+docs = ["Sphinx", "sphinx-rtd-theme", "sphinxcontrib-bibtex"]
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.pytest.ini_options]
+# poetry run pytest
+minversion = "6.0"
+addopts = "-ra -q -vv --cov=dppy --cov-report=term-missing --cov-report=xml"
+testpaths = ["tests"]
+
+# For other tools to be black compliant
+# https://black.readthedocs.io/en/stable/guides/using_black_with_other_tools.html
+[tool.isort]
+profile = "black"
+
+[tool.pylint.messages_control]
+disable = "C0330, C0326"
+
+[tool.pylint.format]
+max-line-length = "88"
