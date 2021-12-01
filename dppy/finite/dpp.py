@@ -108,7 +108,6 @@ class FiniteDPP:
         self.__check_args_coherence()
 
         # Sampling
-        self.sampling_mode = "GS"  # Gram-Schmidt
         self.list_of_samples = []
 
         # when using .sample_k_dpp_*
@@ -186,8 +185,6 @@ class FiniteDPP:
                 "projection" if self.projection else "", self.kernel_type
             ),
             "Parametrized by {}".format(self.params_keys),
-            "- sampling mode = {}".format(self.sampling_mode),
-            "- number of samples = {}".format(len(self.list_of_samples)),
         ]
 
         return "\n".join(str_info)
@@ -337,7 +334,6 @@ class FiniteDPP:
         sampler = self._select_sampler_exact_dpp(method)
         sample = sampler(self, rng, **params)
 
-        self.sampling_mode = method
         self.list_of_samples.append(sample)
         return sample
 
@@ -432,7 +428,6 @@ class FiniteDPP:
         """
 
         rng = check_random_state(random_state)
-        self.sampling_mode = method
         sampler = self._select_sampler_exact_k_dpp(method)
         sample = sampler(self, size, rng, **params)
 
@@ -509,7 +504,6 @@ class FiniteDPP:
         chain = sampler(self, rng, **params)
 
         self.list_of_samples.append(chain)
-        self.sampling_mode = method
         return chain[-1]
 
     @staticmethod
@@ -583,7 +577,7 @@ class FiniteDPP:
             self.L_eig_vals, self.eig_vecs = la.eigh(self.L)
             return True
 
-        self.compute_L()
+        self.compute_likelihood_kernel()
         return True
 
     def compute_L(self):
