@@ -1,16 +1,17 @@
 DPPy: Sampling Determinantal Point Processes with Python
 ========================================================
 
-|Documentation Status| |Build Status| |Coverage Status| |PyPI package|
+|CI Status| |Coverage Status| |PyPI package|
+|Documentation Status|
+
+.. |CI Status| image:: https://github.com/guilgautier/DPPy/actions/workflows/ci.yml/badge.svg
+  :target: https://github.com/guilgautier/DPPy/actions/workflows/ci.yml
 
 .. |Documentation Status| image:: https://readthedocs.org/projects/dppy/badge/?version=latest
   :target: https://dppy.readthedocs.io/en/latest/?badge=latest
 
-.. |Build Status| image:: https://travis-ci.com/guilgautier/DPPy.svg?branch=master
-  :target: https://travis-ci.com/guilgautier/DPPy
-
-.. |Coverage Status| image:: https://coveralls.io/repos/github/guilgautier/DPPy/badge.svg?branch=master
-  :target: https://coveralls.io/github/guilgautier/DPPy?branch=master
+.. |Coverage Status|  image:: https://codecov.io/gh/guilgautier/DPPy/branch/master/graph/badge.svg?token=X7N5S7AH7R
+  :target: https://codecov.io/gh/guilgautier/DPPy
 
 .. |PyPI package| image:: https://img.shields.io/pypi/v/dppy?color=blue
   :target: https://pypi.org/project/dppy/
