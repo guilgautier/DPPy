@@ -566,7 +566,7 @@ class FiniteDPP:
 
         return self.sample_mcmc(self.sampling_mode, **params)
 
-    def compute_K(self, msg=False):
+    def compute_K(self):
         """Alias of :py:meth:`~dppy.finite.dpp.FiniteDPP.compute_correlation_kernel`"""
         return self.compute_correlation_kernel()
 
@@ -579,14 +579,12 @@ class FiniteDPP:
 
             :ref:`finite_dpps_relation_kernels`
         """
-        while self.compute_correlation_kernel_step():
+        while self._compute_correlation_kernel_step():
             continue
         return self.K
 
-    def compute_correlation_kernel_step(self):
-        """Sort of fixed point algorithm to
-
-        Return
+    def _compute_correlation_kernel_step(self):
+        """Return
         ``False`` if the right parameters are indeed computed
         ``True`` if extra computations are required
         """
@@ -594,8 +592,7 @@ class FiniteDPP:
             return False
 
         if self.K_eig_vals is not None:
-            U = self.eig_vecs
-            lambda_ = self.K_eig_vals
+            lambda_, U = self.K_eig_vals, self.eig_vecs
             self.K = (U * lambda_).dot(U.T)
             return False
 
@@ -618,81 +615,79 @@ class FiniteDPP:
         self.compute_L()
         return True
 
-    def compute_L(self, msg=False):
-        """Compute the likelihood kernel :math:`\\mathbf{L}` from the original parametrization of the :class:`FiniteDPP` object.
+    def compute_L(self):
+        """Alias of :py:meth:`~dppy.finite.dpp.FiniteDPP.compute_likelihood_kernel`"""
+        return self.compute_likelihood_kernel()
 
-        The kernel is stored in the :py:attr:`~FiniteDPP.L` attribute.
+    def compute_likelihood_kernel(self):
+        r"""Compute the likelihood kernel :math:`\mathbf{L}` from the current parametrization of the :class:`FiniteDPP` object.
+
+        The returned kernel is also stored as the :py:attr:`~dppy.finite.dpp.FiniteDPP.L` attribute.
 
         .. seealso::
 
             :ref:`finite_dpps_relation_kernels`
         """
+        while self._compute_likelihood_kernel_step():
+            continue
+        return self.L
 
+    def _compute_likelihood_kernel_step(self):
+        """Return
+        ``False`` if the right parameters are indeed computed
+        ``True`` if extra computations are required
+        """
         if self.L is not None:
-            # msg = 'L (likelihood) kernel available'
-            # print(msg)
-            pass
+            return False
 
-        elif (self.kernel_type == "correlation") and self.projection:
-            err_print = [
-                "L = K(I-K)^-1 = kernel cannot be computed:",
-                "K is projection kernel: some eigenvalues equal 1",
+        if self.projection and self.kernel_type == "correlation":
+            raise ValueError(
+                "Likelihood kernel L cannot be computed as L = K (I - K)^-1 since projection kernel K has some eigenvalues equal 1"
+            )
+
+        if self.L_eig_vals is not None:
+            gamma, V = self.L_eig_vals, self.eig_vecs
+            self.L = (V * gamma).dot(V.T)
+            return False
+
+        if self.L_gram_factor is not None:
+            Phi = self.L_gram_factor
+            self.L = Phi.T.dot(Phi)
+            return False
+
+        if self.eval_L is not None:
+            warn_print = [
+                "Weird setting:",
+                "FiniteDPP(.., **{'L_eval_X_data': (eval_L, X_data)})",
+                "When using 'L_eval_X_data', you are a priori working with a big `X_data` and not willing to compute the full likelihood kernel L",
+                "Right now, the computation of L=eval_L(X_data) is performed but might be very expensive, this is at your own risk!",
+                "You might also use FiniteDPP(.., **{'L': eval_L(X_data)})",
             ]
-            raise ValueError("\n".join(err_print))
+            warn("\n".join(warn_print))
+            self.L = self.eval_L(self.X_data)
+            return False
 
-        else:
-            if not msg:
-                print("L (likelihood) kernel computed via:")
-
-            if self.L_eig_vals is not None:
-                msg = "- U diag(eig_L) U.T"
-                print(msg)
-                self.L = (self.eig_vecs * self.L_eig_vals).dot(self.eig_vecs.T)
-
-            elif self.L_gram_factor is not None:
-                msg = "- L = Phi.T Phi, where Phi = L_gram_factor"
-                print(msg)
-                self.L = self.L_gram_factor.T.dot(self.L_gram_factor)
-
-            elif self.eval_L is not None:
-                warn_print = [
-                    "Weird setting:",
-                    "FiniteDPP(.., **{'L_eval_X_data': (eval_L, X_data)})",
-                    "When using 'L_eval_X_data', you are a priori working with a big `X_data` and not willing to compute the full likelihood kernel L",
-                    "Right now, the computation of L=eval_L(X_data) is performed but might be very expensive, this is at your own risk!",
-                    "You might also use FiniteDPP(.., **{'L': eval_L(X_data)})",
+        if self.K_eig_vals is not None:
+            try:  # to compute eigenvalues of kernel L = K(I-K)^-1
+                np.seterr(divide="raise")
+                self.L_eig_vals = self.K_eig_vals / (1.0 - self.K_eig_vals)
+                return True
+            except FloatingPointError:
+                err_print = [
+                    "Eigenvalues of the likelihood L kernel cannot be computed as eig_L = eig_K / (1 - eig_K).",
+                    "K kernel has some eig_K very close to 1. Hint: `K` kernel might be a projection",
                 ]
-                warn("\n".join(warn_print))
-                msg = "- L = eval_L(X_data, X_data)"
-                print(msg)
-                self.L = self.eval_L(self.X_data)
+                raise FloatingPointError("\n".join(err_print))
 
-            elif self.K_eig_vals is not None:
-                try:  # to compute eigenvalues of kernel L = K(I-K)^-1
-                    msg = "- eig_L = eig_K/(1-eig_K)"
-                    print(msg)
-                    np.seterr(divide="raise")
-                    self.L_eig_vals = self.K_eig_vals / (1.0 - self.K_eig_vals)
-                    self.compute_L(msg=True)
-                except FloatingPointError:
-                    err_print = [
-                        "Eigenvalues of L kernel cannot be computed",
-                        "eig_L = eig_K/(1-eig_K)",
-                        "K kernel has some eig_K very close to 1",
-                        "Hint: `K` kernel might be a projection",
-                    ]
-                    raise FloatingPointError("\n".join(err_print))
+        if self.K is not None:
+            # todo separate (non)hermitian cases L = K(K-I)-1
+            eig_vals, self.eig_vecs = la.eigh(self.K)
+            np.clip(eig_vals, 0.0, 1.0, out=eig_vals)  # 0 <= K <= I
+            self.K_eig_vals = eig_vals
+            return True
 
-            elif self.K is not None:
-                msg = "- eigendecomposition of K"
-                print(msg)
-                self.K_eig_vals, self.eig_vecs = la.eigh(self.K)
-                check_in_01(self.K_eig_vals)
-                self.compute_L(msg=True)
-
-            else:
-                self.compute_K(msg=True)
-                self.compute_L(msg=True)
+        self.compute_correlation_kernel()
+        return True
 
     def plot_kernel(self, kernel_type="correlation", save_path=""):
         """Display a heatmap of the kernel used to define the :class:`FiniteDPP` object (correlation kernel :math:`\\mathbf{K}` or likelihood kernel :math:`\\mathbf{L}`)
