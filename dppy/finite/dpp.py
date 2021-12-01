@@ -567,54 +567,56 @@ class FiniteDPP:
         return self.sample_mcmc(self.sampling_mode, **params)
 
     def compute_K(self, msg=False):
-        """Compute the correlation kernel :math:`\\mathbf{K}` from the original parametrization of the :class:`FiniteDPP` object.
+        """Alias of :py:meth:`~dppy.finite.dpp.FiniteDPP.compute_correlation_kernel`"""
+        return self.compute_correlation_kernel()
 
-        The kernel is stored in the :py:attr:`~FiniteDPP.K` attribute.
+    def compute_correlation_kernel(self):
+        r"""Compute the correlation kernel :math:`\mathbf{K}` from the current parametrization of the :class:`FiniteDPP` object.
+
+        The returned kernel is also stored as the :py:attr:`~dppy.finite.dpp.FiniteDPP.K` attribute.
 
         .. seealso::
 
             :ref:`finite_dpps_relation_kernels`
         """
+        while self.compute_correlation_kernel_step():
+            continue
+        return self.K
 
+    def compute_correlation_kernel_step(self):
+        """Sort of fixed point algorithm to
+
+        Return
+        ``False`` if the right parameters are indeed computed
+        ``True`` if extra computations are required
+        """
         if self.K is not None:
-            # msg = 'K (correlation) kernel available'
-            # print(msg)
-            pass
+            return False
 
-        else:
-            if not msg:
-                print("K (correlation) kernel computed via:")
+        if self.K_eig_vals is not None:
+            U = self.eig_vecs
+            lambda_ = self.K_eig_vals
+            self.K = (U * lambda_).dot(U.T)
+            return False
 
-            if self.K_eig_vals is not None:
-                msg = "- U diag(eig_K) U.T"
-                print(msg)
-                self.K = (self.eig_vecs * self.K_eig_vals).dot(self.eig_vecs.T)
+        if self.A_zono is not None:
+            rank = self.A_zono.shape[0]
+            self.K_eig_vals = np.ones(rank)
+            self.eig_vecs, *_ = la.qr(self.A_zono.T, mode="economic")
+            return True
 
-            elif self.A_zono is not None:
-                msg = "\n".join(
-                    ["- K = A.T (AA.T)^-1 A, using", "- U = QR(A.T)", "- K = U U.T"]
-                )
-                print(msg)
-                self.K_eig_vals = np.ones(self.A_zono.shape[0])
-                self.eig_vecs, *_ = la.qr(self.A_zono.T, mode="economic")
-                self.K = self.eig_vecs.dot(self.eig_vecs.T)
+        if self.L_eig_vals is not None:
+            gamma = self.L_eig_vals
+            self.K_eig_vals = gamma / (1.0 + gamma)
+            return True
 
-            elif self.L_eig_vals is not None:
-                msg = "- eig_K = eig_L/(1+eig_L)"
-                print(msg)
-                self.K_eig_vals = self.L_eig_vals / (1.0 + self.L_eig_vals)
-                self.compute_K(msg=True)
+        if self.L is not None:
+            # todo separate (non)hermitian cases K = L(L+I)-1
+            self.L_eig_vals, self.eig_vecs = la.eigh(self.L)
+            return True
 
-            elif self.L is not None:
-                msg = "- eigendecomposition of L"
-                print(msg)
-                self.L_eig_vals, self.eig_vecs = la.eigh(self.L)
-                check_geq_0(self.L_eig_vals)
-                self.compute_K(msg=True)
-
-            else:
-                self.compute_L(msg=True)
-                self.compute_K(msg=True)
+        self.compute_L()
+        return True
 
     def compute_L(self, msg=False):
         """Compute the likelihood kernel :math:`\\mathbf{L}` from the original parametrization of the :class:`FiniteDPP` object.
