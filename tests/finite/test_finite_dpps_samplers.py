@@ -42,9 +42,9 @@ class Configuration(object):
 
         elif self.sampler_type.startswith("mcmc"):
             if self.sampler_type == "mcmc_dpp":
-                dpp.sample_mcmc(mode=self.method, **self.method_params)
+                dpp.sample_mcmc(method=self.method, **self.method_params)
             elif self.sampler_type == "mcmc_k_dpp":
-                dpp.sample_mcmc_k_dpp(mode=self.method, **self.method_params)
+                dpp.sample_mcmc_k_dpp(method=self.method, **self.method_params)
             else:
                 raise ValueError(self.sampler_type)
             return dpp.list_of_samples[-1]
@@ -204,7 +204,7 @@ class TestAdequationOfFiniteDppSamplers(unittest.TestCase):
             samples = config.get_samples(dpp, self.nb_exact_samples)
             for adequation in self.adequations_to_check:
                 with self.subTest(
-                    config=config,
+                    config=config.__dict__,
                     adequation=adequation,
                 ):
                     adeq, msg = self.check_adequation(adequation, samples, dpp)
