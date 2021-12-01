@@ -5,8 +5,18 @@ import numpy as np
 from dppy.utils import check_random_state, det_ST
 
 
-def add_exchange_delete_sampler(
-    kernel, s_init=None, nb_iter=10, T_max=None, random_state=None
+def add_exchange_delete_sampler(dpp, random_state=None, **params):
+    dpp.compute_L()
+    kernel = dpp.L
+    rng = check_random_state(random_state)
+    s0 = params.pop("s_init", None)
+    if s0 is None:
+        s0 = initialize_add_exchange_delete_sampler(kernel, rng, **params)
+    return add_exchange_delete_sampler_core(kernel, s0, rng, **params)
+
+
+def add_exchange_delete_sampler_core(
+    kernel, s_init, random_state=None, nb_iter=10, T_max=None, **kwargs
 ):
     """MCMC sampler for generic DPPs, it is a mix of add/delete and basis exchange MCMC samplers.
 
@@ -196,3 +206,32 @@ def add_exchange_delete_sampler_refactored(
             break
 
     return chain
+
+
+def initialize_add_exchange_delete_sampler(
+    kernel, random_state=None, nb_trials=100, tol=1e-9, **kwargs
+):
+    """
+    .. seealso::
+        - :func:`add_delete_sampler <add_delete_sampler>`
+        - :func:`exchange_sampler <exchange_sampler>`
+        - :func:`initialize_add_exchange_delete_sampler <initialize_add_exchange_delete_sampler>`
+        - :func:`add_exchange_delete_sampler <add_exchange_delete_sampler>`
+    """
+    rng = check_random_state(random_state)
+
+    N = kernel.shape[0]
+    ground_set = np.arange(N)
+
+    for _ in range(nb_trials):
+        T = rng.choice(2 * N, size=N, replace=False)
+        S0 = np.intersect1d(T, ground_set, assume_unique=True)
+        det_S0 = det_ST(kernel, S0)
+        if det_S0 > tol:
+            return S0.tolist()
+
+    raise ValueError(
+        "Unsuccessful initialization of add-exchange-delete sampler. After {} random trials, no initial set S0 satisfies det L_S0 > {}. You may consider passing your own initial state s_init.".format(
+            nb_trials, tol
+        )
+    )

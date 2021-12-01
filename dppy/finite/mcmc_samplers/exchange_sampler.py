@@ -1,25 +1,42 @@
-# coding: utf8
-""" Implementation of finite DPP MCMC samplers:
-
-- `add_exchange_delete_sampler`
-- `add_delete_sampler`
-- `exchange_sampler`
-- `zonotope_sampler`
-
-.. seealso:
-
-    `Documentation on ReadTheDocs <https://dppy.readthedocs.io/en/latest/finite_dpps/mcmc_sampling.html>`_
-"""
-
 import time
 
 import numpy as np
-import scipy.linalg as la
 
 from dppy.utils import check_random_state, det_ST
 
 
-def basis_exchange_sampler(kernel, s_init, nb_iter=10, T_max=None, random_state=None):
+def exchange_sampler(dpp, random_state=None, **params):
+    rng = check_random_state(random_state)
+    s0 = params.pop("s_init", None)
+    size = params.pop("size", None if s0 is None else len(s0))
+    if size is None:
+        raise ValueError(
+            "Exchange sampler cannot be initialized, consider passing s_init or size keyword argument."
+        )
+    kernel = get_exchange_sampler_kernel(dpp, size)
+    if s0 is None:
+        s0 = initialize_exchange_sampler(kernel, size, rng, **params)
+    return exchange_sampler_core(kernel, s0, rng, **params)
+
+
+def get_exchange_sampler_kernel(dpp, size):
+    if dpp.kernel_type == "correlation" and dpp.projection:
+        dpp.compute_K()
+        rank = np.rint(np.trace(dpp.K)).astype(int)
+        if size != rank:
+            raise ValueError(
+                "size={} must be equal to rank={} for DPP(kernel_type='correlation', projection=True, ...)".format(
+                    size, rank
+                )
+            )
+        return dpp.K
+    dpp.compute_L()
+    return dpp.L
+
+
+def exchange_sampler_core(
+    kernel, s_init, random_state=None, nb_iter=10, T_max=None, **kwargs
+):
     """MCMC sampler for projection DPPs, based on the basis exchange property.
 
     :param kernel:
@@ -216,3 +233,22 @@ def exchange_sampler_gauss_quadrature(
             break
 
     return chain.tolist()
+
+
+def initialize_exchange_sampler(
+    kernel, size, random_state=None, nb_trials=100, tol=1e-9, **kwargs
+):
+    rng = check_random_state(random_state)
+    N = kernel.shape[0]
+
+    for _ in range(nb_trials):
+        S0 = rng.choice(N, size=size, replace=False)
+        det_S0 = det_ST(kernel, S0)
+        if det_S0 > tol:
+            return S0.tolist()
+
+    raise ValueError(
+        "Failed to initialize exchange sampler. After {} random trials, no initial set S0 satisfies det L_S0 > {}. If you are sampling from a k-DPP, make sure size k <= rank(L). You may consider passing your own initial state s_init.".format(
+            nb_trials, tol
+        )
+    )

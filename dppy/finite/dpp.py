@@ -33,7 +33,11 @@ from dppy.finite.exact_samplers.spectral_sampler_k_dpp import spectral_sampler_k
 from dppy.finite.exact_samplers.vfx_samplers import vfx_sampler_dpp, vfx_sampler_k_dpp
 
 # MCMC
-from dppy.finite.mcmc_samplers.mcmc_sampling import dpp_sampler_mcmc
+from dppy.finite.mcmc_samplers.add_delete_sampler import add_delete_sampler
+from dppy.finite.mcmc_samplers.add_exchange_delete_sampler import (
+    add_exchange_delete_sampler,
+)
+from dppy.finite.mcmc_samplers.exchange_sampler import exchange_sampler
 from dppy.finite.mcmc_samplers.zonotope_sampler import zonotope_sampler
 
 # UTILS
@@ -448,14 +452,14 @@ class FiniteDPP:
         default = samplers["spectral"]
         return samplers.get(method.lower(), default)
 
-    def sample_mcmc(self, mode, **params):
+    def sample_mcmc(self, method="aed", random_state=None, **params):
         """Run a MCMC with stationary distribution the corresponding :class:`FiniteDPP <FiniteDPP>` object.
 
-        :param string mode:
+        :param string method:
 
-            - ``"AED"`` Add-Exchange-Delete
-            - ``"AD"`` Add-Delete
-            - ``"E"`` Exchange
+            - ``"aed"`` add-exchange-delete
+            - ``"ad"`` add-delete
+            - ``"e"`` exchange
             - ``"zonotope"`` Zonotope sampling
 
         :param dict params:
@@ -463,16 +467,16 @@ class FiniteDPP:
 
             ``"random_state"`` (default None)
 
-            - If ``mode="AED","AD","E"``
+            - If ``method="aed","ad","e"``
 
                 + ``"s_init"`` (default None) Starting state of the Markov chain
                 + ``"nb_iter"`` (default 10) Number of iterations of the chain
                 + ``"T_max"`` (default None) Time horizon
-                + ``"size"`` (default None) Size of the initial sample for ``mode="AD"/"E"``
+                + ``"size"`` (default None) Size of the initial sample for ``method="AD"/"E"``
 
-                    * :math:`\\operatorname{rank}(\\mathbf{K})=\\operatorname{trace}(\\mathbf{K})` for projection :math:`\\mathbf{K}` (correlation) kernel and ``mode="E"``
+                    * :math:`\\operatorname{rank}(\\mathbf{K})=\\operatorname{trace}(\\mathbf{K})` for projection :math:`\\mathbf{K}` (correlation) kernel and ``method="E"``
 
-            - If ``mode="zonotope"``:
+            - If ``method="zonotope"``:
 
                 + ``"lin_obj"`` linear objective in main optimization problem (default np.random.randn(N))
                 + ``"x_0"`` initial point in zonotope (default A*u, u~U[0,1]^n)
@@ -500,56 +504,26 @@ class FiniteDPP:
             - :py:meth:`~FiniteDPP.flush_samples`
         """
 
-        self.sampling_mode = mode
-
-        if self.sampling_mode == "zonotope":
-            if self.A_zono is not None:
-                chain = zonotope_sampler(self.A_zono, **params)
-            else:
-                err_print = [
-                    "Invalid `mode=zonotope` parameter",
-                    "DPP must be defined via `A_zono`",
-                    "Given: {}".format(self.params_keys),
-                ]
-                raise ValueError(" ".join(err_print))
-
-        elif self.sampling_mode == "E":
-            if self.kernel_type == "correlation" and self.projection:
-                self.compute_K()
-                size = params.get("size", None)
-                rank = np.rint(np.trace(self.K)).astype(int)
-                # |sample| = Tr(K) = rank(K) a.s. for projection DPP(K)
-                if size == rank:
-                    chain = dpp_sampler_mcmc(self.K, self.sampling_mode, **params)
-                else:
-                    raise ValueError(
-                        "size={} != rank={} for projection correlation K kernel".format(
-                            size, rank
-                        )
-                    )
-            else:
-                self.compute_L()
-                chain = dpp_sampler_mcmc(self.L, self.sampling_mode, **params)
-
-        elif self.sampling_mode in ("AED", "AD"):
-            self.compute_L()
-            chain = dpp_sampler_mcmc(self.L, self.sampling_mode, **params)
-
-        else:
-            err_print = [
-                "Invalid `mode` parameter, choose among:",
-                "- `AED`: Add-Exchange-Delete",
-                "- `AD`: Add-Delete",
-                "- `E`: Exchange",
-                "- `zonotope`: projection correlation kernel only",
-                "Given: {}".format(self.sampling_mode),
-            ]
-            raise ValueError("\n".join(err_print))
+        rng = check_random_state(random_state)
+        sampler = self._select_sampler_mcmc_dpp(method)
+        chain = sampler(self, rng, **params)
 
         self.list_of_samples.append(chain)
+        self.sampling_mode = method
         return chain[-1]
 
-    def sample_mcmc_k_dpp(self, size, mode="E", **params):
+    @staticmethod
+    def _select_sampler_mcmc_dpp(method):
+        samplers = {
+            "aed": add_exchange_delete_sampler,
+            "ad": add_delete_sampler,
+            "e": exchange_sampler,
+            "zonotope": zonotope_sampler,
+        }
+        default = samplers["aed"]
+        return samplers.get(method.lower(), default)
+
+    def sample_mcmc_k_dpp(self, size, method="e", random_state=None, **params):
         """Calls :py:meth:`~sample_mcmc` with ``mode="E"`` and ``params["size"] = size``
 
         .. seealso::
@@ -559,13 +533,9 @@ class FiniteDPP:
             - :py:meth:`~FiniteDPP.sample_exact_k_dpp`
             - :py:meth:`~FiniteDPP.flush_samples`
         """
-
-        self.sampling_mode = "E"
-
         self.size_k_dpp = size
         params["size"] = size
-
-        return self.sample_mcmc(self.sampling_mode, **params)
+        return self.sample_mcmc(method="e", random_state=None, **params)
 
     def compute_K(self, msg=False):
         """Compute the correlation kernel :math:`\\mathbf{K}` from the original parametrization of the :class:`FiniteDPP` object.

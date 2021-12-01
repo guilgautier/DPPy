@@ -3,7 +3,19 @@ import time
 from dppy.utils import check_random_state, det_ST
 
 
-def add_delete_sampler(kernel, s_init, nb_iter=10, T_max=None, random_state=None):
+def add_delete_sampler(dpp, random_state=None, **params):
+    dpp.compute_L()
+    kernel = dpp.L
+    rng = check_random_state(random_state)
+    s0 = params.pop("s_init", None)
+    if s0 is None:
+        s0 = initialize_add_delete_sampler(kernel, rng, **params)
+    return add_delete_sampler_core(kernel, s0, rng, **params)
+
+
+def add_delete_sampler_core(
+    kernel, s_init, random_state=None, nb_iter=10, T_max=None, **kwargs
+):
     """MCMC sampler for generic DPP(kernel), it performs local moves by removing/adding one element at a time.
 
     :param kernel:
@@ -156,3 +168,23 @@ def add_delete_sampler_refactored(
             break
 
     return chain
+
+
+def initialize_add_delete_sampler(
+    kernel, random_state=None, size=None, nb_trials=100, tol=1e-9, **kwargs
+):
+    rng = check_random_state(random_state)
+    N = kernel.shape[0]
+
+    for _ in range(nb_trials):
+        _size = rng.randint(1, N + 1) if size is None else size
+        S0 = rng.choice(N, size=_size, replace=False)
+        det_S0 = det_ST(kernel, S0)
+        if det_S0 > tol:
+            return S0.tolist()
+
+    raise ValueError(
+        "Failed to initialize add-delete sampler. After {} random trials, no initial set S0 satisfies det L_S0 > {}. If you are sampling from a k-DPP, make sure size k <= rank(L). You may consider passing your own initial state s_init.".format(
+            nb_trials, tol
+        )
+    )

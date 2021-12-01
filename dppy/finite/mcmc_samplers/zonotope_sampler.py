@@ -1,12 +1,27 @@
-import time
-
 import numpy as np
 import scipy.linalg as la
+from cvxopt import matrix, solvers, spmatrix
 
-from dppy.utils import check_random_state, det_ST
+from dppy.utils import check_random_state
 
 
-def zonotope_sampler(A_zono, **params):
+def zonotope_sampler(dpp, random_state=None, **params):
+    if not dpp.projection or not dpp.hermitian or dpp.A_zono is None:
+        raise ValueError(
+            "DPP must be defined via FiniteDPP(kernel_type='correlation', projection=True, hermitian=True, A_zono=...)"
+        )
+    return zonotope_sampler_core(dpp.A_zono, random_state, **params)
+
+
+def zonotope_sampler_core(
+    A_zono,
+    random_state=None,
+    lin_obj=None,
+    x0=None,
+    max_iter=10,
+    show_progress=False,
+    msg_lev="GLP_MSG_OFF",
+):
     """MCMC based sampler for projection DPPs.
     The similarity matrix is the orthogonal projection matrix onto
     the row span of the feature vector matrix.
@@ -23,45 +38,38 @@ def zonotope_sampler(A_zono, **params):
 
         - ``'lin_obj'`` (list): Linear objective (:math:`c`) of the linear program used to identify the tile in which a point lies. Default is a random Gaussian vector.
         - ``'x_0'` (list): Initial point.
-        - ``'nb_iter'`` (int): Number of iterations of the MCMC chain. Default is 10.
+        - ``'max_iter'`` (int): Number of iterations of the MCMC chain. Default is 10.
         - ``'T_max'`` (float): Maximum running time of the algorithm (in seconds).
         Default is None.
         - ``'random_state`` (default None)
     :type params: dict
 
     :return:
-        MCMC chain of approximate samples (stacked row_wise i.e. nb_iter rows).
+        MCMC chain of approximate samples (stacked row_wise i.e. max_iter rows).
     :rtype:
         list of lists
 
     .. seealso::
 
-        Algorithm 5 in :cite:`GaBaVa17`
-
+        - :cite:`GaBaVa17` Algorithm 5
         - :func:`extract_basis <extract_basis>`
         - :func:`exchange_sampler <exchange_sampler>`
     """
-    # For zonotope sampler
-    try:
-        from cvxopt import matrix, solvers, spmatrix
-    except ImportError:
-        raise ValueError(
-            "The cvxopt package is required to use the zonotype sampler (see setup.py)."
-        )
+    solvers.options["show_progress"] = show_progress
+    solvers.options["glpk"] = {"msg_lev": msg_lev}
 
-    solvers.options["show_progress"] = params.get("show_progress", False)
-    solvers.options["glpk"] = {"msg_lev": params.get("show_progress", "GLP_MSG_OFF")}
+    rng = check_random_state(random_state)
 
-    rng = check_random_state(params.get("random_state", None))
-
-    r, N = A_zono.shape  # Sizes of r=samples=rank(A_zono), N=ground set
+    r, N = A_zono.shape  # sample size r = rank(A_zono), ground set size N
     # Linear objective
-    c = matrix(params.get("lin_obj", rng.randn(N)))
-    # Initial point x0 = A*u, u~U[0,1]^n
-    x0 = matrix(params.get("x_0", A_zono.dot(rng.rand(N))))
+    if lin_obj is None:
+        lin_obj = rng.randn(N)
+    c = matrix(lin_obj)
 
-    nb_iter = params.get("nb_iter", 10)
-    T_max = params.get("T_max", None)
+    # Initial point x0 = A*u, u~U[0,1]^n
+    if x0 is None:
+        x0 = A_zono.dot(rng.rand(N))
+    x0 = matrix(x0)
 
     ###################
     # Linear problems #
@@ -128,15 +136,13 @@ def zonotope_sampler(A_zono, **params):
         B_x0 = extract_basis(np.asarray(y_star))
 
     # Initialize sequence of sample
-    chain = np.zeros((nb_iter, r), dtype=int)
+    chain = np.zeros((max_iter, r), dtype=int)
     chain[0] = B_x0
 
     # Compute the det of the tile (Vol(B)=abs(det(B)))
     det_B_x0 = la.det(A_zono[:, B_x0])
 
-    t_start = time.time() if T_max else 0
-
-    for it in range(1, nb_iter):
+    for it in range(1, max_iter):
 
         # Take uniform direction d defining D_x0
         d = matrix(rng.randn(r, 1))
@@ -167,40 +173,36 @@ def zonotope_sampler(A_zono, **params):
             else:
                 chain[it] = B_x0
 
-        if T_max and time.time() - t_start < T_max:
-            break
-
     return chain.tolist()
 
 
-def extract_basis(y_sol, eps=1e-5):
-    """Subroutine of :func:`zonotope_sampler <zonotope_sampler>` to extract the tile of the zonotope
-    in which a point lies. It extracts the indices of entries of the solution
-    of LP :eq:`eq:Px` that are in (0,1).
+def extract_basis(y_sol, tol=1e-5):
+    r"""Extract the basis/tile :math:`B_{x}` of the zonotope in which the RHS :math:`x` of the LP :eq:`eq:Px`, given its optimal solution ``y_sol``.
+
+    .. math::
+
+        B_{x} = \left\{ i \, ; \, y_i^* \in (0,1) \right\}
 
     :param y_sol:
-        Optimal solution of LP :eq:`eq:Px`
+        Optimal solution of the LP :eq:`eq:Px`
     :type y_sol:
-        list
+        array_like
 
-    :param eps:
-        Tolerance :math:`y_i^* \\in (\\epsilon, 1-\\epsilon), \\quad \\epsilon \\geq 0`
-    :eps type:
+    :param tol:
+        Tolerance :math:`y_i^* \in (\epsilon, 1-\epsilon), \quad \epsilon \geq 0`
+    :type eps:
         float
 
     :return:
         Indices of the feature vectors spanning the tile in which the point is lies.
-        :math:`B_{x} = \\left\\{ i \\, ; \\, y_i^* \\in (0,1) \\right\\}`
     :rtype:
-        list
+        array_like
 
     .. seealso::
 
-        Algorithm 3 in :cite:`GaBaVa17`
-
-        - :func:`zonotope_sampler <zonotope_sampler>`
+        - :cite:`GaBaVa17` Algorithm 3
+        - :func:`zonotope_sampler_core <zonotope_sampler_core>`
     """
-
-    basis = np.where((eps < y_sol) & (y_sol < 1 - eps))[0]
-
-    return basis
+    mask = tol < y_sol
+    np.logical_and(mask, y_sol < 1 - tol, where=mask, out=mask)
+    return np.where(mask)[0]
