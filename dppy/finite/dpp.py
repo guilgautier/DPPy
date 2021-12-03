@@ -41,65 +41,8 @@ from dppy.finite.mcmc_samplers.exchange_sampler import exchange_sampler
 from dppy.finite.mcmc_samplers.zonotope_sampler import zonotope_sampler
 
 # UTILS
-from dppy.utils import (
-    check_geq_0,
-    check_in_01,
-    check_random_state,
-    is_equal_to_O_or_1,
-    is_full_row_rank,
-    is_orthonormal_columns,
-    is_projection,
-    is_symmetric,
-)
-
-KERNEL_PARAMS = {
-    "correlation": {
-        "K": {
-            "projection": (True, False),
-            "hermitian": (True, False),
-            "expression": "K",
-            "description": "0 <= K (N, N) <= I if hermitian=True",
-        },
-        "K_eig_dec": {
-            "projection": (True, False),
-            "hermitian": (True,),
-            "expression": "(e_vals, e_vecs)",
-            "description": "0 <= e_vals (r, ) <= 1, e_vecs (N, r)",
-        },
-        "A_zono": {
-            "projection": (True,),
-            "hermitian": (True,),
-            "expression": "A",
-            "description": "A (d, N) with K = A.T (A A.T)^-1 A",
-        },
-    },
-    "likelihood": {
-        "L": {
-            "projection": (True, False),
-            "hermitian": (True,),
-            "expresion": "L",
-            "description": "L (N, N) >= 0 if hermitian=True",
-        },
-        "L_eig_dec": {
-            "projection": (True, False),
-            "hermitian": (True,),
-            "expression": "(e_vals, e_vecs)",
-            "description": "e_vals (r, ) >= 0, e_vecs (N, r)",
-        },
-        "L_gram_factor": {
-            "projection": (False,),
-            "hermitian": (True,),
-            "expression": "Phi",
-            "description": "Phi (d, N) with L = Phi.T Phi",
-        },
-        "L_eval_X_data": {
-            "projection": (False,),
-            "hermitian": (True,),
-            "expression": "(eval_L, X_data)",
-            "description": "X_data (d, N), eval_L callable positive semi-definite kernel function",
-        },
-    },
-}
+from dppy.finite.utils import check_arguments_coherence, check_parameters_validity
+from dppy.utils import check_random_state
 
 
 class FiniteDPP:
@@ -134,7 +77,7 @@ class FiniteDPP:
 
             - ``"L": L``, with ``\mathbf{L}`` :math:`\succeq 0`
             - ``"L_eig_dec": (eig_vals, eig_vecs)``, with ``eig_vals`` :math:`\geq 0`,
-            - ``"L_gram_factor": Phi``, with :math:`\mathbf{L} = \Phi^{ \top} \Phi`,
+            - ``"L_gram_factor": Phi``, with :math:`\mathbf{L} = \Phi^{\top} \Phi`,
             - ``"L_eval_X_data": (eval_L, X_data)``, with :math:`X (N \times d)` and ``eval_L`` a likelihood function such that :math:`\mathbf{L} =` ``eval_L` :math:`(X, X)``.
 
             For a full description of the requirements imposed on ``eval_L``"s interface, see the documentation :func:`dppy.finite.exact_samplers.vfx_samplers.vfx_sampling_precompute_constants`.
@@ -151,7 +94,7 @@ class FiniteDPP:
 
     def __init__(self, kernel_type, projection=False, hermitian=True, **params):
 
-        self.__check_args_coherence(kernel_type, projection, hermitian, **params)
+        check_arguments_coherence(kernel_type, projection, hermitian, **params)
 
         self.kernel_type = kernel_type
         self.hermitian = hermitian
@@ -168,59 +111,17 @@ class FiniteDPP:
         self.L_gram_factor = params.get("L_gram_factor", None)
         self.eval_L, self.X_data = params.get("L_eval_X_data", [None, None])
 
-        self.__check_parameters_validity()
+        check_parameters_validity(self)
 
         self.params_keys = set(params.keys())
 
         # Sampling
         self.list_of_samples = []
+        ## k-dpp
         self.size_k_dpp = 0
         self.esp = None  # evaluation of the elementary symmetric polynomials
+        ## vfx and alpha samplers
         self.intermediate_sample_info = None
-
-    def __check_parameters_validity(self):
-
-        # Attributes relative to K correlation kernel:
-        # K, K_eig_vals, K_eig_vecs, A_zono
-        is_symmetric(self.K)
-        if self.projection:
-            is_projection(self.K)
-
-        if self.projection:
-            is_equal_to_O_or_1(self.K_eig_vals)
-        else:
-            check_in_01(self.K_eig_vals)
-        is_orthonormal_columns(self.eig_vecs)
-
-        is_full_row_rank(self.A_zono)
-
-        # Attributes relative to L likelihood kernel:
-        # L, L_eig_vals, L_eig_vecs, L_gram_factor, L_dual
-        if self.projection:
-            is_projection(self.L)
-
-        if self.projection:
-            is_equal_to_O_or_1(self.L_eig_vals)
-        else:
-            check_geq_0(self.L_eig_vals)
-        if self.eig_vecs is None:  # K_eig_vecs = L_eig_vecs
-            is_orthonormal_columns(self.eig_vecs)
-
-        # L likelihood function representation
-        # eval_L(X, Y) = L(X, Y)
-        # eval_L(X) = L(X, X)
-        if self.eval_L is not None:
-            if not callable(self.eval_L):
-                raise ValueError(
-                    "eval_L should be a positive semi-definite kernel function"
-                )
-        if self.X_data is not None:
-            if not (self.X_data.size and self.X_data.ndim == 2):
-                err_print = [
-                    "Wrong shape = {}".format(self.X_data.shape),
-                    "X_data should be a non empty (N, d) ndarray",
-                ]
-                raise ValueError("\n".join(err_print))
 
     def __str__(self):
         str_info = [
@@ -233,38 +134,6 @@ class FiniteDPP:
         return "\n".join(str_info)
 
     # Check routine
-    def __check_args_coherence(self, kernel_type, projection, hermitian, **params):
-        # Check coherence of initialization parameters of the DPP:
-        # kernel_type, projection and params.
-
-        if kernel_type not in KERNEL_PARAMS.keys():
-            raise ValueError(f"kernel_type not in {KERNEL_PARAMS.keys()}")
-
-        valid_params = KERNEL_PARAMS[kernel_type]
-        coherent_params = set(params).intersection(valid_params)
-        if not coherent_params:
-            suggestions = []
-            for param, _dict in valid_params.items():
-                proj, herm, expr, descr = _dict.values()
-                args = ", ".join(
-                    [
-                        f'kernel_type="{kernel_type}"',
-                        f"projection={'?'.join(map(str, proj))}",
-                        f"hermitian={'?'.join(map(str, herm))}",
-                        f"{param}={expr}",
-                    ]
-                )
-                suggestions.append(f"- FiniteDPP({args})\nwhere {descr}")
-            suggestions = "\n".join(suggestions)
-            raise ValueError(f"Invalid parametrization choose:\n{suggestions}")
-
-        for param in coherent_params:
-            proj, herm, expr, descr = valid_params[param].values()
-            s = "for FiniteDPP(..., {param}={expr}), where {descr}"
-            if projection not in proj:
-                raise ValueError(f"'projection' argument not in {proj}, {s}")
-            if hermitian not in herm:
-                raise ValueError(f"'hermitian' argument not in {herm}, {s}")
 
     def info(self):
         """Display infos about the :class:`FiniteDPP` object"""
