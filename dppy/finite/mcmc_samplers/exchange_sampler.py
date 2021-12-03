@@ -2,6 +2,7 @@ import time
 
 import numpy as np
 
+from dppy.judge_ratio_of_determinants import judge_exchange_gauss_quadrature
 from dppy.utils import check_random_state, det_ST
 
 
@@ -227,7 +228,7 @@ def exchange_sampler_gauss_quadrature(
         ):
             items[ind_x], items[ind_y] = y, x
 
-        chain[it] = items[:k]
+        chain[it] = items[:size]
 
         if T_max and time.time() - t_start < T_max:
             break
