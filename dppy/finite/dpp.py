@@ -388,35 +388,25 @@ class FiniteDPP:
         """
         return compute_likelihood_kernel(self)
 
-    def plot_kernel(self, kernel_type="correlation", save_path=""):
+    def plot_kernel(self, kernel_type="correlation", ax=None):
         """Display a heatmap of the kernel used to define the :class:`~dppy.finite.dpp.FiniteDPP` object (correlation kernel :math:`\\mathbf{K}` or likelihood kernel :math:`\\mathbf{L}`)
 
-        :param str kernel_type: Type of kernel (``"correlation"`` or ``"likelihood"``), default ``"correlation"``
-
-        :param str save_path: Path to save plot, if empty (default) the plot is not saved.
+        :param str kernel_type: ``"correlation"`` or ``"likelihood"``. Default to ``"correlation"``.
         """
-
         if not kernel_type:
             kernel_type = self.kernel_type
 
-        fig, ax = plt.subplots(1, 1)
-
         if kernel_type == "correlation":
-            self.compute_K()
-            nb_items, kernel_to_plot = self.K.shape[0], self.K
-
+            kernel = self.compute_K()
         elif kernel_type == "likelihood":
-            self.compute_L()
-            nb_items, kernel_to_plot = self.L.shape[0], self.L
+            kernel = self.compute_L()
 
-        else:
-            raise ValueError("kernel_type != 'correlation' or 'likelihood'")
+        if ax is None:
+            fig, ax = plt.subplots(1, 1)
 
-        heatmap = ax.pcolor(kernel_to_plot, cmap="jet", vmin=-0.3, vmax=1)
+        heatmap = ax.pcolor(kernel, cmap="jet", vmin=-0.3, vmax=1)
 
-        ax.set_aspect("equal")
-
-        ticks = np.arange(nb_items)
+        ticks = np.arange(len(kernel))
         ticks_label = [r"${}$".format(tic) for tic in ticks]
 
         ax.xaxis.tick_top()
@@ -428,7 +418,8 @@ class FiniteDPP:
         ax.set_xticklabels(ticks_label, minor=False)
         ax.set_yticklabels(ticks_label, minor=False)
 
+        ax.set_aspect("equal")
+
         plt.colorbar(heatmap)
 
-        if save_path:
-            plt.savefig(save_path)
+        return ax
