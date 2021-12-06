@@ -367,6 +367,10 @@ class FiniteDPP:
         return chain[-1]
 
     def compute_K(self):
+        """Alias of :py:meth:`~dppy.finite.dpp.FiniteDPP.compute_correlation_kernel`."""
+        return self.compute_correlation_kernel()
+
+    def compute_correlation_kernel(self):
         r"""Compute the correlation kernel :math:`\mathbf{K}` from the current parametrization of the :class:`~dppy.finite.dpp.FiniteDPP` object.
 
         The returned kernel is also stored as the :py:attr:`~dppy.finite.dpp.FiniteDPP.K` attribute.
@@ -378,6 +382,10 @@ class FiniteDPP:
         return compute_correlation_kernel(self)
 
     def compute_L(self):
+        """Alias of :py:meth:`~dppy.finite.dpp.FiniteDPP.compute_likelihood_kernel`."""
+        return self.compute_likelihood_kernel()
+
+    def compute_likelihood_kernel(self):
         r"""Compute the likelihood kernel :math:`\mathbf{L}` from the current parametrization of the :class:`~dppy.finite.dpp.FiniteDPP` object.
 
         The returned kernel is also stored as the :py:attr:`~dppy.finite.dpp.FiniteDPP.L` attribute.
@@ -389,7 +397,7 @@ class FiniteDPP:
         return compute_likelihood_kernel(self)
 
     def plot_kernel(self, kernel_type="correlation", ax=None):
-        """Display a heatmap of the kernel used to define the :class:`~dppy.finite.dpp.FiniteDPP` object (correlation kernel :math:`\\mathbf{K}` or likelihood kernel :math:`\\mathbf{L}`)
+        r"""Display a heatmap of the kernel used to define the :class:`~dppy.finite.dpp.FiniteDPP` object (correlation kernel :math:`\mathbf{K}` or likelihood kernel :math:`\mathbf{L}`)
 
         :param str kernel_type: ``"correlation"`` or ``"likelihood"``. Default to ``"correlation"``.
         """
@@ -397,9 +405,13 @@ class FiniteDPP:
             kernel_type = self.kernel_type
 
         if kernel_type == "correlation":
-            kernel = self.compute_K()
+            kernel = self.compute_correlation_kernel()
         elif kernel_type == "likelihood":
-            kernel = self.compute_L()
+            kernel = self.compute_likelihood_kernel()
+        else:
+            raise ValueError(
+                "kernel_type must be either 'correlation' or 'likelihood'."
+            )
 
         if ax is None:
             fig, ax = plt.subplots(1, 1)
