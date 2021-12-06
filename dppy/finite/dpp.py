@@ -1,12 +1,12 @@
 # coding: utf8
 """ Implementation of :py:class:`FiniteDPP` object which has 6 main methods:
 
-- :py:meth:`~dpp.finite.dpp.FiniteDPP.sample_exact`, see also :ref:`sampling DPPs exactly<finite_dpps_exact_sampling>`
-- :py:meth:`~dpp.finite.dpp.FiniteDPP.sample_exact_k_dpp`, see also :ref:`sampling k-DPPs exactly<finite_dpps_exact_sampling>`
-- :py:meth:`~dpp.finite.dpp.FiniteDPP.sample_mcmc`, see also :ref:`sampling DPPs with MCMC<finite_dpps_mcmc_sampling>`
-- :py:meth:`~dpp.finite.dpp.FiniteDPP.sample_mcmc_k_dpp`, see also :ref:`sampling k-DPPs with MCMC<finite_dpps_mcmc_sampling_k_dpps>`
-- :py:meth:`~dpp.finite.dpp.FiniteDPP.compute_K`, to compute the correlation :math:`K` kernel from initial parametrization
-- :py:meth:`~dpp.finite.dpp.FiniteDPP.compute_L`, to compute the likelihood :math:`L` kernel from initial parametrization
+- :py:meth:`~dppy.finite.dpp.FiniteDPP.sample_exact`, see also :ref:`sampling DPPs exactly<finite_dpps_exact_sampling>`
+- :py:meth:`~dppy.finite.dpp.FiniteDPP.sample_exact_k_dpp`, see also :ref:`sampling k-DPPs exactly<finite_dpps_exact_sampling>`
+- :py:meth:`~dppy.finite.dpp.FiniteDPP.sample_mcmc`, see also :ref:`sampling DPPs with MCMC<finite_dpps_mcmc_sampling>`
+- :py:meth:`~dppy.finite.dpp.FiniteDPP.sample_mcmc_k_dpp`, see also :ref:`sampling k-DPPs with MCMC<finite_dpps_mcmc_sampling_k_dpps>`
+- :py:meth:`~dppy.finite.dpp.FiniteDPP.compute_correlation_kernel`, to compute the correlation :math:`K` kernel from initial parametrization
+- :py:meth:`~dppy.finite.dpp.FiniteDPP.compute_likelihood_kernel`, to compute the likelihood :math:`L` kernel from initial parametrization
 
 .. seealso:
 
@@ -31,8 +31,6 @@ from dppy.finite.mcmc_samplers.select_samplers import (
 )
 from dppy.finite.utils import check_arguments_coherence, check_parameters_validity
 from dppy.utils import check_random_state
-
-# EXACT
 
 
 class FiniteDPP:
@@ -103,8 +101,6 @@ class FiniteDPP:
 
         check_parameters_validity(self)
 
-        self.params_keys = set(params.keys())
-
         # Sampling
         self.list_of_samples = []
         ## k-dpp
@@ -113,35 +109,19 @@ class FiniteDPP:
         ## vfx and alpha samplers
         self.intermediate_sample_info = None
 
-    def __str__(self):
-        str_info = [
-            "DPP defined through {} {} kernel".format(
-                "projection" if self.projection else "", self.kernel_type
-            ),
-            "Parametrized by {}".format(self.params_keys),
-        ]
-
-        return "\n".join(str_info)
-
-    # Check routine
-
-    def info(self):
-        """Display infos about the :class:`~dppy.finite.dpp.FiniteDPP` object"""
-        print(self.__str__())
-
     def flush_samples(self):
         """Empty the :py:attr:`~dpp.finite.dpp.FiniteDPP.list_of_samples` attribute.
 
         .. see also::
 
-            - :py:meth:`~dpp.finite.dpp.FiniteDPP.sample_exact`
-            - :py:meth:`~dpp.finite.dpp.FiniteDPP.sample_mcmc`
+            - :py:meth:`~dppy.finite.dpp.FiniteDPP.sample_exact`
+            - :py:meth:`~dppy.finite.dpp.FiniteDPP.sample_mcmc`
         """
         self.list_of_samples = []
         self.size_k_dpp = 0
 
     def sample_exact(self, method="spectral", random_state=None, **params):
-        """Sample exactly from the corresponding :class:`~dppy.finite.dpp.FiniteDPP <FiniteDPP>` object. Default sampling method="spectral" assumes the corresponding DPP is  hermitian.
+        """Sample exactly from the corresponding :py:class:`~dppy.finite.dpp.FiniteDPP <FiniteDPP>` object. Default sampling method="spectral" assumes the corresponding DPP is  hermitian.
 
         :param method:
             - ``"spectral"`` (default), see :ref:`finite_dpps_exact_sampling_spectral_method`. It applies to hermitian DPPs: ``FiniteDPP(..., hermitian=True, ...)``.
@@ -183,7 +163,7 @@ class FiniteDPP:
                 a small number and increase if the algorithm fails to terminate.
 
         :return:
-            Returns a sample from the corresponding :class:`~dppy.finite.dpp.FiniteDPP <FiniteDPP>` object. In any case, the sample is appended to the :py:attr:`~dpp.finite.dpp.FiniteDPP.list_of_samples` attribute as a list.
+            Returns a sample from the corresponding :py:class:`~dppy.finite.dpp.FiniteDPP <FiniteDPP>` object. In any case, the sample is appended to the :py:attr:`~dpp.finite.dpp.FiniteDPP.list_of_samples` attribute as a list.
         :rtype:
             list
 
@@ -191,13 +171,13 @@ class FiniteDPP:
 
             Each time you call this method, the sample is appended to the :py:attr:`~dpp.finite.dpp.FiniteDPP.list_of_samples` attribute as a list.
 
-            The :py:attr:`~dpp.finite.dpp.FiniteDPP.list_of_samples` attribute can be emptied using :py:meth:`~dpp.finite.dpp.FiniteDPP.flush_samples`
+            The :py:attr:`~dpp.finite.dpp.FiniteDPP.list_of_samples` attribute can be emptied using :py:meth:`~dppy.finite.dpp.FiniteDPP.flush_samples`
 
         .. seealso::
 
             - :ref:`finite_dpps_exact_sampling`
-            - :py:meth:`~dpp.finite.dpp.FiniteDPP.flush_samples`
-            - :py:meth:`~dpp.finite.dpp.FiniteDPP.sample_mcmc`
+            - :py:meth:`~dppy.finite.dpp.FiniteDPP.flush_samples`
+            - :py:meth:`~dppy.finite.dpp.FiniteDPP.sample_mcmc`
         """
         rng = check_random_state(random_state)
         sampler = select_sampler_exact_dpp(self, method)
@@ -207,7 +187,7 @@ class FiniteDPP:
         return sample
 
     def sample_exact_k_dpp(self, size, method="spectral", random_state=None, **params):
-        r"""Sample exactly from :math:`\operatorname{k-DPP}`. A priori the :class:`~dppy.finite.dpp.FiniteDPP <FiniteDPP>` object was instanciated by its likelihood :math:`\mathbf{L}` kernel so that
+        r"""Sample exactly from :math:`\operatorname{k-DPP}`. A priori the :py:class:`~dppy.finite.dpp.FiniteDPP <FiniteDPP>` object was instanciated by its likelihood :math:`\mathbf{L}` kernel so that
 
         .. math::
 
@@ -272,7 +252,7 @@ class FiniteDPP:
 
             Each time you call this method, the sample is appended to the :py:attr:`~dpp.finite.dpp.FiniteDPP.list_of_samples` attribute as a list.
 
-            The :py:attr:`~dpp.finite.dpp.FiniteDPP.list_of_samples` attribute can be emptied using :py:meth:`~dpp.finite.dpp.FiniteDPP.flush_samples`
+            The :py:attr:`~dpp.finite.dpp.FiniteDPP.list_of_samples` attribute can be emptied using :py:meth:`~dppy.finite.dpp.FiniteDPP.flush_samples`
 
         .. caution::
 
@@ -280,8 +260,8 @@ class FiniteDPP:
 
         .. seealso::
 
-            - :py:meth:`~dpp.finite.dpp.FiniteDPP.sample_exact`
-            - :py:meth:`~dpp.finite.dpp.FiniteDPP.sample_mcmc_k_dpp`
+            - :py:meth:`~dppy.finite.dpp.FiniteDPP.sample_exact`
+            - :py:meth:`~dppy.finite.dpp.FiniteDPP.sample_mcmc_k_dpp`
         """
         rng = check_random_state(random_state)
         sampler = select_sampler_exact_k_dpp(self, method)
@@ -292,7 +272,7 @@ class FiniteDPP:
         return sample
 
     def sample_mcmc(self, method="aed", random_state=None, **params):
-        """Run a MCMC with stationary distribution the corresponding :class:`~dppy.finite.dpp.FiniteDPP <FiniteDPP>` object.
+        """Run a MCMC with stationary distribution the corresponding :py:class:`~dppy.finite.dpp.FiniteDPP <FiniteDPP>` object.
 
         :param string method:
 
@@ -334,13 +314,13 @@ class FiniteDPP:
 
             Each time you call this method, the full trajectory of the Markov chain, made of ``params["nb_iter"]`` samples, is appended to the :py:attr:`~dpp.finite.dpp.FiniteDPP.list_of_samples` attribute as a list of lists.
 
-            The :py:attr:`~dpp.finite.dpp.FiniteDPP.list_of_samples` attribute can be emptied using :py:meth:`~dpp.finite.dpp.FiniteDPP.flush_samples`
+            The :py:attr:`~dpp.finite.dpp.FiniteDPP.list_of_samples` attribute can be emptied using :py:meth:`~dppy.finite.dpp.FiniteDPP.flush_samples`
 
         .. seealso::
 
             - :ref:`finite_dpps_mcmc_sampling`
-            - :py:meth:`~dpp.finite.dpp.FiniteDPP.sample_exact`
-            - :py:meth:`~dpp.finite.dpp.FiniteDPP.flush_samples`
+            - :py:meth:`~dppy.finite.dpp.FiniteDPP.sample_exact`
+            - :py:meth:`~dppy.finite.dpp.FiniteDPP.flush_samples`
         """
         rng = check_random_state(random_state)
         sampler = select_sampler_mcmc_dpp(self, method)
@@ -350,14 +330,14 @@ class FiniteDPP:
         return chain[-1]
 
     def sample_mcmc_k_dpp(self, size, method="e", random_state=None, **params):
-        """Equivalent to :py:meth:`~dpp.finite.dpp.FiniteDPP.sample_mcmc` with ``method="E"`` and ``params["size"] = size``
+        """Equivalent to :py:meth:`~dppy.finite.dpp.FiniteDPP.sample_mcmc` with ``method="E"`` and ``params["size"] = size``
 
         .. seealso::
 
             - :ref:`finite_dpps_mcmc_sampling`
-            - :py:meth:`~dpp.finite.dpp.FiniteDPP.sample_mcmc`
-            - :py:meth:`~dpp.finite.dpp.FiniteDPP.sample_exact_k_dpp`
-            - :py:meth:`~dpp.finite.dpp.FiniteDPP.flush_samples`
+            - :py:meth:`~dppy.finite.dpp.FiniteDPP.sample_mcmc`
+            - :py:meth:`~dppy.finite.dpp.FiniteDPP.sample_exact_k_dpp`
+            - :py:meth:`~dppy.finite.dpp.FiniteDPP.flush_samples`
         """
         self.size_k_dpp = size
         sampler = select_sampler_mcmc_k_dpp(self, method)
@@ -371,7 +351,7 @@ class FiniteDPP:
         return self.compute_correlation_kernel()
 
     def compute_correlation_kernel(self):
-        r"""Compute the correlation kernel :math:`\mathbf{K}` from the current parametrization of the :class:`~dppy.finite.dpp.FiniteDPP` object.
+        r"""Compute the correlation kernel :math:`\mathbf{K}` from the current parametrization of the :py:class:`~dppy.finite.dpp.FiniteDPP` object.
 
         The returned kernel is also stored as the :py:attr:`~dppy.finite.dpp.FiniteDPP.K` attribute.
 
@@ -386,7 +366,7 @@ class FiniteDPP:
         return self.compute_likelihood_kernel()
 
     def compute_likelihood_kernel(self):
-        r"""Compute the likelihood kernel :math:`\mathbf{L}` from the current parametrization of the :class:`~dppy.finite.dpp.FiniteDPP` object.
+        r"""Compute the likelihood kernel :math:`\mathbf{L}` from the current parametrization of the :py:class:`~dppy.finite.dpp.FiniteDPP` object.
 
         The returned kernel is also stored as the :py:attr:`~dppy.finite.dpp.FiniteDPP.L` attribute.
 
@@ -397,7 +377,7 @@ class FiniteDPP:
         return compute_likelihood_kernel(self)
 
     def plot_kernel(self, kernel_type="correlation", ax=None):
-        r"""Display a heatmap of the kernel used to define the :class:`~dppy.finite.dpp.FiniteDPP` object (correlation kernel :math:`\mathbf{K}` or likelihood kernel :math:`\mathbf{L}`)
+        r"""Display a heatmap of the kernel used to define the :py:class:`~dppy.finite.dpp.FiniteDPP` object (correlation kernel :math:`\mathbf{K}` or likelihood kernel :math:`\mathbf{L}`)
 
         :param str kernel_type: ``"correlation"`` or ``"likelihood"``. Default to ``"correlation"``.
         """
