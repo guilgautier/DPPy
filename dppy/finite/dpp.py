@@ -20,29 +20,20 @@ import matplotlib.pyplot as plt
 import numpy as np
 import scipy.linalg as la
 
-# EXACT
-from dppy.finite.exact_samplers.alpha_samplers import (
-    alpha_sampler_dpp,
-    alpha_sampler_k_dpp,
+from dppy.finite.exact_samplers.select_samplers import (
+    select_sampler_exact_dpp,
+    select_sampler_exact_k_dpp,
 )
-from dppy.finite.exact_samplers.chol_sampler import chol_sampler, chol_sampler_k_dpp
-from dppy.finite.exact_samplers.generic_samplers import generic_sampler
-from dppy.finite.exact_samplers.schur_sampler import schur_sampler, schur_sampler_k_dpp
-from dppy.finite.exact_samplers.spectral_sampler_dpp import spectral_sampler
-from dppy.finite.exact_samplers.spectral_sampler_k_dpp import spectral_sampler_k_dpp
-from dppy.finite.exact_samplers.vfx_samplers import vfx_sampler_dpp, vfx_sampler_k_dpp
-
-# MCMC
-from dppy.finite.mcmc_samplers.add_delete_sampler import add_delete_sampler
-from dppy.finite.mcmc_samplers.add_exchange_delete_sampler import (
-    add_exchange_delete_sampler,
+from dppy.finite.mcmc_samplers.select_samplers import (
+    select_sampler_mcmc_dpp,
+    select_sampler_mcmc_k_dpp,
 )
-from dppy.finite.mcmc_samplers.exchange_sampler import exchange_sampler
-from dppy.finite.mcmc_samplers.zonotope_sampler import zonotope_sampler
 
 # UTILS
 from dppy.finite.utils import check_arguments_coherence, check_parameters_validity
 from dppy.utils import check_random_state
+
+# EXACT
 
 
 class FiniteDPP:
@@ -209,47 +200,34 @@ class FiniteDPP:
             - :py:meth:`~FiniteDPP.flush_samples`
             - :py:meth:`~FiniteDPP.sample_mcmc`
         """
-
         rng = check_random_state(random_state)
-        sampler = self._select_sampler_exact_dpp(method)
+        sampler = select_sampler_exact_dpp(self, method)
         sample = sampler(self, rng, **params)
 
         self.list_of_samples.append(sample)
         return sample
 
-    def _select_sampler_exact_dpp(self, method):
-        samplers = {
-            "spectral": spectral_sampler,
-            "vfx": vfx_sampler_dpp,
-            "alpha": alpha_sampler_dpp,
-            "schur": schur_sampler,
-            "chol": chol_sampler,
-            "generic": generic_sampler,
-        }
-        default = "spectral" if self.hermitian else "generic"
-        return samplers.get(method.lower(), samplers[default])
-
     def sample_exact_k_dpp(self, size, method="spectral", random_state=None, **params):
-        """Sample exactly from :math:`\\operatorname{k-DPP}`. A priori the :class:`FiniteDPP <FiniteDPP>` object was instanciated by its likelihood :math:`\\mathbf{L}` kernel so that
+        r"""Sample exactly from :math:`\operatorname{k-DPP}`. A priori the :class:`FiniteDPP <FiniteDPP>` object was instanciated by its likelihood :math:`\mathbf{L}` kernel so that
 
         .. math::
 
-            \\mathbb{P}_{\\operatorname{k-DPP}}(\\mathcal{X} = S)
-                \\propto \\det \\mathbf{L}_S ~ 1_{|S|=k}
+            \mathbb{P}_{\operatorname{k-DPP}}(\mathcal{X} = S)
+                \propto \det \mathbf{L}_S ~ 1_{|S|=k}
 
         :param size:
-            size :math:`k` of the :math:`\\operatorname{k-DPP}`
+            size :math:`k` of the :math:`\operatorname{k-DPP}`
 
         :type size:
             int
 
         :param mode:
             - ``projection=True``:
-                - ``"GS"`` (default): Gram-Schmidt on the rows of :math:`\\mathbf{K}`.
+                - ``"GS"`` (default): Gram-Schmidt on the rows of :math:`\mathbf{K}`.
                 - ``"Schur"``: Use Schur complement to compute conditionals.
 
             - ``projection=False``:
-                - ``"GS"`` (default): Gram-Schmidt on the rows of the eigenvectors of :math:`\\mathbf{K}` selected in Phase 1.
+                - ``"GS"`` (default): Gram-Schmidt on the rows of the eigenvectors of :math:`\mathbf{K}` selected in Phase 1.
                 - ``"GS_bis"``: Slight modification of ``"GS"``
                 - ``"KuTa12"``: Algorithm 1 in :cite:`KuTa12`
                 - ``"vfx"``: the dpp-vfx rejection sampler in :cite:`DeCaVa19`
@@ -284,7 +262,7 @@ class FiniteDPP:
                 a small number and increase if the algorithm fails to terminate.
 
         :return:
-            A sample from the corresponding :math:`\\operatorname{k-DPP}`.
+            A sample from the corresponding :math:`\operatorname{k-DPP}`.
 
             In any case, the sample is appended to the :py:attr:`~FiniteDPP.list_of_samples` attribute as a list.
 
@@ -299,33 +277,20 @@ class FiniteDPP:
 
         .. caution::
 
-            The underlying kernel :math:`\\mathbf{K}`, resp. :math:`\\mathbf{L}` must be real valued for now.
+            The underlying kernel :math:`\mathbf{K}`, resp. :math:`\mathbf{L}` must be real valued for now.
 
         .. seealso::
 
             - :py:meth:`~FiniteDPP.sample_exact`
             - :py:meth:`~FiniteDPP.sample_mcmc_k_dpp`
         """
-
         rng = check_random_state(random_state)
-        sampler = self._select_sampler_exact_k_dpp(method)
+        sampler = select_sampler_exact_k_dpp(self, method)
         sample = sampler(self, size, rng, **params)
 
         self.size_k_dpp = size
         self.list_of_samples.append(sample)
         return sample
-
-    @staticmethod
-    def _select_sampler_exact_k_dpp(method):
-        samplers = {
-            "spectral": spectral_sampler_k_dpp,
-            "vfx": vfx_sampler_k_dpp,
-            "alpha": alpha_sampler_k_dpp,
-            "schur": schur_sampler_k_dpp,
-            "chol": chol_sampler_k_dpp,
-        }
-        default = samplers["spectral"]
-        return samplers.get(method.lower(), default)
 
     def sample_mcmc(self, method="aed", random_state=None, **params):
         """Run a MCMC with stationary distribution the corresponding :class:`FiniteDPP <FiniteDPP>` object.
@@ -378,24 +343,12 @@ class FiniteDPP:
             - :py:meth:`~FiniteDPP.sample_exact`
             - :py:meth:`~FiniteDPP.flush_samples`
         """
-
         rng = check_random_state(random_state)
-        sampler = self._select_sampler_mcmc_dpp(method)
+        sampler = select_sampler_mcmc_dpp(self, method)
         chain = sampler(self, rng, **params)
 
         self.list_of_samples.append(chain)
         return chain[-1]
-
-    @staticmethod
-    def _select_sampler_mcmc_dpp(method):
-        samplers = {
-            "aed": add_exchange_delete_sampler,
-            "ad": add_delete_sampler,
-            "e": exchange_sampler,
-            "zonotope": zonotope_sampler,
-        }
-        default = samplers["aed"]
-        return samplers.get(method.lower(), default)
 
     def sample_mcmc_k_dpp(self, size, method="e", random_state=None, **params):
         """Calls :py:meth:`~sample_mcmc` with ``mode="E"`` and ``params["size"] = size``
@@ -408,8 +361,11 @@ class FiniteDPP:
             - :py:meth:`~FiniteDPP.flush_samples`
         """
         self.size_k_dpp = size
-        params["size"] = size
-        return self.sample_mcmc(method="e", random_state=None, **params)
+        sampler = select_sampler_mcmc_k_dpp(self, method)
+        chain = sampler(self, size=size, random_state=None, **params)
+
+        self.list_of_samples.append(chain)
+        return chain[-1]
 
     def compute_K(self):
         """Alias of :py:meth:`~dppy.finite.dpp.FiniteDPP.compute_correlation_kernel`."""
