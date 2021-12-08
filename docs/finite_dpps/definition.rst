@@ -1,4 +1,4 @@
-.. currentmodule:: dppy.finite_dpps
+.. currentmodule:: dppy.finite.dpp
 
 .. _finite_dpps_definition:
 
@@ -6,23 +6,27 @@ Definition
 **********
 
 A finite point process :math:`\mathcal{X}` on :math:`[N] \triangleq \{1,\dots,N\}` can be understood as a random subset.
-It is defined either via its:
+It can either be defined by
 
-- inclusion probabilities (also called correlation functions)
+- the inclusion probabilities, also called marginal probabilities or correlation functions
 
 	.. math::
+		:label: eq:inclusion_proba
 
 		\mathbb{P}[S\subset \mathcal{X}], \text{ for } S\subset [N],
 
-- likelihood
+- or the joint probabilities, also called the likelihood
 
   	.. math::
+		:label: eq:likelihood_proba
 
 		\mathbb{P}[\mathcal{X}=S], \text{ for } S\subset [N].
 
 .. hint::
 
-	The *determinantal* feature of DPPs stems from the fact that such inclusion, resp. marginal probabilities are given by the principal minors of the corresponding correlation kernel :math:`\mathbf{K}` (resp. likelihood kernel :math:`\mathbf{L}`).
+	The *determinantal* feature of Determinantal Point Processes (DPPs) stems from the fact that many of their statistical properties can be expressed by means of determinants and minors of kernel matrices.
+
+.. _finite_dpps_inclusion_probabilities:
 
 Inclusion probabilities
 =======================
@@ -37,6 +41,8 @@ We say that :math:`\mathcal{X} \sim \operatorname{DPP}(\mathbf{K})` with correla
 
 where :math:`\mathbf{K}_S = [\mathbf{K}_{ij}]_{i,j\in S}` i.e. the square submatrix of :math:`\mathbf{K}` obtained by keeping only rows and columns indexed by :math:`S`.
 
+.. _finite_dpps_likelihood:
+
 Likelihood
 ==========
 
@@ -48,87 +54,135 @@ We say that :math:`\mathcal{X} \sim \operatorname{DPP}(\mathbf{L})` with likelih
 	\mathbb{P}[\mathcal{X}=S] = \frac{\det \mathbf{L}_S}{\det [I+\mathbf{L}]},
 	\quad \forall S\subset [N].
 
+.. _finite_dpps_likelihood_from_correlation_kernel:
+
+Alternative expression of the likelihood
+----------------------------------------
+
+Assuming :math:`\operatorname{DPP}(\mathbf{K})` is well defined, see, e.g., :ref:`finite_dpps_existence`, the likelihood :eq:`eq:likelihood_DPP_L` also reads
+
+.. math::
+	:label: eq:likelihood_from_correlation_kernel
+
+	\mathbb{P}[\mathcal{X}=X]
+		= (-1)^{|X^{c}|} \det [K - I^{X^{c}}]
+		= \left\lvert \det [K - I^{X^{c}}] \right\rvert,
+
+where :math:`I^{A}` denotes the indicator matrix of the subset A, i.e., :math:`[I^{A}]_{ij} = 1_{i\in A} 1_{j\in A}`.
+
+In particular, :math:`\mathbb{P}[\mathcal{X}=\emptyset] = \det[I-K]`.
+
+.. seealso::
+
+	:cite:`KuTa12`, Section 3.5.
+
+.. _finite_dpps_existence:
+
 Existence
 =========
 
-Some common sufficient conditions to guarantee existence are:
+Some necessary conditions on the leading principal minors of the respective kernels can be derived directly from the definitions above
 
-.. math::
-	:label: eq:suff_cond_K
+- for :math:`\mathbf{K}` in :ref:`finite_dpps_inclusion_probabilities` must satisfy :math:`0 \leq \det \mathbf{K}_S \leq 1`,
 
-	\mathbf{K} = \mathbf{K}^{\dagger}
-	\quad \text{and} \quad
-	0_N \preceq \mathbf{K} \preceq I_N,
+- for :math:`\mathbf{L}` in :ref:`finite_dpps_likelihood` must satisfy :math:`\det \mathbf{L}_S \geq 0`,
 
-.. math::
-	:label: eq:suff_cond_L
+for all subsets :math:`S\subset [N]`.
 
-	\mathbf{L} = \mathbf{L}^{\dagger}
-	\quad \text{and} \quad
-	\mathbf{L} \succeq 0_N,
+In the **real symmetric** case, `Sylvester's criterion <https://en.wikipedia.org/wiki/Sylvester%27s_criterion>`_ allows to convert these conditions on the leading principal minors to equivalent positive semi-definiteness conditions on the corresponding kernel.
 
-where the dagger :math:`\dagger` symbol means *conjugate transpose*.
+In fact
 
-.. note::
+- for :math:`\mathbf{K} = \mathbf{K}^{\dagger}`, :math:`\operatorname{DPP}(\mathbf{K})` exists if and only if
+
+	.. math::
+		:label: eq:suff_cond_K
+
+		0_N \preceq \mathbf{K} \preceq I_N.
+
+	.. code-block:: python
+
+		import numpy as np
+		import scipy.linalg as la
+		from dppy.finite.dpp import FiniteDPP
+
+		r, N = 4, 10
+
+		A = np.random.randn(N, r)
+		eig_vecs, _ = la.qr(A, mode='economic')
+		eig_vals = np.random.rand(r)
+		K = (eig_vecs * eig_vals).dot(eig_vecs.T)
+
+		dpp = FiniteDPP('correlation', projection=False, hermitian=True, K_eig_dec=(eig_vals, eig_vecs))
+		# or
+		# dpp = FiniteDPP('correlation', projection=False, hermitian=True, K=K)
+
+- for :math:`\mathbf{L} = \mathbf{L}^{\dagger}`, :math:`\operatorname{DPP}(\mathbf{L})` exists if and only if
+
+	.. math::
+		:label: eq:suff_cond_L
+
+		\mathbf{L} \succeq 0_N.
+
+	.. code-block:: python
+
+		import numpy as np
+		from dppy.finite.dpp import FiniteDPP
+
+		r, N = 4, 10
+
+		Phi = np.random.randn(N, r)
+		L = np.dot(Phi.T, Phi)
+
+		dpp = FiniteDPP('likelihood', projection=False, hermitian=True, L=L)
+		# or
+		# dpp = FiniteDPP('likelihood', projection=False, hermitian=True, L_gram_factor=Phi)
+
+.. important::
 
 	In the following, unless otherwise specified:
 
-	- we work under the sufficient conditions :eq:`eq:suff_cond_K` and :eq:`eq:suff_cond_K`,
-	- :math:`\left(\lambda_{1}, \dots, \lambda_{N} \right)` denote the eigenvalues of :math:`\mathbf{K}`,
-	- :math:`\left(\gamma_{1}, \dots, \gamma_{N} \right)` denote the eigenvalues of :math:`\mathbf{L}`.
-
-.. :ref:`Fig. <correlation_kernel_plot>`
-
-.. _correlation_kernel_plot:
-
-.. plot:: plots/ex_plot_correlation_K_kernel.py
-
-	Correlation :math:`\mathbf{K}` kernel
+    - we work with hermitian kernels satisfying the sufficient conditions :eq:`eq:suff_cond_K` and :eq:`eq:suff_cond_L`,
+    - :math:`\left(\lambda_{1}, \dots, \lambda_{N} \right)` denote the eigenvalues of :math:`\mathbf{K} = U \Lambda U^{\dagger}`,
+    - :math:`\left(\gamma_{1}, \dots, \gamma_{N} \right)` denote the eigenvalues of :math:`\mathbf{L}=V \Gamma V^{\dagger}`.
 
 .. _finite_dpps_definition_projection_dpps:
 
 Projection DPPs
 ===============
 
-.. important::
+:math:`\operatorname{DPP}(\mathbf{K})` defined by a *projection* correlation kernel, i.e., :math:`\mathbf{K}^2=\mathbf{K}` are called *projection* DPPs.
 
-	:math:`\operatorname{DPP}(\mathbf{K})` defined by an *orthogonal projection* correlation kernel :math:`\mathbf{K}` are called *projection* DPPs.
-
-	Recall that `orthogonal projection matrices <https://en.wikipedia.org/wiki/Projection_(linear_algebra)#Projection_matrix>`_ are notably characterized by
-
-	a. :math:`\mathbf{K}^2=\mathbf{K}` and :math:`\mathbf{K}^{\dagger}=\mathbf{K}`,
-	b. or equivalently by :math:`\mathbf{K}=U U^{\dagger}` with :math:`U^{\dagger} U=I_r` where :math:`r=\operatorname{rank}(\mathbf{K})`.
-
-	They are indeed valid kernels since they meet the above sufficient conditions: they are Hermitian with eigenvalues :math:`0` or :math:`1`.
+If in addition :math:`\mathbf{K}` is hermitian, i.e.,  :math:`\mathbf{K}^{\dagger}=\mathbf{K}`, then it is called an `orthogonal projection matrix <https://en.wikipedia.org/wiki/Projection_(linear_algebra)#Projection_matrix>`_.
+In this case, the existence conditions :eq:`eq:suff_cond_K` are satisfied since :math:`\mathbf{K}` has eigenvalues equal to :math:`0` or :math:`1`.
+The corresponding :math:`\operatorname{DPP}(\mathbf{K})` is called an orthogonal projection DPP are simply a projection DPP for brevity.
 
 	.. code-block:: python
 
-		from numpy import ones
-		from numpy.random import randn
-		from scipy.linalg import qr
+		import numpy as np
+		import scipy.linalg as la
 		from dppy.finite.dpp import FiniteDPP
 
 		r, N = 4, 10
 
-		eig_vals = ones(r)
-		A = randn(r, N)
-		eig_vecs, _ = qr(A.T, mode='economic')
+		A = np.random.randn(r, N)
+		eig_vecs, _ = la.qr(A.T, mode='economic')
+		eig_vals = np.ones(r)
+		K = eig_vecs.dot(eig_vecs.T)  # = A^T (A A^T)^-1 A
 
-		proj_DPP = FiniteDPP('correlation', projection=True,
-		                     **{'K_eig_dec': (eig_vals, eig_vecs)})
+		dpp = FiniteDPP('correlation', projection=True, hermitian=True, K_eig_dec=(eig_vals, eig_vecs))
 		# or
-		# proj_DPP = FiniteDPP('correlation', projection=True, **{'A_zono': A})
-		# K = eig_vecs.dot(eig_vecs.T)
-		# proj_DPP = FiniteDPP('correlation', projection=True, **{'K': K})
+		# dpp = FiniteDPP('correlation', projection=True, hermitian=True, A_zono=A)
+		# dpp = FiniteDPP('correlation', projection=True, hermitian=True, K=K)
 
 .. _finite_dpps_definition_k_dpps:
 
 k-DPPs
 ======
 
-A :math:`k\!\operatorname{-DPP}` can be defined as :math:`\operatorname{DPP(\mathbf{L})}` :eq:`eq:likelihood_DPP_L` conditioned to a fixed sample size :math:`|\mathcal{X}|=k`, we denote it :math:`k\!\operatorname{-DPP}(\mathbf{L})`.
+A :math:`k\!\operatorname{-DPP}` can be defined as a :math:`\operatorname{DPP(\mathbf{L})}` :eq:`eq:likelihood_DPP_L` conditioned to a fixed sample size :math:`|\mathcal{X}|=k`, hence the notation :math:`k\!\operatorname{-DPP}(\mathbf{L})`.
 
-It is naturally defined through its joint probabilities
+:math:`k`-DPPs are naturally defined through their joint probabilities or likelihood
 
 .. math::
 	:label: eq:likelihood_kDPP_L
@@ -146,11 +200,11 @@ where the normalizing constant :math:`e_k(L)` corresponds to the `elementary sym
 	e_k(\mathbf{L})
 		\triangleq e_k(\gamma_1, \dots, \gamma_N)
 		= \sum_{\substack{S \subset [N]\\|S|=k}} \prod_{s\in S} \gamma_{s}
-		= \sum_{\substack{S \subset [N]\\|S|=k}} \det L_S.
+		= \sum_{\substack{S \subset [N]\\|S|=k}} \det \mathbf{L}_S.
 
 .. note::
 
-  	Obviously, one must take :math:`k \leq \operatorname{rank}(L)` otherwise :math:`\det \mathbf{L}_S = 0` for :math:`|S| = k > \operatorname{rank}(L)`.
+  	Obviously, one must take :math:`k = |S| = \leq \operatorname{rank}(\mathbf{L})` otherwise :math:`\det \mathbf{L}_S = 0`.
 
 .. warning::
 

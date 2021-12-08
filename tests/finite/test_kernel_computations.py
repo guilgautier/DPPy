@@ -9,7 +9,7 @@ from dppy.utils import example_eval_L_linear, example_eval_L_min_kern
 
 
 class TestFiniteDppInstantiationFromCorrelationKernel(unittest.TestCase):
-    r"""Tests on :py:class:`~dppy.finite_dpps.FiniteDPP` defined through different parametrizations its correlation kernel :math:`\mathbf{K}`."""
+    r"""Tests on :py:class:`~dppy.finite.dpp.FiniteDPP` defined through different parametrizations its correlation kernel :math:`\mathbf{K}`."""
 
     kernel_type = "correlation"
 
@@ -107,7 +107,7 @@ class TestFiniteDppInstantiationFromCorrelationKernel(unittest.TestCase):
 
 
 class TestFiniteDppInstantiationFromLikelihoodKernel(unittest.TestCase):
-    r"""Tests on :py:class:`~dppy.finite_dpps.FiniteDPP` defined through different parametrizations of its likelihood kernel :math:`\mathbf{L}`"""
+    r"""Tests on :py:class:`~dppy.finite.dpp.FiniteDPP` defined through different parametrizations of its likelihood kernel :math:`\mathbf{L}`"""
 
     kernel_type = "likelihood"
     rank, N = 6, 10

@@ -89,7 +89,7 @@ b. Orthogonal projection case i.e. :math:`K^2 = K = K^*`
 Number of points
 ================
 
-For projection DPPs, i.e., when :math:`K` is the kernel associated to an orthogonal projector, one can show that :math:`|\mathcal{X}|=\operatorname{rank}(K)=\operatorname{Trace}(K)` almost surely (see, e.g., :cite:`HKPV06` Lemma 17).
+For projection DPPs, i.e., when :math:`K` is the kernel associated to an orthogonal projector, one can show that :math:`|\mathcal{X}|=\operatorname{rank}(K)=\operatorname{trace}(K)` almost surely (see, e.g., :cite:`HKPV06` Lemma 17).
 
 In the general case, based on the fact that :ref:`generic DPPs are mixtures of projection DPPs <finite_dpps_mixture>`, we have
 

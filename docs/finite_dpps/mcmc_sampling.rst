@@ -1,4 +1,4 @@
-.. currentmodule:: dppy.finite_dpps
+.. currentmodule:: dppy.finite.dpp
 
 .. _finite_dpps_mcmc_sampling:
 

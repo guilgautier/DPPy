@@ -1,4 +1,4 @@
-.. currentmodule:: dppy.finite_dpps
+.. currentmodule:: dppy.finite.dpp
 
 .. _finite_dpps_exact_sampling:
 
@@ -58,7 +58,7 @@ Projection DPPs: the chain rule
 
 In this section, we describe the generic projection DPP sampler, originally derived by :cite:`HKPV06` Algorithm 18.
 
-Recall that the :ref:`number of points of a projection <finite_dpps_properties_number_of_points_dpp_K_projection>` :math:`r=\operatorname{DPP}(\mathbf{K})` is, almost surely, equal to :math:`\operatorname{rank}(K)`, so that the likelihood :eq:`eq:likelihood_projection_K` of :math:`S=\{s_1, \dots, s_r\}` reads
+Recall that the :ref:`number of points of a projection <finite_dpps_number_of_points_projection_case>` :math:`r=\operatorname{DPP}(\mathbf{K})` is, almost surely, equal to :math:`\operatorname{rank}(K)`, so that the likelihood :eq:`eq:likelihood_projection_K` of :math:`S=\{s_1, \dots, s_r\}` reads
 
 .. math::
 
@@ -485,7 +485,7 @@ ary probability tree displayed in `this Figure <fig:cholesky_chain_rule_sets>`.
 					\left\{ 2, 3 \right\} \cap \mathcal{X} = \emptyset
 				\right],
 
-where each conditional probability can be written in closed formed using :eq:`eq:conditioned_on_S_in_X` and :eq:`eq:conditioned_on_S_notin_X`, namely
+where each conditional probability can be written in closed formed using :eq:`eq:finite_dpp_conditioning_inclusion_proba` and :eq:`eq:finite_dpp_conditioning_exclusion_proba`, namely
 
 .. math::
 
@@ -723,7 +723,7 @@ Caution
 
 .. attention::
 
-	Since the number of points of :math:`k\!\operatorname{-DPP}(\mathbf{L})` is fixed, like for :ref:`projection DPPs <finite_dpps_properties_number_of_points_dpp_K_projection>`, it might be tempting to sample :math:`k\!\operatorname{-DPP}(\mathbf{L})` using a chain rule in the way it was applied in :eq:`eq:chain_rule_schur` to sample projection DPPs.
+	Since the number of points of :math:`k\!\operatorname{-DPP}(\mathbf{L})` is fixed, like for :ref:`projection DPPs <finite_dpps_number_of_points_projection_case>`, it might be tempting to sample :math:`k\!\operatorname{-DPP}(\mathbf{L})` using a chain rule in the way it was applied in :eq:`eq:chain_rule_schur` to sample projection DPPs.
 	**However, it is incorrect: sampling sequentially**
 
 	.. math::

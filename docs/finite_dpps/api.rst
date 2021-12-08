@@ -3,7 +3,7 @@
 API
 ###
 
-.. automodule:: dppy.finite_dpps
+.. automodule:: dppy.finite.dpp
     :members:
     :inherited-members:
     :show-inheritance:
