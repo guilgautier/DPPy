@@ -102,7 +102,7 @@ setup(
     # trees: To play with uniform spanning trees
     # docs: Documentation bibligraphy and theme theme
     extras_require={
-        'zonotope': ['cvxopt==1.2.1'],
+        'zonotope': ['cvxopt==1.2.7'],
         'trees': ['networkx'],
         'docs': ['sphinxcontrib-bibtex', 'sphinx_rtd_theme']
         }
