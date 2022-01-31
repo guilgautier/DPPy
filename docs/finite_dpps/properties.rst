@@ -460,3 +460,21 @@ In particular,
 
     - Propositions 3 and 5 of :cite:`Pou19` for the proofs,
     - :ref:`Cholesky-based exact sampler <finite_dpps_exact_sampling_generic_method>`.
+
+.. _finite_dpps_dpp_union_bernoulli_process:
+
+Union with a Bernoulli process
+==============================
+
+Consider the following independent point processes :math:`\mathcal{X} \sim \operatorname{DPP}(\mathbf{K})` and :math:`\mathcal{Y} \sim \operatorname{DPP}(\mathbf{D})`, where :math:`\mathbf{D} = \operatorname{diag}(d_1, \dots, d_n)`, also called a Bernoulli process.
+
+Then,
+
+.. math::
+    :label: eq:finite_dpps_dpp_union_bernoulli_process
+
+    \mathcal{X} \cup \mathcal{Y}
+    \sim
+    \operatorname{DPP}(
+        \mathbf{D} + (I-\mathbf{D})^{1/2}\mathbf{K}(I-\mathbf{D})^{1/2}
+    )
