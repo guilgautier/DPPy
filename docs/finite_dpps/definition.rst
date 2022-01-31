@@ -68,7 +68,7 @@ Assuming :math:`\operatorname{DPP}(\mathbf{K})` is well defined, see, e.g., :ref
 		= (-1)^{|X^{c}|} \det [K - I^{X^{c}}]
 		= \left\lvert \det [K - I^{X^{c}}] \right\rvert,
 
-where :math:`I^{A}` denotes the indicator matrix of the subset A, i.e., :math:`[I^{A}]_{ij} = 1_{i\in A} 1_{j\in A}`.
+where :math:`I^{A}` denotes the indicator matrix of the subset :math:`A`, i.e., :math:`[I^{A}]_{ij} = 1_{i\in A} 1_{j\in A}`.
 
 In particular, :math:`\mathbb{P}[\mathcal{X}=\emptyset] = \det[I-K]`.
 
@@ -83,9 +83,9 @@ Existence
 
 Some necessary conditions on the leading principal minors of the respective kernels can be derived directly from the definitions above
 
-- for :math:`\mathbf{K}` in :ref:`finite_dpps_inclusion_probabilities` must satisfy :math:`0 \leq \det \mathbf{K}_S \leq 1`,
+- :math:`\mathbf{K}` in :ref:`finite_dpps_inclusion_probabilities` must satisfy :math:`0 \leq \det \mathbf{K}_S \leq 1`,
 
-- for :math:`\mathbf{L}` in :ref:`finite_dpps_likelihood` must satisfy :math:`\det \mathbf{L}_S \geq 0`,
+- :math:`\mathbf{L}` in :ref:`finite_dpps_likelihood` must satisfy :math:`\det \mathbf{L}_S \geq 0`,
 
 for all subsets :math:`S\subset [N]`.
 
@@ -93,7 +93,7 @@ In the **real symmetric** case, `Sylvester's criterion <https://en.wikipedia.org
 
 In fact
 
-- for :math:`\mathbf{K} = \mathbf{K}^{\dagger}`, :math:`\operatorname{DPP}(\mathbf{K})` exists if and only if
+- for :math:`\mathbf{K} = \mathbf{K}^{*}`, :math:`\operatorname{DPP}(\mathbf{K})` exists if and only if
 
 	.. math::
 		:label: eq:suff_cond_K
@@ -117,7 +117,7 @@ In fact
 		# or
 		# dpp = FiniteDPP('correlation', projection=False, hermitian=True, K=K)
 
-- for :math:`\mathbf{L} = \mathbf{L}^{\dagger}`, :math:`\operatorname{DPP}(\mathbf{L})` exists if and only if
+- for :math:`\mathbf{L} = \mathbf{L}^{*}`, :math:`\operatorname{DPP}(\mathbf{L})` exists if and only if
 
 	.. math::
 		:label: eq:suff_cond_L
@@ -143,8 +143,8 @@ In fact
 	In the following, unless otherwise specified:
 
     - we work with hermitian kernels satisfying the sufficient conditions :eq:`eq:suff_cond_K` and :eq:`eq:suff_cond_L`,
-    - :math:`\left(\lambda_{1}, \dots, \lambda_{N} \right)` denote the eigenvalues of :math:`\mathbf{K} = U \Lambda U^{\dagger}`,
-    - :math:`\left(\gamma_{1}, \dots, \gamma_{N} \right)` denote the eigenvalues of :math:`\mathbf{L}=V \Gamma V^{\dagger}`.
+    - :math:`\left(\lambda_{1}, \dots, \lambda_{N} \right)` denote the eigenvalues of :math:`\mathbf{K} = U \Lambda U^{*}`,
+    - :math:`\left(\gamma_{1}, \dots, \gamma_{N} \right)` denote the eigenvalues of :math:`\mathbf{L}=V \Gamma V^{*}`.
 
 .. _finite_dpps_definition_projection_dpps:
 
@@ -153,7 +153,7 @@ Projection DPPs
 
 :math:`\operatorname{DPP}(\mathbf{K})` defined by a *projection* correlation kernel, i.e., :math:`\mathbf{K}^2=\mathbf{K}` are called *projection* DPPs.
 
-If in addition :math:`\mathbf{K}` is hermitian, i.e.,  :math:`\mathbf{K}^{\dagger}=\mathbf{K}`, then it is called an `orthogonal projection matrix <https://en.wikipedia.org/wiki/Projection_(linear_algebra)#Projection_matrix>`_.
+If in addition :math:`\mathbf{K}` is hermitian, i.e.,  :math:`\mathbf{K}^{*}=\mathbf{K}`, then it is called an `orthogonal projection matrix <https://en.wikipedia.org/wiki/Projection_(linear_algebra)#Projection_matrix>`_.
 In this case, the existence conditions :eq:`eq:suff_cond_K` are satisfied since :math:`\mathbf{K}` has eigenvalues equal to :math:`0` or :math:`1`.
 The corresponding :math:`\operatorname{DPP}(\mathbf{K})` is called an orthogonal projection DPP are simply a projection DPP for brevity.
 

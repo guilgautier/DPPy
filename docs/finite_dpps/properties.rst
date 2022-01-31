@@ -39,8 +39,8 @@ Relation between correlation and likelihood kernels
     .. math::
         :label: eq:eigendecomposition_K_L
 
-        \mathbf{K} = U \Lambda U^{\dagger}, \quad
-        \mathbf{L} = U \Gamma U^{\dagger}
+        \mathbf{K} = U \Lambda U^{*}, \quad
+        \mathbf{L} = U \Gamma U^{*}
         \qquad \text{with} \qquad
         \lambda_n = \frac{\gamma_n}{1+\gamma_n}, \gamma_n = \frac{\lambda_n}{1-\lambda_n}.
 
@@ -89,13 +89,13 @@ Generic DPPs as mixtures of projection DPPs
 
     .. math::
 
-        \mathbf{K} = \sum_{n=1}^N \lambda_n u_n u_n^{\dagger}.
+        \mathbf{K} = \sum_{n=1}^N \lambda_n u_n u_n^{*}.
 
     Then, denote :math:`\mathcal{X}^B \sim \operatorname{DPP}(\mathbf{K}^B)` with
 
     .. math::
 
-        \mathbf{K}^B = \sum_{n=1}^N B_n u_n u_n^{\dagger},
+        \mathbf{K}^B = \sum_{n=1}^N B_n u_n u_n^{*},
         \quad
         \text{where}
         \quad
@@ -332,7 +332,7 @@ b. The likelihood reads
         \propto \det \mathbf{L}_S
         = \operatorname{Vol}^2 \{\psi_s\}_{s\in S}.
 
-That is to say, DPPs favor subsets :math:`S` whose corresponding feature vectors span a large volume i.e. *DPPs sample softened orthogonal bases*.
+That is to say, Hermitian DPPs favor subsets :math:`S` whose corresponding feature vectors span a large volume i.e. *DPPs sample softened orthogonal bases*.
 
 .. seealso::
 
@@ -343,8 +343,8 @@ That is to say, DPPs favor subsets :math:`S` whose corresponding feature vectors
 Diversity
 =========
 
-For hermitian DPPs, i.e., defined by hermitian kernels :eq:`eq:suff_cond_K` and :eq:`eq:suff_cond_K`, the notion of diversity or negative correlation is encoded by the *determinantal* structure.
-For example, the pair inclusion probability, also called the 2-point correlation function using :eq:`eq:inclusion_proba_DPP_K` yields
+For hermitian DPPs, i.e., defined by hermitian kernels :eq:`eq:suff_cond_K` or :eq:`eq:suff_cond_L`, the notion of diversity or negative correlation is encoded by the *determinantal* structure.
+For example, using :eq:`eq:inclusion_proba_DPP_K`, the pair inclusion probability provides
 
 .. math::
 
@@ -354,12 +354,34 @@ For example, the pair inclusion probability, also called the 2-point correlation
         \overline{\mathbf{K}_{i j}}		& \mathbb{P}[j \in \mathcal{X}]
     \end{vmatrix}\\
     &= \mathbb{P}[i \in \mathcal{X}] \mathbb{P}[j \in \mathcal{X}]
-        - |\mathbf{K}_{i j}|^2,
+        - |\mathbf{K}_{i j}|^2.
 
-so that, the larger :math:`|\mathbf{K}_{i j}|` less likely items :math:`i` and :math:`j` co-occur. If :math:`K_{ij}` models the :ref:`similarity <finite_dpps_geometry>` between items :math:`i` and :math:`j`, DPPs are thus random diverse sets of elements.
+In other words, the larger :math:`|\mathbf{K}_{i j}|` less likely items :math:`i` and :math:`j` co-occur.
+If :math:`K_{ij}` models the :ref:`similarity <finite_dpps_geometry>` between items :math:`i` and :math:`j`, DPPs are thus random diverse sets of elements.
+
+.. _finite_dpps_complementary_process:
+
+Complementary process
+=====================
+
+Let :math:`\mathcal{X} \sim \operatorname{DPP}(\mathbf{K})` and :math:`\mathcal{X}^{c} \triangleq \left\{1, \dots, N\right\} \setminus \mathcal{X}`, then
+
+.. math::
+    :label: eq:finite_dpp_complementary_process
+
+    \mathcal{X}^{c} \sim \operatorname{DPP}(I-\mathbf{K}).
+
+In particular, this means that
+
+.. math::
+    :label: eq:complementary
+
+    \mathbb{P}[ \mathcal{X}\cap B = \emptyset]
+    = \mathbb{P}[ B \subset \mathcal{X}^c]
+    = \det [I-\mathbf{K}]_B.
 
 
-.. _inclusionexclusion_principle:
+.. _finite_dpps_inclusion_exclusion_principle:
 
 Inclusion-exclusion principle
 =============================
@@ -372,7 +394,9 @@ For disjoint subsets :math:`A, B`, we have
     \mathbb{P}[A\subset \mathcal{X},  \mathcal{X}\cap B = \emptyset]
         % &= \sum_{S: S\subset B}
             % (-1)^{|S|} \mathbb{P}[A\cup S \subset  \mathcal{X}]\\
-        = \det [I^A\mathbf{K}  + I^{A^{c}} (I-\mathbf{K} )]_{A\sqcup B}.
+        = \det [I^A\mathbf{K}  + I^{A^{c}} (I-\mathbf{K} )]_{A\sqcup B},
+
+where :math:`I^{A}` denotes the indicator matrix of the subset :math:`A`, i.e., :math:`[I^{A}]_{ij} = 1_{i\in A} 1_{j\in A}`.
 
 In particular,
 
@@ -391,18 +415,6 @@ In particular,
             \det [I - (\mathbf{K} -\mathbf{K} _{:A}\mathbf{K} _A^{-1}\mathbf{K} _{A:})]_{B},
                 &\text{ if }\mathbb{P}[A\subset \mathcal{X}]>0.\\
         \end{cases}
-
-.. _complementary_process:
-
-Complementary process
-=====================
-
-Let :math:`\mathcal{X} \sim \operatorname{DPP}(\mathbf{K})` and :math:`\mathcal{X}^{c} \triangleq \left\{1, \dots, N\right\} \setminus \mathcal{X}`, then
-
-.. math::
-    :label: eq:finite_dpp_complementary_process
-
-    \mathcal{X}^{c} \sim \operatorname{DPP}(I-\mathbf{K}).
 
 .. _finite_dpps_conditioning:
 
@@ -435,16 +447,16 @@ In particular,
 .. math::
 	:label: eq:finite_dpp_conditioning_inclusion_proba
 
-	\mathbb{P}[T \subset \mathcal{X} \mid S \subset \mathcal{X}]
-        = \det\left[\mathbf{K}_T - \mathbf{K}_{TS} \mathbf{K}_S^{-1} \mathbf{K}_{ST}\right],
+	\mathbb{P}[A \subset \mathcal{X} \mid B \subset \mathcal{X}]
+        = \det\left[\mathbf{K}_A - \mathbf{K}_{AB} \mathbf{K}_B^{-1} \mathbf{K}_{BA}\right],
 
 .. math::
 	:label: eq:finite_dpp_conditioning_exclusion_proba
 
-	\mathbb{P}[T \subset \mathcal{X} \mid S \cap \mathcal{X} = \emptyset]
-    	= \det\left[\mathbf{K}_T - \mathbf{K}_{TS} (\mathbf{K}_S - I)^{-1} \mathbf{K}_{ST}\right].
+	\mathbb{P}[A \subset \mathcal{X} \mid B \cap \mathcal{X} = \emptyset]
+    	= \det\left[\mathbf{K}_A - \mathbf{K}_{AB} (\mathbf{K}_B - I)^{-1} \mathbf{K}_{BA}\right].
 
 .. seealso::
 
     - Propositions 3 and 5 of :cite:`Pou19` for the proofs,
-    - :ref:`Cholesky-based exact sampler <finite_dpps_exact_sampling_cholesky_method>`.
+    - :ref:`Cholesky-based exact sampler <finite_dpps_exact_sampling_generic_method>`.
