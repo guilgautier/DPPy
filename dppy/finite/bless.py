@@ -41,13 +41,22 @@ CentersDictionary = namedtuple(
 
 
 def estimate_rls_bless(D, X, eval_L, lam_new):
-    """Given a previously computed (eps, lambda)-accurate dictionary, it computes estimates
-    of all RLS using the estimator from :cite:`CaLaVa17`
-    :param CentersDictionary D: an (eps, lambda) accurate dictionary, see :ref:`bless`
-    :param array_like X: samples whose RLS we must approximate
-    :param callable eval_L: likelihood function
-    :param float lam_new: lambda regularization to use for the RLSs
-    :return: array of estimated RLS
+    """Given a previously computed (eps, lambda)-accurate dictionary, it computes estimates of all RLS using the estimator from :cite:`CaLaVa17`
+
+    :param CentersDictionary D:
+        an (eps, lambda) accurate dictionary, see :py:func:`~dppy.finite.bless.bless`
+
+    :param array_like X:
+        samples whose RLS we must approximate
+
+    :param callable eval_L:
+        likelihood function
+
+    :param float lam_new:
+        lambda regularization to use for the RLSs
+
+    :return:
+        array of estimated RLS
     :rtype:
         array_like
     """
@@ -89,15 +98,28 @@ def estimate_rls_bless(D, X, eval_L, lam_new):
 def reduce_lambda(
     X_data, eval_L, intermediate_dict_bless, lam_new, rng, rls_oversample_parameter=None
 ):
-    """Given a previously computed (eps, lambda)-accurate dictionary and a lambda' < lambda parameter,
-     it constructs an (eps, lambda')-accurate dictionary using approximate RLS sampling.
-    :param array_like X_data: dataset that we must approximate
-    :param callable eval_L: likelihood function
-    :param CentersDictionary intermediate_dict_bless: an (eps, lambda) accurate dictionary, see :ref:`bless`
-    :param float lam_new: lambda regularization for the new dictionary
-    :param np.random.RandomState rng: rng for sampling
-    :param float rls_oversample_parameter: Oversampling parameter to increase success probability, see :ref:`bless`
-    :return: An (eps, lam_new)-accurate dictionary with high probability
+    """Given a previously computed (eps, lambda)-accurate dictionary and a lambda' < lambda parameter, it constructs an (eps, lambda')-accurate dictionary using approximate RLS sampling.
+
+    :param array_like X_data:
+        dataset that we must approximate
+
+    :param callable eval_L:
+        likelihood function
+
+    :param CentersDictionary intermediate_dict_bless:
+        an (eps, lambda) accurate dictionary, see :py:func:`~dppy.finite.bless.bless`
+
+    :param float lam_new:
+        lambda regularization for the new dictionary
+
+    :param np.random.RandomState rng:
+        rng for sampling
+
+    :param float rls_oversample_parameter:
+        Oversampling parameter to increase success probability, see :py:func:`~dppy.finite.bless.bless`
+
+    :return:
+        An (eps, lam_new)-accurate dictionary with high probability
     :rtype:
         CentersDictionary
     """
@@ -179,61 +201,49 @@ def bless(
     nb_iter_bless=None,
     verbose=True,
 ):
-    """Returns a (eps, lambda)-accurate dictionary of Nystrom centers sampled according to approximate RLS.
+    """Returns a (eps, lambda)-accurate dictionary of Nystrom centers sampled according to approximate RLS. Given data X, a similarity function, and its related similarity matrix similarity_function(X, X), an (eps, lambda)-accurate dictionary approximates all principal components of the similarity matrix with a singular value larger than lambda, up to a (1+eps) multiplicative error.
 
-    Given data X, a similarity function, and its related similarity matrix similarity_function(X, X),
-    an (eps, lambda)-accurate dictionary approximates all principal components of the similarity matrix
-    with a singular value larger than lambda, up to a (1+eps) multiplicative error.
+    The algorithm is introduced and analyzed in :cite:`RuCaCaRo18`, for a more formal definition of (eps, lambda)-accuracy and other potential uses see :cite:`CaLaVa17`.
 
-    The algorithm is introduced and analyzed in :cite:`RuCaCaRo18`, for a more formal
-    definition of (eps, lambda)-accuracy and other potential uses see :cite:`CaLaVa17`.
+    :param array_like X_data:
+        input data, as an ndarray-like (n x m) object
 
-    :param array_like X_data: input data, as an ndarray-like (n x m) object
+    :param callable eval_L:
+        likelihood function between points. If L is the associated likelihood matrix, it must satisfy the interface eval_L(X_1) = K(X_1, X_1) or eval_L(X_1, X_2) = K(X_1, X_2). This interface is inspired by scikit-learn's implementation of kernel functions in Gaussian Processes. Any of the kernels provided by sklearn (e.g. sklearn.gaussian_process.kernels.RBF or sklearn.gaussian_process.kernels.PairwiseKernel) should work out of the box.
 
-    :param callable eval_L: likelihood function between points.
-        If L is the associated likelihood matrix, it must satisfy the interface
-        eval_L(X_1) = K(X_1, X_1)
-        eval_L(X_1, X_2) = K(X_1, X_2)
-        This interface is inspired by scikit-learn's implementation of kernel functions in Gaussian Processes.
-        Any of the kernels provided by sklearn (e.g. sklearn.gaussian_process.kernels.RBF or
-        sklearn.gaussian_process.kernels.PairwiseKernel) should work out of the box.
+    :param float lam_final:
+        final lambda (i.e. as in (eps, lambda)-accuracy) desired. Roughly, the final dictionary will approximate all principal components with a singular value larger than lam_final, and therefore smaller lam_final creates larger, more accurate dictionaries.
 
-    :param float lam_final: final lambda (i.e. as in (eps, lambda)-accuracy) desired.
-        Roughly, the final dictionary will approximate all principal components with a singular value
-        larger than lam_final, and therefore smaller lam_final creates larger, more accurate dictionaries.
+    :param float rls_oversample_param:
+        Oversampling parameter used during BLESS's step of random RLS sampling. The rls_oversample >= 1 parameter is used to increase the sampling probabilities and sample size by a rls_oversample factor. This linearly increases the size of the output dictionary, making the algorithm less memory and time efficient, but reduces variance and the negative effects of randomness on the accuracy of the algorithm. Empirically, a small factor rls_oversample = [2,10] seems to work. It is suggested to start with a small number and increase if the algorithm fails to terminate or is inaccurate.
 
-    :param float rls_oversample_param: Oversampling parameter used during BLESS's step of random RLS sampling.
-        The rls_oversample >= 1 parameter is used to increase the sampling probabilities and sample size by a
-        rls_oversample factor. This linearly increases the size of the output dictionary, making the algorithm
-        less memory and time efficient, but reduces variance and the negative effects of randomness on the accuracy
-        of the algorithm. Empirically, a small factor rls_oversample = [2,10] seems to work.
-        It is suggested to start with a small number and increase if the algorithm fails to terminate or is inaccurate.
-
-    :param random_state: Random number generator (RNG) used for the algorithm.
-        By default, if random_state is not provided or is None, a numpy's RandomState with default seeding is used.
-        If a numpy's RandomState is passed, it is used as RNG. If an int is passed, it is used to seed a RandomState
+    :param random_state:
+        Random number generator (RNG) used for the algorithm. By default, if random_state is not provided or is None, a numpy's RandomState with default seeding is used. If a numpy's RandomState is passed, it is used as RNG. If an int is passed, it is used to seed a RandomState
     :type random_state:
         np.random.RandomState or int or None, default None
 
-    :param nb_iter_bless: number of iterations, defaults to log(n) if None
+    :param nb_iter_bless:
+        number of iterations, defaults to log(n) if None
     :type nb_iter_bless:
         int or None, default None
 
-    :param bool verbose: Controls verbosity of debug output, including progress bars.
-        The progress bar reports:
+    :param bool verbose:
+        Controls verbosity of debug output, including progress bars. The progress bar reports:
+
         - lam: lambda value of the current iteration
         - m: current size of the dictionary (number of centers contained)
         - m_expected: expected size of the dictionary before sampling
         - probs_dist: (mean, max, min) of the approximate RLSs at the current iteration
 
-    :return: An (eps, lambda)-accurate dictionary centers_dict (with high probability).
-        If centers_dict contains m entries then the output fields are as follow
+    :return:
+        An (eps, lambda)-accurate dictionary centers_dict (with high probability). If centers_dict contains m entries then the output fields are as follow
 
-        centers_dict.idx`: the indices of the m selected samples in the input dataset `X`
-        centers_dict.X': the (m x d) numpy.ndarray containing the selected samples
-        centers_dict.probs: the probabilities (i.e. approximate RLSs) used to sample the dictionary
-        lam: the final lambda accuracy
-        rls_oversample: the rls_oversample used to sample the dictionary, as a proxy for the `eps`-accuracy
+        - centers_dict.idx`: the indices of the m selected samples in the input dataset `X`
+        - centers_dict.X': the (m x d) numpy.ndarray containing the selected samples
+        - centers_dict.probs: the probabilities (i.e. approximate RLSs) used to sample the dictionary
+        - lam: the final lambda accuracy
+        - rls_oversample: the rls_oversample used to sample the dictionary, as a proxy for the `eps`-accuracy
+
     :rtype:
         CentersDictionary
     """
@@ -301,65 +311,53 @@ def bless_size(
     verbose=True,
 ):
     """Returns a (eps, lam_max)-accurate dictionary of Nystrom centers sampled according to approximate RLS.
-    This variant automatically chooses the lambda parameter, and returns a [lam_min, lam_max] interval
-    such that w.h.p. deff(lam_min) <= size_final/2 and 2*size_final <= deff(lam_max).
 
-    Given data X, a similarity function, and its related similarity matrix similarity_function(X, X),
-    an (eps, lam_max)-accurate dictionary approximates all principal components of the similarity matrix
-    with a singular value larger than lam_max, up to a (1+eps) multiplicative error.
+    This variant automatically chooses the lambda parameter, and returns a [lam_min, lam_max] interval such that w.h.p. deff(lam_min) <= size_final/2 and 2*size_final <= deff(lam_max). Given data X, a similarity function, and its related similarity matrix similarity_function(X, X), an (eps, lam_max)-accurate dictionary approximates all principal components of the similarity matrix with a singular value larger than lam_max, up to a (1+eps) multiplicative error.
 
-    The algorithm is introduced and analyzed in :cite:`CaDeVa20` in the context of k-DPP sampling,
-    for a more formal definition of (eps, lambda)-accuracy and other potential uses see :cite:`CaLaVa17`.
+    The algorithm is introduced and analyzed in :cite:`CaDeVa20` in the context of k-DPP sampling, for a more formal definition of (eps, lambda)-accuracy and other potential uses see :cite:`CaLaVa17`.
 
-    :param array_like X_data: input data, as an ndarray-like (n x m) object
+    :param array_like X_data:
+        input data, as an ndarray-like (n x m) object
 
-    :param callable eval_L: likelihood function between points.
-        If L is the associated likelihood matrix, it must satisfy the interface
-        eval_L(X_1) = K(X_1, X_1)
-        eval_L(X_1, X_2) = K(X_1, X_2)
-        This interface is inspired by scikit-learn's implementation of kernel functions in Gaussian Processes.
-        Any of the kernels provided by sklearn (e.g. sklearn.gaussian_process.kernels.RBF or
-        sklearn.gaussian_process.kernels.PairwiseKernel) should work out of the box.
+    :param callable eval_L:
+        likelihood function between points. If L is the associated likelihood matrix, it must satisfy the interface eval_L(X_1) = K(X_1, X_1) or eval_L(X_1, X_2) = K(X_1, X_2). This interface is inspired by scikit-learn's implementation of kernel functions in Gaussian Processes. Any of the kernels provided by sklearn (e.g. sklearn.gaussian_process.kernels.RBF or sklearn.gaussian_process.kernels.PairwiseKernel) should work out of the box.
 
-    :param int size_final: desired final size. The algorithm returns an interval [lam_min, lam_max]
+    :param int size_final:
+        desired final size. The algorithm returns an interval [lam_min, lam_max]
         that can be used to sample from a "size_final"-DPP. Therefore, larger
         size_final usually creates larger, more accurate dictionaries.
 
-    :param int rls_oversample_param: Oversampling parameter used during BLESS's step of random RLS sampling.
-        The rls_oversample >= 1 parameter is used to increase the sampling probabilities and sample size by a
-        rls_oversample factor. This linearly increases the size of the output dictionary, making the algorithm
-        less memory and time efficient, but reduces variance and the negative effects of randomness on the accuracy
-        of the algorithm. Empirically, a small factor rls_oversample = [2,10] seems to work.
-        It is suggested to start with a small number and increase if the algorithm fails to terminate or is inaccurate.
+    :param int rls_oversample_param:
+        Oversampling parameter used during BLESS's step of random RLS sampling. The rls_oversample >= 1 parameter is used to increase the sampling probabilities and sample size by a rls_oversample factor. This linearly increases the size of the output dictionary, making the algorithm less memory and time efficient, but reduces variance and the negative effects of randomness on the accuracy of the algorithm. Empirically, a small factor rls_oversample = [2,10] seems to work. It is suggested to start with a small number and increase if the algorithm fails to terminate or is inaccurate.
 
-    :param random_state: Random number generator (RNG) used for the algorithm.
+    :param random_state:
+        Random number generator (RNG) used for the algorithm.
         By default, if random_state is not provided or is None, a numpy's RandomState with default seeding is used.
         If a numpy's RandomState is passed, it is used as RNG. If an int is passed, it is used to seed a RandomState
     :type random_state:
         np.random.RandomState or int or None, default None
 
-
-    :param nb_iter_bless: number of iterations, defaults to log_2((1 + 4/(size_final - 2)*tr(L))) if None,
-    which guarantees a reduction rate of 2 for lambda.
+    :param nb_iter_bless:
+        number of iterations, defaults to log_2((1 + 4/(size_final - 2)*tr(L))) if None, which guarantees a reduction rate of 2 for lambda.
     :type nb_iter_bless:
         int or None, default None
 
-    :param bool verbose: Controls verbosity of debug output, including progress bars.
-        The progress bar reports:
+    :param bool verbose:
+        Controls verbosity of debug output, including progress bars. The progress bar reports:
+
         - lam: lambda value of the current iteration
         - m: current size of the dictionary (number of centers contained)
         - m_expected: expected size of the dictionary before sampling
         - probs_dist: (mean, max, min) of the approximate RLSs at the current iteration
 
-    :return:  A tuple containing an interval [lam_min, lam_max] that can be used to sample
-        from a "size_final"-DPP, and an (eps, lambda)-accurate dictionary centers_dict
-        (with high probability). If centers_dict contains m entries then the output fields are as follow
+    :return:
+        A tuple containing an interval [lam_min, lam_max] that can be used to sample from a "size_final"-DPP, and an (eps, lambda)-accurate dictionary centers_dict (with high probability). If centers_dict contains m entries then the output fields are as follow
 
-        centers_dict.idx`: the indices of the m selected samples in the input dataset `X`
-        centers_dict.X': the (m x d) numpy.ndarray containing the selected samples
-        centers_dict.probs: the probabilities (i.e. approximate RLSs) used to sample the dictionary
-        lam: the final lambda accuracy
-        rls_oversample: the rls_oversample used to sample the dictionary, as a proxy for the `eps`-accuracy
+        - centers_dict.idx: the indices of the m selected samples in the input dataset `X`
+        - centers_dict.X: the (m x d) numpy.ndarray containing the selected samples
+        - centers_dict.probs: the probabilities (i.e. approximate RLSs) used to sample the dictionary
+        - lam: the final lambda accuracy
+        - rls_oversample: the rls_oversample used to sample the dictionary, as a proxy for the `eps`-accuracy
 
     :rtype:
         tuple(list, CentersDictionary)
