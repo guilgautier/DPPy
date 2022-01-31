@@ -26,9 +26,13 @@ def projection_kernel_sampler(dpp, random_state=None, **params):
 
 
 def select_sampler_generic_projection_kernel(mode):
-    """Select a sampler for projection DPP define via its correlation kernel K satisfying :math:`K^2 = K`.
+    r"""Select a sampler for projection DPP defined by a projection kernel, i.e., satisfying :math:`P^2 = P`.
 
-    - :func:`projection_kernel_sampler_schur <projection_kernel_sampler_schur>`
+    :param mode: select the variant by its name among
+
+        - ``"schur"`` :py:func:`~dppy.finite.exact_samplers.projection_kernel_samplers.projection_kernel_sampler_schur`
+
+    :type mode: str
     """
     samplers = {
         "schur": projection_kernel_sampler_schur,
@@ -38,11 +42,15 @@ def select_sampler_generic_projection_kernel(mode):
 
 
 def select_sampler_orthogonal_projection_kernel(mode):
-    """Select a sampler for projection DPP define via its correlation kernel
+    r"""Select a sampler for projection hermitian DPP defined by an orthogonal projection kernel, i.e., satisfying :math:`P^2 = P` and :math:`P^{\dagger} = P`.
 
-    - :func:`orthogonal_projection_kernel_sampler_GS <orthogonal_projection_kernel_sampler_GS>`
-    - :func:`projection_kernel_sampler_schur <projection_kernel_sampler_schur>`
-    - :func:`orthogonal_projection_kernel_sampler_cholesky <orthogonal_projection_kernel_sampler_cholesky>`
+    :param mode: select the variant by its name among
+
+        - ``"gs"`` (default) :py:func:`~dppy.finite.exact_samplers.projection_kernel_samplers.orthogonal_projection_kernel_sampler_GS`
+        - ``"schur"`` :py:func:`~dppy.finite.exact_samplers.projection_kernel_samplers.projection_kernel_sampler_schur`
+        - ``"chol"`` :py:func:`~dppy.finite.exact_samplers.projection_kernel_samplers.orthogonal_projection_kernel_sampler_cholesky`
+
+    :type mode: str
     """
     samplers = {
         "gs": orthogonal_projection_kernel_sampler_GS,
@@ -54,7 +62,7 @@ def select_sampler_orthogonal_projection_kernel(mode):
 
 
 def orthogonal_projection_kernel_sampler_cholesky(K, size=None, random_state=None):
-    """Generate an exact sample from :math:`\\operatorname{DPP}(K)`, or :math:`\\operatorname{k-DPP}(K)` with :math:`k=` ``size`` (if ``size`` is provided), where :math:`K` is an orthogonal projection `kernel`.
+    r"""Generate an exact sample from :math:`\operatorname{DPP}(\mathbf{K})`, or :math:`\operatorname{k-DPP}(\mathbf{K})` with :math:`k=` ``size`` (if ``size`` is provided), where :math:`\mathbf{K}` is an orthogonal projection `kernel`.
 
     The chain rule is applied by performing Cholesky updates following :cite:`Pou19` Algorithm 3.
 
@@ -64,12 +72,12 @@ def orthogonal_projection_kernel_sampler_cholesky(K, size=None, random_state=Non
         array_like
 
     :param size:
-        Size of the output sample (if ``size`` is provided), otherwise :math:`k=\\operatorname{trace}(K)=\\operatorname{rank}(K)`.
+        Size of the output sample (if ``size`` is provided), otherwise :math:`k=\operatorname{trace}(\mathbf{K})=\operatorname{rank}(\mathbf{K})`.
     :type size:
         int
 
     :return:
-        An exact sample from the corresponding :math:`\\operatorname{DPP}(K)` or :math:`\\operatorname{k-DPP}(K)`.
+        An exact sample from the corresponding :math:`\operatorname{DPP}(\mathbf{K})` or :math:`\operatorname{k-DPP}(\mathbf{K})`.
     :rtype:
         list
 
@@ -79,9 +87,9 @@ def orthogonal_projection_kernel_sampler_cholesky(K, size=None, random_state=Non
 
     .. seealso::
 
-        - :cite:`Pou19` Algorithm 3 and :ref:`catamari code <https://gitlab.com/hodge_star/catamari/blob/38718a1ea34872fb6567e019ece91fbeb5af5be1/include/catamari/dense_dpp/elementary_hermitian_dpp-impl.hpp#L37>`_ for the Hermitian swap routine.
-        - :func:`orthogonal_projection_kernel_sampler_GS <orthogonal_projection_kernel_sampler_GS>`
-        - :func:`projection_kernel_sampler_schur <projection_kernel_sampler_schur>`
+        - :cite:`Pou19` Algorithm 3 and `catamari code <https://gitlab.com/hodge_star/catamari/blob/38718a1ea34872fb6567e019ece91fbeb5af5be1/include/catamari/dense_dpp/elemen tary_hermitian_dpp-impl.hpp#L37>`_ for the Hermitian swap routine.
+        - :py:func:`~dppy.finite.exact_samplers.projection_kernel_samplers.orthogonal_projection_kernel_sampler_GS`
+        - :py:func:`~dppy.finite.exact_samplers.projection_kernel_samplers.projection_kernel_sampler_schur`
     """
 
     rng = check_random_state(random_state)
@@ -144,9 +152,9 @@ def orthogonal_projection_kernel_sampler_cholesky(K, size=None, random_state=Non
 
 
 def orthogonal_projection_kernel_sampler_GS(K, size=None, random_state=None):
-    """Generate an exact sample from :math:`\\operatorname{DPP}(K)`, or :math:`\\operatorname{k-DPP}(K)` with :math:`k=` ``size`` (if ``size`` is provided), where :math:`K` is an orthogonal projection `kernel`.
+    r"""Generate an exact sample from :math:`\operatorname{DPP}(\mathbf{K})`, or :math:`\operatorname{k-DPP}(\mathbf{K})` with :math:`k=` ``size`` (if ``size`` is provided), where :math:`\mathbf{K}` is an orthogonal projection `kernel`.
 
-    Chain rule is applied by performing sequential Gram-Schmidt orthogonalization or equivalently Cholesky decomposition updates of :math:`K`.
+    Chain rule is applied by performing sequential Gram-Schmidt orthogonalization or equivalently Cholesky decomposition updates of :math:`\mathbf{K}`.
 
     :param K:
         Orthogonal projection kernel.
@@ -154,20 +162,20 @@ def orthogonal_projection_kernel_sampler_GS(K, size=None, random_state=None):
         array_like
 
     :param size:
-        Size of the output sample (if ``size`` is provided), otherwise :math:`k=\\operatorname{trace}(K)=\\operatorname{rank}(K)`.
+        Size of the output sample (if ``size`` is provided), otherwise :math:`k=\operatorname{trace}(\mathbf{K})=\operatorname{rank}(\mathbf{K})`.
     :type size:
         int
 
     :return:
-        An exact sample from the corresponding :math:`\\operatorname{DPP}(K)` or :math:`\\operatorname{k-DPP}(K)`.
+        An exact sample from the corresponding :math:`\operatorname{DPP}(\mathbf{K})` or :math:`\operatorname{k-DPP}(\mathbf{K})`.
     :rtype:
         list
 
     .. seealso::
 
         - :cite:`TrBaAm18` Algorithm 3, :cite:`Gil14` Algorithm 2
-        - :func:`projection_kernel_sampler_schur <projection_kernel_sampler_schur>`
-        - :func:`orthogonal_projection_kernel_sampler_cholesky <orthogonal_projection_kernel_sampler_cholesky>`
+        - :py:func:`~dppy.finite.exact_samplers.projection_kernel_samplers.projection_kernel_sampler_schur`
+        - :py:func:`~dppy.finite.exact_samplers.projection_kernel_samplers.orthogonal_projection_kernel_sampler_cholesky`
     """
 
     rng = check_random_state(random_state)
@@ -202,7 +210,7 @@ def orthogonal_projection_kernel_sampler_GS(K, size=None, random_state=None):
 
 
 def projection_kernel_sampler_schur(K, size=None, random_state=None):
-    """Generate an exact sample from :math:`\\operatorname{DPP}(K)`, or :math:`\\operatorname{k-DPP}(K)` with :math:`k=` ``size`` (if ``size`` is provided), where :math:`K` is a projection kernel (not necessarily orthogonal).
+    r"""Generate an exact sample from :math:`\operatorname{DPP}(\mathbf{K})`, or :math:`\operatorname{k-DPP}(\mathbf{K})` with :math:`k=` ``size`` (if ``size`` is provided), where :math:`\mathbf{K}` is a projection kernel (not necessarily orthogonal).
 
     The chain rule is applied by computing Schur complements explicitely, using Woodbury's formula.
 
@@ -211,24 +219,24 @@ def projection_kernel_sampler_schur(K, size=None, random_state=None):
     :type K:
         array_like
     :param size:
-        Size of the output sample (if ``size`` is provided), otherwise :math:`k=\\operatorname{trace}(K)=\\operatorname{rank}(K)`.
+        Size of the output sample (if ``size`` is provided), otherwise :math:`k=\operatorname{trace}(\mathbf{K})=\operatorname{rank}(\mathbf{K})`.
     :type size:
         int
 
     :return:
-        An exact sample from the corresponding :math:`\\operatorname{DPP}(K)` or :math:`\\operatorname{k-DPP}(K)`.
+        An exact sample from the corresponding :math:`\operatorname{DPP}(\mathbf{K})` or :math:`\operatorname{k-DPP}(\mathbf{K})`.
 
     :return:
-        If ``size`` is not provided (None),
-            A sample from :math:`\\operatorname{DPP}(K)`.
-        If ``size`` is provided,
-            A sample from :math:`\\operatorname{k-DPP}(K)`.
+
+        - If ``size`` is not provided (None), a sample from :math:`\operatorname{DPP}(\mathbf{K})`.
+        - If ``size`` is provided, a sample from :math:`\operatorname{k-DPP}(\mathbf{K})`.
+
     :rtype:
         array_like
 
     .. seealso::
-        - :func:`orthogonal_projection_kernel_sampler_GS <orthogonal_projection_kernel_sampler_GS>`
-        - :func:`orthogonal_projection_kernel_sampler_cholesky <orthogonal_projection_kernel_sampler_cholesky>`
+        - :py:func:`~dppy.finite.exact_samplers.projection_kernel_samplers.orthogonal_projection_kernel_sampler_GS`
+        - :py:func:`~dppy.finite.exact_samplers.projection_kernel_samplers.orthogonal_projection_kernel_sampler_cholesky`
     """
 
     rng = check_random_state(random_state)

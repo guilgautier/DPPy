@@ -5,6 +5,19 @@ from dppy.utils import check_random_state, inner1d
 
 
 def select_sampler_eigen_projection(mode):
+    r"""Select the variant of the spectral method applied to projection :math:`\operatorname{DPP}(\mathbf{K})` with :math:`\mathbf{K} = U U^{*}`.
+
+    :param mode: variant name, default "GS"
+    :type mode: str
+
+    :return: sampler selected by ``mode``
+
+        - ``"GS"`` :py:func:`~dppy.finite.exact_samplers.projection_eigen_samplers.projection_eigen_sampler_GS`
+        - ``"GS_bis"`` :py:func:`~dppy.finite.exact_samplers.projection_eigen_samplers.projection_eigen_sampler_GS_bis`
+        - ``"KuTa12"`` :py:func:`~dppy.finite.exact_samplers.projection_eigen_samplers.projection_eigen_sampler_KuTa12`
+
+    :rtype: callable
+    """
     samplers = {
         "GS": projection_eigen_sampler_GS,
         "GS_bis": projection_eigen_sampler_GS_bis,
@@ -16,16 +29,20 @@ def select_sampler_eigen_projection(mode):
 
 # Phase 2: sample from the projection DPP selected in phase 1
 def projection_eigen_sampler_GS(eig_vecs, size=None, random_state=None):
-    """Generate an exact sample from projection :math:`\\operatorname{DPP}(K)` with orthogonal projection kernel :math:`K=VV^{\\top}` where :math:`V=` ``eig_vecs`` such that :math:`V^{\\top}V = I_r` and :math:`r=\\operatorname{rank}(\\mathbf{K})`.
-    Performs sequential Gram-Schmidt (GS) orthogonalization of the rows of the eigenvectors corresponding to the sampled items.
+    r"""Generate an exact sample from projection :math:`\operatorname{DPP}(K)` with orthogonal projection kernel :math:`K=VV^{\top}` where :math:`V=` ``eig_vecs`` such that :math:`V^{\top}V = I_r` and :math:`r=\operatorname{rank}(K)`.
 
     :param eig_vecs:
-        Eigenvectors used to form projection kernel :math:`K=VV^{\\top}`.
+        Eigenvectors :math:`V` of :math:`K=VV^{\top}`.
     :type eig_vecs:
         array_like
 
+    :param size:
+        Size of the output sample (if ``size`` is provided), otherwise :math:`k=\operatorname{trace}(K)=\operatorname{rank}(K)=r`.
+    :type size:
+        int
+
     :return:
-        A sample from projection :math:`\\operatorname{DPP}(K)`.
+        An exact sample from the corresponding :math:`\operatorname{DPP}(K)` or :math:`\operatorname{k-DPP}(K)`.
     :rtype:
         list
 
@@ -79,17 +96,22 @@ def projection_eigen_sampler_GS(eig_vecs, size=None, random_state=None):
 
 
 def projection_eigen_sampler_GS_bis(eig_vecs, size=None, random_state=None):
-    """Sample from projection :math:`\\operatorname{DPP}(K)` using the eigendecomposition of the orthogonal projection kernel :math:`K=VV^{\\top}` where :math:`V^{\\top}V = I_r` and :math:`r=\\operatorname{rank}(\\mathbf{K})`.
-    Sequential Gram-Schmidt orthogonalization is performed on the rows of the matrix of eigenvectors corresponding to the sampled items.
-    This is a slight modification of :func:`projection_eigen_sampler_GS <projection_eigen_sampler_GS>`.
+    r"""Generate an exact sample from projection :math:`\operatorname{DPP}(K)` with orthogonal projection kernel :math:`K=VV^{\top}` where :math:`V=` ``eig_vecs`` such that :math:`V^{\top}V = I_r` and :math:`r=\operatorname{rank}(K)`.
+
+    This function is a slight modification of :func:`projection_eigen_sampler_GS <projection_eigen_sampler_GS>`.
 
     :param eig_vecs:
-        Eigenvectors of the projection kernel :math:`K=VV^{\\top}`.
+        Eigenvectors :math:`V` of :math:`K=VV^{\top}`.
     :type eig_vecs:
         array_like
 
+    :param size:
+        Size of the output sample (if ``size`` is provided), otherwise :math:`k=\operatorname{trace}(K)=\operatorname{rank}(K)=r`.
+    :type size:
+        int
+
     :return:
-        A sample from projection :math:`\\operatorname{DPP}(K)`.
+        An exact sample from the corresponding :math:`\operatorname{DPP}(K)` or :math:`\operatorname{k-DPP}(K)`.
     :rtype:
         list
 
@@ -169,27 +191,27 @@ def projection_eigen_sampler_GS_bis(eig_vecs, size=None, random_state=None):
 
 
 def projection_eigen_sampler_KuTa12(eig_vecs, size=None, random_state=None):
-    """Generate an exact sample from projection :math:`\\operatorname{DPP}(K)` with orthogonal projection kernel :math:`K=VV^{\\top}` where :math:`V=` ``eig_vecs`` such that :math:`V^{\\top}V = I_r` and :math:`r=\\operatorname{rank}(\\mathbf{K})`.
-    This corresponds to :cite:`KuTa12` Algorithm 1.
+    r"""Generate an exact sample from projection :math:`\operatorname{DPP}(K)` with orthogonal projection kernel :math:`K=VV^{\top}` where :math:`V=` ``eig_vecs`` such that :math:`V^{\top}V = I_r` and :math:`r=\operatorname{rank}(K)`.
 
-    :param eig_vals:
-        Collection of eigenvalues of the similarity kernel :math:`K`.
-    :type eig_vals:
-        list
+    This function implements Algorithm 1 :cite:`KuTa12`.
 
     :param eig_vecs:
-        Eigenvectors of the similarity kernel :math:`K`.
+        Eigenvectors :math:`V` of :math:`K=VV^{\top}`.
     :type eig_vecs:
         array_like
 
+    :param size:
+        Size of the output sample (if ``size`` is provided), otherwise :math:`k=\operatorname{trace}(K)=\operatorname{rank}(K)=r`.
+    :type size:
+        int
+
     :return:
-        A sample from :math:`\\operatorname{DPP}(K)`.
+        An exact sample from the corresponding :math:`\operatorname{DPP}(K)` or :math:`\operatorname{k-DPP}(K)`.
     :rtype:
         list
 
     .. seealso::
 
-        - :cite:`KuTa12` Algorithm 1
         - :func:`projection_eigen_sampler_GS <projection_eigen_sampler_GS>`
         - :func:`projection_eigen_sampler_GS_bis <projection_eigen_sampler_GS_bis>`
     """

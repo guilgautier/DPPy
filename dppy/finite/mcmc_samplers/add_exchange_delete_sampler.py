@@ -6,6 +6,25 @@ from dppy.utils import check_random_state, det_ST
 
 
 def add_exchange_delete_sampler(dpp, random_state=None, **params):
+    r"""MCMC based sampler for sampling approximately from a DPP, by performing `single addition, single deletion, or exchange (swap) moves <finite_dpps_mcmc_sampling_add_exchange_delete>`_.
+
+    See also :py:func:`~dppy.finite.mcmc_samplers.add_exchange_delete_sampler.add_exchange_delete_sampler_core`.
+
+    :param dpp:
+        Finite DPP
+    :type dpp:
+        :py:class:`~dppy.finite.dpp.FiniteDPP`
+
+    :param random_state:
+        random number generator or seed, defaults to None
+    :type random_state:
+        optional
+
+    :return:
+        MCMC chain of approximate samples (stacked row_wise i.e. max_iter rows).
+    :rtype:
+        list of lists
+    """
     dpp.compute_L()
     kernel = dpp.L
     rng = check_random_state(random_state)
@@ -18,7 +37,9 @@ def add_exchange_delete_sampler(dpp, random_state=None, **params):
 def add_exchange_delete_sampler_core(
     kernel, s_init, random_state=None, nb_iter=10, T_max=None, **kwargs
 ):
-    """MCMC sampler for generic DPPs, it is a mix of add/delete and basis exchange MCMC samplers.
+    """MCMC based sampler for sampling approximately from a DPP, by performing single addition single deletion, or exchange (swap) moves.
+
+    This function implements Algorithm 3 in :cite:`LiJeSr16c`.
 
     :param kernel:
         Kernel matrix
@@ -49,10 +70,6 @@ def add_exchange_delete_sampler_core(
         list of `nb_iter` approximate samples of DPP(kernel)
     :rtype:
         array_like
-
-    .. seealso::
-
-        Algorithm 3 in :cite:`LiJeSr16c`
     """
     rng = check_random_state(random_state)
 
@@ -211,12 +228,25 @@ def add_exchange_delete_sampler_refactored(
 def initialize_add_exchange_delete_sampler(
     kernel, random_state=None, nb_trials=100, tol=1e-9, **kwargs
 ):
-    """
-    .. seealso::
-        - :func:`add_delete_sampler <add_delete_sampler>`
-        - :func:`exchange_sampler <exchange_sampler>`
-        - :func:`initialize_add_exchange_delete_sampler <initialize_add_exchange_delete_sampler>`
-        - :func:`add_exchange_delete_sampler <add_exchange_delete_sampler>`
+    r"""Initialize the add-exchange-delete Markov chain with a sample :math:`X_0` with cardinality ``size``, such that :math:`\det K_{X_0} >` ``tol``.
+
+    :param kernel: Kernel matrix :math:`K`
+    :type kernel: array_like
+
+    :param random_state: Random number generator, defaults to None
+    :type random_state: optional
+
+    :param size: size of the initial sample, defaults to None
+    :type size: int, optional
+
+    :param nb_trials: Maximum number of proposed initial samples, defaults to 100. If no proposed sample satisfies the above condition, an error is raised.
+    :type nb_trials: int, optional
+
+    :param tol: Threshold such that :math:`\det K_{X_0} >` ``tol``, defaults to 1e-9
+    :type tol: float, optional
+
+    :return: initial sample :math:`X_0`
+    :rtype: list
     """
     rng = check_random_state(random_state)
 

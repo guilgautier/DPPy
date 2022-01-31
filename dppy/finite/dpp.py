@@ -48,7 +48,7 @@ class FiniteDPP:
         bool, default ``False``
 
     :param hermitian:
-        Indicate if the associated kernel is hermitian, i.e., :math:`M^\dagger = M`
+        Indicate if the associated kernel is hermitian, i.e., :math:`M^* = M`
     :type hermitian:
         bool, default ``True``
 
@@ -121,15 +121,15 @@ class FiniteDPP:
         self.size_k_dpp = 0
 
     def sample_exact(self, method="spectral", random_state=None, **params):
-        """Sample exactly from the corresponding :py:class:`~dppy.finite.dpp.FiniteDPP <FiniteDPP>` object. Default sampling method="spectral" assumes the corresponding DPP is  hermitian.
+        """Sample exactly from the corresponding :py:class:`~dppy.finite.dpp.FiniteDPP` object. Default sampling method="spectral" assumes the corresponding DPP is  hermitian.
 
         :param method:
-            - ``"spectral"`` (default), see :ref:`finite_dpps_exact_sampling_spectral_method`. It applies to hermitian DPPs: ``FiniteDPP(..., hermitian=True, ...)``.
-            - ``"vfx"`` dpp-vfx rejection sampler of :cite:`DeCaVa19`, see :ref:`finite_dpps_exact_sampling_intermediate_sampling_method`. It applies to ``FiniteDPP("likelihood", hermitian=True, L_eval_X_data=(eval_L, X_data))``,
-            - ``"alpha"`` alpha-dpp rejection sampler :cite:`CaDeVa20`, see :ref:`finite_dpps_exact_sampling_intermediate_sampling_method`. It applies to ``FiniteDPP("likelihood", hermitian=True, L_eval_X_data=(eval_L, X_data))``.
+            - ``"spectral"`` (default), see :ref:`finite_dpps_exact_sampling_spectral_method` and :py:func:`~dppy.finite.exact_samplers.spectral_sampler_dpp.spectral_sampler`. It applies to hermitian DPPs: ``FiniteDPP(..., hermitian=True, ...)``.
+            - ``"vfx"`` dpp-vfx rejection sampler of :cite:`DeCaVa19`, see :ref:`finite_dpps_exact_sampling_intermediate_sampling_methods` and :py:func:`~dppy.finite.exact_samplers.vfx_samplers.vfx_sampler_dpp`. It applies to ``FiniteDPP("likelihood", hermitian=True, L_eval_X_data=(eval_L, X_data))``,
+            - ``"alpha"`` alpha-dpp rejection sampler :cite:`CaDeVa20`, see :ref:`finite_dpps_exact_sampling_intermediate_sampling_methods`. It applies to ``FiniteDPP("likelihood", hermitian=True, L_eval_X_data=(eval_L, X_data))``.
             - ``"Schur"``, conditionals are computed as Schur complements see :eq:`eq:chain_rule_schur`. It applies to ``FiniteDPP("correlation", projection=True, ...)``.
-            - ``"Chol"``, see :ref:`finite_dpps_exact_sampling_cholesky_method`. It refers to :cite:`Pou19` Algorithm 1 (see ``"generic"``) and Algorithm 3 which applies to``FiniteDPP("correlation", projection=True, hermitian=true, ...)``.
-            - ``"generic"``, see :ref:`finite_dpps_exact_sampling_cholesky_method`, applies to generic (hermitian or not) finite DPPs, :cite:`Pou19` Algorithm 1.
+            - ``"Chol"``, see :ref:`finite_dpps_exact_sampling_generic_method`. It refers to :cite:`Pou19` Algorithm 1 (see ``"generic"``) and Algorithm 3 which applies to``FiniteDPP("correlation", projection=True, hermitian=true, ...)``.
+            - ``"generic"``, see :ref:`finite_dpps_exact_sampling_generic_method`, applies to generic (hermitian or not) finite DPPs, :cite:`Pou19` Algorithm 1.
 
         :type method:
             string, default ``"spectral"``
@@ -163,7 +163,7 @@ class FiniteDPP:
                 a small number and increase if the algorithm fails to terminate.
 
         :return:
-            Returns a sample from the corresponding :py:class:`~dppy.finite.dpp.FiniteDPP <FiniteDPP>` object. In any case, the sample is appended to the :py:attr:`~dpp.finite.dpp.FiniteDPP.list_of_samples` attribute as a list.
+            Returns a sample from the corresponding :py:class:`~dppy.finite.dpp.FiniteDPP` object. In any case, the sample is appended to the :py:attr:`~dpp.finite.dpp.FiniteDPP.list_of_samples` attribute as a list.
         :rtype:
             list
 
@@ -187,7 +187,7 @@ class FiniteDPP:
         return sample
 
     def sample_exact_k_dpp(self, size, method="spectral", random_state=None, **params):
-        r"""Sample exactly from :math:`\operatorname{k-DPP}`. A priori the :py:class:`~dppy.finite.dpp.FiniteDPP <FiniteDPP>` object was instanciated by its likelihood :math:`\mathbf{L}` kernel so that
+        r"""Sample exactly from :math:`\operatorname{k-DPP}`. A priori the :py:class:`~dppy.finite.dpp.FiniteDPP` object was instanciated by its likelihood :math:`\mathbf{L}` kernel so that
 
         .. math::
 
@@ -217,8 +217,6 @@ class FiniteDPP:
 
         :param dict params:
             Dictionary containing the parameters for exact samplers with keys
-
-            ``"random_state"`` (default None)
 
             - If ``mode="vfx"``
 
@@ -272,7 +270,7 @@ class FiniteDPP:
         return sample
 
     def sample_mcmc(self, method="aed", random_state=None, **params):
-        """Run a MCMC with stationary distribution the corresponding :py:class:`~dppy.finite.dpp.FiniteDPP <FiniteDPP>` object.
+        """Run a MCMC with stationary distribution the corresponding :py:class:`~dppy.finite.dpp.FiniteDPP` object.
 
         :param string method:
 
@@ -283,8 +281,6 @@ class FiniteDPP:
 
         :param dict params:
             Dictionary containing the parameters for MCMC samplers with keys
-
-            ``"random_state"`` (default None)
 
             - If ``method="aed","ad","e"``
 

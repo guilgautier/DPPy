@@ -8,36 +8,67 @@ from dppy.utils import check_random_state
 
 
 def spectral_sampler(dpp, random_state=None, **params):
+    r"""Generate an exact sample from an hermitian ``dpp`` using the :ref:`spectral method <finite_dpps_exact_sampling_spectral_method>`.
+
+    The precomputation cost of generating the first sample involves computing the eigenvalues and eigenvectors of the likelihood kernel :math:`\mathbf{K}` from the current parametrization of ``dpp`` and stored in the ``dpp.K_eig_vals`` and ``dpp.eig_vecs`` attributes.
+
+    :param dpp:
+        Finite DPP
+    :type dpp:
+        :py:class:`~dppy.finite.dpp.FiniteDPP`
+
+    :param random_state:
+        random number generator or seed, defaults to None
+    :type random_state:
+        optional
+
+    Keyword arguments:
+        - mode (str): select the variant of the sampler used in the second step which boils down to sampling from a projection DPP, see :py:func:`~dppy.finite.exact_samplers.projection_eigen_samplers.select_sampler_eigen_projection`
+
+    :return: sample
+    :rtype: list
+    """
     assert dpp.hermitian
     compute_spectral_sampler_parameters_dpp(dpp)
     return do_spectral_sampler_dpp(dpp, random_state, **params)
 
 
 def do_spectral_sampler_dpp(dpp, random_state=None, **params):
+    """Perform the main steps of the :ref:`spectral method <finite_dpps_exact_sampling_spectral_method>` to generate an exact sample from ``dpp``.
+
+    :param dpp: Finite DPP
+    :type dpp: :py:class:`~dppy.finite.dpp.FiniteDPP`
+
+    :param random_state: random number generator or seed, defaults to None
+    :type random_state: optional
+
+    :return: sample
+    :rtype: list
+    """
     rng = check_random_state(random_state)
     eig_vals, eig_vecs = dpp.K_eig_vals, dpp.eig_vecs
     V = select_eigen_vectors_dpp(eig_vals, eig_vecs, random_state=rng)
     sampler = select_sampler_eigen_projection(params.get("mode"))
-    return sampler(V, size=params.get("size"), random_state=rng)
+    return sampler(V, random_state=rng)
 
 
 def compute_spectral_sampler_parameters_dpp(dpp):
-    """Compute eigenvalues and eigenvectors of correlation kernel K from various parametrizations of ``dpp``
+    r"""Compute eigenvalues and eigenvectors of correlation kernel :math:`\mathbf{K}` from the current parametrization of ``dpp``. These values are stored in the ``dpp.K_eig_vals`` and ``dpp.eig_vecs`` attributes.
 
-    :param dpp: ``FiniteDPP`` object
-    :type dpp: FiniteDPP
+    :param dpp: Finite hermitian DPP
+    :type dpp: :py:class:`~dppy.finite.dpp.FiniteDPP`
     """
     while compute_spectral_sampler_parameters_dpp_step(dpp):
         pass
 
 
 def compute_spectral_sampler_parameters_dpp_step(dpp):
-    """
-    Returns
-    ``False`` if the right parameters are indeed computed
-    ``True`` if extra computations are required
+    r"""Compute eigenvalues and eigenvectors of correlation kernel :math:`\mathbf{K}` from the current parametrization of ``dpp``. These values are stored in the ``dpp.K_eig_vals`` and ``dpp.eig_vecs`` attributes.
 
-    Note: Sort of fixed point algorithm to find dpp.K_eig_vals and dpp.eig_vecs
+    This corresponds to a sort of fixed point algorithm to compute eigenvalues and eigenvectors.
+
+    :return: ``False`` if the right parameters are indeed computed, ``True`` if extra computations are required.
+    :rtype: bool
     """
     if dpp.K_eig_vals is not None:
         return False

@@ -10,6 +10,26 @@ from dppy.utils import check_random_state, elementary_symmetric_polynomials
 
 
 def spectral_sampler_k_dpp(dpp, size, random_state=None, **params):
+    r"""Generate an exact sample from an hermitian :math:`k\!\operatorname{-DPP}` associated with ``dpp`` and :math:`k=` ``size``, using the :ref:`spectral method <finite_dpps_exact_sampling_k_dpps>`.
+
+    The precomputation cost of generating the first sample involves computing the eigenvalues and eigenvectors of the likelihood kernel :math:`\mathbf{L}` from the current parametrization of ``dpp`` and stored in the ``dpp.L_eig_vals`` and ``dpp.eig_vecs`` attributes.
+    The elementary symmetric polynomials of degree :math:`0` to :math:`k` are also evaluated at the eigenvalues of the likelihood kernel and stored in the ``dpp.esp`` attribute, see :py:func:`~dppy.utils.elementary_symmetric_polynomials`.
+
+    :param dpp:
+    :type dpp: :py:class:`~dppy.finite.dpp.FiniteDPP`
+
+    :param size: size :math:`k` of the output sample
+    :type size: int
+
+    :param random_state: random number generator or seed, defaults to None
+    :type random_state: optional
+
+    Keyword arguments:
+        - mode (str): select the variant of the sampler used in the second step which boils down to sampling from a projection DPP, see :py:func:`~dppy.finite.exact_samplers.projection_eigen_samplers.select_sampler_eigen_projection`
+
+    :return: sample
+    :rtype: list
+    """
     assert dpp.hermitian
     if not dpp.projection:
         compute_spectral_sampler_parameters_k_dpp(dpp, size)
@@ -25,13 +45,27 @@ def spectral_sampler_k_dpp(dpp, size, random_state=None, **params):
 
 
 def do_spectral_sampler_k_dpp(dpp, size, random_state=None, **params):
+    r"""Perform the main steps of the :ref:`spectral method <finite_dpps_exact_sampling_k_dpps>` to generate an exact sample from the :math:`k\!\operatorname{-DPP}` associated with ``dpp`` and :math:`k=` ``size``.
+
+    :param dpp:
+    :type dpp: :py:class:`~dppy.finite.dpp.FiniteDPP`
+
+    :param size: size :math:`k` of the output sample
+    :type size: int
+
+    :param random_state: random number generator or seed, defaults to None
+    :type random_state: optional
+
+    :return: sample
+    :rtype: list
+    """
     rng = check_random_state(random_state)
     # Phase 1
     eig_vals, eig_vecs = dpp.L_eig_vals, dpp.eig_vecs
     V = select_eigen_vectors_k_dpp(
         eig_vals,
         eig_vecs,
-        size=size,
+        size,
         esp=dpp.esp,
         random_state=rng,
     )
@@ -42,22 +76,26 @@ def do_spectral_sampler_k_dpp(dpp, size, random_state=None, **params):
 
 
 def compute_spectral_sampler_parameters_k_dpp(dpp, size):
-    """Compute eigenvalues and eigenvectors of likelihood kernel L from various parametrizations of ``dpp``
+    r"""Compute the eigenvalues and eigenvectors of the likelihood kernel :math:`\mathbf{L}` the current parametrization of ``dpp`` and stored in the ``dpp.L_eig_vals`` and ``dpp.eig_vecs`` attributes.
+    The elementary symmetric polynomials of degree :math:`0` to :math:`k` are also evaluated at the eigenvalues of the likelihood kernel and stored in the ``dpp.esp`` attribute, see :py:func:`~dppy.utils.elementary_symmetric_polynomials`.
 
-    :param dpp: ``FiniteDPP`` object
+    :param dpp: Finite hermitian DPP
     :type dpp: FiniteDPP
+
+    :param size: size :math:`k` of the output sample
+    :type size: int
     """
     while compute_spectral_sampler_parameters_k_dpp_step(dpp, size):
         pass
 
 
 def compute_spectral_sampler_parameters_k_dpp_step(dpp, size):
-    """
-    Returns
-    ``False`` if the right parameters are indeed computed
-    ``True`` if extra computations are required
+    r"""Compute eigenvalues and eigenvectors of correlation kernel :math:`\mathbf{L}` from the current parametrization of ``dpp``. These values are stored in the ``dpp.L_eig_vals`` and ``dpp.eig_vecs`` attributes. The elementary symmetric polynomials of degree :math:`0` to :math:`k` are also evaluated at the eigenvalues of the likelihood kernel and stored in the ``dpp.esp`` attribute, see :py:func:`~dppy.utils.elementary_symmetric_polynomials`.
 
-    Note: Sort of fixed point algorithm to find dpp.L_eig_vals and dpp.eig_vecs
+    This corresponds to a sort of fixed point algorithm to compute eigenvalues and eigenvectors.
+
+    :return: ``False`` if the right parameters are indeed computed, ``True`` if extra computations are required.
+    :rtype: bool
     """
 
     if dpp.L_eig_vals is not None:
@@ -115,6 +153,7 @@ def compute_spectral_sampler_parameters_k_dpp_step(dpp, size):
 
 def select_eigen_vectors_k_dpp(eig_vals, eig_vecs, size, esp=None, random_state=None):
     """Select columns of ``eig_vecs`` by sampling Bernoulli variables with parameters derived from the computation of elementary symmetric polynomials ``esp`` of order 0 to ``size`` evaluated in ``eig_vals``.
+
     This corresponds to :cite:`KuTa12` Algorithm 8.
 
     :param eig_vals:
@@ -174,6 +213,19 @@ def select_eigen_vectors_k_dpp(eig_vals, eig_vecs, size, esp=None, random_state=
 
 
 def compute_spectral_sampler_eig_vals_projection_k_dpp(dpp, size):
+    r"""Compute the eigenvalues of the projection kernel :math:`\mathbf{L}` or :math:`\mathbf{K}` according to the definition of ``dpp`` as ``FiniteDPP(kernel_type="likelihood", ...)`` or ``FiniteDPP(kernel_type="correlation", ...)``.
+
+    :param dpp: Finite DPP
+    :type dpp: :py:class:`~dppy.finite.dpp.FiniteDPP`
+
+    :param size: size :math:`k` of the output sample
+    :type size: int
+
+    :raises ValueError: If ``dpp`` is a projection :math:`\operatorname{DPP}(\mathbf{K})` and ``size`` :math:`\neq \operatorname{rank}(\mathbf{K})`.
+
+    :return: Eigenvalues of :math:`\mathbf{L}` or :math:`\mathbf{K}` according to the definition of ``dpp`` as ``FiniteDPP(kernel_type="likelihood", ...)`` or ``FiniteDPP(kernel_type="correlation", ...)``.
+    :rtype: array_like
+    """
     assert dpp.projection
     if dpp.kernel_type == "likelihood":
         compute_spectral_sampler_parameters_k_dpp(dpp, size)

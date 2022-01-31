@@ -4,6 +4,23 @@ from dppy.utils import check_random_state
 
 
 def generic_sampler(dpp, random_state=None, **params):
+    r"""Generate an exact sample from ``dpp`` using the :ref:`generic method <finite_dpps_exact_sampling_generic_method>`.
+
+    The correlation kernel :math:`\mathbf{K}` is computed from the current parametrization of ``dpp``, see :py:meth:`~dppy.finite.dpp.FiniteDPP.compute_K`.
+
+    :param dpp: Finite DPP
+    :type dpp: :py:class:`~dppy.finite.dpp.FiniteDPP`
+
+    :param random_state: random number generator or seed, defaults to None
+    :type random_state: optional
+
+    Keyword arguments:
+
+        - mode (str): select the variant of the sampler, see :py:func:`~dppy.finite.exact_samplers.generic_samplers.select_generic_sampler`
+
+    :return: sample
+    :rtype: list
+    """
     dpp.compute_K()
     mode = params.get("mode", "")
     sampler = select_generic_sampler(mode)
@@ -11,6 +28,15 @@ def generic_sampler(dpp, random_state=None, **params):
 
 
 def select_generic_sampler(mode):
+    r"""Select the variant of the :ref:`generic method <finite_dpps_exact_sampling_generic_method>`.
+
+    :param mode:
+        Select the variant among
+
+        - ``"lu"`` (default) :py:func:`~dppy.finite.exact_samplers.generic_samplers.generic_correlation_kernel_sampler_lu`
+
+    :type mode: str
+    """
     samplers = {
         "lu": generic_correlation_kernel_sampler_lu,
     }
@@ -19,7 +45,9 @@ def select_generic_sampler(mode):
 
 
 def generic_correlation_kernel_sampler_lu(K, random_state=None, **params):
-    r"""Generate an exact sample from generic :math:`\operatorname{DPP}(\mathbf{K})` with potentially non hermitian correlation kernel :math:`\mathbf{K}` based on LU factorization procedure.
+    r"""Generate an exact sample from generic :math:`\operatorname{DPP}(\mathbf{K})` with potentially non hermitian correlation kernel :math:`\mathbf{K}`.
+
+    This function implements :cite:`Pou19` Algorithm 1 based on a LU-type factorization procedure.
 
     :param K:
         Correlation kernel (potentially non hermitian).
@@ -38,11 +66,8 @@ def generic_correlation_kernel_sampler_lu(K, random_state=None, **params):
         .. math::
 
             \mathbb{P}\!\left[ \mathcal{ X } = X \right]
-            = \det \left[ K − I_{X^{c}} \right]
+            = \det \left[ \mathbf{K} − I^{X^{c}} \right]
 
-    .. seealso::
-
-        - :cite:`Pou19` Algorithm 1
     """
     rng = check_random_state(random_state)
     A = K.copy()

@@ -6,6 +6,25 @@ from dppy.utils import check_random_state
 
 
 def zonotope_sampler(dpp, random_state=None, **params):
+    r"""MCMC based sampler for sampling approximately from a projection :math:`\operatorname{DPP}(\mathbf{K})`, where :math:`\mathbf{K}=A^{\top}(AA^{\top})^{-1}A`, using the `zonotope approach <finite_dpps_mcmc_sampling_zonotope>`_.
+
+    See also :py:func:`~dppy.finite.mcmc_samplers.zonotope_sampler.zonotope_sampler_core`.
+
+    :param dpp:
+        Finite DPP
+    :type dpp:
+        :py:class:`~dppy.finite.dpp.FiniteDPP`
+
+    :param random_state:
+        random number generator or seed, defaults to None
+    :type random_state:
+        optional
+
+    :return:
+        MCMC chain of approximate samples (stacked row_wise i.e. max_iter rows).
+    :rtype:
+        list of lists
+    """
     if not dpp.projection or not dpp.hermitian or dpp.A_zono is None:
         raise ValueError(
             "DPP must be defined via FiniteDPP(kernel_type='correlation', projection=True, hermitian=True, A_zono=...)"
@@ -22,27 +41,34 @@ def zonotope_sampler_core(
     show_progress=False,
     msg_lev="GLP_MSG_OFF",
 ):
-    """MCMC based sampler for projection DPPs.
-    The similarity matrix is the orthogonal projection matrix onto
-    the row span of the feature vector matrix.
-    Samples are of size equal to the ransampl_size of the projection matrix
-    also equal to the rank of the feature matrix (assumed to be full row rank).
+    r"""MCMC based sampler for sampling approximately from a projection :math:`\operatorname{DPP}(\mathbf{K})`, where :math:`\mathbf{K}=A^{\top}(AA^{\top})^{-1}A`.
+
+    This function implements :cite:`GaBaVa17` Algorithm 5.
 
     :param A_zono:
-        Feature vector matrix, feature vectors are stacked columnwise.
-        It is assumed to be full row rank.
+        Feature vector matrix (r, N), feature vectors are stacked columnwise. It is assumed to be full row rank.
     :type A_zono:
         array_like
 
-    :param params: Dictionary containing the parameters
+    :param lin_obj:
+        Linear objective :math:`c` of the linear program used to identify the tile in which a point lies. Default is a random Gaussian vector.
+    :type lin_obj:
+        array_like
 
-        - ``'lin_obj'`` (list): Linear objective (:math:`c`) of the linear program used to identify the tile in which a point lies. Default is a random Gaussian vector.
-        - ``'x_0'` (list): Initial point.
-        - ``'max_iter'`` (int): Number of iterations of the MCMC chain. Default is 10.
-        - ``'T_max'`` (float): Maximum running time of the algorithm (in seconds).
-        Default is None.
-        - ``'random_state`` (default None)
-    :type params: dict
+    :param x_0:
+        Initial point (r,).
+    :type x_0:
+        array_like
+
+    :param max_iter:
+        Number of iterations of the MCMC chain. Default is 10.
+    :type max_iter:
+        int
+
+    :param T_max:
+        Maximum running time of the algorithm (in seconds). Default is None.
+    :type T_max:
+        float
 
     :return:
         MCMC chain of approximate samples (stacked row_wise i.e. max_iter rows).
@@ -51,9 +77,8 @@ def zonotope_sampler_core(
 
     .. seealso::
 
-        - :cite:`GaBaVa17` Algorithm 5
-        - :func:`extract_basis <extract_basis>`
-        - :func:`exchange_sampler <exchange_sampler>`
+        - :py:func:`~dppy.finite.mcmc_samplers.zonotope_sampler.extract_basis`
+        - :py:func:`~dppy.finite.mcmc_samplers.exchange_sampler.exchange_sampler`
     """
     solvers.options["show_progress"] = show_progress
     solvers.options["glpk"] = {"msg_lev": msg_lev}
@@ -177,14 +202,14 @@ def zonotope_sampler_core(
 
 
 def extract_basis(y_sol, tol=1e-5):
-    r"""Extract the basis/tile :math:`B_{x}` of the zonotope in which the RHS :math:`x` of the LP :eq:`eq:Px`, given its optimal solution ``y_sol``.
+    r"""Extract the basis/tile :math:`B_{x}` of the zonotope in which the RHS :math:`x` of the LP, given its optimal solution ``y_sol``.
 
     .. math::
 
         B_{x} = \left\{ i \, ; \, y_i^* \in (0,1) \right\}
 
     :param y_sol:
-        Optimal solution of the LP :eq:`eq:Px`
+        Optimal solution of the LP
     :type y_sol:
         array_like
 
@@ -201,7 +226,7 @@ def extract_basis(y_sol, tol=1e-5):
     .. seealso::
 
         - :cite:`GaBaVa17` Algorithm 3
-        - :func:`zonotope_sampler_core <zonotope_sampler_core>`
+        - :py:func:`~dppy.finite.mcmc_samplers.zonotope_sampler.zonotope_sampler_core`
     """
     mask = tol < y_sol
     np.logical_and(mask, y_sol < 1 - tol, where=mask, out=mask)

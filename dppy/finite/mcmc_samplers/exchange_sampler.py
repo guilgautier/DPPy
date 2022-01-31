@@ -7,6 +7,25 @@ from dppy.utils import check_random_state, det_ST
 
 
 def exchange_sampler(dpp, random_state=None, **params):
+    r"""MCMC based sampler for sampling approximately from a DPP, by performing `exchange (swap) moves <finite_dpps_mcmc_sampling_add_exchange_delete>`_.
+
+    See also :py:func:`~dppy.finite.mcmc_samplers.exchange_sampler.exchange_sampler_core`.
+
+    :param dpp:
+        Finite DPP
+    :type dpp:
+        :py:class:`~dppy.finite.dpp.FiniteDPP`
+
+    :param random_state:
+        random number generator or seed, defaults to None
+    :type random_state:
+        optional
+
+    :return:
+        MCMC chain of approximate samples (stacked row_wise i.e. max_iter rows).
+    :rtype:
+        list of lists
+    """
     rng = check_random_state(random_state)
     s0 = params.pop("s_init", None)
     size = params.pop("size", None if s0 is None else len(s0))
@@ -38,11 +57,12 @@ def get_exchange_sampler_kernel(dpp, size):
 def exchange_sampler_core(
     kernel, s_init, random_state=None, nb_iter=10, T_max=None, **kwargs
 ):
-    """MCMC sampler for projection DPPs, based on the basis exchange property.
+    """MCMC based sampler for sampling approximately from a DPP, by performing exhange (swap) moves.
+
+    This function implements Algorithm 2 in :cite:`LiJeSr16c`.
 
     :param kernel:
-        Feature vector matrix, feature vectors are stacked columnwise.
-        It is assumed to be full row rank.
+        Kernel matrix
     :type kernel:
         array_like
 
@@ -68,13 +88,9 @@ def exchange_sampler_core(
         None, np.random, int, np.random.RandomState
 
     :return:
-        MCMC chain of approximate sample (stacked row_wise i.e. nb_iter rows).
+        list of `nb_iter` approximate samples of DPP(kernel)
     :rtype:
-        list of lists
-
-    .. seealso::
-
-        Algorithm 2 in :cite:`LiJeSr16c`
+        array_like
     """
     rng = check_random_state(random_state)
 
@@ -166,8 +182,6 @@ def exchange_sampler_refactored(
 
         Algorithm 2 in :cite:`LiJeSr16c`
     """
-
-    # Initialization
     rng = check_random_state(random_state)
 
     N = kernel.shape[0]
@@ -204,7 +218,6 @@ def exchange_sampler_refactored(
 def exchange_sampler_gauss_quadrature(
     kernel, s_init, nb_iter=10, T_max=None, random_state=None
 ):
-
     rng = check_random_state(random_state)
 
     N = kernel.shape[0]
@@ -239,6 +252,26 @@ def exchange_sampler_gauss_quadrature(
 def initialize_exchange_sampler(
     kernel, size, random_state=None, nb_trials=100, tol=1e-9, **kwargs
 ):
+    r"""Initialize the exchange (swap) Markov chain with a sample :math:`X_0` with cardinality ``size``, such that :math:`\det K_{X_0} >` ``tol``.
+
+    :param kernel: Kernel matrix :math:`K`
+    :type kernel: array_like
+
+    :param random_state: Random number generator, defaults to None
+    :type random_state: optional
+
+    :param size: size of the initial sample, defaults to None
+    :type size: int, optional
+
+    :param nb_trials: Maximum number of proposed initial samples, defaults to 100. If no proposed sample satisfies the above condition, an error is raised.
+    :type nb_trials: int, optional
+
+    :param tol: Threshold such that :math:`\det K_{X_0} >` ``tol``, defaults to 1e-9
+    :type tol: float, optional
+
+    :return: initial sample :math:`X_0`
+    :rtype: list
+    """
     rng = check_random_state(random_state)
     N = kernel.shape[0]
 
