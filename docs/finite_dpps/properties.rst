@@ -336,7 +336,7 @@ That is to say, Hermitian DPPs favor subsets :math:`S` whose corresponding featu
 
 .. seealso::
 
-    :ref:`Geometric interpretation of the chain rule for projection DPPs <finite_dpps_exact_sampling_projection_dpp_chain_rule_geometrical_interpretation>`
+    :ref:`Geometric interpretation of the chain rule for projection DPPs <finite_dpps_exact_sampling_projection_dpp_geometrical_interpretation>`
 
 .. _finite_dpps_diversity:
 
@@ -459,7 +459,7 @@ In particular,
 .. seealso::
 
     - Propositions 3 and 5 of :cite:`Pou19` for the proofs,
-    - :ref:`Cholesky-based exact sampler <finite_dpps_exact_sampling_generic_method>`.
+    - :ref:`Cholesky-based exact sampler <finite_dpps_exact_sampling_sequential_methods>`.
 
 .. _finite_dpps_dpp_union_bernoulli_process:
 

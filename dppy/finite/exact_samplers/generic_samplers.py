@@ -4,7 +4,7 @@ from dppy.utils import check_random_state
 
 
 def generic_sampler(dpp, random_state=None, **params):
-    r"""Generate an exact sample from ``dpp`` using the :ref:`generic method <finite_dpps_exact_sampling_generic_method>`.
+    r"""Generate an exact sample from ``dpp`` using the :ref:`generic method <finite_dpps_exact_sampling_sequential_methods>`.
 
     The correlation kernel :math:`\mathbf{K}` is computed from the current parametrization of ``dpp``, see :py:meth:`~dppy.finite.dpp.FiniteDPP.compute_K`.
 
@@ -28,7 +28,7 @@ def generic_sampler(dpp, random_state=None, **params):
 
 
 def select_generic_sampler(mode):
-    r"""Select the variant of the :ref:`generic method <finite_dpps_exact_sampling_generic_method>`.
+    r"""Select the variant of the :ref:`generic method <finite_dpps_exact_sampling_sequential_methods>`.
 
     :param mode:
         Select the variant among

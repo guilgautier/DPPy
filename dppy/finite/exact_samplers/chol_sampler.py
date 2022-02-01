@@ -6,7 +6,7 @@ from dppy.finite.exact_samplers.projection_kernel_samplers import (
 
 def chol_sampler(dpp, random_state=None, **params):
     r"""Generate an exact sample from
-    ``dpp`` using the :ref:`generic method <finite_dpps_exact_sampling_generic_method>`.
+    ``dpp`` using the :ref:`generic method <finite_dpps_exact_sampling_sequential_methods>`.
 
         :param dpp: Finite DPP
         :type dpp: :py:class:`~dppy.finite.dpp.FiniteDPP`

@@ -151,14 +151,14 @@ where :math:`\mathbf{K}_{i-1} = \left[\left\langle \Phi(x_p)^{\top} \Phi(x_q) \r
 
 .. attention::
 
-    In contrast to the :ref:`finite case <finite_dpps_exact_sampling_projection_dpp_chain_rule>` where the conditionals are simply probability vectors, the chain rule formulations :eq:`eq:continuous_dpps_exact_sampling_projection_DPP_chain_rule_schur` and :eq:`eq:continuous_dpps_exact_sampling_projection_DPP_chain_rule_geometric` require sampling from a continuous distribution.
+    In contrast to the :ref:`finite case <finite_dpps_exact_sampling_projection_dpp>` where the conditionals are simply probability vectors, the chain rule formulations :eq:`eq:continuous_dpps_exact_sampling_projection_DPP_chain_rule_schur` and :eq:`eq:continuous_dpps_exact_sampling_projection_DPP_chain_rule_geometric` require sampling from a continuous distribution.
     This can be done using a rejection sampling mechanism but finding a good proposal density with tight rejection bounds is a challenging problem :cite:`LaMoRu15` Section 2.4.
     But it is achievable in some specific cases, see, e.g., :ref:`Multivariate Jacobi Ensemble <multivariate_jacobi_ope>`.
 
 .. seealso::
 
     - Algorithm 18 :cite:`HKPV06` for the original abstract **projection** DPP sampler
-    - :ref:`finite_dpps_exact_sampling_projection_dpp_chain_rule` in the finite case
+    - :ref:`finite_dpps_exact_sampling_projection_dpp` in the finite case
     - Some :ref:`beta_ensembles_definition_OPE` (specific instances of projection DPPs) can be :ref:`sampled <beta_ensembles_sampling>` in :math:`\mathcal{O}(r^2)` by computing the eigenvalues of properly randomised tridiagonal matrices.
     - The :ref:`multivariate Jacobi ensemble <multivariate_jacobi_ope>` whose :py:meth:`~dppy.multivariate_jacobi_ope.MultivariateJacobiOPE.sample` method relies on the chain rule described by :eq:`eq:continuous_dpps_exact_sampling_projection_DPP_chain_rule_geometric`.
 

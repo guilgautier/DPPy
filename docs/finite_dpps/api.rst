@@ -10,6 +10,7 @@ Finite DPP object
     :members:
     :inherited-members:
     :show-inheritance:
+    :special-members: __init__
 
 .. _api_finite_dpps_bless:
 

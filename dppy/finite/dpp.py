@@ -34,53 +34,73 @@ from dppy.utils import check_random_state
 
 
 class FiniteDPP:
-    r"""Finite DPP object parametrized by
+    r"""Object representing :ref:`finite determinantal point process <finite_dpps_definition>`, with attributes.
 
-    :param string kernel_type:
-        Indicate if the associated :math:`\operatorname{DPP}` is defined via its
+    :ivar kernel_type: initial value: ``kernel_type``.
+    :ivar projection: initial value: ``projection``.
+    :ivar hermitian: initial value: ``hermitian``.
 
-        - ``"correlation"`` :math:`\mathbf{K}` kernel, or
-        - ``"likelihood"`` :math:`\mathbf{L}` kernel.
+    :ivar K: initial value: keyword argument ``K`` (default None).
+    :ivar K_eig_vals: initial value: keyword argument ``K_eig_dec[0]`` (default None).
+    :ivar A_zono: initial value: keyword argument ``A_zono`` (default None).
 
-    :param projection:
-        Indicate if the associated kernel is of projection type, i.e., :math:`M^2 = M`.
-    :type projection:
-        bool, default ``False``
+    :ivar L: initial value: keyword argument ``L`` (default None).
+    :ivar L_eig_vals: initial value: keyword argument ``L_eig_dec[0]`` (default None).
+    :ivar L_gram_factor: initial value: keyword argument ``L_gram_factor`` (default None).
 
-    :param hermitian:
-        Indicate if the associated kernel is hermitian, i.e., :math:`M^* = M`
-    :type hermitian:
-        bool, default ``True``
+    :ivar eig_vecs: initial value: keyword argument ``K_eig_dec[1]`` or ``L_eig_dec[1]`` (default None).
 
-    :param params:
-        Dictionary containing the parametrization of the underlying
+    :ivar eval_L: initial value: keyword argument ``L_eval_X_data[0]`` (default None).
+    :ivar X_data: initial value: keyword argument ``L_eval_X_data[1]`` (default None).
 
-        - correlation kernel
-
-            - ``"K": K``, with :math:`\mathbf{K} (N \times N)`. If ``hermitian=True`` then :math:`0 \preceq \mathbf{K} \preceq I` must be satisfied,
-            - ``"K_eig_dec": (eig_vals, eig_vecs)``, with :math:`0 \leq eig_vals \leq 1` and columns of eig_vecs must be orthonormal,
-            - ``"A_zono": A``, with :math:`A (d \times N)` and :math:`\operatorname{rank}(A)=d`.
-
-        - likelihood kernel
-
-            - ``"L": L``, with ``\mathbf{L}`` :math:`\succeq 0`
-            - ``"L_eig_dec": (eig_vals, eig_vecs)``, with ``eig_vals`` :math:`\geq 0`,
-            - ``"L_gram_factor": Phi``, with :math:`\mathbf{L} = \Phi^{\top} \Phi`,
-            - ``"L_eval_X_data": (eval_L, X_data)``, with :math:`X (N \times d)` and ``eval_L`` a likelihood function such that :math:`\mathbf{L} =` ``eval_L` :math:`(X, X)``.
-
-            For a full description of the requirements imposed on ``eval_L``"s interface, see the documentation :func:`dppy.finite.exact_samplers.vfx_samplers.vfx_sampling_precompute_constants`.
-            For an example, see the implementation of any of the kernels provided by scikit-learn (e.g. sklearn.gaussian_process.kernels.PairwiseKernel).
-
-    :type params:
-        dict
-
-    .. seealso::
-
-        - :ref:`finite_dpps_definition`
-        - :ref:`finite_dpps_exact_sampling`
+    :ivar list_of_samples: initial value: ``[]``.
+    :ivar size_k_dpp: initial value: ``0``.
+    :ivar esp: initial value: ``None``.
+    :ivar intermediate_sample_info: initial value: ``None``.
     """
 
     def __init__(self, kernel_type, projection=False, hermitian=True, **params):
+        r"""Instantiate a :py:class:`~dppy.finite.FiniteDPP` object form
+
+        :param string kernel_type:
+            Indicate if the associated :math:`\operatorname{DPP}` is defined via its
+
+            - ``"correlation"`` :math:`\mathbf{K}` kernel, or
+            - ``"likelihood"`` :math:`\mathbf{L}` kernel.
+
+        :param projection:
+            Indicate if the associated kernel is of projection type, i.e., :math:`M^2 = M`.
+        :type projection:
+            bool, default ``False``.
+
+        :param hermitian:
+            Indicate if the associated kernel is hermitian, i.e., :math:`M^* = M`.
+        :type hermitian:
+            bool, default ``True``.
+
+        :Keyword Arguments:
+
+            If ``kernel_type="correlation"``
+
+            - **K** (numpy.ndarray) -- correlation kernel :math:`\mathbf{K}` of size :math:`N \times N`. If ``hermitian=True`` then :math:`0 \preceq \mathbf{K} \preceq I` must be satisfied.
+
+            - **K_eig_dec** (tuple(numpy.ndarray, numpy.ndarray)) -- ``(eig_vals, eig_vecs)`` Eigendecomposition of the correlation kernel :math:`\mathbf{K}=U\Lambda U^*`, such that :math:`U=` ``eig_vecs``, :math:`\Lambda=\operatorname{diag}` (``eig_vals``) with :math:`0 \leq` ``eig_vals`` :math:`\leq 1`. Applies only if ``hermitian=True``.
+
+            - **A_zono** (numpy.ndarray) -- Matrix of size :math:`d \times N` such that :math:`\operatorname{rank}(A)=d` and :math:`\mathbf{K} = A^{\top} (A A^{\top})^{-1} A`.
+
+            If ``kernel_type="likelihood"``
+
+            - **L** (numpy.ndarray) -- likelihood kernel :math:`\mathbf{L}` of size :math:`N \times N`. If ``hermitian=True`` then :math:`\mathbf{L} \succeq 0` must be satisfied.
+
+            - **L_eig_dec** (tuple(numpy.ndarray, numpy.ndarray)) -- ``(eig_vals, eig_vecs)``.  Eigendecomposition of the likelihood kernel :math:`\mathbf{L}=V\Gamma V^*`, such that :math:`V=` ``eig_vecs``, :math:`\Gamma=\operatorname{diag}` (``eig_vals``), with ``eig_vals`` :math:`\geq 0`. Applies only if ``hermitian=True``.
+
+            - **L_gram_factor** (numpy.ndarray) -- Matrix :math:`\Phi` of size :math:`d \times N` such that :math:`\mathbf{L} = \Phi^{\top} \Phi`.
+
+            - **L_eval_X_data** (tuple(callable, numpy.ndarray)) -- ``(L, X)`` such that :math:`\mathbf{L}_{ij} =` ``L(X[i, :], X[j, :])``. For a full description of the requirements imposed on ``L``'s interface, see the documentation of :func:`~dppy.finite.exact_samplers.vfx_samplers.vfx_sampling_precompute_constants`. For an example, see the implementation of any of the kernels provided by scikit-learn (e.g. sklearn.gaussian_process.kernels.PairwiseKernel).
+
+        :type params:
+            dict
+        """
 
         check_arguments_coherence(kernel_type, projection, hermitian, **params)
 
@@ -120,58 +140,29 @@ class FiniteDPP:
         self.list_of_samples = []
         self.size_k_dpp = 0
 
-    def sample_exact(self, method="spectral", random_state=None, **params):
-        """Sample exactly from the corresponding :py:class:`~dppy.finite.dpp.FiniteDPP` object. Default sampling method="spectral" assumes the corresponding DPP is  hermitian.
+    def sample_exact(self, method=None, random_state=None, **kwargs):
+        """Sample exactly from the corresponding :py:class:`~dppy.finite.dpp.FiniteDPP` object.
 
         :param method:
-            - ``"spectral"`` (default), see :ref:`finite_dpps_exact_sampling_spectral_method` and :py:func:`~dppy.finite.exact_samplers.spectral_sampler_dpp.spectral_sampler`. It applies to hermitian DPPs: ``FiniteDPP(..., hermitian=True, ...)``.
-            - ``"vfx"`` dpp-vfx rejection sampler of :cite:`DeCaVa19`, see :ref:`finite_dpps_exact_sampling_intermediate_sampling_methods` and :py:func:`~dppy.finite.exact_samplers.vfx_samplers.vfx_sampler_dpp`. It applies to ``FiniteDPP("likelihood", hermitian=True, L_eval_X_data=(eval_L, X_data))``,
-            - ``"alpha"`` alpha-dpp rejection sampler :cite:`CaDeVa20`, see :ref:`finite_dpps_exact_sampling_intermediate_sampling_methods`. It applies to ``FiniteDPP("likelihood", hermitian=True, L_eval_X_data=(eval_L, X_data))``.
-            - ``"Schur"``, conditionals are computed as Schur complements see :eq:`eq:chain_rule_schur`. It applies to ``FiniteDPP("correlation", projection=True, ...)``.
-            - ``"Chol"``, see :ref:`finite_dpps_exact_sampling_generic_method`. It refers to :cite:`Pou19` Algorithm 1 (see ``"generic"``) and Algorithm 3 which applies to``FiniteDPP("correlation", projection=True, hermitian=true, ...)``.
-            - ``"generic"``, see :ref:`finite_dpps_exact_sampling_generic_method`, applies to generic (hermitian or not) finite DPPs, :cite:`Pou19` Algorithm 1.
+
+            - ``"sequential"``. It corresponds to a generic sampler, which applies to any valid DPP (hermitian or not), see :ref:`finite_dpps_exact_sampling_sequential_methods` and :py:func:`~dppy.finite.exact_samplers.sequential_samplers.sequential_sampler`.
+
+            - ``"spectral"``. It applies only if the attribute :py:attr:`~dppy.finite.dpp.FiniteDPP.hermitian` is True, see :ref:`finite_dpps_exact_sampling_spectral_method` and :py:func:`~dppy.finite.exact_samplers.spectral_samplers.spectral_sampler_dpp`.
+
+            - ``"intermediate"``. It applies only if the attribute :py:attr:`~dppy.finite.dpp.FiniteDPP.hermitian` is True, see :ref:`finite_dpps_exact_sampling_intermediate_sampling_methods` and :py:func:`~dppy.finite.exact_samplers.intermediate_samplers.intermediate_sampler_dpp`.
+
+            - ``"projection"``. It applies only if the attribute :py:attr:`~dppy.finite.dpp.FiniteDPP.projection` is True, see :ref:`finite_dpps_exact_sampling_projection_dpp` and :py:func:`~dppy.finite.exact_samplers.projection_samplers.projection_sampler_dpp`.
 
         :type method:
-            string, default ``"spectral"``
+            string, default ``"spectral"`` if the attribute :py:attr:`~dppy.finite.dpp.FiniteDPP.hermitian` is True, otherwise ``"sequential"``.
 
-        :param dict params:
-            Dictionary containing the parameters of the corresponding exact sampling method
-
-            - ``method="spectral"``
-                - ``"mode"``
-                    - ``"GS"`` (default): similar to Algorithm 2 of :cite:`Gil14`  and Algorithm 3 of :cite:`TrBaAm18`.
-                    - ``"GS_bis"``: slight modification of ``"GS"``
-                    - ``"KuTa12"``: corresponds to Algorithm 1 of :cite:`KuTa12`
-
-            - ``method="vfx"``
-
-                See :py:meth:`~dppy.finite.exact_samplers.vfx_samplers.vfx_sampler_dpp` for a full list of all parameters accepted by "vfx" sampling. We report here the most impactful
-
-                + ``"rls_oversample_dppvfx"`` (default 4.0) Oversampling parameter used to construct dppvfx's internal Nystrom approximation. This makes each rejection round slower and more memory intensive, but reduces variance and the number of rounds of rejections.
-                + ``"rls_oversample_bless"`` (default 4.0) Oversampling parameter used during bless's internal Nystrom approximation. This makes the one-time pre-processing slower and more memory intensive, but reduces variance and the number of rounds of rejections
-
-                Empirically, a small factor [2,10] seems to work for both parameters. It is suggested to start s.t. a small number and increase if the algorithm fails to terminate.
-
-            - ``method="alpha"``
-
-                See :py:meth:`~dppy.finite.exact_samplers.alpha_samplers.alpha_sampler_k_dpp` for a full list of all parameters accepted by "alpha" sampling. We report here the most impactful
-
-                + ``"rls_oversample_alphadpp"`` (default 4.0) Oversampling parameter used to construct alpha-dpp's internal Nystrom approximation. This makes each rejection round slower and more memory intensive, but reduces variance and the number of rounds of rejections.
-                + ``"rls_oversample_bless"`` (default 4.0) Oversampling parameter used during bless's internal Nystrom approximation. This makes the one-time pre-processing slower and more memory intensive, but reduces variance and the number of rounds of rejections
-
-                Empirically, a small factor [2,10] seems to work for both parameters. It is suggested to start with
-                a small number and increase if the algorithm fails to terminate.
+        :Keyword Arguments:
+            Please refer to the documentation of the sampler associated to the ``method`` argument.
 
         :return:
             Returns a sample from the corresponding :py:class:`~dppy.finite.dpp.FiniteDPP` object. In any case, the sample is appended to the :py:attr:`~dpp.finite.dpp.FiniteDPP.list_of_samples` attribute as a list.
         :rtype:
             list
-
-        .. note::
-
-            Each time you call this method, the sample is appended to the :py:attr:`~dpp.finite.dpp.FiniteDPP.list_of_samples` attribute as a list.
-
-            The :py:attr:`~dpp.finite.dpp.FiniteDPP.list_of_samples` attribute can be emptied using :py:meth:`~dppy.finite.dpp.FiniteDPP.flush_samples`
 
         .. seealso::
 
@@ -186,57 +177,24 @@ class FiniteDPP:
         self.list_of_samples.append(sample)
         return sample
 
-    def sample_exact_k_dpp(self, size, method="spectral", random_state=None, **params):
-        r"""Sample exactly from :math:`\operatorname{k-DPP}`. A priori the :py:class:`~dppy.finite.dpp.FiniteDPP` object was instanciated by its likelihood :math:`\mathbf{L}` kernel so that
+    def sample_exact_k_dpp(self, size, method="spectral", random_state=None, **kwargs):
+        r"""Sample exactly from the corresponding :math:`\operatorname{k-DPP}` with :math:`k=` ``size``, see :ref:`finite_dpps_exact_sampling_k_dpps`.
 
-        .. math::
+        It applies only if the attribute :py:attr:`~dppy.finite.dpp.FiniteDPP.hermitian` is True.
 
-            \mathbb{P}_{\operatorname{k-DPP}}(\mathcal{X} = S)
-                \propto \det \mathbf{L}_S ~ 1_{|S|=k}
+        :param method:
 
-        :param size:
-            size :math:`k` of the :math:`\operatorname{k-DPP}`
+            - ``"spectral"`` (default), see :ref:`finite_dpps_exact_sampling_k_dpps` and :py:func:`~dppy.finite.exact_samplers.spectral_samplers.spectral_sampler_k_dpp`.
 
-        :type size:
-            int
+            - ``"intermediate"``, see :ref:`finite_dpps_exact_sampling_intermediate_sampling_methods` and :py:func:`~dppy.finite.exact_samplers.intermediate_samplers.intermediate_sampler_k_dpp`.
 
-        :param mode:
-            - ``projection=True``:
-                - ``"GS"`` (default): Gram-Schmidt on the rows of :math:`\mathbf{K}`.
-                - ``"Schur"``: Use Schur complement to compute conditionals.
+            - ``"projection"``. It applies only if the attribute :py:attr:`~dppy.finite.dpp.FiniteDPP.projection` is True, see  :py:func:`~dppy.finite.exact_samplers.projection_samplers.projection_sampler_k_dpp`.
 
-            - ``projection=False``:
-                - ``"GS"`` (default): Gram-Schmidt on the rows of the eigenvectors of :math:`\mathbf{K}` selected in Phase 1.
-                - ``"GS_bis"``: Slight modification of ``"GS"``
-                - ``"KuTa12"``: Algorithm 1 in :cite:`KuTa12`
-                - ``"vfx"``: the dpp-vfx rejection sampler in :cite:`DeCaVa19`
-                - ``"alpha"``: the alpha-dpp rejection sampler in :cite:`CaDeVa20`
+        :type method:
+            string, default ``"spectral"``.
 
-        :type mode:
-            string, default ``"GS"``
-
-        :param dict params:
-            Dictionary containing the parameters for exact samplers with keys
-
-            - If ``mode="vfx"``
-
-                See :py:meth:`~dppy.finite.exact_samplers.vfx_sampler_k_dpp` for a full list of all parameters accepted by "vfx" sampling. We report here the most impactful
-
-                + ``"rls_oversample_dppvfx"`` (default 4.0) Oversampling parameter used to construct dppvfx's internal Nystrom approximation. This makes each rejection round slower and more memory intensive, but reduces variance and the number of rounds of rejections.
-                + ``"rls_oversample_bless"`` (default 4.0) Oversampling parameter used during bless's internal Nystrom approximation. This makes the one-time pre-processing slower and more memory intensive, but reduces variance and the number of rounds of rejections
-
-                Empirically, a small factor [2,10] seems to work for both parameters. It is suggested to start with
-                a small number and increase if the algorithm fails to terminate.
-
-            - If ``mode="alpha"``
-                See :py:meth:`~dppy.finite.exact_samplers.alpha_samplers.alpha_sampler_k_dpp` for a full list of all parameters accepted by "alpha" sampling. We report here the most impactful
-
-                + ``"rls_oversample_alphadpp"`` (default 4.0) Oversampling parameter used to construct alpha-dpp's internal Nystrom approximation. This makes each rejection round slower and more memory intensive, but reduces variance and the number of rounds of rejections.
-                + ``"rls_oversample_bless"`` (default 4.0) Oversampling parameter used during bless's internal Nystrom approximation. This makes the one-time pre-processing slower and more memory intensive, but reduces variance and the number of rounds of rejections
-                + ``"early_stop"`` (default False) Wheter to return as soon as a k-DPP sample is drawn, or to continue with alpha-dpp internal binary search to make subsequent sampling faster.
-
-                Empirically, a small factor [2,10] seems to work for both parameters. It is suggested to start with
-                a small number and increase if the algorithm fails to terminate.
+        :Keyword Arguments:
+            Please refer to the documentation of the sampler associated to the ``method`` argument.
 
         :return:
             A sample from the corresponding :math:`\operatorname{k-DPP}`.
@@ -263,7 +221,7 @@ class FiniteDPP:
         """
         rng = check_random_state(random_state)
         sampler = select_sampler_exact_k_dpp(self, method)
-        sample = sampler(self, size, rng, **params)
+        sample = sampler(self, size, rng, **kwargs)
 
         self.size_k_dpp = size
         self.list_of_samples.append(sample)
