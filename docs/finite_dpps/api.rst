@@ -47,7 +47,7 @@ Projection case
 General case
 ------------
 
-.. automodule:: dppy.finite.exact_samplers.generic_samplers
+.. automodule:: dppy.finite.exact_samplers.sequential_samplers
     :members:
     :inherited-members:
     :show-inheritance:

@@ -16,7 +16,7 @@ def generic_sampler(dpp, random_state=None, **params):
 
     Keyword arguments:
 
-        - mode (str): select the variant of the sampler, see :py:func:`~dppy.finite.exact_samplers.generic_samplers.select_generic_sampler`
+        - mode (str): select the variant of the sampler, see :py:func:`~dppy.finite.exact_samplers.sequential_samplers.select_generic_sampler`
 
     :return: sample
     :rtype: list
@@ -33,7 +33,7 @@ def select_generic_sampler(mode):
     :param mode:
         Select the variant among
 
-        - ``"lu"`` (default) :py:func:`~dppy.finite.exact_samplers.generic_samplers.generic_correlation_kernel_sampler_lu`
+        - ``"lu"`` (default) :py:func:`~dppy.finite.exact_samplers.sequential_samplers.generic_correlation_kernel_sampler_lu`
 
     :type mode: str
     """

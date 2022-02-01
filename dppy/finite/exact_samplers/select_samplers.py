@@ -3,8 +3,8 @@ from dppy.finite.exact_samplers.alpha_samplers import (
     alpha_sampler_k_dpp,
 )
 from dppy.finite.exact_samplers.chol_sampler import chol_sampler, chol_sampler_k_dpp
-from dppy.finite.exact_samplers.generic_samplers import generic_sampler
 from dppy.finite.exact_samplers.schur_sampler import schur_sampler, schur_sampler_k_dpp
+from dppy.finite.exact_samplers.sequential_samplers import generic_sampler
 from dppy.finite.exact_samplers.spectral_sampler_dpp import spectral_sampler
 from dppy.finite.exact_samplers.spectral_sampler_k_dpp import spectral_sampler_k_dpp
 from dppy.finite.exact_samplers.vfx_samplers import vfx_sampler_dpp, vfx_sampler_k_dpp

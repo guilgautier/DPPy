@@ -1,7 +1,7 @@
-from dppy.finite.exact_samplers.generic_samplers import generic_sampler
 from dppy.finite.exact_samplers.projection_kernel_samplers import (
     projection_kernel_sampler,
 )
+from dppy.finite.exact_samplers.sequential_samplers import generic_sampler
 
 
 def chol_sampler(dpp, random_state=None, **params):
@@ -15,7 +15,7 @@ def chol_sampler(dpp, random_state=None, **params):
         :type random_state: optional
 
         Keyword arguments:
-            - mode (str): select the variant of the sampler, see :py:func:`~dppy.finite.exact_samplers.projection_kernel_samplers.projection_kernel_sampler` if else :py:func:`~dppy.finite.exact_samplers.generic_samplers.generic_sampler`
+            - mode (str): select the variant of the sampler, see :py:func:`~dppy.finite.exact_samplers.projection_kernel_samplers.projection_kernel_sampler` if else :py:func:`~dppy.finite.exact_samplers.sequential_samplers.generic_sampler`
 
         :return: list
         :rtype: sample
