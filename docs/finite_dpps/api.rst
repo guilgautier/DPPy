@@ -37,7 +37,7 @@ Generic samplers
 Projection case
 ---------------
 
-.. automodule:: dppy.finite.exact_samplers.projection_kernel_samplers
+.. automodule:: dppy.finite.exact_samplers.projection_sampler_kernel
     :members:
     :inherited-members:
     :show-inheritance:
@@ -62,7 +62,7 @@ Spectral sampler
 Projection case
 ---------------
 
-.. automodule:: dppy.finite.exact_samplers.projection_eigen_samplers
+.. automodule:: dppy.finite.exact_samplers.projection_sampler_eigen
     :members:
     :inherited-members:
     :show-inheritance:

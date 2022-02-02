@@ -1,4 +1,4 @@
-from dppy.finite.exact_samplers.projection_kernel_samplers import (
+from dppy.finite.exact_samplers.projection_sampler_kernel import (
     projection_kernel_sampler,
 )
 
@@ -12,7 +12,7 @@ def schur_sampler(dpp, random_state=None, **params):
     :type random_state: optional
 
     Keyword arguments:
-        - mode (str): select the variant of the sampler, see :py:func:`~dppy.finite.exact_samplers.projection_kernel_samplers.projection_kernel_sampler`
+        - mode (str): select the variant of the sampler, see :py:func:`~dppy.finite.exact_samplers.projection_sampler_kernel.projection_kernel_sampler`
 
     :return: sample
     :rtype: list
@@ -36,7 +36,7 @@ def schur_sampler_k_dpp(dpp, size, random_state=None, **params):
     :type random_state: optional
 
     Keyword arguments:
-        - mode (str): select the variant of the sampler, see :py:func:`~dppy.finite.exact_samplers.projection_kernel_samplers.projection_kernel_sampler`
+        - mode (str): select the variant of the sampler, see :py:func:`~dppy.finite.exact_samplers.projection_sampler_kernel.projection_kernel_sampler`
 
     :return: sample
     :rtype: list

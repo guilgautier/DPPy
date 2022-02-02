@@ -3,8 +3,8 @@ from warnings import warn
 import numpy as np
 import scipy.linalg as la
 
-from dppy.finite.exact_samplers.projection_eigen_samplers import (
-    select_sampler_eigen_projection,
+from dppy.finite.exact_samplers.projection_sampler_eigen import (
+    select_projection_sampler_eigen,
 )
 from dppy.utils import check_random_state, elementary_symmetric_polynomials
 
@@ -25,7 +25,7 @@ def spectral_sampler_dpp(dpp, random_state=None, **params):
         optional
 
     Keyword arguments:
-        - mode (str): select the variant of the sampler used in the second step which boils down to sampling from a projection DPP, see :py:func:`~dppy.finite.exact_samplers.projection_eigen_samplers.select_sampler_eigen_projection`
+        - mode (str): select the variant of the sampler used in the second step which boils down to sampling from a projection DPP, see :py:func:`~dppy.finite.exact_samplers.projection_sampler_eigen.select_projection_sampler_eigen`
 
     :return: sample
     :rtype: list
@@ -50,7 +50,7 @@ def do_spectral_sampler_dpp(dpp, random_state=None, **params):
     rng = check_random_state(random_state)
     eig_vals, eig_vecs = dpp.K_eig_vals, dpp.eig_vecs
     V = select_eigen_vectors_dpp(eig_vals, eig_vecs, random_state=rng)
-    sampler = select_sampler_eigen_projection(params.get("mode"))
+    sampler = select_projection_sampler_eigen(params.get("mode"))
     return sampler(V, random_state=rng)
 
 
@@ -170,7 +170,7 @@ def spectral_sampler_k_dpp(dpp, size, random_state=None, **params):
     :type random_state: optional
 
     Keyword arguments:
-        - mode (str): select the variant of the sampler used in the second step which boils down to sampling from a projection DPP, see :py:func:`~dppy.finite.exact_samplers.projection_eigen_samplers.select_sampler_eigen_projection`
+        - mode (str): select the variant of the sampler used in the second step which boils down to sampling from a projection DPP, see :py:func:`~dppy.finite.exact_samplers.projection_sampler_eigen.select_projection_sampler_eigen`
 
     :return: sample
     :rtype: list
@@ -185,7 +185,7 @@ def spectral_sampler_k_dpp(dpp, size, random_state=None, **params):
         V = dpp.eig_vecs[:, eig_vals > 0.5]
         # Phase 2
         dpp.size_k_dpp = size
-        sampler = select_sampler_eigen_projection(params.get("mode"))
+        sampler = select_projection_sampler_eigen(params.get("mode"))
         return sampler(V, size=size, random_state=random_state)
 
 
@@ -216,7 +216,7 @@ def do_spectral_sampler_k_dpp(dpp, size, random_state=None, **params):
     )
     # Phase 2
     dpp.size_k_dpp = size
-    sampler = select_sampler_eigen_projection(params.get("mode"))
+    sampler = select_projection_sampler_eigen(params.get("mode"))
     return sampler(V, size=size, random_state=rng)
 
 

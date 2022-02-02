@@ -30,7 +30,7 @@ def select_sampler_generic_projection_kernel(mode):
 
     :param mode: select the variant by its name among
 
-        - ``"schur"`` :py:func:`~dppy.finite.exact_samplers.projection_kernel_samplers.projection_kernel_sampler_schur`
+        - ``"schur"`` :py:func:`~dppy.finite.exact_samplers.projection_sampler_kernel.projection_kernel_sampler_schur`
 
     :type mode: str
     """
@@ -46,9 +46,9 @@ def select_sampler_orthogonal_projection_kernel(mode):
 
     :param mode: select the variant by its name among
 
-        - ``"gs"`` (default) :py:func:`~dppy.finite.exact_samplers.projection_kernel_samplers.orthogonal_projection_kernel_sampler_GS`
-        - ``"schur"`` :py:func:`~dppy.finite.exact_samplers.projection_kernel_samplers.projection_kernel_sampler_schur`
-        - ``"chol"`` :py:func:`~dppy.finite.exact_samplers.projection_kernel_samplers.orthogonal_projection_kernel_sampler_cholesky`
+        - ``"gs"`` (default) :py:func:`~dppy.finite.exact_samplers.projection_sampler_kernel.orthogonal_projection_kernel_sampler_GS`
+        - ``"schur"`` :py:func:`~dppy.finite.exact_samplers.projection_sampler_kernel.projection_kernel_sampler_schur`
+        - ``"chol"`` :py:func:`~dppy.finite.exact_samplers.projection_sampler_kernel.orthogonal_projection_kernel_sampler_cholesky`
 
     :type mode: str
     """
@@ -88,8 +88,8 @@ def orthogonal_projection_kernel_sampler_cholesky(K, size=None, random_state=Non
     .. seealso::
 
         - :cite:`Pou19` Algorithm 3 and `catamari code <https://gitlab.com/hodge_star/catamari/blob/38718a1ea34872fb6567e019ece91fbeb5af5be1/include/catamari/dense_dpp/elemen tary_hermitian_dpp-impl.hpp#L37>`_ for the Hermitian swap routine.
-        - :py:func:`~dppy.finite.exact_samplers.projection_kernel_samplers.orthogonal_projection_kernel_sampler_GS`
-        - :py:func:`~dppy.finite.exact_samplers.projection_kernel_samplers.projection_kernel_sampler_schur`
+        - :py:func:`~dppy.finite.exact_samplers.projection_sampler_kernel.orthogonal_projection_kernel_sampler_GS`
+        - :py:func:`~dppy.finite.exact_samplers.projection_sampler_kernel.projection_kernel_sampler_schur`
     """
 
     rng = check_random_state(random_state)
@@ -174,8 +174,8 @@ def orthogonal_projection_kernel_sampler_GS(K, size=None, random_state=None):
     .. seealso::
 
         - :cite:`TrBaAm18` Algorithm 3, :cite:`Gil14` Algorithm 2
-        - :py:func:`~dppy.finite.exact_samplers.projection_kernel_samplers.projection_kernel_sampler_schur`
-        - :py:func:`~dppy.finite.exact_samplers.projection_kernel_samplers.orthogonal_projection_kernel_sampler_cholesky`
+        - :py:func:`~dppy.finite.exact_samplers.projection_sampler_kernel.projection_kernel_sampler_schur`
+        - :py:func:`~dppy.finite.exact_samplers.projection_sampler_kernel.orthogonal_projection_kernel_sampler_cholesky`
     """
 
     rng = check_random_state(random_state)
@@ -235,8 +235,8 @@ def projection_kernel_sampler_schur(K, size=None, random_state=None):
         array_like
 
     .. seealso::
-        - :py:func:`~dppy.finite.exact_samplers.projection_kernel_samplers.orthogonal_projection_kernel_sampler_GS`
-        - :py:func:`~dppy.finite.exact_samplers.projection_kernel_samplers.orthogonal_projection_kernel_sampler_cholesky`
+        - :py:func:`~dppy.finite.exact_samplers.projection_sampler_kernel.orthogonal_projection_kernel_sampler_GS`
+        - :py:func:`~dppy.finite.exact_samplers.projection_sampler_kernel.orthogonal_projection_kernel_sampler_cholesky`
     """
 
     rng = check_random_state(random_state)

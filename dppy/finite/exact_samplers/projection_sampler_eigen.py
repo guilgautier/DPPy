@@ -4,7 +4,7 @@ import scipy.linalg as la
 from dppy.utils import check_random_state, inner1d
 
 
-def select_sampler_eigen_projection(mode):
+def select_projection_sampler_eigen(mode):
     r"""Select the variant of the spectral method applied to projection :math:`\operatorname{DPP}(\mathbf{K})` with :math:`\mathbf{K} = U U^{*}`.
 
     :param mode: variant name, default "GS"
@@ -12,9 +12,9 @@ def select_sampler_eigen_projection(mode):
 
     :return: sampler selected by ``mode``
 
-        - ``"GS"`` :py:func:`~dppy.finite.exact_samplers.projection_eigen_samplers.projection_eigen_sampler_GS`
-        - ``"GS_bis"`` :py:func:`~dppy.finite.exact_samplers.projection_eigen_samplers.projection_eigen_sampler_GS_bis`
-        - ``"KuTa12"`` :py:func:`~dppy.finite.exact_samplers.projection_eigen_samplers.projection_eigen_sampler_KuTa12`
+        - ``"GS"`` :py:func:`~dppy.finite.exact_samplers.projection_sampler_eigen.projection_eigen_sampler_GS`
+        - ``"GS_bis"`` :py:func:`~dppy.finite.exact_samplers.projection_sampler_eigen.projection_eigen_sampler_GS_bis`
+        - ``"KuTa12"`` :py:func:`~dppy.finite.exact_samplers.projection_sampler_eigen.projection_eigen_sampler_KuTa12`
 
     :rtype: callable
     """
