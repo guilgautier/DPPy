@@ -2,6 +2,7 @@ from string import ascii_lowercase
 
 import numpy as np
 from numpy.linalg import det, matrix_rank
+from scipy.special import betaln
 
 
 def check_random_state(seed: object) -> np.random.RandomState:
@@ -56,6 +57,12 @@ def uniform_permutation(n, random_state=None):
     #     sigma[j], sigma[i] = sigma[i], sigma[j]
 
     # return sigma
+
+
+def log_binom(r, k):
+    if r == k:
+        return 0.0
+    return np.log(r + 1) + betaln(r - k + 1, k + 1)
 
 
 def inner1d(arr1, arr2=None, axis=0):

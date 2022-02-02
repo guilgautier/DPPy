@@ -172,7 +172,7 @@ class FiniteDPP:
         """
         rng = check_random_state(random_state)
         sampler = select_sampler_exact_dpp(self, method)
-        sample = sampler(self, rng, **kwargs)
+        sample = sampler(self, random_state=rng, **kwargs)
 
         self.list_of_samples.append(sample)
         return sample
@@ -221,7 +221,7 @@ class FiniteDPP:
         """
         rng = check_random_state(random_state)
         sampler = select_sampler_exact_k_dpp(self, method)
-        sample = sampler(self, size, rng, **kwargs)
+        sample = sampler(self, size=size, random_state=rng, **kwargs)
 
         self.size_k_dpp = size
         self.list_of_samples.append(sample)

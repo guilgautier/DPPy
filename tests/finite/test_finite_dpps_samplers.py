@@ -234,12 +234,14 @@ class TestAdequationOfFiniteDppSamplers(unittest.TestCase):
         sampler_method_params = {
             "exact_dpp": (
                 ("spectral", {"mode": "GS"}),
-                ("spectral", {"mode": "GS_bis"}),
-                ("spectral", {"mode": "KuTa12"}),
-                ("Chol", {}),
-                ("Schur", {}),
+                ("projection", {"mode": "cho"}),
+                ("projection", {"mode": "lu"}),
             ),
-            "exact_k_dpp": (("spectral", {"mode": "GS", "size": k}),),
+            "exact_k_dpp": (
+                ("spectral", {"mode": "GS", "size": k}),
+                ("projection", {"mode": "cho"}),
+                ("projection", {"mode": "lu"}),
+            ),
             "mcmc_dpp": (("E", {"size": k, "nb_iter": self.nb_iter_mcmc}),),
             "mcmc_k_dpp": (("E", {"size": k, "nb_iter": self.nb_iter_mcmc}),),
         }
@@ -292,12 +294,13 @@ class TestAdequationOfFiniteDppSamplers(unittest.TestCase):
                 ("spectral", {"mode": "GS"}),
                 ("spectral", {"mode": "GS_bis"}),
                 ("spectral", {"mode": "KuTa12"}),
-                ("Chol", {}),
             ),
             "exact_k_dpp": (
                 ("spectral", {"mode": "GS", "size": self.rank}),
                 ("spectral", {"mode": "GS_bis", "size": self.rank}),
                 ("spectral", {"mode": "KuTa12", "size": self.rank}),
+                ("projection", {"mode": "cho", "size": self.rank - 1}),
+                ("projection", {"mode": "lu", "size": self.rank - 1}),
             ),
             "mcmc_dpp": (
                 ("AD", {"nb_iter": self.nb_iter_mcmc}),
