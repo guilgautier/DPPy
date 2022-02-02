@@ -140,7 +140,7 @@ class FiniteDPP:
         self.list_of_samples = []
         self.size_k_dpp = 0
 
-    def sample_exact(self, method=None, random_state=None, **kwargs):
+    def sample_exact(self, method="", random_state=None, **kwargs):
         """Sample exactly from the corresponding :py:class:`~dppy.finite.dpp.FiniteDPP` object.
 
         :param method:
@@ -172,7 +172,7 @@ class FiniteDPP:
         """
         rng = check_random_state(random_state)
         sampler = select_sampler_exact_dpp(self, method)
-        sample = sampler(self, rng, **params)
+        sample = sampler(self, rng, **kwargs)
 
         self.list_of_samples.append(sample)
         return sample

@@ -5,14 +5,16 @@ from dppy.finite.exact_samplers.alpha_samplers import (
 from dppy.finite.exact_samplers.chol_sampler import chol_sampler, chol_sampler_k_dpp
 from dppy.finite.exact_samplers.schur_sampler import schur_sampler, schur_sampler_k_dpp
 from dppy.finite.exact_samplers.sequential_samplers import generic_sampler
-from dppy.finite.exact_samplers.spectral_sampler_dpp import spectral_sampler
-from dppy.finite.exact_samplers.spectral_sampler_k_dpp import spectral_sampler_k_dpp
+from dppy.finite.exact_samplers.spectral_sampler import (
+    spectral_sampler_dpp,
+    spectral_sampler_k_dpp,
+)
 from dppy.finite.exact_samplers.vfx_samplers import vfx_sampler_dpp, vfx_sampler_k_dpp
 
 
 def select_sampler_exact_dpp(dpp, method):
     samplers = {
-        "spectral": spectral_sampler,
+        "spectral": spectral_sampler_dpp,
         "vfx": vfx_sampler_dpp,
         "alpha": alpha_sampler_dpp,
         "schur": schur_sampler,
