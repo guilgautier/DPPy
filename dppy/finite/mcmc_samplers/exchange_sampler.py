@@ -41,7 +41,7 @@ def exchange_sampler(dpp, random_state=None, **params):
 
 def get_exchange_sampler_kernel(dpp, size):
     if dpp.kernel_type == "correlation" and dpp.projection:
-        dpp.compute_K()
+        dpp.compute_correlation_kernel()
         rank = np.rint(np.trace(dpp.K)).astype(int)
         if size != rank:
             raise ValueError(
@@ -50,7 +50,7 @@ def get_exchange_sampler_kernel(dpp, size):
                 )
             )
         return dpp.K
-    dpp.compute_L()
+    dpp.compute_likelihood_kernel()
     return dpp.L
 
 

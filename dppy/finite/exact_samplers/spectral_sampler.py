@@ -121,7 +121,7 @@ def compute_spectral_sampler_parameters_dpp_step(dpp):
         return False
 
     if dpp.eval_L is not None and dpp.X_data is not None:
-        dpp.compute_L()
+        dpp.compute_likelihood_kernel()
         return True
 
     raise ValueError(
@@ -307,7 +307,7 @@ def compute_spectral_sampler_parameters_k_dpp_step(dpp, size):
 
     elif dpp.eval_L is not None and dpp.X_data is not None:
         # In case mode!="vfx"
-        dpp.compute_L()
+        dpp.compute_likelihood_kernel()
         return True
 
     else:
@@ -407,7 +407,7 @@ def compute_spectral_sampler_eig_vals_projection_k_dpp(dpp, size):
         elif dpp.A_zono is not None:
             rank = dpp.A_zono.shape[0]
         else:
-            dpp.compute_K()
+            dpp.compute_correlation_kernel()
             rank = np.rint(np.trace(dpp.K)).astype(int)
 
         if size != rank:
@@ -427,7 +427,7 @@ def compute_spectral_sampler_eig_vals_projection_k_dpp(dpp, size):
             dpp.eig_vecs, *_ = la.qr(dpp.A_zono.T, mode="economic")
             return dpp.K_eig_vals
         else:
-            dpp.compute_K()  # 0 <= K <= I
+            dpp.compute_correlation_kernel()  # 0 <= K <= I
             eig_vals, dpp.eig_vecs = la.eigh(dpp.K)
             np.clip(eig_vals, 0.0, 1.0, out=eig_vals)
             dpp.K_eig_vals = eig_vals

@@ -23,7 +23,7 @@ def add_delete_sampler(dpp, random_state=None, **params):
     :rtype:
         list of lists
     """
-    dpp.compute_L()
+    dpp.compute_likelihood_kernel()
     kernel = dpp.L
     rng = check_random_state(random_state)
     s0 = params.pop("s_init", None)

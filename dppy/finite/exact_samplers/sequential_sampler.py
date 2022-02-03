@@ -6,7 +6,7 @@ from dppy.utils import check_random_state
 def sequential_sampler(dpp, random_state=None, **kwargs):
     r"""Generate an exact sample from ``dpp`` using the :ref:`sequential method <finite_dpps_exact_sampling_sequential_methods>`.
 
-    The correlation kernel :math:`\mathbf{K}` is computed from the current parametrization of ``dpp``, see :py:meth:`~dppy.finite.dpp.FiniteDPP.compute_K`.
+    The correlation kernel :math:`\mathbf{K}` is computed from the current parametrization of ``dpp``, see :py:meth:`~dppy.finite.dpp.FiniteDPP.compute_correlation_kernel`.
 
     :param dpp: Finite DPP
     :type dpp: :py:class:`~dppy.finite.dpp.FiniteDPP`
@@ -23,7 +23,7 @@ def sequential_sampler(dpp, random_state=None, **kwargs):
     :return: sample
     :rtype: list
     """
-    dpp.compute_K()
+    dpp.compute_correlation_kernel()
     mode = kwargs.get("mode", "")
     sampler = select_sequential_sampler(mode, dpp.hermitian)
     return sampler(dpp.K, random_state=random_state, **kwargs)
