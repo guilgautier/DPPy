@@ -4,8 +4,7 @@ from dppy.utils import check_random_state, log_binom
 
 
 def projection_sampler_eigen(dpp, random_state=None, **kwargs):
-    assert dpp.projection and dpp.hermitian
-    assert dpp.eig_vecs is not None
+    assert dpp.projection and dpp.hermitian and dpp.eig_vecs is not None
 
     size = kwargs.get("size", None)
     if dpp.kernel_type == "likelihood" and not size:
@@ -16,7 +15,7 @@ def projection_sampler_eigen(dpp, random_state=None, **kwargs):
         rank_K = dpp.eig_vecs.shape[1]
         if size != rank_K:
             raise ValueError(
-                "'size' argument must be equal to rank(K) for sampling projection DPP(K)"
+                f"size={size} argument must be equal to rank(K)={rank} for projection DPP(K)"
             )
     mode = kwargs.get("mode", "")
     sampler = select_projection_sampler_eigen(mode)
@@ -41,7 +40,7 @@ def select_projection_sampler_eigen(mode):
         "gs-perm": projection_sampler_eigen_gs_perm,
     }
     default = samplers["gs"]
-    return samplers.get(mode, default)
+    return samplers.get(mode.lower(), default)
 
 
 def projection_sampler_eigen_gs(eig_vecs, size=None, random_state=None, **kwargs):
