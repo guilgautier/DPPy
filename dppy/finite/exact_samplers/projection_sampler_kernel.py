@@ -34,30 +34,7 @@ def select_projection_sampler_kernel(mode, hermitian=False):
 def projection_sampler_kernel_lu(
     K, size=None, random_state=None, overwrite=False, **kwargs
 ):
-    r"""Generate an exact sample from :math:`\operatorname{DPP}(\mathbf{K})`, or :math:`\operatorname{k-DPP}(\mathbf{K})` with :math:`k=` ``size`` (if ``size`` is provided), where :math:`\mathbf{K}` is an orthogonal projection `kernel`.
-
-    The chain rule is applied by performing LU updates following :cite:`Pou19` Algorithm 3.
-
-    :param K:
-        Orthogonal projection kernel.
-    :type K:
-        array_like
-
-    :param size:
-        Size of the output sample (if ``size`` is provided), otherwise :math:`k=\operatorname{trace}(\mathbf{K})=\operatorname{rank}(\mathbf{K})`.
-    :type size:
-        int
-
-    :return:
-        An exact sample from the corresponding :math:`\operatorname{DPP}(\mathbf{K})` or :math:`\operatorname{k-DPP}(\mathbf{K})`.
-    :rtype:
-        list
-
-    .. seealso::
-
-        - :cite:`Pou19` Algorithm 3
-        - :py:func:`~dppy.finite.exact_samplers.projection_sampler_kernel.projection_sampler_kernel_cho`
-    """
+    """Variant of :py:func:`~dppy.finite.exact_samplers.projection_samplers_eigen.projection_sampler_kernel_cho` where LU updates are performed instead of Cholesky updates."""
     rng = check_random_state(random_state)
 
     rank = np.rint(np.trace(K)).astype(int)
@@ -113,33 +90,44 @@ def projection_sampler_kernel_lu(
 def projection_sampler_kernel_cho(
     K, size=None, random_state=None, overwrite=False, **kwargs
 ):
-    r"""Generate an exact sample from :math:`\operatorname{DPP}(\mathbf{K})`, or :math:`\operatorname{k-DPP}(\mathbf{K})` with :math:`k=` ``size`` (if ``size`` is provided), where :math:`\mathbf{K}` is an orthogonal projection `kernel`.
+    r"""Generate an exact sample from :math:`\operatorname{DPP}(\mathbf{K})`, or :math:`\operatorname{k-DPP}(\mathbf{K})` with :math:`k=` ``size`` (if ``size`` is provided), where :math:`\mathbf{K}` is an orthogonal projection `kernel` and denote :math:`r=\operatorname{rank}(\mathbf{K})`.
+    If ``size=None`` (default), it is set to :math:`k=r`, this also corresponds to sampling from the projection :math:`\operatorname{DPP}(\mathbf{K}=UU^{*})`.
 
-    The chain rule is applied by performing Cholesky updates following :cite:`Pou19` Algorithm 3.
+    This function implements :cite:`Pou19` Algorithm 3, where updates of the conditionals driving the chain rule are performed via Cholesky updates.
+
+    The likelihood of the output sample is given by
+
+    .. math::
+
+        \mathbb{P}\!\left[ \mathcal{X} = X \right]
+        = \frac{1}{\binom{r}{k}} \det K_X ~ 1_{|X|=k}.
 
     :param K:
-        Orthogonal projection kernel.
+        Orthogonal projection kernel :math:`\mathbf{K}=\mathbf{K}^*=\mathbf{K}^2`.
     :type K:
         array_like
 
     :param size:
-        Size of the output sample (if ``size`` is provided), otherwise :math:`k=\operatorname{trace}(\mathbf{K})=\operatorname{rank}(\mathbf{K})`.
+        If None, it is set to :math:`r`, otherwise it defines the size :math:`k\leq r` of the output :math:`\operatorname{k-DPP} sample, defaults to None.
     :type size:
-        int
+        int, optional
+
+    :param overwrite:
+        If True, ``K`` is overwritten otherwise a copy of ``K`` is made, defaults to True.
+    :type overwrite:
+        bool, optional
 
     :return:
-        An exact sample from the corresponding :math:`\operatorname{DPP}(\mathbf{K})` or :math:`\operatorname{k-DPP}(\mathbf{K})`.
+        Exact sample :math:`X` and its log-likelihood.
     :rtype:
-        list
-
-    .. caution::
-
-        The current implementation is an attempt of @guilgautier to reproduce the original C implementation of `catamari <https://gitlab.com/hodge_star/catamari>`_
+        tuple(list, float)
 
     .. seealso::
 
-        - :cite:`Pou19` Algorithm 3 and `catamari code <https://gitlab.com/hodge_star/catamari/blob/38718a1ea34872fb6567e019ece91fbeb5af5be1/include/catamari/dense_dpp/elementary_hermitian_dpp-impl.hpp#L37>`_ for the Hermitian swap routine.
+        - :ref:`finite_dpps_exact_sampling_projection_dpp`
+        - :cite:`Pou19` Algorithm 3
         - :py:func:`~dppy.finite.exact_samplers.projection_sampler_kernel.projection_sampler_kernel_lu`
+        - :py:func:`~dppy.finite.exact_samplers.projection_samplers_eigen.projection_sampler_eigen_gs_perm`
     """
     rng = check_random_state(random_state)
 
@@ -207,6 +195,7 @@ def swap(A, i, j):
 
 def swap_hermitian(A, i, j):
     # Hermitian swap of indices i, j of A
+    # See `catamari code <https://gitlab.com/hodge_star/catamari/blob/38718a1ea34872fb6567e019ece91fbeb5af5be1/include/catamari/dense_dpp/elementary_hermitian_dpp-impl.hpp#L37>`_ for the Hermitian swap routine.
     i_j = [i, j]
     j_i = [j, i]
     I1, I2, I3 = slice(0, i), slice(i + 1, j), slice(j + 1, len(A))
