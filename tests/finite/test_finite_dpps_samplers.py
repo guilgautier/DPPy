@@ -16,6 +16,13 @@ from dppy.finite.dpp import FiniteDPP
 from dppy.utils import det_ST, example_eval_L_linear, example_eval_L_min_kern
 
 
+def compute_expected_cardinality(L_xy, X):
+    L = L_xy(X)
+    I_L_min = L + np.eye(*L.shape)
+    exp_card = np.sum(np.diag(L.dot(np.linalg.inv(I_L_min))))
+    return np.floor(exp_card).astype(int)
+
+
 class Configuration(object):
     def __init__(self, sampler_type, method, method_params, idx, dpp_params):
         self.sampler_type = sampler_type
@@ -34,6 +41,10 @@ class Configuration(object):
                 if self.sampler_type == "exact_dpp":
                     dpp.sample_exact(method=self.method, **self.method_params)
                 elif self.sampler_type == "exact_k_dpp":
+                    if dpp.eval_L is not None:
+                        L_xy, X = dpp.eval_L, dpp.X_data
+                        k = compute_expected_cardinality(L_xy, X) // 2
+                        self.method_params["size"] = k
                     dpp.sample_exact_k_dpp(method=self.method, **self.method_params)
                 else:
                     raise ValueError(self.sampler_type)
@@ -211,9 +222,16 @@ class TestAdequationOfFiniteDppSamplers(unittest.TestCase):
 
         kernel_type = "correlation"
         # projection, param
-        dpp_params = [{"projection": True, "A_zono": self.A_zono}]
+        dpp_params = [
+            {
+                "projection": True,
+                "A_zono": self.A_zono,
+            },
+        ]
 
-        sampler_method_params = {"mcmc_dpp": (("zonotope", {}),)}
+        sampler_method_params = {
+            "mcmc_dpp": (("zonotope", {}),),
+        }
 
         self.run_adequation_tests(kernel_type, dpp_params, sampler_method_params)
 
@@ -300,7 +318,7 @@ class TestAdequationOfFiniteDppSamplers(unittest.TestCase):
 
         kernel_type = "likelihood"
         # projection, param
-        U = self.eig_vecs
+        U = self.e_vecs
 
         dpp_params = [
             {
@@ -339,7 +357,7 @@ class TestAdequationOfFiniteDppSamplers(unittest.TestCase):
 
         kernel_type = "likelihood"
 
-        U = self.eig_vecs
+        U = self.e_vecs
         # projection, param
         dpp_params = [
             {
@@ -358,7 +376,10 @@ class TestAdequationOfFiniteDppSamplers(unittest.TestCase):
                 "projection": False,
                 "L_eig_dec": (self.e_vals_geq_0, U),
             },
-            {"projection": False, "L_gram_factor": self.phi},
+            {
+                "projection": False,
+                "L_gram_factor": self.phi,
+            },
         ]  # L_gram_factor to test L_dual
 
         k = self.rank // 2
@@ -382,26 +403,19 @@ class TestAdequationOfFiniteDppSamplers(unittest.TestCase):
 
         self.run_adequation_tests(kernel_type, dpp_params, sampler_method_params)
 
-    def test_adequation_intermediate_sampler_linear_kernel(self):
+    def test_adequation_intermediate_sampler(self):
 
         kernel_type = "likelihood"
-
-        X_data_randn = rndm.rand(100, 6)
-
         dpp_params = [
             {
                 "projection": False,
-                "L_eval_X_data": (example_eval_L_linear, X_data_randn),
+                "L_eval_X_data": (example_eval_L_linear, rndm.rand(100, 6)),
+            },
+            {
+                "projection": False,
+                "L_eval_X_data": (example_eval_L_min_kern, rndm.rand(100, 1)),
             },
         ]
-
-        L_lin = example_eval_L_linear(X_data_randn)
-        I_L_lin = L_lin + np.eye(*L_lin.shape)
-        exp_card = np.sum(np.diag(L_lin.dot(np.linalg.inv(I_L_lin))))
-        k = np.floor(exp_card).astype(int) // 2
-
-        print("E[|X|]={}, k={}".format(exp_card, k))
-
         sampler_method_params = {
             "exact_dpp": (
                 (
@@ -426,7 +440,7 @@ class TestAdequationOfFiniteDppSamplers(unittest.TestCase):
                     "intermediate",
                     {
                         "mode": "vfx",
-                        "size": k,
+                        # "size": k, defined in get_samples
                         "verbose": False,
                         "rls_oversample_bless": 5,
                     },
@@ -435,70 +449,7 @@ class TestAdequationOfFiniteDppSamplers(unittest.TestCase):
                     "intermediate",
                     {
                         "mode": "alpha",
-                        "size": k,
-                        "verbose": False,
-                        "rls_oversample_bless": 5,
-                    },
-                ),
-            ),
-        }
-
-        self.run_adequation_tests(kernel_type, dpp_params, sampler_method_params)
-
-    def test_adequation_intermediate_sampler_min_kernel(self):
-
-        kernel_type = "likelihood"
-
-        X_data_in_01 = rndm.rand(100, 1)
-
-        dpp_params = [
-            {
-                "projection": False,
-                "L_eval_X_data": (example_eval_L_min_kern, X_data_in_01),
-            },
-        ]
-
-        L_min = example_eval_L_min_kern(X_data_in_01)
-        I_L_min = L_min + np.eye(*L_min.shape)
-        exp_card = np.sum(np.diag(L_min.dot(np.linalg.inv(I_L_min))))
-        k = np.floor(exp_card).astype(int) // 2
-
-        print("E[|X|]={}, k={}".format(exp_card, k))
-
-        sampler_method_params = {
-            "exact_dpp": (
-                (
-                    "intermediate",
-                    {
-                        "mode": "vfx",
-                        "verbose": False,
-                        "rls_oversample_bless": 5,
-                    },
-                ),
-                (
-                    "intermediate",
-                    {
-                        "mode": "alpha",
-                        "verbose": False,
-                        "rls_oversample_bless": 5,
-                    },
-                ),
-            ),
-            "exact_k_dpp": (
-                (
-                    "intermediate",
-                    {
-                        "mode": "vfx",
-                        "size": k,
-                        "verbose": False,
-                        "rls_oversample_bless": 5,
-                    },
-                ),
-                (
-                    "intermediate",
-                    {
-                        "mode": "alpha",
-                        "size": k,
+                        # "size": k, defined in get_samples
                         "verbose": False,
                         "rls_oversample_bless": 5,
                     },
