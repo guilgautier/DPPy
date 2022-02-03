@@ -60,16 +60,16 @@ _IntermediateSampleInfoAlphaRescale = namedtuple(
 )
 
 
-def alpha_sampler_dpp(dpp, rng, **params):
+def intermediate_sampler_alpha_dpp(dpp, random_state=None, **params):
     r"""Generate an exact sample from an hermitian ``dpp`` using the **alpha** variant of the :ref:`intermediate sampling method <finite_dpps_exact_sampling_intermediate_sampling_methods>`.
 
-    See also :py:func:`~dppy.finite.exact_samplers.alpha_samplers.alpha_sampler_dpp_core`.
+    See also :py:func:`~dppy.finite.exact_samplers.intermediate_sampler_alpha.intermediate_sampler_alpha_dpp_core`.
 
     :param dpp:
         Finite hermitian DPP
     :type dpp:
         :py:class:`~dppy.finite.dpp.FiniteDPP`
-    :param rng:
+    :param random_state:
         random number generator
 
     :return:
@@ -84,23 +84,28 @@ def alpha_sampler_dpp(dpp, rng, **params):
             "The alpha sampler is only available with FiniteDPP(..., hermitian=True, L_eval_X_data=(L_eval, X_data)) representation."
         )
 
-    r_state_outer = None
-    if "random_state" in params:
-        r_state_outer = params.pop("random_state", None)
+    # r_state_outer = None
+    # if "random_state" in params:
+    #     r_state_outer = params.pop("random_state", None)
 
-    sample, dpp.intermediate_sample_info = alpha_sampler_dpp_core(
-        dpp.intermediate_sample_info, dpp.X_data, dpp.eval_L, random_state=rng, **params
+    sample, dpp.intermediate_sample_info = intermediate_sampler_alpha_dpp_core(
+        dpp.intermediate_sample_info,
+        dpp.X_data,
+        dpp.eval_L,
+        random_state=random_state,
+        **params,
     )
-    if r_state_outer:
-        params["random_state"] = r_state_outer
+
+    # if r_state_outer:
+    #     params["random_state"] = r_state_outer
 
     return sample
 
 
-def alpha_sampler_k_dpp(dpp, size, rng, **params):
+def intermediate_sampler_alpha_k_dpp(dpp, size, random_state=None, **params):
     r"""Generate an exact sample from an hermitian :math:`k\!\operatorname{-DPP}` associated with ``dpp`` and :math:`k=` ``size``, using the **alpha** variant of the :ref:`intermediate sampling method <finite_dpps_exact_sampling_intermediate_sampling_methods>`.
 
-    See also :py:func:`~dppy.finite.exact_samplers.alpha_samplers.alpha_sampler_k_dpp_core`
+    See also :py:func:`~dppy.finite.exact_samplers.intermediate_sampler_alpha.intermediate_sampler_alpha_k_dpp_core`
 
     :param dpp:
         Finite hermitian DPP
@@ -112,7 +117,7 @@ def alpha_sampler_k_dpp(dpp, size, rng, **params):
     :type size:
         int
 
-    :param rng:
+    :param random_state:
         random number generator
 
     :return:
@@ -127,21 +132,21 @@ def alpha_sampler_k_dpp(dpp, size, rng, **params):
             "The alpha sampler is only available with FiniteDPP(..., hermitian=True, L_eval_X_data=(L_eval, X_data)) representation."
         )
 
-    r_state_outer = None
-    if "random_state" in params:
-        r_state_outer = params.pop("random_state", None)
+    # r_state_outer = None
+    # if "random_state" in params:
+    #     r_state_outer = params.pop("random_state", None)
 
-    sample, dpp.intermediate_sample_info = alpha_sampler_k_dpp_core(
+    sample, dpp.intermediate_sample_info = intermediate_sampler_alpha_k_dpp_core(
         size,
         dpp.intermediate_sample_info,
         dpp.X_data,
         dpp.eval_L,
-        random_state=rng,
-        **params
+        random_state=random_state,
+        **params,
     )
 
-    if r_state_outer:
-        params["random_state"] = r_state_outer
+    # if r_state_outer:
+    #     params["random_state"] = r_state_outer
 
     return sample
 
@@ -151,14 +156,14 @@ def estimate_rls_from_weighted_dict_eigendecomp(
 ):
     """Given embedded points, and a decomposition of embedded covariance matrix, estimate RLS.
 
-    Note that this is a different estimator than the one used in BLESS (i.e. :func:`dppy.finite.bless.estimate_rls_bless`), which we use here for efficiency because we can recycle already embedded points and eigen-decomposition.
+    Note that this is a different estimator than the one used in BLESS (i.e. :py:func:`~dppy.finite.bless.estimate_rls_bless`), which we use here for efficiency because we can recycle already embedded points and eigen-decomposition.
 
 
     :param array_like eigvec:
-        eigenvectors of I_A_mm = B_bar_T*B_bar_T.T + lam I, see :func:`vfx_sampling_precompute_constants`
+        eigenvectors of I_A_mm = B_bar_T*B_bar_T.T + lam I, see :py:func:`~dppy.finite.exact_samplers.intermediate_sampler_alpha.alpha_sampling_precompute_constants`
 
     :param array_like eigvals:
-        eigenvalues of I_A_mm = B_bar_T*B_bar_T.T + lam I, see :func:`vfx_sampling_precompute_constants`
+        eigenvalues of I_A_mm = B_bar_T*B_bar_T.T + lam I, see :py:func:`~dppy.finite.exact_samplers.intermediate_sampler_alpha.alpha_sampling_precompute_constants`
 
     :param array_like B_bar_T:
         (m x n) transposed matrix of n points embedded using a dictionary with m centers
@@ -239,7 +244,7 @@ def alpha_dpp_sampling_precompute_constants(
         float, default 4.0
 
     :param rls_oversample_bless:
-        Oversampling parameter used during bless's internal Nystrom approximation. Note that this is a different Nystrom approximation than the one related to :func:`rls_oversample_alphadpp`, and can be tuned separately. The rls_oversample_bless >= 1 parameter is used to increase the rank of the approximation by a rls_oversample_bless factor. This makes the one-time pre-processing slower and more memory intensive, but reduces variance and the number of rounds of rejections, so the actual runtime might increase or decrease. Empirically, a small factor rls_oversample_bless = [2,10] seems to work. It is suggested to start with a small number and increase if the algorithm fails to terminate or is not accurate.
+        Oversampling parameter used during bless's internal Nystrom approximation. Note that this is a different Nystrom approximation than the one related to :py:func:`rls_oversample_alphadpp`, and can be tuned separately. The rls_oversample_bless >= 1 parameter is used to increase the rank of the approximation by a rls_oversample_bless factor. This makes the one-time pre-processing slower and more memory intensive, but reduces variance and the number of rounds of rejections, so the actual runtime might increase or decrease. Empirically, a small factor rls_oversample_bless = [2,10] seems to work. It is suggested to start with a small number and increase if the algorithm fails to terminate or is not accurate.
 
     :type rls_oversample_bless:
         float, default 4.0
@@ -432,11 +437,13 @@ def alpha_dpp_sampling_precompute_constants(
     return result
 
 
-def alpha_sampler_dpp_core(info, X_data, eval_L, random_state=None, **params):
+def intermediate_sampler_alpha_dpp_core(
+    info, X_data, eval_L, random_state=None, **params
+):
     r"""First pre-compute quantities necessary for the alpha-dpp rejection sampling loop, such as the inner Nyström approximation, and the and the initial rescaling alpha_hat for the binary search. Then, given the pre-computed information,run a rejection sampling loop to generate samples from DPP(alpha * L).
 
     :param info:
-        If available, the pre-computed information necessary for the alpha-dpp rejection sampling loop. If ``None``, this function will compute and return an ``_IntermediateSampleInfoAlphaRescale`` (see :func:`alpha_dpp_sampling_precompute_constants`)
+        If available, the pre-computed information necessary for the alpha-dpp rejection sampling loop. If ``None``, this function will compute and return an ``_IntermediateSampleInfoAlphaRescale`` (see :py:func:`~dppy.finite.exact_samplers.intermediate_sampler_alpha.alpha_dpp_sampling_precompute_constants`)
 
     :type info:
         ``_IntermediateSampleInfoAlphaRescale`` or ``None``, default ``None``
@@ -474,7 +481,7 @@ def alpha_sampler_dpp_core(info, X_data, eval_L, random_state=None, **params):
 
         - ``'rls_oversample_bless'`` (float, default 4.0)
             Oversampling parameter used during bless's internal Nyström approximation.
-            Note that this is a different Nyström approximation than the one related to :func:`rls_oversample_alphadpp`, and can be tuned separately.
+            Note that this is a different Nyström approximation than the one related to :py:func:`rls_oversample_alphadpp`, and can be tuned separately.
             The ``rls_oversample_bless``:math:`\geq 1` parameter is used to increase the rank of the approximation by a ``rls_oversample_bless`` factor.
             This makes the one-time pre-processing slower and more memory intensive, but reduces variance and the number of rounds of rejections, so the actual runtime might increase or decrease.
             Empirically, a small factor ``rls_oversample_bless``:math:`\in [2,10]` seems to work.
@@ -531,19 +538,21 @@ def alpha_sampler_dpp_core(info, X_data, eval_L, random_state=None, **params):
     return sample, info
 
 
-def alpha_sampler_k_dpp_core(size, info, X_data, eval_L, random_state=None, **params):
+def intermediate_sampler_alpha_k_dpp_core(
+    size, info, X_data, eval_L, random_state=None, **params
+):
     r"""First pre-compute quantities necessary for the alpha-dpp rejection sampling loop, such as the inner Nyström
     approximation, the and the initial rescaling alpha_hat for the binary search.
     Then, given the pre-computed information,run a rejection sampling loop to generate k-DPP samples.
     To guarantee that the returned sample has size ``size``, we internally set desired_expected_size=size and
-    then repeatedly invoke alpha_sampler_dpp_core until a sample of the correct size is returned,
+    then repeatedly invoke intermediate_sampler_alpha_dpp_core until a sample of the correct size is returned,
     or exit with an error after a chosen number of rejections is reached.
 
     :param int size: The size of the sample (i.e. the k of k-DPPs)
 
     :param info:
         If available, the pre-computed information necessary for the alpha-dpp rejection sampling loop.
-        If ``None``, this function will compute and return an ``_IntermediateSampleInfoAlphaRescale`` (see :func:`alpha_dpp_sampling_precompute_constants`)
+        If ``None``, this function will compute and return an ``_IntermediateSampleInfoAlphaRescale`` (see :py:func:`~dppy.finite.exact_samplers.intermediate_sampler_alpha.alpha_dpp_sampling_precompute_constants`)
 
     :type info:
         ``_IntermediateSampleInfoAlphaRescale`` or ``None``, default ``None``
@@ -570,7 +579,7 @@ def alpha_sampler_k_dpp_core(size, info, X_data, eval_L, random_state=None, **pa
 
             Oversampling parameter used to construct alphadpp's internal Nyström approximation. The ``rls_oversample_alphadpp``:math:`\geq 1` parameter is used to increase the rank of the approximation by a ``rls_oversample_alphadpp`` factor. This makes each rejection round slower and more memory intensive, but reduces variance and the number of rounds of rejections, so the actual runtime might increase or decrease. Empirically, a small factor ``rls_oversample_alphadpp``:math:`\in [2,10]` seems to work. It is suggested to start with a small number and increase if the algorithm fails to terminate.
 
-        - ``'rls_oversample_bless'`` (float, default 4.0) Oversampling parameter used during bless's internal Nyström approximation. Note that this is a different Nyström approximation than the one related to :func:`rls_oversample_alphadpp`, and can be tuned separately. The ``rls_oversample_bless``:math:`\geq 1` parameter is used to increase the rank of the approximation by a ``rls_oversample_bless`` factor. This makes the one-time pre-processing slower and more memory intensive, but reduces variance and the number of rounds of rejections, so the actual runtime might increase or decrease. Empirically, a small factor ``rls_oversample_bless``:math:`\in [2,10]` seems to work. It is suggested to start with a small number and increase if the algorithm fails to terminate or is not accurate.
+        - ``'rls_oversample_bless'`` (float, default 4.0) Oversampling parameter used during bless's internal Nyström approximation. Note that this is a different Nyström approximation than the one related to :py:func:`rls_oversample_alphadpp`, and can be tuned separately. The ``rls_oversample_bless``:math:`\geq 1` parameter is used to increase the rank of the approximation by a ``rls_oversample_bless`` factor. This makes the one-time pre-processing slower and more memory intensive, but reduces variance and the number of rounds of rejections, so the actual runtime might increase or decrease. Empirically, a small factor ``rls_oversample_bless``:math:`\in [2,10]` seems to work. It is suggested to start with a small number and increase if the algorithm fails to terminate or is not accurate.
 
         - ``'r_func'`` (function, default x: x) Mapping from estimate expected size of the rescaled alpha-DPP to Poisson intensity used to choose size of the intermediate sample. Larger intermediate sampler cause less efficient iterations but higher acceptance probability.
 
@@ -725,7 +734,7 @@ def alpha_dpp_sampling_do_sampling_loop(
         likelihood function. Given two sets of n points X and m points Y, eval_L(X, Y) should compute the (n x m) matrix containing the likelihood between points. The function should also accept a single argument X and return eval_L(X) = eval_L(X, X). As an example, see the implementation of any of the kernels provided by scikit-learn (e.g. sklearn.gaussian_process.kernels.PairwiseKernel).
 
     :param _IntermediateSampleInfoAlphaRescale intermediate_sample_info:
-        Pre-computed information necessary for the alpha-dpp rejection sampling loop, as returned by :func:`alpha_dpp_sampling_precompute_constants.`
+        Pre-computed information necessary for the alpha-dpp rejection sampling loop, as returned by :py:func:`~dppy.finite.exact_samplers.intermediate_sampler_alpha.alpha_dpp_sampling_precompute_constants.`
 
     :param np.random.RandomState rng:
         random source used for sampling

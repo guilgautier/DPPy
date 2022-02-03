@@ -44,17 +44,17 @@ _IntermediateSampleInfo = namedtuple(
 )
 
 
-def vfx_sampler_dpp(dpp, rng, **params):
+def intermediate_sampler_vfx_dpp(dpp, random_state=None, **params):
     r"""Generate an exact sample from an hermitian ``dpp`` using the **vfx** variant of the :ref:`intermediate sampling method <finite_dpps_exact_sampling_intermediate_sampling_methods>`.
 
-    See also :py:func:`~dppy.finite.exact_samplers.vfx_samplers.vfx_sampler_dpp_core`.
+    See also :py:func:`~dppy.finite.exact_samplers.intermediate_sampler_vfx.intermediate_sampler_vfx_dpp_core`.
 
     :param dpp:
         Finite hermitian DPP
     :type dpp:
         :py:class:`~dppy.finite.dpp.FiniteDPP`
 
-    :param rng:
+    :param random_state:
         random number generator
 
     :return:
@@ -69,23 +69,27 @@ def vfx_sampler_dpp(dpp, rng, **params):
             "The vfx sampler is only available with FiniteDPP(..., hermitian=True, L_eval_X_data=(L_eval, X_data)) representation."
         )
 
-    r_state_outer = None
-    if "random_state" in params:
-        r_state_outer = params.pop("random_state", None)
+    # r_state_outer = None
+    # if "random_state" in params:
+    #     r_state_outer = params.pop("random_state", None)
 
-    sample, dpp.intermediate_sample_info = vfx_sampler_dpp_core(
-        dpp.intermediate_sample_info, dpp.X_data, dpp.eval_L, random_state=rng, **params
+    sample, dpp.intermediate_sample_info = intermediate_sampler_vfx_dpp_core(
+        dpp.intermediate_sample_info,
+        dpp.X_data,
+        dpp.eval_L,
+        random_state=random_state,
+        **params
     )
-    if r_state_outer:
-        params["random_state"] = r_state_outer
+    # if r_state_outer:
+    #     params["random_state"] = r_state_outer
 
     return sample
 
 
-def vfx_sampler_k_dpp(dpp, size, rng, **params):
+def intermediate_sampler_vfx_k_dpp(dpp, size, random_state=None, **params):
     r"""Generate an exact sample from an hermitian :math:`k\!\operatorname{-DPP}` associated with ``dpp`` and :math:`k=` ``size``, using the **vfx** variant of the :ref:`intermediate sampling method <finite_dpps_exact_sampling_intermediate_sampling_methods>`.
 
-    See also :py:func:`~dppy.finite.exact_samplers.vfx_samplers.vfx_sampler_k_dpp_core`
+    See also :py:func:`~dppy.finite.exact_samplers.intermediate_sampler_vfx.intermediate_sampler_vfx_k_dpp_core`
 
     :param dpp:
         Finite hermitian DPP
@@ -97,7 +101,7 @@ def vfx_sampler_k_dpp(dpp, size, rng, **params):
     :type size:
         int
 
-    :param rng:
+    :param random_state:
         random number generator
 
     :return:
@@ -112,20 +116,21 @@ def vfx_sampler_k_dpp(dpp, size, rng, **params):
             "The vfx sampler is only available with FiniteDPP(..., hermitian=True, L_eval_X_data=(L_eval, X_data)) representation."
         )
 
-    r_state_outer = None
-    if "random_state" in params:
-        r_state_outer = params.pop("random_state", None)
+    # r_state_outer = None
+    # if "random_state" in params:
+    #     r_state_outer = params.pop("random_state", None)
 
-    sample, dpp.intermediate_sample_info = vfx_sampler_k_dpp_core(
+    sample, dpp.intermediate_sample_info = intermediate_sampler_vfx_k_dpp_core(
         size,
         dpp.intermediate_sample_info,
         dpp.X_data,
         dpp.eval_L,
-        random_state=rng,
+        random_state=random_state,
         **params
     )
-    if r_state_outer:
-        params["random_state"] = r_state_outer
+
+    # if r_state_outer:
+    #     params["random_state"] = r_state_outer
 
     return sample
 
@@ -403,7 +408,9 @@ def vfx_sampling_precompute_constants(
     return result
 
 
-def vfx_sampler_dpp_core(info, X_data, eval_L, random_state=None, **params):
+def intermediate_sampler_vfx_dpp_core(
+    info, X_data, eval_L, random_state=None, **params
+):
     r"""First pre-compute quantities necessary for the vfx rejection sampling loop, such as the inner Nyström approximation, and the RLS of all elements in :math:`\mathbf{L}`.
     Then, given the pre-computed information,run a rejection sampling loop to generate DPP samples.
 
@@ -484,8 +491,10 @@ def vfx_sampler_dpp_core(info, X_data, eval_L, random_state=None, **params):
     return sample, info
 
 
-def vfx_sampler_k_dpp_core(size, info, X_data, eval_L, random_state=None, **params):
-    r"""First pre-compute quantities necessary for the vfx rejection sampling loop, such as the inner Nyström approximation, and the RLS of all elements in :math:`\mathbf{L}`. Then, given the pre-computed information,run a rejection sampling loop to generate DPP samples. To guarantee that the returned sample has size ``size``, we internally set desired_expected_size=size and then repeatedly invoke vfx_sampler_dpp_core until a sample of the correct size is returned, or exit with an error after a chosen number of rejections is reached.
+def intermediate_sampler_vfx_k_dpp_core(
+    size, info, X_data, eval_L, random_state=None, **params
+):
+    r"""First pre-compute quantities necessary for the vfx rejection sampling loop, such as the inner Nyström approximation, and the RLS of all elements in :math:`\mathbf{L}`. Then, given the pre-computed information,run a rejection sampling loop to generate DPP samples. To guarantee that the returned sample has size ``size``, we internally set desired_expected_size=size and then repeatedly invoke intermediate_sampler_vfx_dpp_core until a sample of the correct size is returned, or exit with an error after a chosen number of rejections is reached.
 
     :param int size: The size of the sample (i.e. the k of k-DPPs)
 

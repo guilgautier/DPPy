@@ -96,7 +96,7 @@ class FiniteDPP:
 
             - **L_gram_factor** (numpy.ndarray) -- Matrix :math:`\Phi` of size :math:`d \times N` such that :math:`\mathbf{L} = \Phi^{\top} \Phi`.
 
-            - **L_eval_X_data** (tuple(callable, numpy.ndarray)) -- ``(L, X)`` such that :math:`\mathbf{L}_{ij} =` ``L(X[i, :], X[j, :])``. For a full description of the requirements imposed on ``L``'s interface, see the documentation of :func:`~dppy.finite.exact_samplers.vfx_samplers.vfx_sampling_precompute_constants`. For an example, see the implementation of any of the kernels provided by scikit-learn (e.g. sklearn.gaussian_process.kernels.PairwiseKernel).
+            - **L_eval_X_data** (tuple(callable, numpy.ndarray)) -- ``(L, X)`` such that :math:`\mathbf{L}_{ij} =` ``L(X[i, :], X[j, :])``. For a full description of the requirements imposed on ``L``'s interface, see the documentation of :func:`~dppy.finite.exact_samplers.intermediate_sampler_vfx.vfx_sampling_precompute_constants`. For an example, see the implementation of any of the kernels provided by scikit-learn (e.g. sklearn.gaussian_process.kernels.PairwiseKernel).
 
         :type params:
             dict
@@ -228,7 +228,7 @@ class FiniteDPP:
         return sample
 
     def sample_mcmc(self, method="aed", random_state=None, **params):
-        """Run a MCMC with stationary distribution the corresponding :py:class:`~dppy.finite.dpp.FiniteDPP` object.
+        r"""Run a MCMC with stationary distribution the corresponding :py:class:`~dppy.finite.dpp.FiniteDPP` object.
 
         :param string method:
 

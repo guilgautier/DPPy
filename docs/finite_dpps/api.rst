@@ -73,12 +73,12 @@ Projection case
 General case
 ---------------
 
-.. automodule:: dppy.finite.exact_samplers.spectral_sampler_dpp
+.. automodule:: dppy.finite.exact_samplers.spectral_sampler.spectral_sampler_dpp
     :members:
     :inherited-members:
     :show-inheritance:
 
-.. automodule:: dppy.finite.exact_samplers.spectral_sampler_k_dpp
+.. automodule:: dppy.finite.exact_samplers.spectral_sampler.spectral_sampler_k_dpp
     :members:
     :inherited-members:
     :show-inheritance:
@@ -92,7 +92,7 @@ Intermediate sampling
 VFX
 ---------------
 
-.. automodule:: dppy.finite.exact_samplers.vfx_samplers
+.. automodule:: dppy.finite.exact_samplers.intermediate_sampler_vfx
     :members:
     :inherited-members:
     :show-inheritance:
@@ -103,7 +103,7 @@ VFX
 Alpha
 ---------------
 
-.. automodule:: dppy.finite.exact_samplers.alpha_samplers
+.. automodule:: dppy.finite.exact_samplers.intermediate_sampler_alpha
     :members:
     :inherited-members:
     :show-inheritance:
