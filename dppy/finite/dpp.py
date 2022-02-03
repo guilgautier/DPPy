@@ -21,9 +21,9 @@ from dppy.finite.compute_kernels import (
     compute_correlation_kernel,
     compute_likelihood_kernel,
 )
-from dppy.finite.exact_samplers.select_samplers import (
-    select_sampler_exact_dpp,
-    select_sampler_exact_k_dpp,
+from dppy.finite.exact_samplers.select_exact_sampler import (
+    select_exact_sampler_dpp,
+    select_exact_sampler_k_dpp,
 )
 from dppy.finite.mcmc_samplers.select_samplers import (
     select_sampler_mcmc_dpp,
@@ -143,15 +143,15 @@ class FiniteDPP:
     def sample_exact(self, method="", random_state=None, **kwargs):
         """Sample exactly from the corresponding :py:class:`~dppy.finite.dpp.FiniteDPP` object.
 
-        :param method:
+        :param method: :py:func:`~dppy.finite.exact_samplers.select_exact_sampler.select_exact_sampler_dpp`.
 
             - ``"sequential"``. It corresponds to a generic sampler, which applies to any valid DPP (hermitian or not), see :ref:`finite_dpps_exact_sampling_sequential_methods` and :py:func:`~dppy.finite.exact_samplers.sequential_sampler.sequential_sampler`.
 
-            - ``"spectral"``. It applies only if the attribute :py:attr:`~dppy.finite.dpp.FiniteDPP.hermitian` is True, see :ref:`finite_dpps_exact_sampling_spectral_method` and :py:func:`~dppy.finite.exact_samplers.spectral_samplers.spectral_sampler_dpp`.
+            - ``"spectral"``. It applies only if the attribute :py:attr:`~dppy.finite.dpp.FiniteDPP.hermitian` is True, see :ref:`finite_dpps_exact_sampling_spectral_method` and :py:func:`~dppy.finite.exact_samplers.spectral_sampler.spectral_sampler_dpp`.
 
-            - ``"intermediate"``. It applies only if the attribute :py:attr:`~dppy.finite.dpp.FiniteDPP.hermitian` is True, see :ref:`finite_dpps_exact_sampling_intermediate_sampling_methods` and :py:func:`~dppy.finite.exact_samplers.intermediate_samplers.intermediate_sampler_dpp`.
+            - ``"intermediate"``. It applies only if the attribute :py:attr:`~dppy.finite.dpp.FiniteDPP.hermitian` is True, see :ref:`finite_dpps_exact_sampling_intermediate_sampling_methods` and :py:func:`~dppy.finite.exact_samplers.intermediate_sampler.intermediate_sampler_dpp`.
 
-            - ``"projection"``. It applies only if the attribute :py:attr:`~dppy.finite.dpp.FiniteDPP.projection` is True, see :ref:`finite_dpps_exact_sampling_projection_dpp` and :py:func:`~dppy.finite.exact_samplers.projection_samplers.projection_sampler_dpp`.
+            - ``"projection"``. It applies only if the attribute :py:attr:`~dppy.finite.dpp.FiniteDPP.projection` is True, see :ref:`finite_dpps_exact_sampling_projection_methods` and :py:func:`~dppy.finite.exact_samplers.projection_sampler_eigen.projection_sampler_eigen`, :py:func:`~dppy.finite.exact_samplers.projection_sampler_eigen.projection_sampler_kernel`.
 
         :type method:
             string, default ``"spectral"`` if the attribute :py:attr:`~dppy.finite.dpp.FiniteDPP.hermitian` is True, otherwise ``"sequential"``.
@@ -171,7 +171,7 @@ class FiniteDPP:
             - :py:meth:`~dppy.finite.dpp.FiniteDPP.sample_mcmc`
         """
         rng = check_random_state(random_state)
-        sampler = select_sampler_exact_dpp(self, method)
+        sampler = select_exact_sampler_dpp(self, method)
         sample = sampler(self, random_state=rng, **kwargs)
 
         self.list_of_samples.append(sample)
@@ -184,11 +184,11 @@ class FiniteDPP:
 
         :param method:
 
-            - ``"spectral"`` (default), see :ref:`finite_dpps_exact_sampling_k_dpps` and :py:func:`~dppy.finite.exact_samplers.spectral_samplers.spectral_sampler_k_dpp`.
+            - ``"spectral"`` (default), see :ref:`finite_dpps_exact_sampling_k_dpps` and :py:func:`~dppy.finite.exact_samplers.spectral_sampler.spectral_sampler_k_dpp`.
 
-            - ``"intermediate"``, see :ref:`finite_dpps_exact_sampling_intermediate_sampling_methods` and :py:func:`~dppy.finite.exact_samplers.intermediate_samplers.intermediate_sampler_k_dpp`.
+            - ``"intermediate"``, see :ref:`finite_dpps_exact_sampling_intermediate_sampling_methods` and :py:func:`~dppy.finite.exact_samplers.intermediate_sampler.intermediate_sampler_k_dpp`.
 
-            - ``"projection"``. It applies only if the attribute :py:attr:`~dppy.finite.dpp.FiniteDPP.projection` is True, see  :py:func:`~dppy.finite.exact_samplers.projection_samplers.projection_sampler_k_dpp`.
+            - ``"projection"``. It applies only if the attribute :py:attr:`~dppy.finite.dpp.FiniteDPP.projection` is True, see  :py:func:`~dppy.finite.exact_samplers.projection_sampler.projection_sampler_k_dpp`.
 
         :type method:
             string, default ``"spectral"``.
@@ -220,7 +220,7 @@ class FiniteDPP:
             - :py:meth:`~dppy.finite.dpp.FiniteDPP.sample_mcmc_k_dpp`
         """
         rng = check_random_state(random_state)
-        sampler = select_sampler_exact_k_dpp(self, method)
+        sampler = select_exact_sampler_k_dpp(self, method)
         sample = sampler(self, size=size, random_state=rng, **kwargs)
 
         self.size_k_dpp = size
