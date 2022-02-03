@@ -123,9 +123,9 @@ def projection_sampler_eigen_gs(eig_vecs, size=None, random_state=None, **kwargs
 def projection_sampler_eigen_gs_perm(
     eig_vecs, size=None, random_state=None, overwrite=False, **kwargs
 ):
-    """Variant of :py:func:`~dppy.finite.exact_samplers.projection_sampler_eigen.projection_sampler_eigen_gs` involving permutations of the rows of ``eigvecs``.
+    """Variant of :py:func:`~dppy.finite.exact_samplers.projection_sampler_eigen.projection_sampler_eigen_gs` involving permutations of the rows of ``eig_vecs``.
 
-    If ``overwrite`` is True, ``eigvecs`` is permuted inplace.
+    If ``overwrite`` is True, ``eig_vecs`` is permuted inplace.
     """
 
     rng = check_random_state(random_state)

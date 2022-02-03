@@ -4,16 +4,16 @@ from dppy.utils import check_random_state, log_binom
 
 
 def projection_sampler_kernel(dpp, size=None, random_state=None, **kwargs):
-    r"""Generate an exact sample from ``dpp`` using the :ref:`projection method <finite_dpps_exact_sampling_projection_methods>` must be a projection, i.e., the attribute :py:attr:`~dppy.finite.dpp.FiniteDPP.projection` must be True.
+    r"""Generate an exact sample from ``dpp`` using the :ref:`projection method <finite_dpps_exact_sampling_projection_methods>` must be a projection, i.e., the attribute ``dpp.projection`` must be True.
 
-    If the attribute :py:attr:`~dppy.finite.dpp.FiniteDPP.kernel_type` is ``"likelihood"``, sample from :math:`\operatorname{k-DPP}(\mathbf{L})` where ``size`` :math:`=k` must be provided. Denote :math:`r=\operatorname{rank}(\mathbf{L})`.
+    If the attribute ``dpp.kernel_type`` is ``"likelihood"``, sample from :math:`\operatorname{k-DPP}(\mathbf{L})` where ``size`` :math:`=k` must be provided. Denote :math:`r=\operatorname{rank}(\mathbf{L})`.
 
     .. math::
 
         \mathbb{P}\!\left[ \mathcal{X} = X \right]
         = \frac{1}{\binom{r}{k}} \det \mathbf{L}_X ~ 1_{|X|=k}.
 
-    If the attribute :py:attr:`~dppy.finite.dpp.FiniteDPP.kernel_type` is ``"correlation"``, sample from the projection :math:`\operatorname{DPP}(\mathbf{K})` where ``size`` must be equal to :math:`r=\operatorname{rank}(\mathbf{K})`.
+    If the attribute ``dpp.kernel_type`` is ``"correlation"``, sample from the projection :math:`\operatorname{DPP}(\mathbf{K})` where ``size`` must be equal to :math:`r=\operatorname{rank}(\mathbf{K})`.
 
     .. math::
 
@@ -47,13 +47,14 @@ def projection_sampler_kernel(dpp, size=None, random_state=None, **kwargs):
         dpp.compute_likelihood_kernel()
         return sampler(dpp.L, size=size, random_state=random_state, **kwargs)
 
-    if dpp.kernel_type == "correlation" and size:
+    if dpp.kernel_type == "correlation":
         dpp.compute_correlation_kernel()
-        rank_K = np.rint(np.trace(dpp.K)).astype(int)
-        if size != rank_K:
-            raise ValueError(
-                f"'size' argument != {rank_K} = rank(K) for sampling projection DPP(K)"
-            )
+        if size:
+            rank_K = np.rint(np.trace(dpp.K)).astype(int)
+            if size != rank_K:
+                raise ValueError(
+                    f"'size' argument != {rank_K} = rank(K) for sampling projection DPP(K)"
+                )
         return sampler(dpp.K, size=size, random_state=random_state, **kwargs)
 
 
