@@ -1,251 +1,289 @@
 import numpy as np
-import scipy.linalg as la
 
-from dppy.utils import check_random_state, inner1d
+from dppy.utils import check_random_state, log_binom
+
+
+def projection_sampler_eigen(dpp, random_state=None, **kwargs):
+    assert dpp.projection and dpp.hermitian
+
+    size = kwargs.get("size", None)
+    if dpp.kernel_type == "likelihood" and not size:
+        raise ValueError(
+            "'size' argument (k) required for sampling k-DPP(L) with projection likelihood kernel L."
+        )
+
+    assert dpp.eig_vecs is not None
+
+    mode = kwargs.get("mode", "")
+    sampler = select_projection_sampler_eigen(mode)
+    return sampler(dpp.eig_vecs, random_state=random_state, **kwargs)
 
 
 def select_projection_sampler_eigen(mode):
-    r"""Select the variant of the spectral method applied to projection :math:`\operatorname{DPP}(\mathbf{K})` with :math:`\mathbf{K} = U U^{*}`.
+    r"""Select the variant of the spectral method applied to a projection kernel given its factorization.
 
-    :param mode: variant name, default "GS"
+    :param mode: variant name, defaults to "gs".
     :type mode: str
 
     :return: sampler selected by ``mode``
 
-        - ``"GS"`` :py:func:`~dppy.finite.exact_samplers.projection_sampler_eigen.projection_eigen_sampler_GS`
-        - ``"GS_bis"`` :py:func:`~dppy.finite.exact_samplers.projection_sampler_eigen.projection_eigen_sampler_GS_bis`
-        - ``"KuTa12"`` :py:func:`~dppy.finite.exact_samplers.projection_sampler_eigen.projection_eigen_sampler_KuTa12`
+        - ``"gs"`` :py:func:`~dppy.finite.exact_samplers.projection_sampler_eigen.projection_sampler_eigen_gs`
+        - ``"gs-perm"`` :py:func:`~dppy.finite.exact_samplers.projection_sampler_eigen.projection_sampler_eigen_gs_perm`
 
     :rtype: callable
     """
     samplers = {
-        "GS": projection_eigen_sampler_GS,
-        "GS_bis": projection_eigen_sampler_GS_bis,
-        "KuTa12": projection_eigen_sampler_KuTa12,
+        "gs": projection_sampler_eigen_gs,
+        "gs-perm": projection_sampler_eigen_gs_perm,
     }
-    default = samplers["GS"]
+    default = samplers["gs"]
     return samplers.get(mode, default)
 
 
-# Phase 2: sample from the projection DPP selected in phase 1
-def projection_eigen_sampler_GS(eig_vecs, size=None, random_state=None):
-    r"""Generate an exact sample from projection :math:`\operatorname{DPP}(K)` with orthogonal projection kernel :math:`K=VV^{\top}` where :math:`V=` ``eig_vecs`` such that :math:`V^{\top}V = I_r` and :math:`r=\operatorname{rank}(K)`.
+def projection_sampler_eigen_gs(eig_vecs, size=None, random_state=None, **kwargs):
+    r"""Generate an exact sample from :math:`\operatorname{k-DPP}(\mathbf{L})` with :math:`k=` ``size`` (if ``size`` is provided), where :math:`\mathbf{L}=UU^{*}` is an orthogonal projection matrix given :math:`U=` ``eig_vecs`` such that :math:`U^{*}U = I_r` and denote :math:`r=\operatorname{rank}(\mathbf{L})`. If ``size=None`` (default), it is set to :math:`k=r`, this also corresponds to sampling from the projection :math:`\operatorname{DPP}(\mathbf{K}=UU^{*})`.
+
+    The likelihood of the output sample is given by
+
+    .. math::
+
+        \mathbb{P}\!\left[ \mathcal{X} = X \right]
+        = \frac{1}{\binom{r}{k}} \det [UU^*]_X ~ 1_{|X|=k}.
 
     :param eig_vecs:
-        Eigenvectors :math:`V` of :math:`K=VV^{\top}`.
+        Eigenvectors :math:`U` of :math:`\mathbf{K}=UU^{*}`.
     :type eig_vecs:
         array_like
 
     :param size:
-        Size of the output sample (if ``size`` is provided), otherwise :math:`k=\operatorname{trace}(K)=\operatorname{rank}(K)=r`.
+        If None, it is set to :math:`r`, otherwise it defines the size :math:`k\leq r` of the output :math:`\operatorname{k-DPP} sample, defaults to None.
     :type size:
-        int
+        int, optional
 
     :return:
-        An exact sample from the corresponding :math:`\operatorname{DPP}(K)` or :math:`\operatorname{k-DPP}(K)`.
+        Exact sample :math:`X` and its log-likelihood.
     :rtype:
-        list
+        tuple(list, float)
 
     .. seealso::
 
+        - :ref:`finite_dpps_exact_sampling_projection_dpp`
         - :cite:`Gil14` Algorithm 2 or :cite:`TrBaAm18` Algorithm 3
-        - :func:`projection_eigen_sampler_GS_bis <projection_eigen_sampler_GS_bis>`
-        - :func:`projection_eigen_sampler_KuTa12 <projection_eigen_sampler_KuTa12>`
+        - :py:func:`~dppy.finite.exact_samplers.projection_sampler_eigen.projection_sampler_eigen_gs_perm`
+        - :py:func:`~dppy.finite.exact_samplers.projection_sampler_kernel.projection_sampler_kernel_cho`
     """
-    if not eig_vecs.shape[1]:
-        return []  # np.empty((0,), dtype=int)
-
     rng = check_random_state(random_state)
 
-    V = eig_vecs
-    N, rank = V.shape  # ground set size / rank(K)
+    N, rank = eig_vecs.shape
+    if rank == 0:
+        return []
+
     if size is None:  # full projection DPP else k-DPP with k = size
         size = rank
     assert size <= rank
 
-    ground_set = np.arange(N)
-    sample = np.zeros(size, dtype=int)
-    rem = np.full(N, fill_value=True, dtype=bool)
+    Q = eig_vecs
+    is_complex = np.iscomplexobj(Q)
 
-    # Phase 1: Already performed!
-    # Select eigvecs with Bernoulli variables with parameter = eigvals of K.
+    R = np.zeros((size, N))
+    d2 = np.linalg.norm(Q, axis=1) ** 2
 
-    # Phase 2: Chain rule
-    # Use Gram-Schmidt recursion to compute the Vol^2 of the parallelepiped spanned by the feature vectors associated to the sample
+    items = np.arange(N)
+    Xc = np.full(N, fill_value=True, dtype=bool)
 
-    c = np.zeros((N, size))
-    norms_2 = inner1d(V, axis=1)  # ||V_i:||^2
-
-    for it in range(size):
+    for i in range(size):
         # Pick an item \propto this squared distance
-        j = rng.choice(ground_set[rem], p=np.abs(norms_2[rem]) / (rank - it))
-        sample[it] = j
-        rem[j] = False
+        xi = rng.choice(items[Xc], p=d2[Xc] / (rank - i))
+        Xc[xi] = False
 
-        if it == size - 1:
+        R[i, xi] = np.sqrt(d2[xi])
+
+        if i == size - 1:
             break
 
-        # Cancel the contribution of V_j to the remaining feature vectors
-        c[rem, it] = V[rem, :].dot(V[j, :]) - c[rem, :it].dot(c[j, :it])
-        c[rem, it] /= np.sqrt(norms_2[j])
+        R[i, Xc] = Q[Xc, :].dot(Q[xi, :].conj())
+        R[i, Xc] -= R[:i, xi].dot(R[:i, Xc])
+        R[i, Xc] /= R[i, xi]
 
-        norms_2[rem] -= c[rem, it] ** 2  # update residual norm^2
+        if is_complex:
+            d2[Xc] -= np.abs(R[i, Xc]) ** 2
+        else:
+            d2[Xc] -= R[i, Xc] ** 2
+        np.fmax(d2, 0.0, where=Xc, out=d2)
 
-    # log_likelihood = np.sum(np.log(norm_2[sample]))
-    return sample.tolist()  # , log_likelihood
+    sample = items[~Xc].tolist()
+    log_likelihood = np.sum(np.log(d2[sample])) - log_binom(rank, size)
+    return sample  # , log_likelihood
 
 
-def projection_eigen_sampler_GS_bis(eig_vecs, size=None, random_state=None):
-    r"""Generate an exact sample from projection :math:`\operatorname{DPP}(K)` with orthogonal projection kernel :math:`K=VV^{\top}` where :math:`V=` ``eig_vecs`` such that :math:`V^{\top}V = I_r` and :math:`r=\operatorname{rank}(K)`.
+def projection_sampler_eigen_gs_perm(
+    eig_vecs, size=None, random_state=None, overwrite=False, **kwargs
+):
+    """Variant of :py:func:`~dppy.finite.exact_samplers.projection_samplers_eigen.projection_sampler_eigen_gs_perm` involving permutations of the rows of ``eigvecs``.
 
-    This function is a slight modification of :func:`projection_eigen_sampler_GS <projection_eigen_sampler_GS>`.
-
-    :param eig_vecs:
-        Eigenvectors :math:`V` of :math:`K=VV^{\top}`.
-    :type eig_vecs:
-        array_like
-
-    :param size:
-        Size of the output sample (if ``size`` is provided), otherwise :math:`k=\operatorname{trace}(K)=\operatorname{rank}(K)=r`.
-    :type size:
-        int
-
-    :return:
-        An exact sample from the corresponding :math:`\operatorname{DPP}(K)` or :math:`\operatorname{k-DPP}(K)`.
-    :rtype:
-        list
-
-    .. seealso::
-
-        - :func:`projection_eigen_sampler_GS <projection_eigen_sampler_GS>`
-        - :func:`projection_eigen_sampler_KuTa12 <projection_eigen_sampler_KuTa12>`
+    If ``overwrite`` is True, ``eigvecs`` is permuted inplace.
     """
-    if not eig_vecs.shape[1]:
-        return []  # np.empty((0,), dtype=int)
 
     rng = check_random_state(random_state)
 
-    V = eig_vecs.copy()
-    N, rank = V.shape  # ground set size / rank(K)
+    N, rank = eig_vecs.shape
+    if rank == 0:
+        return []
+
     if size is None:  # full projection DPP else k-DPP with k = size
         size = rank
     assert size <= rank
 
-    ground_set = np.arange(N)
-    sample = np.zeros(size, dtype=int)
-    rem = np.full(N, fill_value=True, dtype=bool)
+    Q = eig_vecs
+    is_complex = np.iscomplexobj(Q)
 
-    # Chain rule
-    # Use Gram-Schmidt recursion to compute the Vol^2 of the parallelepiped spanned by the feature vectors associated to the sample
+    R = np.zeros((size, N), dtype=Q.dtype)
+    d2 = np.linalg.norm(Q, axis=1) ** 2
 
-    # Matrix of the contribution of remaining vectors
-    # <V_i, P_{V_Y}^{orthog} V_j>
-    c = np.zeros((N, size), dtype=float)
-    norms_2 = inner1d(V, axis=1)  # ||V_i:||^2
+    items = np.arange(N)
 
-    for it in range(size):
+    for i in range(size):
+        J = range(i, N)
+        j = rng.choice(J, p=d2[J] / (rank - i))
 
-        # Pick an item proportionally to the residual norm^2
-        # ||P_{V_Y}^{orthog} V_j||^2
-        j = rng.choice(ground_set[rem], p=np.abs(norms_2[rem]) / (rank - it))
-        sample[it] = j
-        if it == size - 1:
-            break
-        # Update the residual norm^2
-        #
-        # |P_{V_Y+j}^{orthog} V_i|^2
-        #                                    <V_i,P_{V_Y}^{orthog} V_j>^2
-        #     =  |P_{V_Y}^{orthog} V_i|^2 -  ----------------------------
-        #                                      |P_{V_Y}^{orthog} V_j|^2
-        #
-        # 1) Orthogonal part of V_j w.r.t. orthonormal basis of Span(V_Y)
-        #    V'_j = P_{V_Y}^{orthog} V_j
-        #         = V_j - <V_j,sum_Y V'_k>V'_k
-        #         = V_j - sum_Y <V_j, V'_k> V'_k
-        # Note V'_j is not normalized
-        rem[j] = False
-        V[j, :] -= c[j, :it].dot(V[sample[:it], :])
+        # swap
+        i_j = [i, j]
+        j_i = [j, i]
 
-        # 2) Compute <V_i, V'_j> = <V_i, P_{V_Y}^{orthog} V_j>
-        c[rem, it] = V[rem, :].dot(V[j, :])
+        Q[i_j] = Q[j_i]
+        I1 = slice(0, i)
+        R[I1, i_j] = R[I1, j_i]
 
-        # 3) Normalize V'_j with norm^2 and not norm
-        #              V'_j         P_{V_Y}^{orthog} V_j
-        #    V'_j  =  -------  =  --------------------------
-        #             |V'j|^2      |P_{V_Y}^{orthog} V_j|^2
-        #
-        # in preparation for next orthogonalization in 1)
-        V[j, :] /= norms_2[j]
+        items[i], items[j] = items[j], items[i]
+        d2[i], d2[j] = d2[j], d2[i]
 
-        # 4) Update the residual norm^2: cancel contrib of V_i onto V_j
-        #
-        # |P_{V_Y+j}^{orthog} V_i|^2
-        #   = |P_{V_Y}^{orthog} V_i|^2 - <V_i,V'_j>^2 / |V'j|^2
-        #                                  <V_i,P_{V_Y}^{orthog} V_j>^2
-        #   =  |P_{V_Y}^{orthog} V_i|^2 -  ----------------------------
-        #                                   |P_{V_Y}^{orthog} V_j|^2
-        norms_2[rem] -= c[rem, it] ** 2 / norms_2[j]
+        R[i, i] = np.sqrt(d2[i])
 
-    # log_likelihood = np.sum(np.log(norm_2[sample]))
-    return sample.tolist()  # , log_likelihood
-
-
-def projection_eigen_sampler_KuTa12(eig_vecs, size=None, random_state=None):
-    r"""Generate an exact sample from projection :math:`\operatorname{DPP}(K)` with orthogonal projection kernel :math:`K=VV^{\top}` where :math:`V=` ``eig_vecs`` such that :math:`V^{\top}V = I_r` and :math:`r=\operatorname{rank}(K)`.
-
-    This function implements Algorithm 1 :cite:`KuTa12`.
-
-    :param eig_vecs:
-        Eigenvectors :math:`V` of :math:`K=VV^{\top}`.
-    :type eig_vecs:
-        array_like
-
-    :param size:
-        Size of the output sample (if ``size`` is provided), otherwise :math:`k=\operatorname{trace}(K)=\operatorname{rank}(K)=r`.
-    :type size:
-        int
-
-    :return:
-        An exact sample from the corresponding :math:`\operatorname{DPP}(K)` or :math:`\operatorname{k-DPP}(K)`.
-    :rtype:
-        list
-
-    .. seealso::
-
-        - :func:`projection_eigen_sampler_GS <projection_eigen_sampler_GS>`
-        - :func:`projection_eigen_sampler_GS_bis <projection_eigen_sampler_GS_bis>`
-    """
-    if not eig_vecs.shape[1]:
-        return []  # np.empty((0,), dtype=int)
-
-    rng = check_random_state(random_state)
-
-    V = eig_vecs.copy()
-    N, rank = V.shape  # ground set size / rank(K)
-    if size is None:  # full projection DPP else k-DPP with k = size
-        size = rank
-    assert size <= rank
-
-    sample = np.full(size, fill_value=0, dtype=int)
-    norms_2 = inner1d(V, axis=1)  # ||V_i:||^2
-
-    # Following [Algo 1, KuTa12], the aim is to compute the ortho complement of the subspace spanned by the selected eigenvectors to the canonical vectors \{e_i ; i \in Y\}. We proceed recursively.
-    for it in range(size):
-
-        j = rng.choice(N, p=np.abs(norms_2) / (rank - it))
-        sample[it] = j
-        if it == size - 1:
+        if i == size - 1:
             break
 
-        # Cancel the contribution of e_i to the remaining vectors that is, find the subspace of V that is orthogonal to \{e_i ; i \in Y\}
-        # Take the index of a vector that has a non null contribution on e_j
-        k = np.where(V[j, :] != 0)[0][0]
-        # Cancel the contribution of the remaining vectors on e_j, but stay in the subspace spanned by V i.e. get the subspace of V orthogonal to \{e_i ; i \in Y\}
-        V -= np.outer(V[:, k] / V[j, k], V[j, :])
-        # V_:j is set to 0 so we delete it and we can derive an orthononormal basis of the subspace under consideration
-        V, _ = la.qr(np.delete(V, k, axis=1), mode="economic")
+        I1, I2 = slice(0, i), slice(i + 1, N)
+        R[i, I2] = Q[I2, :].dot(Q[i, :].conj())
+        R[i, I2] -= R[I1, i].dot(R[I1, I2])
+        R[i, I2] /= R[i, i]
 
-        norms_2 = inner1d(V, axis=1)  # ||V_i:||^2
+        if is_complex:
+            d2[I2] -= np.abs(R[i, I2]) ** 2
+        else:
+            d2[I2] -= R[i, I2] ** 2
+        np.fmax(d2[I2], 0.0, out=d2[I2])
 
-    # log_likelihood = np.sum(np.log(norm_2[sample]))
-    return sample.tolist()  # , log_likelihood
+    if not overwrite:
+        perm = np.empty_like(items)
+        perm[items] = np.arange(items.size)
+        eig_vecs[:] = Q[perm]
+
+    S = range(0, size)
+    sample = items[S].tolist()
+    log_likelihood = np.sum(np.log(d2[S])) - log_binom(rank, size)
+    return sample  # , log_likelihood
+
+
+# def projection_sampler_eigen_mgs(U, size=None, random_state=None, overwrite=False):
+
+#     rng = check_random_state(random_state)
+
+#     N, rank = U.shape
+#     if rank == 0:
+#         return []
+
+#     if size is None:  # full projection DPP else k-DPP with k = size
+#         size = rank
+#     assert size <= rank
+
+#     Q = U if overwrite else U.copy()
+#     is_complex = np.iscomplexobj(Q)
+
+#     R = np.zeros((size, N), dtype=Q.dtype)
+#     d2 = np.linalg.norm(Q, axis=1) ** 2
+
+#     items = np.arange(N)  # ground set
+#     Xc = np.full(N, fill_value=True, dtype=bool)
+
+#     for i in range(size):
+#         xi = rng.choice(items[Xc], p=d2[Xc] / (rank - i))
+#         Xc[xi] = False
+
+#         R[i, xi] = np.sqrt(d2[xi])
+
+#         if i == size - 1:
+#             break
+
+#         Q[xi, :] /= R[i, xi]
+#         R[i, Xc] = Q[Xc, :].dot(Q[i, :].conj())
+#         Q[Xc, :] -= np.outer(R[i, Xc], Q[i, :])
+
+#         if is_complex:
+#             d2[Xc] -= np.abs(R[i, Xc]) ** 2
+#         else:
+#             d2[Xc] -= R[i, Xc] ** 2
+#         np.fmax(d2[Xc], 0.0, out=d2[Xc])
+
+#     X = items[~Xc].tolist()
+#     likelihood = np.prod(d2[X])  # np.prod(np.square(R[X, range(0, size)]))
+#     return X, likelihood
+
+
+# def projection_sampler_eigen_mgs_perm(
+#     U, size=None, random_state=None, overwrite=False
+# ):
+
+#     rng = check_random_state(random_state)
+
+#     N, rank = U.shape
+#     if rank == 0:
+#         return []
+
+#     if size is None:  # full projection DPP else k-DPP with k = size
+#         size = rank
+#     assert size <= rank
+
+#     Q = U if overwrite else U.copy()
+#     is_complex = np.iscomplexobj(Q)
+
+#     R = np.zeros((size, N), dtype=Q.dtype)
+#     d2 = np.linalg.norm(Q, axis=1) ** 2
+
+#     items = np.arange(N)
+
+#     for i in range(size):
+#         J = range(i, N)
+#         j = rng.choice(J, p=d2[J] / (rank - i))
+
+#         # swap
+#         i_j = [i, j]
+#         j_i = [j, i]
+
+#         Q[i_j] = Q[j_i]
+#         I1 = slice(0, i)
+#         R[I1, i_j] = R[I1, j_i]
+
+#         items[i], items[j] = items[j], items[i]
+#         d2[i], d2[j] = d2[j], d2[i]
+
+#         R[i, i] = np.sqrt(d2[i])
+
+#         if i == size - 1:
+#             break
+
+#         I2 = slice(i + 1, N)
+#         Q[i, :] /= R[i, i]
+#         R[i, I2] = Q[I2, :].dot(Q[i, :].conj())
+#         Q[I2, :] -= np.outer(R[i, I2], Q[i, :])
+
+#         if is_complex:
+#             d2[I2] -= np.abs(R[i, I2]) ** 2
+#         else:
+#             d2[I2] -= R[i, I2] ** 2
+#         np.fmax(d2[I2], 0.0, out=d2[I2])
+
+#     S = range(0, size)
+#     sample = items[S].tolist()
+#     likelihood = np.prod(d2[S])  # np.prod(np.square(R[S, S]))
+
+#     return sample, likelihood
