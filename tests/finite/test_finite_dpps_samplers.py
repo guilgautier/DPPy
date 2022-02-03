@@ -221,13 +221,20 @@ class TestAdequationOfFiniteDppSamplers(unittest.TestCase):
 
         kernel_type = "correlation"
         # projection, param
+        U = self.e_vecs
         dpp_params = [
             {
                 "projection": True,
-                "K": (self.e_vecs * self.e_vals_eq_01).dot(self.e_vecs.T),
+                "K": (U * self.e_vals_eq_01).dot(U.T),
             },
-            {"projection": True, "K_eig_dec": (self.e_vals_eq_01, self.e_vecs)},
-            {"projection": True, "A_zono": self.A_zono},
+            {
+                "projection": True,
+                "K_eig_dec": (self.e_vals_eq_01, U),
+            },
+            {
+                "projection": True,
+                "A_zono": self.A_zono,
+            },
         ]
 
         k = self.rank
@@ -254,13 +261,17 @@ class TestAdequationOfFiniteDppSamplers(unittest.TestCase):
     def test_dpp_adequation_with_non_projection_correlation_kernel(self):
 
         kernel_type = "correlation"
+        U = self.e_vecs
         # projection, param
         dpp_params = [
             {
                 "projection": False,
-                "K": (self.e_vecs * self.e_vals_in_01).dot(self.e_vecs.T),
+                "K": (U * self.e_vals_in_01).dot(U.T),
             },
-            {"projection": False, "K_eig_dec": (self.e_vals_in_01, self.e_vecs)},
+            {
+                "projection": False,
+                "K_eig_dec": (self.e_vals_in_01, U),
+            },
         ]
 
         k = self.rank // 2
@@ -289,12 +300,17 @@ class TestAdequationOfFiniteDppSamplers(unittest.TestCase):
 
         kernel_type = "likelihood"
         # projection, param
+        U = self.eig_vecs
+
         dpp_params = [
             {
                 "projection": True,
-                "L": (self.e_vecs * self.e_vals_eq_01).dot(self.e_vecs.T),
+                "L": (U * self.e_vals_eq_01).dot(U.T),
             },
-            {"projection": True, "L_eig_dec": (self.e_vals_eq_01, self.e_vecs)},
+            {
+                "projection": True,
+                "L_eig_dec": (self.e_vals_eq_01, U),
+            },
         ]
 
         sampler_method_params = {
@@ -322,18 +338,26 @@ class TestAdequationOfFiniteDppSamplers(unittest.TestCase):
     def test_dpp_adequation_with_non_projection_likelihood_kernel(self):
 
         kernel_type = "likelihood"
+
+        U = self.eig_vecs
         # projection, param
         dpp_params = [
             {
                 "projection": False,
-                "L": (self.e_vecs * self.e_vals_eq_01).dot(self.e_vecs.T),
+                "L": (U * self.e_vals_eq_01).dot(U.T),
             },
-            {"projection": False, "L_eig_dec": (self.e_vals_eq_01, self.e_vecs)},
             {
                 "projection": False,
-                "L": (self.e_vecs * self.e_vals_geq_0).dot(self.e_vecs.T),
+                "L_eig_dec": (self.e_vals_eq_01, U),
             },
-            {"projection": False, "L_eig_dec": (self.e_vals_geq_0, self.e_vecs)},
+            {
+                "projection": False,
+                "L": (U * self.e_vals_geq_0).dot(U.T),
+            },
+            {
+                "projection": False,
+                "L_eig_dec": (self.e_vals_geq_0, U),
+            },
             {"projection": False, "L_gram_factor": self.phi},
         ]  # L_gram_factor to test L_dual
 
