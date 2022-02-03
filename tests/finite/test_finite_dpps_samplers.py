@@ -17,16 +17,15 @@ from dppy.utils import det_ST, example_eval_L_linear, example_eval_L_min_kern
 
 
 class Configuration(object):
-    def __init__(self, sampler_type, method, method_params, idx, proj, dpp_params):
+    def __init__(self, sampler_type, method, method_params, idx, dpp_params):
         self.sampler_type = sampler_type
         self.method = method
         self.method_params = method_params
         self.idx = idx
-        self.proj = proj
         self.dpp_params = dpp_params
 
     def create_dpp(self, kernel_type):
-        return FiniteDPP(kernel_type, projection=self.proj, **self.dpp_params)
+        return FiniteDPP(kernel_type, **self.dpp_params)
 
     def get_samples(self, dpp, nb_exact_samples):
 
@@ -188,16 +187,14 @@ class TestAdequationOfFiniteDppSamplers(unittest.TestCase):
 
     def iter_configurations(self, list_dpp_params, sampler_method_params):
 
-        for sampler_type, methods_params in sampler_method_params.items():
-            for method, params in methods_params:
-                for idx, (proj, dpp_params) in enumerate(list_dpp_params):
-                    yield Configuration(
-                        sampler_type, method, params, idx, proj, dpp_params
-                    )
+        for sampler_type, method_params in sampler_method_params.items():
+            for method, params in method_params:
+                for idx, dpp_params in enumerate(list_dpp_params):
+                    yield Configuration(sampler_type, method, params, idx, dpp_params)
 
-    def run_adequation_tests(self, kernel_type, list_dpp_params, sampler_method_params):
+    def run_adequation_tests(self, kernel_type, dpp_params, sampler_method_params):
 
-        for config in self.iter_configurations(list_dpp_params, sampler_method_params):
+        for config in self.iter_configurations(dpp_params, sampler_method_params):
             # Initialize DPP and generate samples a single time
             # before performing checks for performance reasons (sampling is the bottleneck)
             dpp = config.create_dpp(kernel_type)
@@ -214,20 +211,23 @@ class TestAdequationOfFiniteDppSamplers(unittest.TestCase):
 
         kernel_type = "correlation"
         # projection, param
-        list_dpp_params = [(True, {"A_zono": self.A_zono})]
+        dpp_params = [{"projection": True, "A_zono": self.A_zono}]
 
         sampler_method_params = {"mcmc_dpp": (("zonotope", {}),)}
 
-        self.run_adequation_tests(kernel_type, list_dpp_params, sampler_method_params)
+        self.run_adequation_tests(kernel_type, dpp_params, sampler_method_params)
 
     def test_dpp_adequation_with_projection_correlation_kernel(self):
 
         kernel_type = "correlation"
         # projection, param
-        list_dpp_params = [
-            (True, {"K": (self.e_vecs * self.e_vals_eq_01).dot(self.e_vecs.T)}),
-            (True, {"K_eig_dec": (self.e_vals_eq_01, self.e_vecs)}),
-            (True, {"A_zono": self.A_zono}),
+        dpp_params = [
+            {
+                "projection": True,
+                "K": (self.e_vecs * self.e_vals_eq_01).dot(self.e_vecs.T),
+            },
+            {"projection": True, "K_eig_dec": (self.e_vals_eq_01, self.e_vecs)},
+            {"projection": True, "A_zono": self.A_zono},
         ]
 
         k = self.rank
@@ -249,15 +249,18 @@ class TestAdequationOfFiniteDppSamplers(unittest.TestCase):
             "mcmc_k_dpp": (("E", {"size": k, "nb_iter": self.nb_iter_mcmc}),),
         }
 
-        self.run_adequation_tests(kernel_type, list_dpp_params, sampler_method_params)
+        self.run_adequation_tests(kernel_type, dpp_params, sampler_method_params)
 
     def test_dpp_adequation_with_non_projection_correlation_kernel(self):
 
         kernel_type = "correlation"
         # projection, param
-        list_dpp_params = [
-            (False, {"K": (self.e_vecs * self.e_vals_in_01).dot(self.e_vecs.T)}),
-            (False, {"K_eig_dec": (self.e_vals_in_01, self.e_vecs)}),
+        dpp_params = [
+            {
+                "projection": False,
+                "K": (self.e_vecs * self.e_vals_in_01).dot(self.e_vecs.T),
+            },
+            {"projection": False, "K_eig_dec": (self.e_vals_in_01, self.e_vecs)},
         ]
 
         k = self.rank // 2
@@ -280,15 +283,18 @@ class TestAdequationOfFiniteDppSamplers(unittest.TestCase):
             "mcmc_k_dpp": (("E", {"size": k, "nb_iter": self.nb_iter_mcmc}),),
         }
 
-        self.run_adequation_tests(kernel_type, list_dpp_params, sampler_method_params)
+        self.run_adequation_tests(kernel_type, dpp_params, sampler_method_params)
 
     def test_dpp_adequation_with_projection_likelihood_kernel(self):
 
         kernel_type = "likelihood"
         # projection, param
-        list_dpp_params = [
-            (True, {"L": (self.e_vecs * self.e_vals_eq_01).dot(self.e_vecs.T)}),
-            (True, {"L_eig_dec": (self.e_vals_eq_01, self.e_vecs)}),
+        dpp_params = [
+            {
+                "projection": True,
+                "L": (self.e_vecs * self.e_vals_eq_01).dot(self.e_vecs.T),
+            },
+            {"projection": True, "L_eig_dec": (self.e_vals_eq_01, self.e_vecs)},
         ]
 
         sampler_method_params = {
@@ -311,18 +317,24 @@ class TestAdequationOfFiniteDppSamplers(unittest.TestCase):
             "mcmc_k_dpp": (("E", {"size": self.rank, "nb_iter": self.nb_iter_mcmc}),),
         }
 
-        self.run_adequation_tests(kernel_type, list_dpp_params, sampler_method_params)
+        self.run_adequation_tests(kernel_type, dpp_params, sampler_method_params)
 
     def test_dpp_adequation_with_non_projection_likelihood_kernel(self):
 
         kernel_type = "likelihood"
         # projection, param
-        list_dpp_params = [
-            (False, {"L": (self.e_vecs * self.e_vals_eq_01).dot(self.e_vecs.T)}),
-            (False, {"L_eig_dec": (self.e_vals_eq_01, self.e_vecs)}),
-            (False, {"L": (self.e_vecs * self.e_vals_geq_0).dot(self.e_vecs.T)}),
-            (False, {"L_eig_dec": (self.e_vals_geq_0, self.e_vecs)}),
-            (False, {"L_gram_factor": self.phi}),
+        dpp_params = [
+            {
+                "projection": False,
+                "L": (self.e_vecs * self.e_vals_eq_01).dot(self.e_vecs.T),
+            },
+            {"projection": False, "L_eig_dec": (self.e_vals_eq_01, self.e_vecs)},
+            {
+                "projection": False,
+                "L": (self.e_vecs * self.e_vals_geq_0).dot(self.e_vecs.T),
+            },
+            {"projection": False, "L_eig_dec": (self.e_vals_geq_0, self.e_vecs)},
+            {"projection": False, "L_gram_factor": self.phi},
         ]  # L_gram_factor to test L_dual
 
         k = self.rank // 2
@@ -344,7 +356,7 @@ class TestAdequationOfFiniteDppSamplers(unittest.TestCase):
             "mcmc_k_dpp": (("E", {"size": k, "nb_iter": self.nb_iter_mcmc}),),
         }
 
-        self.run_adequation_tests(kernel_type, list_dpp_params, sampler_method_params)
+        self.run_adequation_tests(kernel_type, dpp_params, sampler_method_params)
 
     def test_adequation_intermediate_sampler_linear_kernel(self):
 
@@ -352,8 +364,11 @@ class TestAdequationOfFiniteDppSamplers(unittest.TestCase):
 
         X_data_randn = rndm.rand(100, 6)
 
-        list_dpp_params = [
-            [False, {"L_eval_X_data": (example_eval_L_linear, X_data_randn)}]
+        dpp_params = [
+            {
+                "projection": False,
+                "L_eval_X_data": (example_eval_L_linear, X_data_randn),
+            },
         ]
 
         L_lin = example_eval_L_linear(X_data_randn)
@@ -404,7 +419,7 @@ class TestAdequationOfFiniteDppSamplers(unittest.TestCase):
             ),
         }
 
-        self.run_adequation_tests(kernel_type, list_dpp_params, sampler_method_params)
+        self.run_adequation_tests(kernel_type, dpp_params, sampler_method_params)
 
     def test_adequation_intermediate_sampler_min_kernel(self):
 
@@ -412,8 +427,11 @@ class TestAdequationOfFiniteDppSamplers(unittest.TestCase):
 
         X_data_in_01 = rndm.rand(100, 1)
 
-        list_dpp_params = [
-            [False, {"L_eval_X_data": (example_eval_L_min_kern, X_data_in_01)}]
+        dpp_params = [
+            {
+                "projection": False,
+                "L_eval_X_data": (example_eval_L_min_kern, X_data_in_01),
+            },
         ]
 
         L_min = example_eval_L_min_kern(X_data_in_01)
@@ -464,7 +482,7 @@ class TestAdequationOfFiniteDppSamplers(unittest.TestCase):
             ),
         }
 
-        self.run_adequation_tests(kernel_type, list_dpp_params, sampler_method_params)
+        self.run_adequation_tests(kernel_type, dpp_params, sampler_method_params)
 
 
 def main():
