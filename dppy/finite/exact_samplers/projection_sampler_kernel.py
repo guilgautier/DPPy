@@ -4,7 +4,7 @@ from dppy.utils import check_random_state, log_binom
 
 
 def projection_sampler_kernel(dpp, size=None, random_state=None, **kwargs):
-    r"""Generate an exact sample from ``dpp`` using the :ref:`projection method <finite_dpps_exact_sampling_projection_methods>` must be a projection, i.e., the attribute ``dpp.projection`` must be True.
+    r"""Generate an exact sample from ``dpp`` using the :ref:`projection method <finite_dpps_exact_sampling_projection_methods>`. The attribute ``dpp.projection`` must be True.
 
     If the attribute ``dpp.kernel_type`` is ``"likelihood"``, sample from :math:`\operatorname{k-DPP}(\mathbf{L})` where ``size`` :math:`=k` must be provided. Denote :math:`r=\operatorname{rank}(\mathbf{L})`.
 
@@ -20,19 +20,29 @@ def projection_sampler_kernel(dpp, size=None, random_state=None, **kwargs):
         \mathbb{P}\!\left[ \mathcal{X} = X \right]
         = \det \mathbf{K}_X ~ 1_{|X|=r}.
 
+    :param dpp:
+        Finite DPP
+    :type dpp:
+        :py:class:`~dppy.finite.dpp.FiniteDPP`
+
     :param size:
         If None, it is set to :math:`r`, otherwise it defines the size :math:`k\leq r` of the output :math:`\operatorname{k-DPP}` sample, defaults to None.
     :type size:
         int, optional
+
+    :param random_state:
+        random number generator or seed, defaults to None
+    :type random_state:
+        optional
 
     :return:
         Exact sample :math:`X` and its log-likelihood.
     :rtype:
         tuple(list, float)
 
-    Keyword arguments:
+    :Keyword arguments:
 
-        - **mode** (str): select the variant of the sampler, see :py:func:`~dppy.finite.exact_samplers.projection_sampler_eigen.select_projection_sampler_kernel`
+        - **mode** (str): select the variant of the sampler, see :py:func:`~dppy.finite.exact_samplers.projection_sampler_kernel.select_projection_sampler_kernel`
     """
     assert dpp.projection
 
@@ -53,7 +63,9 @@ def projection_sampler_kernel(dpp, size=None, random_state=None, **kwargs):
             rank_K = np.rint(np.trace(dpp.K)).astype(int)
             if size != rank_K:
                 raise ValueError(
-                    f"'size' argument != {rank_K} = rank(K) for sampling projection DPP(K)"
+                    "'size' argument {} != {} = rank(K) for sampling projection DPP(K)".format(
+                        size, rank
+                    )
                 )
         return sampler(dpp.K, size=size, random_state=random_state, **kwargs)
 
@@ -61,13 +73,15 @@ def projection_sampler_kernel(dpp, size=None, random_state=None, **kwargs):
 def select_projection_sampler_kernel(mode, hermitian):
     r"""Select the variant of the :ref:`projection method <finite_dpps_exact_sampling_projection_methods>`.
 
-    :param mode:
-        Select the variant among
+    :param mode: variant name, defaults to ``"cho"`` if ``hermitian`` is True, otherwise "lu".
+    :type mode: str
+
+    :return: sampler selected by ``mode``
 
         - ``"lu"`` (default) :py:func:`~dppy.finite.exact_samplers.projection_sampler_kernel.projection_sampler_kernel_lu`
         - ``"cho"`` (default) :py:func:`~dppy.finite.exact_samplers.projection_sampler_kernel.projection_sampler_kernel_cho`
 
-    :type mode: str
+    :rtype: callable
     """
     samplers = {
         "lu": projection_sampler_kernel_lu,
@@ -156,6 +170,11 @@ def projection_sampler_kernel_cho(
         If True, ``K`` is overwritten otherwise a copy of ``K`` is made, defaults to True.
     :type overwrite:
         bool, optional
+
+    :param random_state:
+        random number generator or seed, defaults to None
+    :type random_state:
+        optional
 
     :return:
         Exact sample :math:`X` and its log-likelihood.

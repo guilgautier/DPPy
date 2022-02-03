@@ -3,10 +3,50 @@ import numpy as np
 from dppy.utils import check_random_state, log_binom
 
 
-def projection_sampler_eigen(dpp, random_state=None, **kwargs):
+def projection_sampler_eigen(dpp, size=None, random_state=None, **kwargs):
+    r"""Generate an exact sample from ``dpp`` using the :ref:`projection method <finite_dpps_exact_sampling_projection_methods>`.
+    The attribute ``dpp.projection`` must be True and the underlying kernel must be a orthogonal projection matrix with eigenvectors :math:`U=` ``dpp.eig_vecs``.
+
+    If the attribute ``dpp.kernel_type`` is ``"likelihood"``, sample from :math:`\operatorname{k-DPP}(\mathbf{L}=UU^{*})` where ``size`` :math:`=k` must be provided. Denote :math:`r=\operatorname{rank}(\mathbf{L})`, the number of columns of :math:`U`.
+
+    .. math::
+
+        \mathbb{P}\!\left[ \mathcal{X} = X \right]
+        = \frac{1}{\binom{r}{k}} \det \mathbf{L}_X ~ 1_{|X|=k}.
+
+    If the attribute ``dpp.kernel_type`` is ``"correlation"``, sample from the projection :math:`\operatorname{DPP}(\mathbf{K}=UU^{*})` where ``size`` must be equal to :math:`r=\operatorname{rank}(\mathbf{K})`, the number of columns of :math:`U`.
+
+    .. math::
+
+        \mathbb{P}\!\left[ \mathcal{X} = X \right]
+        = \det \mathbf{K}_X ~ 1_{|X|=r}.
+
+    :param dpp:
+        Finite DPP
+    :type dpp:
+        :py:class:`~dppy.finite.dpp.FiniteDPP`
+
+    :param size:
+        If None, it is set to :math:`r`, otherwise it defines the size :math:`k\leq r` of the output :math:`\operatorname{k-DPP}` sample, defaults to None.
+    :type size:
+        int, optional
+
+    :param random_state:
+        random number generator or seed, defaults to None
+    :type random_state:
+        optional
+
+    :return:
+        Exact sample :math:`X` and its log-likelihood.
+    :rtype:
+        tuple(list, float)
+
+    :Keyword arguments:
+
+        - **mode** (str): select the variant of the sampler, see :py:func:`~dppy.finite.exact_samplers.projection_sampler_eigen.select_projection_sampler_eigen`
+    """
     assert dpp.projection and dpp.hermitian and dpp.eig_vecs is not None
 
-    size = kwargs.get("size", None)
     if dpp.kernel_type == "likelihood" and not size:
         raise ValueError(
             "'size' argument (k) required for sampling k-DPP(L) with projection likelihood kernel L."
@@ -15,7 +55,7 @@ def projection_sampler_eigen(dpp, random_state=None, **kwargs):
         rank_K = dpp.eig_vecs.shape[1]
         if size != rank_K:
             raise ValueError(
-                f"size={size} argument must be equal to rank(K)={rank} for projection DPP(K)"
+                f"size={size} argument must be equal to rank(K)={rank_K} for projection DPP(K)"
             )
     mode = kwargs.get("mode", "")
     sampler = select_projection_sampler_eigen(mode)
@@ -62,6 +102,11 @@ def projection_sampler_eigen_gs(eig_vecs, size=None, random_state=None, **kwargs
         If None, it is set to :math:`r`, otherwise it defines the size :math:`k\leq r` of the output :math:`\operatorname{k-DPP}` sample, defaults to None.
     :type size:
         int, optional
+
+    :param random_state:
+        random number generator or seed, defaults to None
+    :type random_state:
+        optional
 
     :return:
         Exact sample :math:`X` and its log-likelihood.

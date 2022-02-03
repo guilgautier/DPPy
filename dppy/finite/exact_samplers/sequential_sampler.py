@@ -3,7 +3,7 @@ import numpy as np
 from dppy.utils import check_random_state
 
 
-def sequential_sampler(dpp, random_state=None, **params):
+def sequential_sampler(dpp, random_state=None, **kwargs):
     r"""Generate an exact sample from ``dpp`` using the :ref:`sequential method <finite_dpps_exact_sampling_sequential_methods>`.
 
     The correlation kernel :math:`\mathbf{K}` is computed from the current parametrization of ``dpp``, see :py:meth:`~dppy.finite.dpp.FiniteDPP.compute_K`.
@@ -11,10 +11,12 @@ def sequential_sampler(dpp, random_state=None, **params):
     :param dpp: Finite DPP
     :type dpp: :py:class:`~dppy.finite.dpp.FiniteDPP`
 
-    :param random_state: random number generator or seed, defaults to None
-    :type random_state: optional
+    :param random_state:
+        random number generator or seed, defaults to None
+    :type random_state:
+        optional
 
-    Keyword arguments:
+    :Keyword arguments:
 
         - **mode** (str): select the variant of the sampler, see :py:func:`~dppy.finite.exact_samplers.sequential_sampler.select_sequential_sampler`
 
@@ -22,9 +24,9 @@ def sequential_sampler(dpp, random_state=None, **params):
     :rtype: list
     """
     dpp.compute_K()
-    mode = params.get("mode", "")
+    mode = kwargs.get("mode", "")
     sampler = select_sequential_sampler(mode, dpp.hermitian)
-    return sampler(dpp.K, random_state=random_state, **params)
+    return sampler(dpp.K, random_state=random_state, **kwargs)
 
 
 def select_sequential_sampler(mode, hermitian):
@@ -48,7 +50,7 @@ def select_sequential_sampler(mode, hermitian):
     return samplers.get(mode.lower(), default)
 
 
-def sequential_sampler_lu(K, random_state=None, **params):
+def sequential_sampler_lu(K, random_state=None, **kwargs):
     r"""Generate an exact sample from generic :math:`\operatorname{DPP}(\mathbf{K})` with potentially non hermitian correlation kernel :math:`\mathbf{K}`.
 
     This function implements :cite:`Pou19` Algorithm 1 based on a LU-type factorization procedure.
@@ -58,20 +60,15 @@ def sequential_sampler_lu(K, random_state=None, **params):
     :type K:
         array_like
 
+    :param random_state:
+        random number generator or seed, defaults to None
+    :type random_state:
+        optional
+
     :return:
         An exact sample :math:`X \sim \operatorname{DPP}(\mathbf{K})`.
     :rtype:
         list
-
-    .. note::
-
-        The likelihood of the output sample :math:`X` is given by
-
-        .. math::
-
-            \mathbb{P}\!\left[ \mathcal{ X } = X \right]
-            = \det \left[ \mathbf{K} − I^{X^{c}} \right]
-
     """
     rng = check_random_state(random_state)
     A = K.copy()
@@ -90,15 +87,20 @@ def sequential_sampler_lu(K, random_state=None, **params):
     return sample  # , A , log_likelihood
 
 
-def sequential_sampler_ldl(K, random_state=None, **params):
+def sequential_sampler_ldl(K, random_state=None, **kwargs):
     r"""Generate an exact sample from a hermitian :math:`\operatorname{DPP}(\mathbf{K})`.
 
-    This function implements the hermitian version of :cite:`Pou19` Algorithm 1. It is based on a LDL^h-type factorization procedure.
+    This function implements the hermitian version of :cite:`Pou19` Algorithm 1. It is based on a :math:`LDL^h`-type factorization procedure.
 
     :param K:
-        Hermitian correlation kernel :math:`\mathbf{K}`.
+        Hermitian correlation kernel :math:`\mathbf{K}=\mathbf{K}^*`.
     :type K:
         array_like
+
+    :param random_state:
+        random number generator or seed, defaults to None
+    :type random_state:
+        optional
 
     :return:
         An exact sample :math:`X \sim \operatorname{DPP}(\mathbf{K})`.

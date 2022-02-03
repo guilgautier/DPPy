@@ -60,7 +60,7 @@ _IntermediateSampleInfoAlphaRescale = namedtuple(
 )
 
 
-def intermediate_sampler_alpha_dpp(dpp, random_state=None, **params):
+def intermediate_sampler_alpha_dpp(dpp, random_state=None, **kwargs):
     r"""Generate an exact sample from an hermitian ``dpp`` using the **alpha** variant of the :ref:`intermediate sampling method <finite_dpps_exact_sampling_intermediate_sampling_methods>`.
 
     See also :py:func:`~dppy.finite.exact_samplers.intermediate_sampler_alpha.intermediate_sampler_alpha_dpp_core`.
@@ -69,8 +69,11 @@ def intermediate_sampler_alpha_dpp(dpp, random_state=None, **params):
         Finite hermitian DPP
     :type dpp:
         :py:class:`~dppy.finite.dpp.FiniteDPP`
+
     :param random_state:
-        random number generator
+        random number generator or seed, defaults to None
+    :type random_state:
+        optional
 
     :return:
         sample
@@ -85,24 +88,24 @@ def intermediate_sampler_alpha_dpp(dpp, random_state=None, **params):
         )
 
     # r_state_outer = None
-    # if "random_state" in params:
-    #     r_state_outer = params.pop("random_state", None)
+    # if "random_state" in kwargs:
+    #     r_state_outer = kwargs.pop("random_state", None)
 
     sample, dpp.intermediate_sample_info = intermediate_sampler_alpha_dpp_core(
         dpp.intermediate_sample_info,
         dpp.X_data,
         dpp.eval_L,
         random_state=random_state,
-        **params,
+        **kwargs,
     )
 
     # if r_state_outer:
-    #     params["random_state"] = r_state_outer
+    #     kwargs["random_state"] = r_state_outer
 
     return sample
 
 
-def intermediate_sampler_alpha_k_dpp(dpp, size, random_state=None, **params):
+def intermediate_sampler_alpha_k_dpp(dpp, size, random_state=None, **kwargs):
     r"""Generate an exact sample from an hermitian :math:`k\!\operatorname{-DPP}` associated with ``dpp`` and :math:`k=` ``size``, using the **alpha** variant of the :ref:`intermediate sampling method <finite_dpps_exact_sampling_intermediate_sampling_methods>`.
 
     See also :py:func:`~dppy.finite.exact_samplers.intermediate_sampler_alpha.intermediate_sampler_alpha_k_dpp_core`
@@ -118,7 +121,9 @@ def intermediate_sampler_alpha_k_dpp(dpp, size, random_state=None, **params):
         int
 
     :param random_state:
-        random number generator
+        random number generator or seed, defaults to None
+    :type random_state:
+        optional
 
     :return:
         sample
@@ -133,8 +138,8 @@ def intermediate_sampler_alpha_k_dpp(dpp, size, random_state=None, **params):
         )
 
     # r_state_outer = None
-    # if "random_state" in params:
-    #     r_state_outer = params.pop("random_state", None)
+    # if "random_state" in kwargs:
+    #     r_state_outer = kwargs.pop("random_state", None)
 
     sample, dpp.intermediate_sample_info = intermediate_sampler_alpha_k_dpp_core(
         size,
@@ -142,11 +147,11 @@ def intermediate_sampler_alpha_k_dpp(dpp, size, random_state=None, **params):
         dpp.X_data,
         dpp.eval_L,
         random_state=random_state,
-        **params,
+        **kwargs,
     )
 
     # if r_state_outer:
-    #     params["random_state"] = r_state_outer
+    #     kwargs["random_state"] = r_state_outer
 
     return sample
 
@@ -438,7 +443,7 @@ def alpha_dpp_sampling_precompute_constants(
 
 
 def intermediate_sampler_alpha_dpp_core(
-    info, X_data, eval_L, random_state=None, **params
+    info, X_data, eval_L, random_state=None, **kwargs
 ):
     r"""First pre-compute quantities necessary for the alpha-dpp rejection sampling loop, such as the inner Nyström approximation, and the and the initial rescaling alpha_hat for the binary search. Then, given the pre-computed information,run a rejection sampling loop to generate samples from DPP(alpha * L).
 
@@ -455,12 +460,11 @@ def intermediate_sampler_alpha_dpp_core(
         Likelihood function. Given two sets of n points X and m points Y, ``eval_L(X, Y)`` should compute the :math:`n x m` matrix containing the likelihood between points. The function should also accept a single argument X and return ``eval_L(X) = eval_L(X, X)``. As an example, see the implementation of any of the kernels provided by scikit-learn (e.g. `PairwiseKernel <https://scikit-learn.org/stable/modules/generated/sklearn.gaussian_process.kernels.PairwiseKernel.html>`_).
 
     :param random_state:
-        random source used for sampling, if None a RandomState is automatically generated
-
+        random number generator or seed, defaults to None
     :type random_state:
-        RandomState or None, default None
+        optional
 
-    :param dict params:
+    :param dict kwargs:
         Dictionary including optional parameters:
 
         - ``'desired_expected_size'`` (float or None, default None)
@@ -469,7 +473,7 @@ def intermediate_sampler_alpha_dpp_core(
             If None, use the natural DPP expected sample size.
             The alpha-dpp sampling algorithm can approximately adjust the expected sample size of the DPP by rescaling the :math:`\mathbf{L}` matrix with a scalar :math:`\alpha^*\leq 1` .
             Adjusting the expected sample size can be useful to control downstream complexity, and it is necessary to improve the probability of drawing a sample with exactly :math:`k` elements when using alpha-dpp for k-DPP sampling.
-            Currently only reducing the sample size is supported, and the sampler will return an exception if the DPP sample has already a natural expected size smaller than ``params['desired_expected_size'``.]
+            Currently only reducing the sample size is supported, and the sampler will return an exception if the DPP sample has already a natural expected size smaller than ``kwargs['desired_expected_size'``.]
 
         - ``'rls_oversample_alphadpp'`` (float, default 4.0)
 
@@ -525,21 +529,21 @@ def intermediate_sampler_alpha_dpp_core(
 
     if info is None:
         info = alpha_dpp_sampling_precompute_constants(
-            X_data=X_data, eval_L=eval_L, rng=rng, **params
+            X_data=X_data, eval_L=eval_L, rng=rng, **kwargs
         )
 
-        r_func = params.get("r_func", lambda r: r)
+        r_func = kwargs.get("r_func", lambda r: r)
         info = info._replace(r=r_func(info.deff_alpha_L_hat))
 
     sample, rej_count, info = alpha_dpp_sampling_do_sampling_loop(
-        X_data, eval_L, info, rng, **params
+        X_data, eval_L, info, rng, **kwargs
     )
 
     return sample, info
 
 
 def intermediate_sampler_alpha_k_dpp_core(
-    size, info, X_data, eval_L, random_state=None, **params
+    size, info, X_data, eval_L, random_state=None, **kwargs
 ):
     r"""First pre-compute quantities necessary for the alpha-dpp rejection sampling loop, such as the inner Nyström
     approximation, the and the initial rescaling alpha_hat for the binary search.
@@ -567,12 +571,11 @@ def intermediate_sampler_alpha_k_dpp_core(
         As an example, see the implementation of any of the kernels provided by scikit-learn (e.g. `PairwiseKernel <https://scikit-learn.org/stable/modules/generated/sklearn.gaussian_process.kernels.PairwiseKernel.html>`_).
 
     :param random_state:
-        random source used for sampling, if None a RandomState is automatically generated
-
+        random number generator or seed, defaults to None
     :type random_state:
-        RandomState or None, default None
+        optional
 
-    :param dict params:
+    :param dict kwargs:
         Dictionary including optional parameters:
 
         - ``'rls_oversample_alphadpp'`` (float, default 4.0)
@@ -615,14 +618,14 @@ def intermediate_sampler_alpha_k_dpp_core(
 
     if info is None or info.k != size:
         info = alpha_dpp_sampling_precompute_constants(
-            X_data=X_data, eval_L=eval_L, desired_expected_size=size, rng=rng, **params
+            X_data=X_data, eval_L=eval_L, desired_expected_size=size, rng=rng, **kwargs
         )
 
-        r_func = params.get("r_func", lambda r: r)
+        r_func = kwargs.get("r_func", lambda r: r)
 
         info = info._replace(r=r_func(info.deff_alpha_L_hat))
 
-    max_iter_size_rejection = params.get("max_iter_size_rejection", 100)
+    max_iter_size_rejection = kwargs.get("max_iter_size_rejection", 100)
     number_trial_search = np.ceil(np.sqrt(size)).astype("int")
     stopping_ratio = 1 + 1 / (size + 3) ** 2
 
@@ -634,18 +637,18 @@ def intermediate_sampler_alpha_k_dpp_core(
     ratio_alpha = info.alpha_max / info.alpha_min
     found_good_alpha = ratio_alpha <= stopping_ratio
 
-    prog_bar = get_progress_bar(disable=not params.get("verbose", False))
+    prog_bar = get_progress_bar(disable=not kwargs.get("verbose", False))
     verbose_outer = None
-    if "verbose" in params:
-        verbose_outer = params.pop("verbose")
-    params["verbose"] = False
+    if "verbose" in kwargs:
+        verbose_outer = kwargs.pop("verbose")
+    kwargs["verbose"] = False
 
-    early_stop = params.get("early_stop", False)
+    early_stop = kwargs.get("early_stop", False)
 
     trial_count_overall = 0
     for _ in range(max_iter_size_rejection):
         sample, rej_count, info = alpha_dpp_sampling_do_sampling_loop(
-            X_data, eval_L, info, rng, **params
+            X_data, eval_L, info, rng, **kwargs
         )
 
         trial_count += 1
@@ -715,9 +718,9 @@ def intermediate_sampler_alpha_k_dpp_core(
         info = info._replace(alpha_switches=info.alpha_switches + 1)
 
     if verbose_outer:
-        params["verbose"] = verbose_outer
+        kwargs["verbose"] = verbose_outer
     else:
-        params.pop("verbose")
+        kwargs.pop("verbose")
 
     return sample_out, info
 

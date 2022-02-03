@@ -44,7 +44,7 @@ _IntermediateSampleInfo = namedtuple(
 )
 
 
-def intermediate_sampler_vfx_dpp(dpp, random_state=None, **params):
+def intermediate_sampler_vfx_dpp(dpp, random_state=None, **kwargs):
     r"""Generate an exact sample from an hermitian ``dpp`` using the **vfx** variant of the :ref:`intermediate sampling method <finite_dpps_exact_sampling_intermediate_sampling_methods>`.
 
     See also :py:func:`~dppy.finite.exact_samplers.intermediate_sampler_vfx.intermediate_sampler_vfx_dpp_core`.
@@ -55,7 +55,9 @@ def intermediate_sampler_vfx_dpp(dpp, random_state=None, **params):
         :py:class:`~dppy.finite.dpp.FiniteDPP`
 
     :param random_state:
-        random number generator
+        random number generator or seed, defaults to None
+    :type random_state:
+        optional
 
     :return:
         sample
@@ -70,23 +72,23 @@ def intermediate_sampler_vfx_dpp(dpp, random_state=None, **params):
         )
 
     # r_state_outer = None
-    # if "random_state" in params:
-    #     r_state_outer = params.pop("random_state", None)
+    # if "random_state" in kwargs:
+    #     r_state_outer = kwargs.pop("random_state", None)
 
     sample, dpp.intermediate_sample_info = intermediate_sampler_vfx_dpp_core(
         dpp.intermediate_sample_info,
         dpp.X_data,
         dpp.eval_L,
         random_state=random_state,
-        **params
+        **kwargs
     )
     # if r_state_outer:
-    #     params["random_state"] = r_state_outer
+    #     kwargs["random_state"] = r_state_outer
 
     return sample
 
 
-def intermediate_sampler_vfx_k_dpp(dpp, size, random_state=None, **params):
+def intermediate_sampler_vfx_k_dpp(dpp, size, random_state=None, **kwargs):
     r"""Generate an exact sample from an hermitian :math:`k\!\operatorname{-DPP}` associated with ``dpp`` and :math:`k=` ``size``, using the **vfx** variant of the :ref:`intermediate sampling method <finite_dpps_exact_sampling_intermediate_sampling_methods>`.
 
     See also :py:func:`~dppy.finite.exact_samplers.intermediate_sampler_vfx.intermediate_sampler_vfx_k_dpp_core`
@@ -102,7 +104,9 @@ def intermediate_sampler_vfx_k_dpp(dpp, size, random_state=None, **params):
         int
 
     :param random_state:
-        random number generator
+        random number generator or seed, defaults to None
+    :type random_state:
+        optional
 
     :return:
         sample
@@ -117,8 +121,8 @@ def intermediate_sampler_vfx_k_dpp(dpp, size, random_state=None, **params):
         )
 
     # r_state_outer = None
-    # if "random_state" in params:
-    #     r_state_outer = params.pop("random_state", None)
+    # if "random_state" in kwargs:
+    #     r_state_outer = kwargs.pop("random_state", None)
 
     sample, dpp.intermediate_sample_info = intermediate_sampler_vfx_k_dpp_core(
         size,
@@ -126,11 +130,11 @@ def intermediate_sampler_vfx_k_dpp(dpp, size, random_state=None, **params):
         dpp.X_data,
         dpp.eval_L,
         random_state=random_state,
-        **params
+        **kwargs
     )
 
     # if r_state_outer:
-    #     params["random_state"] = r_state_outer
+    #     kwargs["random_state"] = r_state_outer
 
     return sample
 
@@ -410,7 +414,7 @@ def vfx_sampling_precompute_constants(
 
 
 def intermediate_sampler_vfx_dpp_core(
-    info, X_data, eval_L, random_state=None, **params
+    info, X_data, eval_L, random_state=None, **kwargs
 ):
     r"""First pre-compute quantities necessary for the vfx rejection sampling loop, such as the inner Nyström approximation, and the RLS of all elements in :math:`\mathbf{L}`.
     Then, given the pre-computed information,run a rejection sampling loop to generate DPP samples.
@@ -418,7 +422,7 @@ def intermediate_sampler_vfx_dpp_core(
     :param info:
         If available, the pre-computed information necessary for the vfx rejection sampling loop. If ``None``, this function will compute and return an ``_IntermediateSampleInfo`` with fields
 
-            - ``.alpha_star``: appropriate rescaling such that the expected sample size of :math:`\operatorname{DPP}(\alpha^* \mathbf{L})` is equal to a user-indicated constant ``params['desired_expected_size']``, or 1.0 if no such constant was specified by the user.
+            - ``.alpha_star``: appropriate rescaling such that the expected sample size of :math:`\operatorname{DPP}(\alpha^* \mathbf{L})` is equal to a user-indicated constant ``kwargs['desired_expected_size']``, or 1.0 if no such constant was specified by the user.
 
             - ``.logdet_I_A``: :math:`\log \det` of the Nyström approximation of :math:`\mathbf{L} + I`
 
@@ -438,15 +442,14 @@ def intermediate_sampler_vfx_dpp_core(
         Likelihood function. Given two sets of n points X and m points Y, ``eval_L(X, Y)`` should compute the :math:`n \times m` matrix containing the likelihood between points. The function should also accept a single argument X and return ``eval_L(X) = eval_L(X, X)``. As an example, see the implementation of any of the kernels provided by scikit-learn (e.g. `PairwiseKernel <https://scikit-learn.org/stable/modules/generated/sklearn.gaussian_process.kernels.PairwiseKernel.html>`_).
 
     :param random_state:
-        random source used for sampling, if None a RandomState is automatically generated
-
+        random number generator or seed, defaults to None
     :type random_state:
-        RandomState or None, default None
+        optional
 
-    :param dict params:
+    :param dict kwargs:
         Dictionary including optional parameters:
 
-        - ``'desired_expected_size'`` (float or None, default None) Desired expected sample size for the DPP. If None, use the natural DPP expected sample size. The vfx sampling algorithm can approximately adjust the expected sample size of the DPP by rescaling the :math:`\mathbf{L}` matrix with a scalar :math:`\alpha^*\leq 1` . Adjusting the expected sample size can be useful to control downstream complexity, and it is necessary to improve the probability of drawing a sample with exactly :math:`k` elements when using vfx for k-DPP sampling. Currently only reducing the sample size is supported, and the sampler will return an exception if the DPP sample has already a natural expected size smaller than ``params['desired_expected_size'``.]
+        - ``'desired_expected_size'`` (float or None, default None) Desired expected sample size for the DPP. If None, use the natural DPP expected sample size. The vfx sampling algorithm can approximately adjust the expected sample size of the DPP by rescaling the :math:`\mathbf{L}` matrix with a scalar :math:`\alpha^*\leq 1` . Adjusting the expected sample size can be useful to control downstream complexity, and it is necessary to improve the probability of drawing a sample with exactly :math:`k` elements when using vfx for k-DPP sampling. Currently only reducing the sample size is supported, and the sampler will return an exception if the DPP sample has already a natural expected size smaller than ``kwargs['desired_expected_size'``.]
 
         - ``'rls_oversample_dppvfx'`` (float, default 4.0) Oversampling parameter used to construct dppvfx's internal Nyström approximation. The ``rls_oversample_dppvfx``:math:`\geq 1` parameter is used to increase the rank of the approximation by a ``rls_oversample_dppvfx`` factor. This makes each rejection round slower and more memory intensive, but reduces variance and the number of rounds of rejections, so the actual runtime might increase or decrease. Empirically, a small factor ``rls_oversample_dppvfx``:math:`\in [2,10]` seems to work. It is suggested to start with a small number and increase if the algorithm fails to terminate.
 
@@ -479,21 +482,21 @@ def intermediate_sampler_vfx_dpp_core(
 
     if info is None:
         info = vfx_sampling_precompute_constants(
-            X_data=X_data, eval_L=eval_L, rng=rng, **params
+            X_data=X_data, eval_L=eval_L, rng=rng, **kwargs
         )
 
-        q_func = params.get("q_func", lambda s: s * s)
+        q_func = kwargs.get("q_func", lambda s: s * s)
         info = info._replace(q=q_func(info.s))
 
     sample, rej_count = vfx_sampling_do_sampling_loop(
-        X_data, eval_L, info, rng, **params
+        X_data, eval_L, info, rng, **kwargs
     )
 
     return sample, info
 
 
 def intermediate_sampler_vfx_k_dpp_core(
-    size, info, X_data, eval_L, random_state=None, **params
+    size, info, X_data, eval_L, random_state=None, **kwargs
 ):
     r"""First pre-compute quantities necessary for the vfx rejection sampling loop, such as the inner Nyström approximation, and the RLS of all elements in :math:`\mathbf{L}`. Then, given the pre-computed information,run a rejection sampling loop to generate DPP samples. To guarantee that the returned sample has size ``size``, we internally set desired_expected_size=size and then repeatedly invoke intermediate_sampler_vfx_dpp_core until a sample of the correct size is returned, or exit with an error after a chosen number of rejections is reached.
 
@@ -502,7 +505,7 @@ def intermediate_sampler_vfx_k_dpp_core(
     :param info:
         If available, the pre-computed information necessary for the vfx rejection sampling loop. If ``None``, this function will compute and return an ``_IntermediateSampleInfo`` with fields
 
-        - ``.alpha_star``: appropriate rescaling such that the expected sample size of :math:`\operatorname{DPP}(\alpha^* \mathbf{L})` is equal to a user-indicated constant ``params['desired_expected_size']``, or 1.0 if no such constant was specified by the user.
+        - ``.alpha_star``: appropriate rescaling such that the expected sample size of :math:`\operatorname{DPP}(\alpha^* \mathbf{L})` is equal to a user-indicated constant ``kwargs['desired_expected_size']``, or 1.0 if no such constant was specified by the user.
         - ``.logdet_I_A``: :math:`\log \det` of the Nyström approximation of :math:`\mathbf{L} + I`
         - ``.q``: placeholder q constant used for vfx sampling, to be replaced by the user before the sampling loop
         - ``.s`` and ``.z``: approximations of the expected sample size of :math:`\operatorname{DPP}(\alpha^* \mathbf{L})` to be used in the sampling loop. For more details see :cite:`DeCaVa19`
@@ -521,12 +524,11 @@ def intermediate_sampler_vfx_k_dpp_core(
         As an example, see the implementation of any of the kernels provided by scikit-learn (e.g. `PairwiseKernel <https://scikit-learn.org/stable/modules/generated/sklearn.gaussian_process.kernels.PairwiseKernel.html>`_).
 
     :param random_state:
-        random source used for sampling, if None a RandomState is automatically generated
-
+        random number generator or seed, defaults to None
     :type random_state:
-        RandomState or None, default None
+        optional
 
-    :param dict params:
+    :param dict kwargs:
         Dictionary including optional parameters:
 
         - ``'rls_oversample_dppvfx'`` (float, default 4.0) Oversampling parameter used to construct dppvfx's internal Nyström approximation. The ``rls_oversample_dppvfx``:math:`\geq 1` parameter is used to increase the rank of the approximation by a ``rls_oversample_dppvfx`` factor. This makes each rejection round slower and more memory intensive, but reduces variance and the number of rounds of rejections, so the actual runtime might increase or decrease. Empirically, a small factor ``rls_oversample_dppvfx``:math:`\in [2,10]` seems to work. It is suggested to start with a small number and increase if the algorithm fails to terminate.
@@ -563,17 +565,17 @@ def intermediate_sampler_vfx_k_dpp_core(
 
     if (info is None) or (not np.isclose(info.s, size).item()):
         info = vfx_sampling_precompute_constants(
-            X_data=X_data, eval_L=eval_L, desired_expected_size=size, rng=rng, **params
+            X_data=X_data, eval_L=eval_L, desired_expected_size=size, rng=rng, **kwargs
         )
 
-        q_func = params.get("q_func", lambda s: s * s)
+        q_func = kwargs.get("q_func", lambda s: s * s)
         info = info._replace(q=q_func(info.s))
 
-    max_iter_size_rejection = params.get("max_iter_size_rejection", 100)
+    max_iter_size_rejection = kwargs.get("max_iter_size_rejection", 100)
 
     for _ in range(max_iter_size_rejection):
         sample, rej_count = vfx_sampling_do_sampling_loop(
-            X_data, eval_L, info, rng, **params
+            X_data, eval_L, info, rng, **kwargs
         )
 
         tmp = info.rej_to_first_sample + rej_count

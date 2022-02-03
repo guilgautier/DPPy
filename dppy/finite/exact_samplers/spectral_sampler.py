@@ -9,7 +9,7 @@ from dppy.finite.exact_samplers.projection_sampler_eigen import (
 from dppy.utils import check_random_state, elementary_symmetric_polynomials
 
 
-def spectral_sampler_dpp(dpp, random_state=None, **params):
+def spectral_sampler_dpp(dpp, random_state=None, **kwargs):
     r"""Generate an exact sample from an hermitian ``dpp`` using the :ref:`spectral method <finite_dpps_exact_sampling_spectral_method>`.
 
     The eigenvalues ``dpp.K_eig_vals`` and eigenvectors ``dpp.eig_vecs`` of the correlation kernel :math:`\mathbf{K}` are computed from the current parametrization of ``dpp``.
@@ -24,7 +24,7 @@ def spectral_sampler_dpp(dpp, random_state=None, **params):
     :type random_state:
         optional
 
-    Keyword arguments:
+    :Keyword arguments:
         - **mode** (str): select the variant of the sampler used in the second step which boils down to sampling from a projection DPP, see :py:func:`~dppy.finite.exact_samplers.projection_sampler_eigen.select_projection_sampler_eigen`
 
     :return: sample
@@ -32,27 +32,32 @@ def spectral_sampler_dpp(dpp, random_state=None, **params):
     """
     assert dpp.hermitian
     compute_spectral_sampler_parameters_dpp(dpp)
-    return do_spectral_sampler_dpp(dpp, random_state, **params)
+    return do_spectral_sampler_dpp(dpp, random_state, **kwargs)
 
 
-def do_spectral_sampler_dpp(dpp, random_state=None, **params):
+def do_spectral_sampler_dpp(dpp, random_state=None, **kwargs):
     """Perform the main steps of the :ref:`spectral method <finite_dpps_exact_sampling_spectral_method>` to generate an exact sample from ``dpp``.
 
     :param dpp: Finite DPP
     :type dpp: :py:class:`~dppy.finite.dpp.FiniteDPP`
 
-    :param random_state: random number generator or seed, defaults to None
-    :type random_state: optional
+    :param random_state:
+        random number generator or seed, defaults to None
+    :type random_state:
+        optional
 
     :return: sample
     :rtype: list
+
+
+    :py:func:`~dppy.finite.exact_samplers.projection_sampler_eigen.select_projection_sampler_eigen`
     """
     rng = check_random_state(random_state)
     eig_vals, eig_vecs = dpp.K_eig_vals, dpp.eig_vecs
     V = select_eigen_vectors_dpp(eig_vals, eig_vecs, random_state=rng)
-    mode = params.get("mode", "")
+    mode = kwargs.get("mode", "")
     sampler = select_projection_sampler_eigen(mode)
-    return sampler(V, random_state=rng)
+    return sampler(V, random_state=rng, **kwargs)
 
 
 def compute_spectral_sampler_parameters_dpp(dpp):
@@ -126,17 +131,22 @@ def compute_spectral_sampler_parameters_dpp_step(dpp):
 
 # Phase 1
 def select_eigen_vectors_dpp(bernoulli_params, eig_vecs, random_state=None):
-    """Select columns of ``eig_vecs`` by sampling Bernoulli variables with parameters ``bernoulli_params``.
+    r"""Select columns of ``eig_vecs`` by sampling Bernoulli variables with parameters ``bernoulli_params``.
 
     :param bernoulli_params:
-        Parameters of Bernoulli variables
+        Vector of size :math:`r` containing the parameters of Bernoulli variables
     :type bernoulli_params:
-        array_like, shape (r,)
+        array_like
 
     :param eig_vecs:
-        Eigenvectors, stored as columns of a 2d array
+        Array of size :math:`N \times r` collecting the eigenvectors stored columnwise.
     :type eig_vecs:
-        array_like, shape (N, r)
+        array_like
+
+    :param random_state:
+        random number generator or seed, defaults to None
+    :type random_state:
+        optional
 
     :return:
         Selected eigenvectors
@@ -155,7 +165,7 @@ def select_eigen_vectors_dpp(bernoulli_params, eig_vecs, random_state=None):
 #### k-DPP
 
 
-def spectral_sampler_k_dpp(dpp, size, random_state=None, **params):
+def spectral_sampler_k_dpp(dpp, size, random_state=None, **kwargs):
     r"""Generate an exact sample from an hermitian :math:`k\!\operatorname{-DPP}` associated with ``dpp`` and :math:`k=` ``size``, using the :ref:`spectral method <finite_dpps_exact_sampling_k_dpps>`.
 
     The precomputation cost of generating the first sample involves computing the eigenvalues and eigenvectors of the likelihood kernel :math:`\mathbf{L}` from the current parametrization of ``dpp`` and stored in the ``dpp.L_eig_vals`` and ``dpp.eig_vecs`` attributes.
@@ -167,10 +177,12 @@ def spectral_sampler_k_dpp(dpp, size, random_state=None, **params):
     :param size: size :math:`k` of the output sample
     :type size: int
 
-    :param random_state: random number generator or seed, defaults to None
-    :type random_state: optional
+    :param random_state:
+        random number generator or seed, defaults to None
+    :type random_state:
+        optional
 
-    Keyword arguments:
+    :Keyword arguments:
         - **mode** (str): select the variant of the sampler used in the second step which boils down to sampling from a projection DPP, see :py:func:`~dppy.finite.exact_samplers.projection_sampler_eigen.select_projection_sampler_eigen`
 
     :return: sample
@@ -179,18 +191,19 @@ def spectral_sampler_k_dpp(dpp, size, random_state=None, **params):
     assert dpp.hermitian
     if not dpp.projection:
         compute_spectral_sampler_parameters_k_dpp(dpp, size)
-        return do_spectral_sampler_k_dpp(dpp, size, random_state, **params)
+        return do_spectral_sampler_k_dpp(dpp, size, random_state, **kwargs)
     else:
         eig_vals = compute_spectral_sampler_eig_vals_projection_k_dpp(dpp, size)
         # Phase 1 select_eigenvectors from eigvalues = 0 or 1
         V = dpp.eig_vecs[:, eig_vals > 0.5]
         # Phase 2
         dpp.size_k_dpp = size
-        sampler = select_projection_sampler_eigen(params.get("mode"))
-        return sampler(V, size=size, random_state=random_state)
+        mode = kwargs.get("mode")
+        sampler = select_projection_sampler_eigen(mode)
+        return sampler(V, size=size, random_state=random_state, **kwargs)
 
 
-def do_spectral_sampler_k_dpp(dpp, size, random_state=None, **params):
+def do_spectral_sampler_k_dpp(dpp, size, random_state=None, **kwargs):
     r"""Perform the main steps of the :ref:`spectral method <finite_dpps_exact_sampling_k_dpps>` to generate an exact sample from the :math:`k\!\operatorname{-DPP}` associated with ``dpp`` and :math:`k=` ``size``.
 
     :param dpp:
@@ -199,8 +212,13 @@ def do_spectral_sampler_k_dpp(dpp, size, random_state=None, **params):
     :param size: size :math:`k` of the output sample
     :type size: int
 
-    :param random_state: random number generator or seed, defaults to None
-    :type random_state: optional
+    :param random_state:
+        random number generator or seed, defaults to None
+    :type random_state:
+        optional
+
+    :Keyword arguments:
+        - **mode** (str): select the variant of the sampler used in the second step which boils down to sampling from a projection DPP, see :py:func:`~dppy.finite.exact_samplers.projection_sampler_eigen.select_projection_sampler_eigen`
 
     :return: sample
     :rtype: list
@@ -217,8 +235,9 @@ def do_spectral_sampler_k_dpp(dpp, size, random_state=None, **params):
     )
     # Phase 2
     dpp.size_k_dpp = size
-    sampler = select_projection_sampler_eigen(params.get("mode"))
-    return sampler(V, size=size, random_state=rng)
+    mode = kwargs.get("mode", "")
+    sampler = select_projection_sampler_eigen(mode)
+    return sampler(V, size=size, random_state=rng, **kwargs)
 
 
 def compute_spectral_sampler_parameters_k_dpp(dpp, size):
@@ -321,6 +340,11 @@ def select_eigen_vectors_k_dpp(eig_vals, eig_vecs, size, esp=None, random_state=
         Computation of the elementary symmetric polynomials previously evaluated in ``eig_vals`` and returned by :py:func:`~dppy.utils.elementary_symmetric_polynomials`, default to None.
     :type esp:
         array_like
+
+    :param random_state:
+        random number generator or seed, defaults to None
+    :type random_state:
+        optional
 
     :return:
         Selected eigenvectors
