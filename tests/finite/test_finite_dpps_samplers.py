@@ -365,12 +365,42 @@ class TestAdequationOfFiniteDppSamplers(unittest.TestCase):
 
         sampler_method_params = {
             "exact_dpp": (
-                ("vfx", {"verbose": False, "rls_oversample_bless": 5}),
-                ("alpha", {"verbose": False, "rls_oversample_bless": 5}),
+                (
+                    "intermediate",
+                    {
+                        "mode": "vfx",
+                        "verbose": False,
+                        "rls_oversample_bless": 5,
+                    },
+                ),
+                (
+                    "intermediate",
+                    {
+                        "mode": "alpha",
+                        "verbose": False,
+                        "rls_oversample_bless": 5,
+                    },
+                ),
             ),
             "exact_k_dpp": (
-                ("vfx", {"size": k, "verbose": False, "rls_oversample_bless": 5}),
-                ("alpha", {"size": k, "verbose": False, "rls_oversample_bless": 5}),
+                (
+                    "intermediate",
+                    {
+                        "mode": "vfx",
+                        "size": k,
+                        "verbose": False,
+                        "rls_oversample_bless": 5,
+                    },
+                ),
+                (
+                    "intermediate",
+                    {
+                        "mode": "alpha",
+                        "size": k,
+                        "verbose": False,
+                        "rls_oversample_bless": 5,
+                    },
+                ),
             ),
         }
 
@@ -395,12 +425,42 @@ class TestAdequationOfFiniteDppSamplers(unittest.TestCase):
 
         sampler_method_params = {
             "exact_dpp": (
-                ("vfx", {"verbose": False, "rls_oversample_bless": 5}),
-                ("alpha", {"verbose": False, "rls_oversample_bless": 5}),
+                (
+                    "intermediate",
+                    {
+                        "mode": "vfx",
+                        "verbose": False,
+                        "rls_oversample_bless": 5,
+                    },
+                ),
+                (
+                    "intermediate",
+                    {
+                        "mode": "alpha",
+                        "verbose": False,
+                        "rls_oversample_bless": 5,
+                    },
+                ),
             ),
             "exact_k_dpp": (
-                ("vfx", {"size": k, "verbose": False, "rls_oversample_bless": 5}),
-                ("alpha", {"size": k, "verbose": False, "rls_oversample_bless": 5}),
+                (
+                    "intermediate",
+                    {
+                        "mode": "vfx",
+                        "size": k,
+                        "verbose": False,
+                        "rls_oversample_bless": 5,
+                    },
+                ),
+                (
+                    "intermediate",
+                    {
+                        "mode": "alpha",
+                        "size": k,
+                        "verbose": False,
+                        "rls_oversample_bless": 5,
+                    },
+                ),
             ),
         }
 

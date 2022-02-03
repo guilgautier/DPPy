@@ -195,6 +195,7 @@ def vfx_sampling_precompute_constants(
     rls_oversample_bless=4.0,
     nb_iter_bless=None,
     verbose=True,
+    **kwargs
 ):
     """Pre-compute quantities necessary for the vfx rejection sampling loop, such as the inner Nystrom approximation, and the RLS of all elements in L.
 
