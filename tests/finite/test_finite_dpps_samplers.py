@@ -236,9 +236,12 @@ class TestAdequationOfFiniteDppSamplers(unittest.TestCase):
                 ("spectral", {"mode": "gs"}),
                 ("projection", {"mode": "cho"}),
                 ("projection", {"mode": "lu"}),
+                ("sequential", {"mode": "lu"}),
+                ("sequential", {"mode": "ldl"}),
             ),
             "exact_k_dpp": (
                 ("spectral", {"mode": "gs", "size": k}),
+                ("spectral", {"mode": "gs-perm", "size": k}),
                 ("projection", {"mode": "cho", "size": k}),
                 ("projection", {"mode": "lu", "size": k}),
             ),
@@ -263,7 +266,8 @@ class TestAdequationOfFiniteDppSamplers(unittest.TestCase):
             "exact_dpp": (
                 ("spectral", {"mode": "gs"}),
                 ("spectral", {"mode": "gs-perm"}),
-                ("generic", {}),
+                ("sequential", {"mode": "lu"}),
+                ("sequential", {"mode": "ldl"}),
             ),
             "exact_k_dpp": (
                 ("spectral", {"mode": "gs", "size": k}),
@@ -291,6 +295,8 @@ class TestAdequationOfFiniteDppSamplers(unittest.TestCase):
             "exact_dpp": (
                 ("spectral", {"mode": "gs"}),
                 ("spectral", {"mode": "gs-perm"}),
+                ("sequential", {"mode": "lu"}),
+                ("sequential", {"mode": "ldl"}),
             ),
             "exact_k_dpp": (
                 ("spectral", {"mode": "gs", "size": self.rank}),
@@ -324,6 +330,8 @@ class TestAdequationOfFiniteDppSamplers(unittest.TestCase):
             "exact_dpp": (
                 ("spectral", {"mode": "gs"}),
                 ("spectral", {"mode": "gs-perm"}),
+                ("sequential", {"mode": "lu"}),
+                ("sequential", {"mode": "ldl"}),
             ),
             "exact_k_dpp": (
                 ("spectral", {"mode": "gs", "size": k}),

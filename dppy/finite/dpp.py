@@ -145,7 +145,7 @@ class FiniteDPP:
 
         :param method:
 
-            - ``"sequential"``. It corresponds to a generic sampler, which applies to any valid DPP (hermitian or not), see :ref:`finite_dpps_exact_sampling_sequential_methods` and :py:func:`~dppy.finite.exact_samplers.sequential_samplers.sequential_sampler`.
+            - ``"sequential"``. It corresponds to a generic sampler, which applies to any valid DPP (hermitian or not), see :ref:`finite_dpps_exact_sampling_sequential_methods` and :py:func:`~dppy.finite.exact_samplers.sequential_sampler.sequential_sampler`.
 
             - ``"spectral"``. It applies only if the attribute :py:attr:`~dppy.finite.dpp.FiniteDPP.hermitian` is True, see :ref:`finite_dpps_exact_sampling_spectral_method` and :py:func:`~dppy.finite.exact_samplers.spectral_samplers.spectral_sampler_dpp`.
 

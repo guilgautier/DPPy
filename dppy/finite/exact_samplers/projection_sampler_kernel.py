@@ -22,11 +22,13 @@ def projection_sampler_kernel(dpp, size=None, random_state=None, **kwargs):
     return sampler(dpp.K, size=size, random_state=random_state, **kwargs)
 
 
-def select_projection_sampler_kernel(mode, hermitian=False):
+def select_projection_sampler_kernel(mode, hermitian):
     samplers = {
         "lu": projection_sampler_kernel_lu,
         "cho": projection_sampler_kernel_cho,
     }
+    if mode == "cho":
+        assert hermitian
     default = samplers["cho" if hermitian else "lu"]
     return samplers.get(mode.lower(), default)
 

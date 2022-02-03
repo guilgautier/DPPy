@@ -27,12 +27,12 @@ BLESS
 Exact samplers
 *****************
 
-.. _api_finite_dpps_exact_samplers_generic_samplers:
+.. _api_finite_dpps_exact_samplers_sequential_samplers:
 
 Generic samplers
 ================
 
-.. _api_finite_dpps_exact_samplers_generic_sampler_projection_case:
+.. _api_finite_dpps_exact_samplers_sequential_sampler_projection_case:
 
 Projection case
 ---------------
@@ -42,12 +42,12 @@ Projection case
     :inherited-members:
     :show-inheritance:
 
-.. _api_finite_dpps_exact_samplers_generic_sampler_general_case:
+.. _api_finite_dpps_exact_samplers_sequential_sampler_general_case:
 
 General case
 ------------
 
-.. automodule:: dppy.finite.exact_samplers.sequential_samplers
+.. automodule:: dppy.finite.exact_samplers.sequential_sampler
     :members:
     :inherited-members:
     :show-inheritance:

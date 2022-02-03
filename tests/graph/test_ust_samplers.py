@@ -64,7 +64,7 @@ class UniformityOfSamplerForUniformSpanningTree(unittest.TestCase):
             "spectral",
             "schur",
             "chol",
-            "generic",
+            "sequential",
         )
 
         for method in samplers:

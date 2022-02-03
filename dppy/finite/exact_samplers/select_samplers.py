@@ -5,7 +5,7 @@ from dppy.finite.exact_samplers.intermediate_sampler import (
 from dppy.finite.exact_samplers.projection_sampler_kernel import (
     projection_sampler_kernel,
 )
-from dppy.finite.exact_samplers.sequential_samplers import generic_sampler
+from dppy.finite.exact_samplers.sequential_sampler import sequential_sampler
 from dppy.finite.exact_samplers.spectral_sampler import (
     spectral_sampler_dpp,
     spectral_sampler_k_dpp,
@@ -17,9 +17,9 @@ def select_sampler_exact_dpp(dpp, method):
         "spectral": spectral_sampler_dpp,
         "projection": projection_sampler_kernel,
         "intermediate": intermediate_sampler_dpp,
-        "generic": generic_sampler,
+        "sequential": sequential_sampler,
     }
-    default = samplers["spectral" if dpp.hermitian else "generic"]
+    default = samplers["spectral" if dpp.hermitian else "sequential"]
     return samplers.get(method.lower(), default)
 
 
