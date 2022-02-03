@@ -4,6 +4,36 @@ from dppy.utils import check_random_state, log_binom
 
 
 def projection_sampler_kernel(dpp, size=None, random_state=None, **kwargs):
+    r"""Generate an exact sample from ``dpp`` using the :ref:`projection method <finite_dpps_exact_sampling_projection_methods>` must be a projection, i.e., the attribute :py:attr:`~dppy.finite.dpp.FiniteDPP.projection` must be True.
+
+    If the attribute :py:attr:`~dppy.finite.dpp.FiniteDPP.kernel_type` is ``"likelihood"``, sample from :math:`\operatorname{k-DPP}(\mathbf{L})` where ``size`` :math:`=k` must be provided. Denote :math:`r=\operatorname{rank}(\mathbf{L})`.
+
+    .. math::
+
+        \mathbb{P}\!\left[ \mathcal{X} = X \right]
+        = \frac{1}{\binom{r}{k}} \det \mathbf{L}_X ~ 1_{|X|=k}.
+
+    If the attribute :py:attr:`~dppy.finite.dpp.FiniteDPP.kernel_type` is ``"correlation"``, sample from the projection :math:`\operatorname{DPP}(\mathbf{K})` where ``size`` must be equal to :math:`r=\operatorname{rank}(\mathbf{K})`.
+
+    .. math::
+
+        \mathbb{P}\!\left[ \mathcal{X} = X \right]
+        = \det \mathbf{K}_X ~ 1_{|X|=r}.
+
+    :param size:
+        If None, it is set to :math:`r`, otherwise it defines the size :math:`k\leq r` of the output :math:`\operatorname{k-DPP}` sample, defaults to None.
+    :type size:
+        int, optional
+
+    :return:
+        Exact sample :math:`X` and its log-likelihood.
+    :rtype:
+        tuple(list, float)
+
+    Keyword arguments:
+
+        - **mode** (str): select the variant of the sampler, see :py:func:`~dppy.finite.exact_samplers.projection_sampler_eigen.select_projection_sampler_kernel`
+    """
     assert dpp.projection
 
     mode = kwargs.get("mode", "")
@@ -17,12 +47,27 @@ def projection_sampler_kernel(dpp, size=None, random_state=None, **kwargs):
         dpp.compute_likelihood_kernel()
         return sampler(dpp.L, size=size, random_state=random_state, **kwargs)
 
-    # if dpp.kernel_type == "correlation":
-    dpp.compute_correlation_kernel()
-    return sampler(dpp.K, size=size, random_state=random_state, **kwargs)
+    if dpp.kernel_type == "correlation" and size:
+        dpp.compute_correlation_kernel()
+        rank_K = np.rint(np.trace(dpp.K)).astype(int)
+        if size != rank_K:
+            raise ValueError(
+                f"'size' argument != {rank_K} = rank(K) for sampling projection DPP(K)"
+            )
+        return sampler(dpp.K, size=size, random_state=random_state, **kwargs)
 
 
 def select_projection_sampler_kernel(mode, hermitian):
+    r"""Select the variant of the :ref:`projection method <finite_dpps_exact_sampling_projection_methods>`.
+
+    :param mode:
+        Select the variant among
+
+        - ``"lu"`` (default) :py:func:`~dppy.finite.exact_samplers.projection_sampler_kernel.projection_sampler_kernel_lu`
+        - ``"cho"`` (default) :py:func:`~dppy.finite.exact_samplers.projection_sampler_kernel.projection_sampler_kernel_cho`
+
+    :type mode: str
+    """
     samplers = {
         "lu": projection_sampler_kernel_lu,
         "cho": projection_sampler_kernel_cho,
@@ -36,7 +81,7 @@ def select_projection_sampler_kernel(mode, hermitian):
 def projection_sampler_kernel_lu(
     K, size=None, random_state=None, overwrite=False, **kwargs
 ):
-    """Variant of :py:func:`~dppy.finite.exact_samplers.projection_samplers_eigen.projection_sampler_kernel_cho` where LU updates are performed instead of Cholesky updates."""
+    """Variant of :py:func:`~dppy.finite.exact_samplers.projection_sampler_kernel.projection_sampler_kernel_cho` where LU updates are performed instead of Cholesky updates."""
     rng = check_random_state(random_state)
 
     rank = np.rint(np.trace(K)).astype(int)
@@ -92,25 +137,17 @@ def projection_sampler_kernel_lu(
 def projection_sampler_kernel_cho(
     K, size=None, random_state=None, overwrite=False, **kwargs
 ):
-    r"""Generate an exact sample from :math:`\operatorname{DPP}(\mathbf{K})`, or :math:`\operatorname{k-DPP}(\mathbf{K})` with :math:`k=` ``size`` (if ``size`` is provided), where :math:`\mathbf{K}` is an orthogonal projection `kernel` and denote :math:`r=\operatorname{rank}(\mathbf{K})`.
-    If ``size=None`` (default), it is set to :math:`k=r`, this also corresponds to sampling from the projection :math:`\operatorname{DPP}(\mathbf{K}=UU^{*})`.
+    r"""Generate an exact sample from :math:`\operatorname{k-DPP}(K)` with :math:`k=` ``size`` (if ``size`` is provided), where ``K`` is an orthogonal projection matrix. If ``size`` is None (default), it is set to :math:`k=\operatorname{rank}(K)\triangleq r`, this also corresponds to sampling from the projection :math:`\operatorname{DPP}(K)`.
 
-    This function implements :cite:`Pou19` Algorithm 3, where updates of the conditionals driving the chain rule are performed via Cholesky updates.
-
-    The likelihood of the output sample is given by
-
-    .. math::
-
-        \mathbb{P}\!\left[ \mathcal{X} = X \right]
-        = \frac{1}{\binom{r}{k}} \det K_X ~ 1_{|X|=k}.
+    This function implements :cite:`Pou19` Algorithm 3, where updates of the conditionals driving the chain rule are performed via Cholesky updates. This can also be viewed as randomized a Gram-Schmidt orthogalization procedure applied on the rows or columns of the kernel.
 
     :param K:
-        Orthogonal projection kernel :math:`\mathbf{K}=\mathbf{K}^*=\mathbf{K}^2`.
+        Orthogonal projection kernel :math:`K=K^*=K^2`.
     :type K:
         array_like
 
     :param size:
-        If None, it is set to :math:`r`, otherwise it defines the size :math:`k\leq r` of the output :math:`\operatorname{k-DPP} sample, defaults to None.
+        If None, it is set to :math:`r`, otherwise it defines the size :math:`k\leq r` of the output :math:`\operatorname{k-DPP}` sample, defaults to None.
     :type size:
         int, optional
 
@@ -126,10 +163,10 @@ def projection_sampler_kernel_cho(
 
     .. seealso::
 
-        - :ref:`finite_dpps_exact_sampling_projection_dpp`
+        - :ref:`finite_dpps_exact_sampling_projection_methods`
         - :cite:`Pou19` Algorithm 3
         - :py:func:`~dppy.finite.exact_samplers.projection_sampler_kernel.projection_sampler_kernel_lu`
-        - :py:func:`~dppy.finite.exact_samplers.projection_samplers_eigen.projection_sampler_eigen_gs_perm`
+        - :py:func:`~dppy.finite.exact_samplers.projection_sampler_eigen.projection_sampler_eigen_gs_perm`
     """
     rng = check_random_state(random_state)
 

@@ -5,15 +5,19 @@ from dppy.utils import check_random_state, log_binom
 
 def projection_sampler_eigen(dpp, random_state=None, **kwargs):
     assert dpp.projection and dpp.hermitian
+    assert dpp.eig_vecs is not None
 
     size = kwargs.get("size", None)
     if dpp.kernel_type == "likelihood" and not size:
         raise ValueError(
             "'size' argument (k) required for sampling k-DPP(L) with projection likelihood kernel L."
         )
-
-    assert dpp.eig_vecs is not None
-
+    if dpp.kernel_type == "correlation" and size:
+        rank_K = dpp.eig_vecs.shape[1]
+        if size != rank_K:
+            raise ValueError(
+                "'size' argument must be equal to rank(K) for sampling projection DPP(K)"
+            )
     mode = kwargs.get("mode", "")
     sampler = select_projection_sampler_eigen(mode)
     return sampler(dpp.eig_vecs, random_state=random_state, **kwargs)
@@ -41,7 +45,7 @@ def select_projection_sampler_eigen(mode):
 
 
 def projection_sampler_eigen_gs(eig_vecs, size=None, random_state=None, **kwargs):
-    r"""Generate an exact sample from :math:`\operatorname{k-DPP}(\mathbf{L})` with :math:`k=` ``size`` (if ``size`` is provided), where :math:`\mathbf{L}=UU^{*}` is an orthogonal projection matrix given :math:`U=` ``eig_vecs`` such that :math:`U^{*}U = I_r` and denote :math:`r=\operatorname{rank}(\mathbf{L})`. If ``size=None`` (default), it is set to :math:`k=r`, this also corresponds to sampling from the projection :math:`\operatorname{DPP}(\mathbf{K}=UU^{*})`.
+    r"""Generate an exact sample from :math:`\operatorname{k-DPP}(\mathbf{L})` with :math:`k=` ``size`` (if ``size`` is provided), where :math:`\mathbf{L}=UU^{*}` is an orthogonal projection matrix given :math:`U=` ``eig_vecs`` such that :math:`U^{*}U = I_r` and denote :math:`r=\operatorname{rank}(\mathbf{L})`. If ``size`` is None (default), it is set to :math:`k=r`, this also corresponds to sampling from the projection :math:`\operatorname{DPP}(\mathbf{K}=UU^{*})`.
 
     The likelihood of the output sample is given by
 
@@ -56,7 +60,7 @@ def projection_sampler_eigen_gs(eig_vecs, size=None, random_state=None, **kwargs
         array_like
 
     :param size:
-        If None, it is set to :math:`r`, otherwise it defines the size :math:`k\leq r` of the output :math:`\operatorname{k-DPP} sample, defaults to None.
+        If None, it is set to :math:`r`, otherwise it defines the size :math:`k\leq r` of the output :math:`\operatorname{k-DPP}` sample, defaults to None.
     :type size:
         int, optional
 
@@ -67,7 +71,7 @@ def projection_sampler_eigen_gs(eig_vecs, size=None, random_state=None, **kwargs
 
     .. seealso::
 
-        - :ref:`finite_dpps_exact_sampling_projection_dpp`
+        - :ref:`finite_dpps_exact_sampling_projection_methods`
         - :cite:`Gil14` Algorithm 2 or :cite:`TrBaAm18` Algorithm 3
         - :py:func:`~dppy.finite.exact_samplers.projection_sampler_eigen.projection_sampler_eigen_gs_perm`
         - :py:func:`~dppy.finite.exact_samplers.projection_sampler_kernel.projection_sampler_kernel_cho`
@@ -119,7 +123,7 @@ def projection_sampler_eigen_gs(eig_vecs, size=None, random_state=None, **kwargs
 def projection_sampler_eigen_gs_perm(
     eig_vecs, size=None, random_state=None, overwrite=False, **kwargs
 ):
-    """Variant of :py:func:`~dppy.finite.exact_samplers.projection_samplers_eigen.projection_sampler_eigen_gs_perm` involving permutations of the rows of ``eigvecs``.
+    """Variant of :py:func:`~dppy.finite.exact_samplers.projection_sampler_eigen.projection_sampler_eigen_gs` involving permutations of the rows of ``eigvecs``.
 
     If ``overwrite`` is True, ``eigvecs`` is permuted inplace.
     """
