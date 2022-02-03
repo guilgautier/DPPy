@@ -336,7 +336,7 @@ That is to say, Hermitian DPPs favor subsets :math:`S` whose corresponding featu
 
 .. seealso::
 
-    :ref:`Geometric interpretation of the chain rule for projection DPPs <finite_dpps_exact_sampling_projection_dpp_geometrical_interpretation>`
+    :ref:`Geometric interpretation of the chain rule for projection DPPs <finite_dpps_exact_sampling_projection_methods_geometrical_interpretation>`
 
 .. _finite_dpps_diversity:
 

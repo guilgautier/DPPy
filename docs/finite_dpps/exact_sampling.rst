@@ -7,7 +7,7 @@ Exact sampling
 
 Consider a finite DPP defined by its correlation kernel :math:`\mathbf{K}` :eq:`eq:inclusion_proba_DPP_K` or likelihood kernel :math:`\mathbf{L}` :eq:`eq:likelihood_DPP_L`.
 
-- **Projection DPPs**, i.e., DPPs with **orthogonal projection correlation kernels** :math:`\mathbf{K}=\mathbf{K}^*=\mathbf{K}^2` are reserved a special treatment, see :ref:`finite_dpps_exact_sampling_projection_dpp`.
+- **Projection DPPs**, i.e., DPPs with **orthogonal projection correlation kernels** :math:`\mathbf{K}=\mathbf{K}^*=\mathbf{K}^2` are reserved a special treatment, see :ref:`finite_dpps_exact_sampling_projection_methods`.
 
 For non-projection kernels, there exist three main types of exact sampling procedures:
 
@@ -51,7 +51,7 @@ In particular, for :math:`k\!\operatorname{-DPP}(\mathbf{L})` we have :math:`d_{
 
     - Some DPPs that arise in specific contexts can sometimes be sampled exactly via special and potentially more efficient samplers, see, e.g., :ref:`exotic_dpps`.
 
-.. _finite_dpps_exact_sampling_projection_dpp:
+.. _finite_dpps_exact_sampling_projection_methods:
 
 Projection DPPs
 ===============
@@ -125,7 +125,7 @@ Using `Woodbury's formula <https://en.wikipedia.org/wiki/Woodbury_matrix_identit
 
         The connexion between the chain rule :eq:`eq:chain_rule_projection_kernel_woodbury` and Gaussian Processes is valid in the case where the GP kernel is an **projection kernel**, see also :ref:`finite_kdpps_exact_sampling_chain_rule_projection_kernel_caution`.
 
-.. _finite_dpps_exact_sampling_projection_dpp_geometrical_interpretation:
+.. _finite_dpps_exact_sampling_projection_methods_geometrical_interpretation:
 
 Geometrical interpretation
 --------------------------
@@ -160,7 +160,7 @@ Geometrical interpretation
     In the end, projection DPPs favor sets of :math:`r=\operatorname{rank}(\mathbf{K})` items associated to feature vectors that span a large volume.
     This is another way of understanding :ref:`diversity <finite_dpps_diversity>`.
 
-.. _finite_dpps_exact_sampling_projection_dpp_in_practice:
+.. _finite_dpps_exact_sampling_projection_methods_in_practice:
 
 In practice
 -----------
@@ -509,12 +509,12 @@ Given the spectral decomposition of the correlation kernel :math:`\mathbf{K}`
 .. note::
 
     **Step 1.** selects a component of the mixture, while
-    **Step 2.** requires sampling from the corresponding **projection** DPP, cf. :ref:`finite_dpps_exact_sampling_projection_dpp`
+    **Step 2.** requires sampling from the corresponding **projection** DPP, cf. :ref:`finite_dpps_exact_sampling_projection_methods`
 
 In practice
 -----------
 
-- Sampling *projection* :math:`\operatorname{DPP}(\mathbf{K})` from the eigendecomposition of :math:`\mathbf{K}=U U^{*}` with :math:`U^{*}U = I_{\operatorname{rank}(\mathbf{K})}`) was presented in :ref:`finite_dpps_exact_sampling_projection_dpp`.
+- Sampling *projection* :math:`\operatorname{DPP}(\mathbf{K})` from the eigendecomposition of :math:`\mathbf{K}=U U^{*}` with :math:`U^{*}U = I_{\operatorname{rank}(\mathbf{K})}`) was presented in :ref:`finite_dpps_exact_sampling_projection_methods`.
 
 - Sampling :math:`\operatorname{DPP}(\mathbf{K})` from :math:`0_N \preceq\mathbf{K} \preceq I_N` can be done by following
 

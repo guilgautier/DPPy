@@ -27,25 +27,25 @@ BLESS
 Exact samplers
 *****************
 
-.. _api_finite_dpps_exact_samplers_sequential_samplers:
+.. _api_finite_dpps_exact_samplers_projection_sampler:
 
-Generic samplers
-================
-
-.. _api_finite_dpps_exact_samplers_sequential_sampler_projection_case:
-
-Projection case
----------------
+Projection samplers
+===================
 
 .. automodule:: dppy.finite.exact_samplers.projection_sampler_kernel
     :members:
     :inherited-members:
     :show-inheritance:
 
-.. _api_finite_dpps_exact_samplers_sequential_sampler_general_case:
+.. automodule:: dppy.finite.exact_samplers.projection_sampler_eigen
+    :members:
+    :inherited-members:
+    :show-inheritance:
 
-General case
-------------
+.. _api_finite_dpps_exact_samplers_sequential_samplers:
+
+Sequential samplers
+===================
 
 .. automodule:: dppy.finite.exact_samplers.sequential_sampler
     :members:
@@ -54,43 +54,26 @@ General case
 
 .. _api_finite_dpps_exact_samplers_spectral_sampler:
 
-Spectral sampler
-================
+Spectral samplers
+=================
 
-.. _api_finite_dpps_exact_samplers_spectral_sampler_projection_case:
-
-Projection case
----------------
-
-.. automodule:: dppy.finite.exact_samplers.projection_sampler_eigen
+.. automodule:: dppy.finite.exact_samplers.spectral_sampler
     :members:
     :inherited-members:
     :show-inheritance:
 
-
-.. _api_finite_dpps_exact_samplers_spectral_sampler_general_case:
-
-General case
----------------
-
-.. automodule:: dppy.finite.exact_samplers.spectral_sampler.spectral_sampler_dpp
-    :members:
-    :inherited-members:
-    :show-inheritance:
-
-.. automodule:: dppy.finite.exact_samplers.spectral_sampler.spectral_sampler_k_dpp
-    :members:
-    :inherited-members:
-    :show-inheritance:
-
-
-Intermediate sampling
+Intermediate samplers
 ==============================
 
-.. _api_finite_dpps_exact_samplers_intermediate_sampler_projection_case:
+.. _api_finite_dpps_exact_samplers_intermediate_sampler:
+
+.. automodule:: dppy.finite.exact_samplers.intermediate_sampler
+    :members:
+    :inherited-members:
+    :show-inheritance:
 
 VFX
----------------
+---
 
 .. automodule:: dppy.finite.exact_samplers.intermediate_sampler_vfx
     :members:
@@ -101,7 +84,7 @@ VFX
 .. _api_finite_dpps_exact_samplers_intermediate_sampler_general_case:
 
 Alpha
----------------
+-----
 
 .. automodule:: dppy.finite.exact_samplers.intermediate_sampler_alpha
     :members:

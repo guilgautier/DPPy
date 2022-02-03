@@ -16,7 +16,7 @@ def sequential_sampler(dpp, random_state=None, **params):
 
     Keyword arguments:
 
-        - mode (str): select the variant of the sampler, see :py:func:`~dppy.finite.exact_samplers.sequential_sampler.select_sequential_sampler`
+        - **mode** (str): select the variant of the sampler, see :py:func:`~dppy.finite.exact_samplers.sequential_sampler.select_sequential_sampler`
 
     :return: sample
     :rtype: list
@@ -34,7 +34,7 @@ def select_sequential_sampler(mode, hermitian):
         Select the variant among
 
         - ``"lu"`` (default) :py:func:`~dppy.finite.exact_samplers.sequential_sampler.sequential_sampler_lu`
-        - ``"ldl"`` (default) :py:func:`~dppy.finite.exact_samplers.sequential_sampler.sequential_sampler_lu`
+        - ``"ldl"`` (default) :py:func:`~dppy.finite.exact_samplers.sequential_sampler.sequential_sampler_ldl`
 
     :type mode: str
     """

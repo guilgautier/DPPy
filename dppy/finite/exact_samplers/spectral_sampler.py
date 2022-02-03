@@ -25,7 +25,7 @@ def spectral_sampler_dpp(dpp, random_state=None, **params):
         optional
 
     Keyword arguments:
-        - mode (str): select the variant of the sampler used in the second step which boils down to sampling from a projection DPP, see :py:func:`~dppy.finite.exact_samplers.projection_sampler_eigen.select_projection_sampler_eigen`
+        - **mode** (str): select the variant of the sampler used in the second step which boils down to sampling from a projection DPP, see :py:func:`~dppy.finite.exact_samplers.projection_sampler_eigen.select_projection_sampler_eigen`
 
     :return: sample
     :rtype: list
@@ -170,7 +170,7 @@ def spectral_sampler_k_dpp(dpp, size, random_state=None, **params):
     :type random_state: optional
 
     Keyword arguments:
-        - mode (str): select the variant of the sampler used in the second step which boils down to sampling from a projection DPP, see :py:func:`~dppy.finite.exact_samplers.projection_sampler_eigen.select_projection_sampler_eigen`
+        - **mode** (str): select the variant of the sampler used in the second step which boils down to sampling from a projection DPP, see :py:func:`~dppy.finite.exact_samplers.projection_sampler_eigen.select_projection_sampler_eigen`
 
     :return: sample
     :rtype: list
