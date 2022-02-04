@@ -16,48 +16,143 @@ from dppy.finite.dpp import FiniteDPP
 from dppy.utils import det_ST, example_eval_L_linear, example_eval_L_min_kern
 
 
-def compute_expected_cardinality(L_xy, X):
-    L = L_xy(X)
-    I_L_min = L + np.eye(*L.shape)
-    exp_card = np.sum(np.diag(L.dot(np.linalg.inv(I_L_min))))
-    return np.floor(exp_card).astype(int)
-
-
 class Configuration(object):
-    def __init__(self, sampler_type, method, method_params, idx, dpp_params):
+    def __init__(self, dpp_params, sampler_type, method_params):
         self.sampler_type = sampler_type
-        self.method = method
         self.method_params = method_params
-        self.idx = idx
         self.dpp_params = dpp_params
 
-    def create_dpp(self, kernel_type):
-        return FiniteDPP(kernel_type, **self.dpp_params)
+    def create_dpp(self):
+        return FiniteDPP(**self.dpp_params)
 
     def get_samples(self, dpp, nb_exact_samples):
-
         if self.sampler_type.startswith("exact"):
+            samples = []
             for _ in range(nb_exact_samples):
                 if self.sampler_type == "exact_dpp":
-                    dpp.sample_exact(method=self.method, **self.method_params)
+                    X = dpp.sample_exact(**self.method_params)
                 elif self.sampler_type == "exact_k_dpp":
-                    if dpp.eval_L is not None:
-                        L_xy, X = dpp.eval_L, dpp.X_data
-                        k = compute_expected_cardinality(L_xy, X) // 2
-                        self.method_params["size"] = k
-                    dpp.sample_exact_k_dpp(method=self.method, **self.method_params)
+                    X = dpp.sample_exact_k_dpp(**self.method_params)
                 else:
                     raise ValueError(self.sampler_type)
-            return dpp.list_of_samples
+                samples.append(X)
+            return samples
 
         elif self.sampler_type.startswith("mcmc"):
             if self.sampler_type == "mcmc_dpp":
-                dpp.sample_mcmc(method=self.method, **self.method_params)
+                dpp.sample_mcmc(**self.method_params)
             elif self.sampler_type == "mcmc_k_dpp":
-                dpp.sample_mcmc_k_dpp(method=self.method, **self.method_params)
+                dpp.sample_mcmc_k_dpp(**self.method_params)
             else:
                 raise ValueError(self.sampler_type)
             return dpp.list_of_samples[-1]
+
+
+def singleton_adequation(dpp, samples, tol=0.05, **kwargs):
+    """Perform chi-square test to check that
+    P[{i} C X] = K_ii
+    """
+
+    if dpp.size_k_dpp:
+        adeq = True
+        msg = "We do not check inclusion probabilities for k-DPPs"
+    else:
+        dpp.compute_correlation_kernel()
+        N = len(dpp.K)
+
+        f_th = np.diag(dpp.K) / np.trace(dpp.K)
+
+        samples_as_singletons = list(chain.from_iterable(samples))
+        f_emp, _ = np.histogram(samples_as_singletons, bins=range(N + 1), density=True)
+
+        _, pval = chisquare(f_obs=f_emp, f_exp=f_th)
+
+        adeq = pval > tol
+        msg = "pval = {}, emp = {}, th = {}".format(pval, f_emp, f_th)
+
+    return adeq, msg
+
+
+def doubleton_adequation(dpp, samples, tol=0.05, **kwargs):
+    """Perform chi-square test to check that
+    P[{i, j} C X] = det [[K_ii, K_ij], [K_ji, K_jj]]
+    """
+    if dpp.size_k_dpp:
+        return True, "We do not check inclusion probabilities for k-DPPs"
+    else:
+        samples = list(map(set, samples))
+        dpp.compute_correlation_kernel()
+        N = len(dpp.K)
+
+        nb_doubletons = 10
+        doubletons = [
+            set(rndm.choice(N, size=2, replace=False)) for _ in range(nb_doubletons)
+        ]
+
+        # det [[K_ii, K_ij], [K_ji, K_jj]]
+        f_th = np.array([det_ST(dpp.K, list(d)) for d in doubletons])
+
+        counts = np.array(
+            [sum(doubl.issubset(sampl) for sampl in samples) for doubl in doubletons]
+        )
+        f_emp = counts / len(samples)
+
+        f_emp /= f_emp.sum()
+        f_th /= f_th.sum()
+        _, pval = chisquare(f_obs=f_emp, f_exp=f_th)
+
+        adeq = pval > tol
+        msg = "pval = {}, emp = {}, th = {}".format(pval, f_emp, f_th)
+
+        return adeq, msg
+
+
+def uniqueness_of_items(dpp, samples, **kwargs):
+    """Check that each sample is made of unique items (no duplicates)"""
+
+    adeq = all(len(set(x)) == len(x) for x in samples)
+    msg = "Some samples contain duplicated items, while each item must appear only once"
+
+    return adeq, msg
+
+
+def cardinality_adequation(dpp, samples, **kwargs):
+    """Check that the empirical cardinality of the samples is within a standard deviation to the true E[|X|] = Trace(K).
+    For k-DPP, simply check that the samples have the prescribed cadinality"""
+
+    card_emp = np.array([len(sample) for sample in samples])
+    mean_card_emp = np.mean(card_emp)
+
+    if dpp.size_k_dpp:
+        adeq = np.all(card_emp == dpp.size_k_dpp)
+        msg = "|X|_emp = {}, |X|_th = {}".format(mean_card_emp, dpp.size_k_dpp)
+
+    else:
+        dpp.compute_correlation_kernel()
+        # E[|X|] = Trace(K), Var[|X|] = Trace(K - K^2)
+        mean_card_th = np.trace(dpp.K)
+        if dpp.kernel_type == "correlation" and dpp.projection:
+            # E[|X|] = |X| = Trace(K) |X| = rank(K)
+            mean_card_th = np.rint(mean_card_th).astype(int)
+
+        std_card_th = np.sqrt(np.abs(np.trace(dpp.K - dpp.K.dot(dpp.K))))
+
+        adeq = np.abs(mean_card_emp - mean_card_th) <= std_card_th
+        msg = "E_emp = {}, E_th = {}, Std_th = {}".format(
+            mean_card_emp, mean_card_th, std_card_th
+        )
+
+    return adeq, msg
+
+
+def select_adequation(name):
+    adequations = {
+        "uniqueness_of_items": uniqueness_of_items,
+        "cardinality": cardinality_adequation,
+        "singleton": singleton_adequation,
+        "doubleton": doubleton_adequation,
+    }
+    return adequations.get(name)
 
 
 class TestAdequationOfFiniteDppSamplers(unittest.TestCase):
@@ -71,185 +166,85 @@ class TestAdequationOfFiniteDppSamplers(unittest.TestCase):
     e_vals_in_01 = np.random.rand(rank)
     e_vals_geq_0 = 1 + rndm.geometric(p=0.5, size=rank)
 
-    e_vecs, _ = la.qr(rndm.randn(N, rank), mode="economic")
+    e_vecs, *_ = la.qr(rndm.randn(N, rank), mode="economic")
 
     A_zono = rndm.randn(rank, N)
 
     phi = rndm.randn(rank, N)
 
-    adequations_to_check = (
-        "uniqueness_of_items",
-        "cardinality",
-        "singleton",
-        "doubleton",
-    )
-
-    @staticmethod
-    def singleton_adequation(dpp, samples, tol=0.05):
-        """Perform chi-square test to check that
-        P[{i} C X] = K_ii
-        """
-
-        if dpp.size_k_dpp:
-            adeq = True
-            msg = "We do not check inclusion probabilities for k-DPPs"
-        else:
-            dpp.compute_K()
-            N = len(dpp.K)
-
-            f_th = np.diag(dpp.K) / np.trace(dpp.K)
-
-            samples_as_singletons = list(chain.from_iterable(samples))
-            f_emp, _ = np.histogram(
-                samples_as_singletons, bins=range(N + 1), density=True
-            )
-
-            _, pval = chisquare(f_obs=f_emp, f_exp=f_th)
-
-            adeq = pval > tol
-            msg = "pval = {}, emp = {}, th = {}".format(pval, f_emp, f_th)
-
-        return adeq, msg
-
-    @staticmethod
-    def doubleton_adequation(dpp, samples, tol=0.05):
-        """Perform chi-square test to check that
-        P[{i, j} C X] = det [[K_ii, K_ij], [K_ji, K_jj]]
-        """
-        if dpp.size_k_dpp:
-            return True, "We do not check inclusion probabilities for k-DPPs"
-        else:
-            samples = list(map(set, samples))
-            dpp.compute_K()
-            N = len(dpp.K)
-
-            nb_doubletons = 10
-            doubletons = [
-                set(rndm.choice(N, size=2, replace=False)) for _ in range(nb_doubletons)
-            ]
-
-            # det [[K_ii, K_ij], [K_ji, K_jj]]
-            f_th = np.array([det_ST(dpp.K, list(d)) for d in doubletons])
-
-            counts = np.array(
-                [
-                    sum(doubl.issubset(sampl) for sampl in samples)
-                    for doubl in doubletons
-                ]
-            )
-            f_emp = counts / len(samples)
-
-            f_emp /= f_emp.sum()
-            f_th /= f_th.sum()
-            _, pval = chisquare(f_obs=f_emp, f_exp=f_th)
-
-            adeq = pval > tol
-            msg = "pval = {}, emp = {}, th = {}".format(pval, f_emp, f_th)
-
-            return adeq, msg
-
-    @staticmethod
-    def uniqueness_of_items(dpp, samples):
-        """Check that each sample is made of unique items (no duplicates)"""
-
-        adeq = all(len(set(x)) == len(x) for x in samples)
-        msg = "Some samples contain duplicated items, while each item must appear only once"
-
-        return adeq, msg
-
-    @staticmethod
-    def cardinality_adequation(dpp, samples):
-        """Check that the empirical cardinality of the samples is within a standard deviation to the true E[|X|] = Trace(K).
-        For k-DPP, simply check that the samples have the prescribed cadinality"""
-
-        card_emp = np.array([len(sample) for sample in samples])
-        mean_card_emp = np.mean(card_emp)
-
-        if dpp.size_k_dpp:
-            adeq = np.all(card_emp == dpp.size_k_dpp)
-            msg = "|X|_emp = {}, |X|_th = {}".format(mean_card_emp, dpp.size_k_dpp)
-
-        else:
-            dpp.compute_K()
-            # E[|X|] = Trace(K), Var[|X|] = Trace(K - K^2)
-            mean_card_th = np.trace(dpp.K)
-            if dpp.kernel_type == "correlation" and dpp.projection:
-                # E[|X|] = |X| = Trace(K) |X| = rank(K)
-                mean_card_th = np.rint(mean_card_th).astype(int)
-
-            std_card_th = np.sqrt(np.abs(np.trace(dpp.K - dpp.K.dot(dpp.K))))
-
-            adeq = np.abs(mean_card_emp - mean_card_th) <= std_card_th
-            msg = "E_emp = {}, E_th = {}, Std_th = {}".format(
-                mean_card_emp, mean_card_th, std_card_th
-            )
-
-        return adeq, msg
-
-    def check_adequation(self, name, samples, dpp):
-        if name == "uniqueness_of_items":
-            return self.uniqueness_of_items(dpp, samples)
-        elif name == "cardinality":
-            return self.cardinality_adequation(dpp, samples)
-        elif name == "singleton":
-            return self.singleton_adequation(dpp, samples)
-        elif name == "doubleton":
-            return self.doubleton_adequation(dpp, samples)
-
     def iter_configurations(self, list_dpp_params, sampler_method_params):
+        for sampler_type, list_method_params in sampler_method_params.items():
+            for method_params in list_method_params:
+                for dpp_params in list_dpp_params:
+                    # define a dpp for each sampling type and sampling method
+                    yield Configuration(dpp_params, sampler_type, method_params)
 
-        for sampler_type, method_params in sampler_method_params.items():
-            for method, params in method_params:
-                for idx, dpp_params in enumerate(list_dpp_params):
-                    yield Configuration(sampler_type, method, params, idx, dpp_params)
-
-    def run_adequation_tests(self, kernel_type, dpp_params, sampler_method_params):
+    def run_adequation_tests(
+        self,
+        dpp_params,
+        sampler_method_params,
+        adequations_to_check,
+    ):
 
         for config in self.iter_configurations(dpp_params, sampler_method_params):
             # Initialize DPP and generate samples a single time
             # before performing checks for performance reasons (sampling is the bottleneck)
-            dpp = config.create_dpp(kernel_type)
+            dpp = config.create_dpp()
             samples = config.get_samples(dpp, self.nb_exact_samples)
-            for adequation in self.adequations_to_check:
+            for (name, adeq_params) in adequations_to_check.items():
                 with self.subTest(
                     config=config.__dict__,
-                    adequation=adequation,
+                    adequation=name,
                 ):
-                    adeq, msg = self.check_adequation(adequation, samples, dpp)
+                    adequation = select_adequation(name)
+                    adeq, msg = adequation(dpp, samples, **adeq_params)
                     self.assertTrue(adeq, msg)
 
     def test_adequation_of_projection_dpp_K_zonotope_sampler(self):
 
-        kernel_type = "correlation"
-        # projection, param
         dpp_params = [
             {
+                "kernel_type": "correlation",
                 "projection": True,
                 "A_zono": self.A_zono,
             },
         ]
 
         sampler_method_params = {
-            "mcmc_dpp": (("zonotope", {}),),
+            "mcmc_dpp": (
+                {
+                    "method": "zonotope",
+                },
+            ),
         }
 
-        self.run_adequation_tests(kernel_type, dpp_params, sampler_method_params)
+        adequations_to_check = {
+            "uniqueness_of_items": {},
+            "cardinality": {},
+            "singleton": {},
+            "doubleton": {},
+        }
+
+        self.run_adequation_tests(
+            dpp_params, sampler_method_params, adequations_to_check
+        )
 
     def test_dpp_adequation_with_projection_correlation_kernel(self):
 
-        kernel_type = "correlation"
-        # projection, param
         U = self.e_vecs
         dpp_params = [
             {
+                "kernel_type": "correlation",
                 "projection": True,
                 "K": (U * self.e_vals_eq_01).dot(U.T),
             },
             {
+                "kernel_type": "correlation",
                 "projection": True,
                 "K_eig_dec": (self.e_vals_eq_01, U),
             },
             {
+                "kernel_type": "correlation",
                 "projection": True,
                 "A_zono": self.A_zono,
             },
@@ -258,35 +253,44 @@ class TestAdequationOfFiniteDppSamplers(unittest.TestCase):
         k = self.rank
         sampler_method_params = {
             "exact_dpp": (
-                ("spectral", {"mode": "gs"}),
-                ("projection", {"mode": "cho"}),
-                ("projection", {"mode": "lu"}),
-                ("sequential", {"mode": "lu"}),
-                ("sequential", {"mode": "ldl"}),
+                {"method": "spectral", "mode": "gs"},
+                {"method": "projection", "mode": "cho"},
+                {"method": "projection", "mode": "lu"},
+                {"method": "sequential", "mode": "lu"},
+                {"method": "sequential", "mode": "ldl"},
             ),
             "exact_k_dpp": (
-                ("spectral", {"mode": "gs", "size": k}),
-                ("spectral", {"mode": "gs-perm", "size": k}),
-                ("projection", {"mode": "cho", "size": k}),
-                ("projection", {"mode": "lu", "size": k}),
+                {"method": "spectral", "mode": "gs", "size": k},
+                {"method": "spectral", "mode": "gs-perm", "size": k},
+                {"method": "projection", "mode": "cho", "size": k},
+                {"method": "projection", "mode": "lu", "size": k},
             ),
-            "mcmc_dpp": (("E", {"size": k, "nb_iter": self.nb_iter_mcmc}),),
-            "mcmc_k_dpp": (("E", {"size": k, "nb_iter": self.nb_iter_mcmc}),),
+            "mcmc_dpp": ({"method": "E", "size": k, "nb_iter": self.nb_iter_mcmc},),
+            "mcmc_k_dpp": ({"method": "E", "size": k, "nb_iter": self.nb_iter_mcmc},),
         }
 
-        self.run_adequation_tests(kernel_type, dpp_params, sampler_method_params)
+        adequations_to_check = {
+            "uniqueness_of_items": {},
+            "cardinality": {},
+            "singleton": {},
+            "doubleton": {},
+        }
+
+        self.run_adequation_tests(
+            dpp_params, sampler_method_params, adequations_to_check
+        )
 
     def test_dpp_adequation_with_non_projection_correlation_kernel(self):
 
-        kernel_type = "correlation"
         U = self.e_vecs
-        # projection, param
         dpp_params = [
             {
+                "kernel_type": "correlation",
                 "projection": False,
                 "K": (U * self.e_vals_in_01).dot(U.T),
             },
             {
+                "kernel_type": "correlation",
                 "projection": False,
                 "K_eig_dec": (self.e_vals_in_01, U),
             },
@@ -296,168 +300,207 @@ class TestAdequationOfFiniteDppSamplers(unittest.TestCase):
 
         sampler_method_params = {
             "exact_dpp": (
-                ("spectral", {"mode": "gs"}),
-                ("spectral", {"mode": "gs-perm"}),
-                ("sequential", {"mode": "lu"}),
-                ("sequential", {"mode": "ldl"}),
+                {"method": "spectral", "mode": "gs"},
+                {"method": "spectral", "mode": "gs-perm"},
+                {"method": "sequential", "mode": "lu"},
+                {"method": "sequential", "mode": "ldl"},
             ),
             "exact_k_dpp": (
-                ("spectral", {"mode": "gs", "size": k}),
-                ("spectral", {"mode": "gs-perm", "size": k}),
+                {"method": "spectral", "mode": "gs", "size": k},
+                {"method": "spectral", "mode": "gs-perm", "size": k},
             ),
             "mcmc_dpp": (
-                ("AD", {"nb_iter": self.nb_iter_mcmc}),
-                ("AED", {"nb_iter": self.nb_iter_mcmc}),
+                {"method": "AD", "nb_iter": self.nb_iter_mcmc},
+                {"method": "AED", "nb_iter": self.nb_iter_mcmc},
             ),
-            "mcmc_k_dpp": (("E", {"size": k, "nb_iter": self.nb_iter_mcmc}),),
+            "mcmc_k_dpp": ({"method": "E", "size": k, "nb_iter": self.nb_iter_mcmc},),
         }
 
-        self.run_adequation_tests(kernel_type, dpp_params, sampler_method_params)
+        adequations_to_check = {
+            "uniqueness_of_items": {},
+            "cardinality": {},
+            "singleton": {},
+            "doubleton": {},
+        }
+
+        self.run_adequation_tests(
+            dpp_params, sampler_method_params, adequations_to_check
+        )
 
     def test_dpp_adequation_with_projection_likelihood_kernel(self):
 
-        kernel_type = "likelihood"
-        # projection, param
         U = self.e_vecs
-
         dpp_params = [
             {
+                "kernel_type": "likelihood",
                 "projection": True,
                 "L": (U * self.e_vals_eq_01).dot(U.T),
             },
             {
+                "kernel_type": "likelihood",
                 "projection": True,
                 "L_eig_dec": (self.e_vals_eq_01, U),
             },
         ]
 
+        k = self.rank
         sampler_method_params = {
             "exact_dpp": (
-                ("spectral", {"mode": "gs"}),
-                ("spectral", {"mode": "gs-perm"}),
-                ("sequential", {"mode": "lu"}),
-                ("sequential", {"mode": "ldl"}),
+                {"method": "spectral", "mode": "gs"},
+                {"method": "spectral", "mode": "gs-perm"},
+                {"method": "sequential", "mode": "lu"},
+                {"method": "sequential", "mode": "ldl"},
             ),
             "exact_k_dpp": (
-                ("spectral", {"mode": "gs", "size": self.rank}),
-                ("spectral", {"mode": "gs-perm", "size": self.rank}),
-                ("projection", {"mode": "cho", "size": self.rank}),
-                ("projection", {"mode": "lu", "size": self.rank}),
+                {"method": "spectral", "mode": "gs", "size": k},
+                {"method": "spectral", "mode": "gs-perm", "size": k},
+                {"method": "projection", "mode": "cho", "size": k},
+                {"method": "projection", "mode": "lu", "size": k},
             ),
             "mcmc_dpp": (
-                ("AD", {"nb_iter": self.nb_iter_mcmc}),
-                ("AED", {"nb_iter": self.nb_iter_mcmc}),
+                {"method": "AD", "nb_iter": self.nb_iter_mcmc},
+                {"method": "AED", "nb_iter": self.nb_iter_mcmc},
             ),
-            "mcmc_k_dpp": (("E", {"size": self.rank, "nb_iter": self.nb_iter_mcmc}),),
+            "mcmc_k_dpp": ({"method": "E", "size": k, "nb_iter": self.nb_iter_mcmc},),
         }
 
-        self.run_adequation_tests(kernel_type, dpp_params, sampler_method_params)
+        adequations_to_check = {
+            "uniqueness_of_items": {},
+            "cardinality": {},
+            "singleton": {},
+            "doubleton": {},
+        }
+
+        self.run_adequation_tests(
+            dpp_params, sampler_method_params, adequations_to_check
+        )
 
     def test_dpp_adequation_with_non_projection_likelihood_kernel(self):
 
-        kernel_type = "likelihood"
-
         U = self.e_vecs
-        # projection, param
         dpp_params = [
             {
+                "kernel_type": "likelihood",
                 "projection": False,
                 "L": (U * self.e_vals_eq_01).dot(U.T),
             },
             {
+                "kernel_type": "likelihood",
                 "projection": False,
                 "L_eig_dec": (self.e_vals_eq_01, U),
             },
             {
+                "kernel_type": "likelihood",
                 "projection": False,
                 "L": (U * self.e_vals_geq_0).dot(U.T),
             },
             {
+                "kernel_type": "likelihood",
                 "projection": False,
                 "L_eig_dec": (self.e_vals_geq_0, U),
             },
             {
+                "kernel_type": "likelihood",
                 "projection": False,
                 "L_gram_factor": self.phi,
             },
-        ]  # L_gram_factor to test L_dual
+        ]
 
         k = self.rank // 2
         sampler_method_params = {
             "exact_dpp": (
-                ("spectral", {"mode": "gs"}),
-                ("spectral", {"mode": "gs-perm"}),
-                ("sequential", {"mode": "lu"}),
-                ("sequential", {"mode": "ldl"}),
+                {"method": "spectral", "mode": "gs"},
+                {"method": "spectral", "mode": "gs-perm"},
+                {"method": "sequential", "mode": "lu"},
+                {"method": "sequential", "mode": "ldl"},
             ),
             "exact_k_dpp": (
-                ("spectral", {"mode": "gs", "size": k}),
-                ("spectral", {"mode": "gs-perm", "size": k}),
+                {"method": "spectral", "mode": "gs", "size": k},
+                {"method": "spectral", "mode": "gs-perm", "size": k},
             ),
             "mcmc_dpp": (
-                ("AD", {"nb_iter": self.nb_iter_mcmc}),
-                ("AED", {"nb_iter": self.nb_iter_mcmc}),
+                {"method": "AD", "nb_iter": self.nb_iter_mcmc},
+                {"method": "AED", "nb_iter": self.nb_iter_mcmc},
             ),
-            "mcmc_k_dpp": (("E", {"size": k, "nb_iter": self.nb_iter_mcmc}),),
+            "mcmc_k_dpp": ({"method": "E", "size": k, "nb_iter": self.nb_iter_mcmc},),
         }
 
-        self.run_adequation_tests(kernel_type, dpp_params, sampler_method_params)
+        adequations_to_check = {
+            "uniqueness_of_items": {},
+            "cardinality": {},
+            "singleton": {},
+            "doubleton": {},
+        }
+
+        self.run_adequation_tests(
+            dpp_params, sampler_method_params, adequations_to_check
+        )
 
     def test_adequation_intermediate_sampler(self):
 
-        kernel_type = "likelihood"
+        # def compute_expected_cardinality(L_xy, X):
+        #     L = L_xy(X)
+        #     I_L_min = L + np.eye(*L.shape)
+        #     exp_card = np.sum(np.diag(L.dot(np.linalg.inv(I_L_min))))
+        #     return np.floor(exp_card).astype(int)
+
+        N = 100
         dpp_params = [
             {
+                "kernel_type": "likelihood",
                 "projection": False,
-                "L_eval_X_data": (example_eval_L_linear, rndm.rand(100, 6)),
+                "L_eval_X_data": (example_eval_L_linear, rndm.rand(N, 6)),
             },
             {
+                "kernel_type": "likelihood",
                 "projection": False,
-                "L_eval_X_data": (example_eval_L_min_kern, rndm.rand(100, 1)),
+                "L_eval_X_data": (example_eval_L_min_kern, rndm.rand(N, 1)),
             },
         ]
         sampler_method_params = {
             "exact_dpp": (
-                (
-                    "intermediate",
-                    {
-                        "mode": "vfx",
-                        "verbose": False,
-                        "rls_oversample_bless": 5,
-                    },
-                ),
-                (
-                    "intermediate",
-                    {
-                        "mode": "alpha",
-                        "verbose": False,
-                        "rls_oversample_bless": 5,
-                    },
-                ),
+                {
+                    "method": "intermediate",
+                    "mode": "vfx",
+                    "verbose": False,
+                    "rls_oversample_bless": 5,
+                },
+                {
+                    "method": "intermediate",
+                    "mode": "alpha",
+                    "verbose": False,
+                    "rls_oversample_bless": 5,
+                },
             ),
-            "exact_k_dpp": (
-                (
-                    "intermediate",
-                    {
-                        "mode": "vfx",
-                        # "size": k, defined in get_samples
-                        "verbose": False,
-                        "rls_oversample_bless": 5,
-                    },
-                ),
-                (
-                    "intermediate",
-                    {
-                        "mode": "alpha",
-                        # "size": k, defined in get_samples
-                        "verbose": False,
-                        "rls_oversample_bless": 5,
-                    },
-                ),
-            ),
+            # todo k_dpp samplers need tunning, unconvenient to test
+            # "exact_k_dpp": (
+            #     {
+            #         "method": "intermediate",
+            #         "mode": "vfx",
+            #         "size": 3,
+            #         "verbose": False,
+            #         "rls_oversample_bless": 5,
+            #     },
+            #     {
+            #         "method": "intermediate",
+            #         "mode": "alpha",
+            #         "size": 3,
+            #         "verbose": False,
+            #         "rls_oversample_bless": 5,
+            #     },
+            # ),
         }
 
-        self.run_adequation_tests(kernel_type, dpp_params, sampler_method_params)
+        adequations_to_check = {
+            "uniqueness_of_items": {},
+            "cardinality": {},
+            "singleton": {},
+            "doubleton": {},
+        }
+
+        self.run_adequation_tests(
+            dpp_params, sampler_method_params, adequations_to_check
+        )
 
 
 def main():
