@@ -13,7 +13,12 @@ import scipy.linalg as la
 from scipy.stats import chisquare
 
 from dppy.finite.dpp import FiniteDPP
-from dppy.utils import det_ST, example_eval_L_linear, example_eval_L_min_kern
+from dppy.utils import (
+    compute_loglikelihood,
+    det_ST,
+    example_eval_L_linear,
+    example_eval_L_min_kern,
+)
 
 
 class Configuration(object):
@@ -145,12 +150,26 @@ def cardinality_adequation(dpp, samples, **kwargs):
     return adeq, msg
 
 
+def log_likelihood_adequation(dpp, samples, k_dpp=False, **kwargs):
+    log_lik_emp = np.zeros(len(samples))
+    log_lik_theo = np.zeros(len(samples))
+    for i, (X, log_likelihood) in enumerate(samples):
+        log_lik_emp[i] = log_likelihood
+        log_lik_theo[i] = compute_loglikelihood(dpp, X, k_dpp=k_dpp)
+
+    adeq = np.allclose(log_lik_emp, log_lik_theo)
+    msg = "{}".format(np.vstack((log_lik_emp, log_lik_theo)))
+
+    return adeq, msg
+
+
 def select_adequation(name):
     adequations = {
         "uniqueness_of_items": uniqueness_of_items,
         "cardinality": cardinality_adequation,
         "singleton": singleton_adequation,
         "doubleton": doubleton_adequation,
+        "log_likelihood": log_likelihood_adequation,
     }
     return adequations.get(name)
 
@@ -497,6 +516,138 @@ class TestAdequationOfFiniteDppSamplers(unittest.TestCase):
             "singleton": {},
             "doubleton": {},
         }
+
+        self.run_adequation_tests(
+            dpp_params, sampler_method_params, adequations_to_check
+        )
+
+    def test_log_likelihood_projection_sampler_eigen_dpp(self):
+
+        e_vals = self.e_vals_eq_01
+        U = self.e_vecs
+        dpp_params = [
+            {
+                "kernel_type": "correlation",
+                "projection": True,
+                "K_eig_dec": (e_vals, U),
+            },
+        ]
+
+        sampler_method_params = {
+            "exact_dpp": (
+                {"method": "projection", "mode": "gs", "log_likelihood": True},
+                {"method": "projection", "mode": "gs-perm", "log_likelihood": True},
+            ),
+        }
+
+        adequations_to_check = {"log_likelihood": {}}
+
+        self.run_adequation_tests(
+            dpp_params, sampler_method_params, adequations_to_check
+        )
+
+    def test_log_likelihood_projection_sampler_kernel_dpp(self):
+
+        U = self.e_vecs
+        dpp_params = [
+            {"kernel_type": "correlation", "projection": True, "K": U.dot(U.T)},
+        ]
+
+        sampler_method_params = {
+            "exact_dpp": (
+                {"method": "projection", "mode": "cho", "log_likelihood": True},
+                {"method": "projection", "mode": "lu", "log_likelihood": True},
+            ),
+        }
+
+        adequations_to_check = {"log_likelihood": {}}
+
+        self.run_adequation_tests(
+            dpp_params, sampler_method_params, adequations_to_check
+        )
+
+    def test_log_likelihood_projection_sampler_eigen_k_dpp(self):
+
+        r = self.rank
+        e_vals = self.e_vals_eq_01
+        U = self.e_vecs
+        dpp_params = [
+            {
+                "kernel_type": "likelihood",
+                "projection": True,
+                "L_eig_dec": (e_vals, U),
+            },
+        ]
+
+        sampler_method_params = {
+            "exact_k_dpp": (
+                {
+                    "size": r // 2,
+                    "method": "projection",
+                    "mode": "gs",
+                    "log_likelihood": True,
+                },
+                {
+                    "size": r // 2,
+                    "method": "projection",
+                    "mode": "gs-perm",
+                    "log_likelihood": True,
+                },
+            ),
+        }
+
+        adequations_to_check = {"log_likelihood": {"k_dpp": True}}
+
+        self.run_adequation_tests(
+            dpp_params, sampler_method_params, adequations_to_check
+        )
+
+    def test_log_likelihood_projection_sampler_kernel_k_dpp(self):
+
+        r = self.rank
+        U = self.e_vecs
+        dpp_params = [
+            {"kernel_type": "likelihood", "projection": True, "L": U.dot(U.T)},
+        ]
+
+        sampler_method_params = {
+            "exact_k_dpp": (
+                {
+                    "size": r // 2,
+                    "method": "projection",
+                    "mode": "cho",
+                    "log_likelihood": True,
+                },
+                {
+                    "size": r // 2,
+                    "method": "projection",
+                    "mode": "lu",
+                    "log_likelihood": True,
+                },
+            ),
+        }
+
+        adequations_to_check = {"log_likelihood": {"k_dpp": True}}
+
+        self.run_adequation_tests(
+            dpp_params, sampler_method_params, adequations_to_check
+        )
+
+    def test_log_likelihood_sequential_sampler(self):
+
+        U = self.e_vecs
+        dpp_params = [
+            {"kernel_type": "correlation", "projection": True, "K": U.dot(U.T)},
+        ]
+
+        sampler_method_params = {
+            "exact_dpp": (
+                {"method": "sequential", "mode": "lu", "log_likelihood": True},
+                {"method": "sequential", "mode": "ldl", "log_likelihood": True},
+            ),
+        }
+
+        adequations_to_check = {"log_likelihood": {}}
 
         self.run_adequation_tests(
             dpp_params, sampler_method_params, adequations_to_check
