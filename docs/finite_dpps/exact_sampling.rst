@@ -7,7 +7,7 @@ Exact sampling
 
 Consider a finite DPP defined by its correlation kernel :math:`\mathbf{K}` :eq:`eq:inclusion_proba_DPP_K` or likelihood kernel :math:`\mathbf{L}` :eq:`eq:likelihood_DPP_L`.
 
-- **Projection DPPs**, i.e., DPPs with **orthogonal projection correlation kernels** :math:`\mathbf{K}=\mathbf{K}^*=\mathbf{K}^2` are reserved a special treatment, see :ref:`finite_dpps_exact_sampling_projection_methods`.
+- :ref:`finite_dpps_exact_sampling_projection_methods`, i.e., DPPs with **orthogonal projection correlation kernels** :math:`\mathbf{K}=\mathbf{K}^*=\mathbf{K}^2` are reserved a special treatment.
 
 For non-projection kernels, there exist three main types of exact sampling procedures:
 

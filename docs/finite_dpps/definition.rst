@@ -151,11 +151,9 @@ In fact
 Projection DPPs
 ===============
 
-:math:`\operatorname{DPP}(\mathbf{K})` defined by a *projection* correlation kernel, i.e., :math:`\mathbf{K}^2=\mathbf{K}` are called *projection* DPPs.
+:math:`\operatorname{DPP}(\mathbf{K})` defined by an `orthogonal projection matrix <https://en.wikipedia.org/wiki/Projection_(linear_algebra)#Projection_matrix>`_ correlation kernel :math:`\mathbf{K}=\mathbf{K}^{*}=\mathbf{K}^{2}` are called *projection* DPPs.
 
-If in addition :math:`\mathbf{K}` is hermitian, i.e.,  :math:`\mathbf{K}^{*}=\mathbf{K}`, then it is called an `orthogonal projection matrix <https://en.wikipedia.org/wiki/Projection_(linear_algebra)#Projection_matrix>`_.
 In this case, the existence conditions :eq:`eq:suff_cond_K` are satisfied since :math:`\mathbf{K}` has eigenvalues equal to :math:`0` or :math:`1`.
-The corresponding :math:`\operatorname{DPP}(\mathbf{K})` is called an orthogonal projection DPP are simply a projection DPP for brevity.
 
 	.. code-block:: python
 

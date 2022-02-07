@@ -187,10 +187,15 @@ def projection_sampler_kernel_cho(
     :type random_state:
         optional
 
+    :param log_likelihood:
+        If True, log-likelihood of the sample is also returned.
+    :type log_likelihood:
+        bool
+
     :return:
-        Exact sample :math:`X` and its log-likelihood.
+        Exact sample :math:`X` and its log-likelihood according to ``log_likelihood``.
     :rtype:
-        tuple(list, float)
+        list or tuple(list, float)
 
     .. seealso::
 

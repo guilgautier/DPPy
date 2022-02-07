@@ -71,10 +71,15 @@ def sequential_sampler_lu(
     :type random_state:
         optional
 
+    :param log_likelihood:
+        If True, log-likelihood of the sample is also returned.
+    :type log_likelihood:
+        bool
+
     :return:
-        An exact sample :math:`X \sim \operatorname{DPP}(\mathbf{K})`.
+        Exact sample :math:`X` and its log-likelihood according to ``log_likelihood``.
     :rtype:
-        list
+        list or tuple(list, float)
     """
     rng = check_random_state(random_state)
     A = K if overwrite else K.copy()
@@ -102,25 +107,9 @@ def sequential_sampler_ldl(
     log_likelihood=False,
     **kwargs,
 ):
-    r"""Generate an exact sample from a hermitian :math:`\operatorname{DPP}(\mathbf{K})`.
+    r"""Hermitian (:math:`\mathbf{K}=\mathbf{K}^*`) variant of :py:func:`~dppy.finite.exact_samplers.sequential_sampler.sequential_sampler_lu`
 
-    This function implements the hermitian version of :cite:`Pou19` Algorithm 1. It is based on a :math:`LDL^h`-type factorization procedure.
-
-    :param K:
-        Hermitian correlation kernel :math:`\mathbf{K}=\mathbf{K}^*`.
-    :type K:
-        array_like
-
-    :param random_state:
-        random number generator or seed, defaults to None
-    :type random_state:
-        optional
-
-    :return:
-        An exact sample :math:`X \sim \operatorname{DPP}(\mathbf{K})`.
-    :rtype:
-        list
-    """
+    This corresponds to the :math:`LDL^h`-type variant of :cite:`Pou19` Algorithm 1."""
     rng = check_random_state(random_state)
     A = K if overwrite else K.copy()
     hermitian = np.iscomplexobj(A)

@@ -37,13 +37,16 @@ def projection_sampler_eigen(dpp, size=None, random_state=None, **kwargs):
         optional
 
     :return:
-        Exact sample :math:`X` and its log-likelihood.
+        Exact sample :math:`X`.
     :rtype:
-        tuple(list, float)
+        list
 
     :Keyword arguments:
 
-        - **mode** (str): select the variant of the sampler, see :py:func:`~dppy.finite.exact_samplers.projection_sampler_eigen.select_projection_sampler_eigen`
+        - **mode** (str): select the variant of the sampler
+        - **log_likelihood** (bool): return the log-likelihood of the sample in addition of the sample itself.
+
+        See :py:func:`~dppy.finite.exact_samplers.projection_sampler_eigen.select_projection_sampler_eigen` for the list of samplers and their specific keyword arguments.
     """
     assert dpp.projection and dpp.hermitian and dpp.eig_vecs is not None
 
@@ -114,10 +117,15 @@ def projection_sampler_eigen_gs(
     :type random_state:
         optional
 
+    :param log_likelihood:
+        If True, log-likelihood of the sample is also returned.
+    :type log_likelihood:
+        bool
+
     :return:
-        Exact sample :math:`X` and its log-likelihood.
+        Exact sample :math:`X` and its log-likelihood according to ``log_likelihood``.
     :rtype:
-        tuple(list, float)
+        list or tuple(list, float)
 
     .. seealso::
 
