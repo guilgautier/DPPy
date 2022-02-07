@@ -358,28 +358,29 @@ def select_eigen_vectors_k_dpp(eig_vals, eig_vecs, size, esp=None, random_state=
     """
 
     rng = check_random_state(random_state)
-
-    # Size of: ground set / sample
-    N, k = eig_vecs.shape[0], size
+    assert eig_vals.size == eig_vecs.shape[1]
 
     # as in np.linalg.matrix_rank
-    tol = np.max(eig_vals) * N * np.finfo(float).eps
+    tol = np.max(eig_vals) * np.max(eig_vecs.shape) * np.finfo(float).eps
     rank = np.count_nonzero(eig_vals > tol)
-    if k > rank:
-        raise ValueError("size k={} > rank(L)={}".format(k, rank))
+    if size > rank:
+        raise ValueError("size k={} > rank(L)={}".format(size, rank))
 
     if esp is None:
-        esp = elementary_symmetric_polynomials(eig_vals, k)
+        esp = elementary_symmetric_polynomials(eig_vals, size)
 
-    mask = np.zeros(k, dtype=int)
+    mask_idx = np.zeros(size, dtype=int)
+    k = size
     for n in range(eig_vals.size, 0, -1):
-        if rng.rand() < eig_vals[n - 1] * esp[k - 1, n - 1] / esp[k, n]:
-            k -= 1
-            mask[k] = n - 1
-            if k == 0:
-                break
+        if k == 0:
+            break
 
-    return eig_vecs[:, mask]
+        proba = eig_vals[n - 1] * esp[k - 1, n - 1] / esp[k, n]
+        if rng.rand() < proba:
+            k -= 1
+            mask_idx[k] = n - 1
+
+    return eig_vecs[:, mask_idx]
 
 
 def compute_spectral_sampler_eig_vals_projection_k_dpp(dpp, size):
