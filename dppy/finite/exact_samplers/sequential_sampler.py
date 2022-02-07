@@ -50,7 +50,13 @@ def select_sequential_sampler(mode, hermitian):
     return samplers.get(mode.lower(), default)
 
 
-def sequential_sampler_lu(K, random_state=None, **kwargs):
+def sequential_sampler_lu(
+    K,
+    random_state=None,
+    overwrite=False,
+    log_likelihood=False,
+    **kwargs,
+):
     r"""Generate an exact sample from generic :math:`\operatorname{DPP}(\mathbf{K})` with potentially non hermitian correlation kernel :math:`\mathbf{K}`.
 
     This function implements :cite:`Pou19` Algorithm 1 based on a LU-type factorization procedure.
@@ -71,7 +77,7 @@ def sequential_sampler_lu(K, random_state=None, **kwargs):
         list
     """
     rng = check_random_state(random_state)
-    A = K.copy()
+    A = K if overwrite else K.copy()
     N = len(A)
     sample = []
     for i in range(N):
@@ -82,12 +88,20 @@ def sequential_sampler_lu(K, random_state=None, **kwargs):
         I = slice(i + 1, N)
         A[I, i] /= A[i, i]
         A[I, I] -= np.outer(A[I, i], A[i, I])
-        # A[j+1:, j+1:] -=  np.einsum('i,j', A[j+1:, j], A[j, j+1:])
-    # log_likelihood = np.sum(np.log(np.diagonal(A)))
-    return sample  # , A , log_likelihood
+
+    if log_likelihood:
+        log_lik = np.sum(np.log(np.abs(A.diagonal())))
+        return sample, log_lik
+    return sample
 
 
-def sequential_sampler_ldl(K, random_state=None, **kwargs):
+def sequential_sampler_ldl(
+    K,
+    random_state=None,
+    overwrite=False,
+    log_likelihood=False,
+    **kwargs,
+):
     r"""Generate an exact sample from a hermitian :math:`\operatorname{DPP}(\mathbf{K})`.
 
     This function implements the hermitian version of :cite:`Pou19` Algorithm 1. It is based on a :math:`LDL^h`-type factorization procedure.
@@ -108,7 +122,7 @@ def sequential_sampler_ldl(K, random_state=None, **kwargs):
         list
     """
     rng = check_random_state(random_state)
-    A = K.copy()
+    A = K if overwrite else K.copy()
     hermitian = np.iscomplexobj(A)
     N = len(A)
     v = np.zeros(N, dtype=(A.dtype))
@@ -116,19 +130,25 @@ def sequential_sampler_ldl(K, random_state=None, **kwargs):
     sample = []
     for i in range(N):
         I = range(0, i)
+
         if hermitian:
             v[I] = np.conj(A[i, I] * d[I])
             d[i] -= np.real(A[i, I].dot(v[I]))
         else:
             v[I] = A[i, I] * d[I]
             d[i] -= A[i, I].dot(v[I])
+
         if rng.rand() < d[i]:
             sample.append(i)
         else:
             d[i] -= 1.0
-        A[i, I] = d[i]
+
+        A[i, i] = d[i]
         I, J = slice(0, i), slice(i + 1, N)
         A[J, i] -= A[J, I].dot(v[I])
         A[J, i] /= d[i]
 
-    return sample  # , A
+    if log_likelihood:
+        log_lik = np.sum(np.log(np.abs(d)))
+        return sample, log_lik
+    return sample

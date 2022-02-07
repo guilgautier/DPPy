@@ -80,7 +80,6 @@ def select_projection_sampler_kernel(mode, hermitian):
 
         - ``"lu"`` (default) :py:func:`~dppy.finite.exact_samplers.projection_sampler_kernel.projection_sampler_kernel_lu`
         - ``"cho"`` (default) :py:func:`~dppy.finite.exact_samplers.projection_sampler_kernel.projection_sampler_kernel_cho`
-
     :rtype: callable
     """
     samplers = {
@@ -94,7 +93,12 @@ def select_projection_sampler_kernel(mode, hermitian):
 
 
 def projection_sampler_kernel_lu(
-    K, size=None, random_state=None, overwrite=False, **kwargs
+    K,
+    size=None,
+    random_state=None,
+    overwrite=False,
+    log_likelihood=False,
+    **kwargs,
 ):
     """Variant of :py:func:`~dppy.finite.exact_samplers.projection_sampler_kernel.projection_sampler_kernel_cho` where LU updates are performed instead of Cholesky updates."""
     rng = check_random_state(random_state)
@@ -145,12 +149,19 @@ def projection_sampler_kernel_lu(
 
     S = range(0, size)
     sample = items[S].tolist()
-    log_likelihood = np.sum(np.log(d2[S])) - log_binom(rank, size)
-    return sample  # , log_likelihood
+    if log_likelihood:
+        log_lik = np.sum(np.log(d2[S])) - log_binom(rank, size)
+        return sample, log_lik
+    return sample
 
 
 def projection_sampler_kernel_cho(
-    K, size=None, random_state=None, overwrite=False, **kwargs
+    K,
+    size=None,
+    random_state=None,
+    overwrite=False,
+    log_likelihood=False,
+    **kwargs,
 ):
     r"""Generate an exact sample from :math:`\operatorname{k-DPP}(K)` with :math:`k=` ``size`` (if ``size`` is provided), where ``K`` is an orthogonal projection matrix. If ``size`` is None (default), it is set to :math:`k=\operatorname{rank}(K)\triangleq r`, this also corresponds to sampling from the projection :math:`\operatorname{DPP}(K)`.
 
@@ -229,8 +240,10 @@ def projection_sampler_kernel_cho(
     S = range(0, size)
     sample = items[S].tolist()
 
-    log_likelihood = np.sum(np.log(d2[S])) - log_binom(rank, size)
-    return sample  # , log_likelihood
+    if log_likelihood:
+        log_lik = np.sum(np.log(d2[S])) - log_binom(rank, size)
+        return sample, log_lik
+    return sample
 
 
 def swap(A, i, j):

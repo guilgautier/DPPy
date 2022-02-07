@@ -83,7 +83,13 @@ def select_projection_sampler_eigen(mode):
     return samplers.get(mode.lower(), default)
 
 
-def projection_sampler_eigen_gs(eig_vecs, size=None, random_state=None, **kwargs):
+def projection_sampler_eigen_gs(
+    eig_vecs,
+    size=None,
+    random_state=None,
+    log_likelihood=False,
+    **kwargs,
+):
     r"""Generate an exact sample from :math:`\operatorname{k-DPP}(\mathbf{L})` with :math:`k=` ``size`` (if ``size`` is provided), where :math:`\mathbf{L}=UU^{*}` is an orthogonal projection matrix given :math:`U=` ``eig_vecs`` such that :math:`U^{*}U = I_r` and denote :math:`r=\operatorname{rank}(\mathbf{L})`. If ``size`` is None (default), it is set to :math:`k=r`, this also corresponds to sampling from the projection :math:`\operatorname{DPP}(\mathbf{K}=UU^{*})`.
 
     The likelihood of the output sample is given by
@@ -160,12 +166,19 @@ def projection_sampler_eigen_gs(eig_vecs, size=None, random_state=None, **kwargs
         np.fmax(d2, 0.0, where=Xc, out=d2)
 
     sample = items[~Xc].tolist()
-    log_likelihood = np.sum(np.log(d2[sample])) - log_binom(rank, size)
-    return sample  # , log_likelihood
+    if log_likelihood:
+        log_lik = np.sum(np.log(d2[sample])) - log_binom(rank, size)
+        return sample, log_lik
+    return sample
 
 
 def projection_sampler_eigen_gs_perm(
-    eig_vecs, size=None, random_state=None, overwrite=False, **kwargs
+    eig_vecs,
+    size=None,
+    random_state=None,
+    overwrite=False,
+    log_likelihood=False,
+    **kwargs,
 ):
     """Variant of :py:func:`~dppy.finite.exact_samplers.projection_sampler_eigen.projection_sampler_eigen_gs` involving permutations of the rows of ``eig_vecs``.
 
@@ -228,8 +241,10 @@ def projection_sampler_eigen_gs_perm(
 
     S = range(0, size)
     sample = items[S].tolist()
-    log_likelihood = np.sum(np.log(d2[S])) - log_binom(rank, size)
-    return sample  # , log_likelihood
+    if log_likelihood:
+        log_lik = np.sum(np.log(d2[S])) - log_binom(rank, size)
+        return sample, log_lik
+    return sample
 
 
 # def projection_sampler_eigen_mgs(U, size=None, random_state=None, overwrite=False):
