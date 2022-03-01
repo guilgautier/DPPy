@@ -8,12 +8,15 @@ from dppy.utils import check_random_state
 
 class FourierProjectionDPP(AbstractSpectralContinuousProjectionDPP):
     def __init__(self, multi_indices):
-        super().__init__(multi_indices, eltype_kernel=complex)
+        super().__init__(multi_indices, dtype_kernel=complex)
 
-    def eigen_function_1d(self, i, x_i):
-        raise np.exp(2 * np.pi * 1j * i * x_i)
+    def reference_density(self, x):
+        return 1.0
 
-    def eigen_function_multi(self, multi_idx, x):
+    def eigen_function_1D(self, n, x_n):
+        raise np.exp(2 * np.pi * 1j * n * x_n)
+
+    def eigen_function_multiD(self, multi_idx, x):
         # phi_k(x) exp(2 j pi <k, x>)
         X, K = np.atleast_2d(x, multi_idx)
         phi = np.zeros((X.shape[0], K.shape[0]), dtype=complex)
@@ -24,10 +27,10 @@ class FourierProjectionDPP(AbstractSpectralContinuousProjectionDPP):
         return phi.squeeze()
 
     def feature_vector(self, x):
-        return self.eigen_function_multi(self.multi_indices, x)
+        return self.eigen_function_multiD(self.multi_indices, x)
 
     def correlation_kernel(self, x, y=None):
-        if y is None and x.shape == (self.d,):
+        if (y is None or y is x) and x.shape == (self.d,):
             return float(self.N)
 
         # return super().correlation_kernel(x, x if y is None else y)
