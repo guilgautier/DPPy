@@ -10,11 +10,7 @@ import numpy as np
 from scipy.integrate import quad
 from scipy.special import eval_jacobi
 
-from dppy.continuous.jacobi import (
-    JacobiProjectionDPP,
-    compute_ordering,
-    compute_rejection_bounds,
-)
+from dppy.continuous.jacobi import JacobiProjectionDPP, bound_jacobi, compute_ordering
 from dppy.utils import is_symmetric
 
 
@@ -136,11 +132,11 @@ class TestJacobiProjectionDPP(unittest.TestCase):
 
                 dpp = JacobiProjectionDPP(N, jacobi_params)
 
-                with_log_scale = compute_rejection_bounds(
+                with_log_scale = bound_jacobi(
                     dpp.jacobi_params, dpp.ordering, log_scale=True
                 )
 
-                without_log_scale = compute_rejection_bounds(
+                without_log_scale = bound_jacobi(
                     dpp.jacobi_params, dpp.ordering, log_scale=False
                 )
 

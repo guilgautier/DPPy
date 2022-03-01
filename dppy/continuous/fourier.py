@@ -7,17 +7,39 @@ from dppy.utils import check_random_state
 
 
 class FourierProjectionDPP(AbstractSpectralContinuousProjectionDPP):
+    r"""Class representing the continuous projection DPP associated with Fourier eigenfunctions :math:`\phi_k(x) = \exp(2 j \pi \left\langle k, x \right\rangle)`.
+
+    - reference density :math:`w(x) = \prod_{i=1}^{d} 1_{[-1/2, 1/2]}(x_i)`.
+    - projection kernel
+
+        .. math::
+            K(x, y)
+            = \sum_{\mathfrak{b}(k)=0}^{N-1}
+                \exp(2 j \pi \left\langle k, x - y \right\rangle).
+
+    .. seealso::
+
+        - :py:meth:`~dppy.continuous.abstract_continuous_dpp.AbstractSpectralContinuousProjectionDPP` for more details.
+    """
+
     def __init__(self, multi_indices):
+        r"""Initialize the continuous Fourier projection DPP with eigenfunctions indexed by ``multi_indices``.
+
+        :param multi_indices: Matrix of size :math:`N \times d` collecting the multi-indices :math:`k` indexing the eigenfunctions :math:`\phi_k`.
+        :type multi_indices: array_like
+        """
         super().__init__(multi_indices, dtype_kernel=complex)
 
     def reference_density(self, x):
         return 1.0
 
-    def eigen_function_1D(self, n, x_n):
-        raise np.exp(2 * np.pi * 1j * n * x_n)
+    def eigen_function_1D(self, n, dim, x):
+        # phi_n(x) = exp(2 j pi n x)
+        # same eigen function family across dimension
+        raise np.exp(2 * np.pi * 1j * n * x)
 
     def eigen_function_multiD(self, multi_idx, x):
-        # phi_k(x) exp(2 j pi <k, x>)
+        # phi_k(x) = exp(2 j pi <k, x>)
         X, K = np.atleast_2d(x, multi_idx)
         phi = np.zeros((X.shape[0], K.shape[0]), dtype=complex)
         phi.imag = np.dot(X, K.T)
@@ -32,8 +54,6 @@ class FourierProjectionDPP(AbstractSpectralContinuousProjectionDPP):
     def correlation_kernel(self, x, y=None):
         if (y is None or y is x) and x.shape == (self.d,):
             return float(self.N)
-
-        # return super().correlation_kernel(x, x if y is None else y)
 
         phi = self.feature_vector
         phi_x = phi(x)
