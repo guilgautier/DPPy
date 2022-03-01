@@ -1,40 +1,38 @@
 # coding: utf8
-""" Implementation of the class :class:`MultivariateJacobiOPE` used in :cite:`GaBaVa19` for Monte Carlo with Determinantal Point Processes
+""" Implementation of the class :class:`JacobiProjectionDPP` used in :cite:`GaBaVa19` for Monte Carlo with Determinantal Point Processes
 
 It has 3 main methods:
 
-- :py:meth:`~dppy.multivariate_jacobi_ope.MultivariateJacobiOPE.sample` to generate samples
-- :py:meth:`~dppy.multivariate_jacobi_ope.MultivariateJacobiOPE.K` to evaluate the corresponding projection kernel
-- :py:meth:`~dppy.multivariate_jacobi_ope.MultivariateJacobiOPE.plot` to display 1D or 2D samples
+- :py:meth:`~dppy.continuous.jacobi.JacobiProjectionDPP.sample` to generate samples
+- :py:meth:`~dppy.continuous.jacobi.JacobiProjectionDPP.K` to evaluate the corresponding projection kernel
+- :py:meth:`~dppy.continuous.jacobi.JacobiProjectionDPP.plot` to display 1D or 2D samples
 """
 
-import numpy as np
 import itertools as itt
 
-from scipy import stats
-from scipy.special import beta, betaln, factorial, gamma, gammaln
-from scipy.special import eval_jacobi
 # from scipy.special import logsumexp
 import matplotlib.pyplot as plt
+import numpy as np
+from scipy import stats
+from scipy.special import beta, betaln, eval_jacobi, factorial, gamma, gammaln
 
 from dppy.random_matrices import mu_ref_beta_sampler_tridiag as tridiagonal_model
-
 from dppy.utils import check_random_state, inner1d
 
 
-class MultivariateJacobiOPE:
+class JacobiProjectionDPP:
     """
     Multivariate Jacobi Orthogonal Polynomial Ensemble used in :cite:`GaBaVa19` for Monte Carlo with Determinantal Point Processes
 
     This corresponds to a continuous multivariate projection DPP with state space :math:`[-1, 1]^d` with respect to
 
-    - reference measure :math:`\\mu(dx) = w(x) dx` (see also :py:meth:`~dppy.multivariate_jacobi_ope.MultivariateJacobiOPE.eval_w`), where
+    - reference measure :math:`\\mu(dx) = w(x) dx` (see also :py:meth:`~dppy.continuous.jacobi.JacobiProjectionDPP.eval_w`), where
 
         .. math::
 
             w(x) = \\prod_{i=1}^{d} (1-x_i)^{a_i} (1+x_i)^{b_i}
 
-    - kernel :math:`K` (see also :py:meth:`~dppy.multivariate_jacobi_ope.MultivariateJacobiOPE.K`)
+    - kernel :math:`K` (see also :py:meth:`~dppy.continuous.jacobi.JacobiProjectionDPP.K`)
 
         .. math::
             K(x, y) = \\sum_{\\mathfrak{b}(k)=0}^{N-1}
@@ -80,31 +78,30 @@ class MultivariateJacobiOPE:
 
     def __init__(self, N, jacobi_params):
 
-        self.N, self.jacobi_params, self.dim =\
-            self._check_params(N, jacobi_params)
+        self.N, self.jacobi_params, self.dim = self._check_params(N, jacobi_params)
 
         self.ordering = compute_ordering(self.N, self.dim)
 
-        self.deg_max, self.degrees_1D_polynomials =\
-            compute_degrees_1D_polynomials(np.max(self.ordering, axis=0))
+        self.deg_max, self.degrees_1D_polynomials = compute_degrees_1D_polynomials(
+            np.max(self.ordering, axis=0)
+        )
 
-        self.norms_1D_polynomials =\
-            compute_norms_1D_polynomials(self.jacobi_params, self.deg_max)
+        self.norms_1D_polynomials = compute_norms_1D_polynomials(
+            self.jacobi_params, self.deg_max
+        )
 
-        self.square_norms_multiD_polynomials =\
-            np.prod((self.norms_1D_polynomials**2)[self.ordering,
-                                                   range(self.dim)],
-                    axis=1)
+        self.square_norms_multiD_polynomials = np.prod(
+            (self.norms_1D_polynomials ** 2)[self.ordering, range(self.dim)], axis=1
+        )
 
         self.mass_of_mu = self.square_norms_multiD_polynomials[0]
 
-        self.rejection_bounds =\
-            compute_rejection_bounds(self.jacobi_params,
-                                     self.ordering,
-                                     log_scale=True)
+        self.rejection_bounds = compute_rejection_bounds(
+            self.jacobi_params, self.ordering, log_scale=True
+        )
 
     def _check_params(self, N, jacobi_params):
-        """ Check that:
+        """Check that:
 
         - The number of points :math:`N \\geq 1`
         - Jacobi parameters
@@ -112,14 +109,14 @@ class MultivariateJacobiOPE:
             - when :math:`d \\geq 2` we must have :math:`|a_i|, |b_i| \\leq \\frac{1}{2}`.
         """
         if type(N) is not int or N < 1:
-            raise ValueError('Number of points N={} < 1'.format(N))
+            raise ValueError("Number of points N={} < 1".format(N))
 
         dim = jacobi_params.size // 2
 
         if dim == 1 and not np.all(jacobi_params > -1):
-            raise ValueError('d=1, Jacobi parameters must be > -1')
+            raise ValueError("d=1, Jacobi parameters must be > -1")
         elif dim >= 2 and not np.all(np.abs(jacobi_params) <= 0.5):
-            raise ValueError('d={}, Jacobi parameters be in [-0.5, 0.5]^d'.format(dim))
+            raise ValueError("d={}, Jacobi parameters be in [-0.5, 0.5]^d".format(dim))
 
         return N, jacobi_params, dim
 
@@ -138,7 +135,7 @@ class MultivariateJacobiOPE:
         """
         a, b = self.jacobi_params.T
 
-        return np.prod((1.0 - X)**a * (1.0 + X)**b, axis=-1)
+        return np.prod((1.0 - X) ** a * (1.0 + X) ** b, axis=-1)
 
     def eval_multiD_polynomials(self, X):
         """Evaluate
@@ -171,16 +168,19 @@ class MultivariateJacobiOPE:
 
         .. seealso::
 
-            - evaluation of the kernel :py:meth:`~dppy.multivariate_jacobi_ope.MultivariateJacobiOPE.K`
+            - evaluation of the kernel :py:meth:`~dppy.continuous.jacobi.JacobiProjectionDPP.K`
         """
-        poly_1D_jacobi = eval_jacobi(self.degrees_1D_polynomials,
-                                     self.jacobi_params[:, 0],
-                                     self.jacobi_params[:, 1],
-                                     np.atleast_2d(X)[:, None])\
-                        / self.norms_1D_polynomials
+        poly_1D_jacobi = (
+            eval_jacobi(
+                self.degrees_1D_polynomials,
+                self.jacobi_params[:, 0],
+                self.jacobi_params[:, 1],
+                np.atleast_2d(X)[:, None],
+            )
+            / self.norms_1D_polynomials
+        )
 
-        return np.prod(poly_1D_jacobi[:, self.ordering, range(self.dim)],
-                       axis=2)
+        return np.prod(poly_1D_jacobi[:, self.ordering, range(self.dim)], axis=2)
 
     def K(self, X, Y=None, eval_pointwise=False):
         """Evalute :math:`\\left(K(x, y)\\right)_{x\\in X, y\\in Y}` if ``eval_pointwise=False`` or :math:`\\left(K(x, y)\\right)_{(x, y)\\in (X, Y)}` otherwise
@@ -267,8 +267,7 @@ class MultivariateJacobiOPE:
             else:
                 return phi_XY[:len_X].dot(phi_XY[len_X:].T)
 
-    def sample_chain_rule_proposal(self, nb_trials_max=10000,
-                                   random_state=None):
+    def sample_chain_rule_proposal(self, nb_trials_max=10000, random_state=None):
         """Use a rejection sampling mechanism to sample
 
         .. math::
@@ -315,7 +314,7 @@ class MultivariateJacobiOPE:
 
             .. note::
 
-                Each of the rejection constant :math:`C_{k}` is computed at initialization of the :py:class:`MultivariateJacobiOPE` object using :py:meth:`compute_rejection_bounds`
+                Each of the rejection constant :math:`C_{k}` is computed at initialization of the :py:class:`JacobiProjectionDPP` object using :py:meth:`compute_rejection_bounds`
 
         :return:
             A sample :math:`x\\in[-1,1]^d` with probability distribution :math:`\\frac{1}{N} K(x,x) w(x)`
@@ -346,17 +345,20 @@ class MultivariateJacobiOPE:
             x = 1.0 - 2.0 * rng.beta(0.5, 0.5, size=self.dim)
 
             # Compute (P_k(x)/||P_k||)^2
-            Pk2_x = np.prod(eval_jacobi(k, a, b, x))**2 / Pk_square_norm
+            Pk2_x = np.prod(eval_jacobi(k, a, b, x)) ** 2 / Pk_square_norm
             # Pk2_x = (np.prod(eval_jacobi(k, a, b, x)) / norm_Pk)**2
 
             # Compute w(x) / w_eq(x)
-            w_over_w_eq =\
-                np.pi**d * np.prod((1.0 - x)**a_05 * (1.0 + x)**b_05)
+            w_over_w_eq = np.pi ** d * np.prod((1.0 - x) ** a_05 * (1.0 + x) ** b_05)
 
             if rng.rand() * rejection_bound < Pk2_x * w_over_w_eq:
                 break
         else:
-            print('marginal distribution 1/N K(x,x), rejection fails after {} proposals'.format(trial))
+            print(
+                "marginal distribution 1/N K(x,x), rejection fails after {} proposals".format(
+                    trial
+                )
+            )
 
         return x
 
@@ -416,10 +418,12 @@ class MultivariateJacobiOPE:
         rng = check_random_state(random_state)
 
         if self.dim == 1 and tridiag_1D:
-            sample = tridiagonal_model(a=self.jacobi_params[0, 0] + 1,
-                                       b=self.jacobi_params[0, 1] + 1,
-                                       size=self.N,
-                                       random_state=rng)[:, None]
+            sample = tridiagonal_model(
+                a=self.jacobi_params[0, 0] + 1,
+                b=self.jacobi_params[0, 1] + 1,
+                size=self.N,
+                random_state=rng,
+            )[:, None]
             return 1.0 - 2.0 * sample
 
         sample = np.zeros((self.N, self.dim))
@@ -446,14 +450,18 @@ class MultivariateJacobiOPE:
                     phi[n] /= np.sqrt(schur)
                     break
             else:
-                print('conditional x_{} | x_1,...,x_{}, rejection fails after {} proposals'.format(n + 1, n, trial))
+                print(
+                    "conditional x_{} | x_1,...,x_{}, rejection fails after {} proposals".format(
+                        n + 1, n, trial
+                    )
+                )
 
         return sample
 
-    def plot(self, sample, weighted=''):
+    def plot(self, sample, weighted=""):
 
         if self.dim >= 3:
-            raise NotImplementedError('Visualizations in d>=3 not implemented')
+            raise NotImplementedError("Visualizations in d>=3 not implemented")
 
         tols = 5e-2 * np.ones_like(self.jacobi_params)
         tols = np.zeros_like(self.jacobi_params)
@@ -461,11 +469,11 @@ class MultivariateJacobiOPE:
 
         weights = np.ones(len(sample))
 
-        if weighted == 'BH':
+        if weighted == "BH":
             # w_n = 1 / K(x_n, x_n)
-            weights = 1. / self.K(sample, eval_pointwise=True)
+            weights = 1.0 / self.K(sample, eval_pointwise=True)
 
-        elif weighted == 'EZ':
+        elif weighted == "EZ":
             Phi_X = self.eval_multiD_polynomials(sample)
 
             idx = np.tile(np.arange(self.N), (self.N, 1))
@@ -489,30 +497,35 @@ class MultivariateJacobiOPE:
 
             fig, ax_main = plt.subplots(figsize=(6, 4))
 
-            ax_main.tick_params(axis='both', which='major', labelsize=18)
+            ax_main.tick_params(axis="both", which="major", labelsize=18)
             ax_main.set_xticks(ticks_pos)
             ax_main.set_xticklabels(ticks_labs)
 
-            ax_main.spines['right'].set_visible(False)
-            ax_main.spines['top'].set_visible(False)
+            ax_main.spines["right"].set_visible(False)
+            ax_main.spines["top"].set_visible(False)
 
-            ax_main.scatter(sample[:, 0],
-                            np.zeros_like(sample[:, 0]),
-                            s=weights)
+            ax_main.scatter(sample[:, 0], np.zeros_like(sample[:, 0]), s=weights)
 
-            ax_main.hist(sample[:, 0],
-                         bins=10,
-                         weights=weights,
-                         density=True,
-                         orientation='vertical',
-                         alpha=0.5)
+            ax_main.hist(
+                sample[:, 0],
+                bins=10,
+                weights=weights,
+                density=True,
+                orientation="vertical",
+                alpha=0.5,
+            )
 
             # Top densities
             X_ = np.linspace(-1 + tols[0, 1], 1 - tols[0, 0], 200)[:, None]
-            ax_main.plot(X_,
-                         0.5 * stats.beta(*(1 + self.jacobi_params[0])).pdf(0.5 * (1 - X_)),
-                         ls='--', c='red', lw=3, alpha=0.7,
-                         label=r'$a_1 = {:.2f}, b_1 = {:.2f}$'.format(*self.jacobi_params[0]))
+            ax_main.plot(
+                X_,
+                0.5 * stats.beta(*(1 + self.jacobi_params[0])).pdf(0.5 * (1 - X_)),
+                ls="--",
+                c="red",
+                lw=3,
+                alpha=0.7,
+                label=r"$a_1 = {:.2f}, b_1 = {:.2f}$".format(*self.jacobi_params[0]),
+            )
 
             x_lim = ax_main.get_xlim()
             y_lim = ax_main.get_ylim()
@@ -521,123 +534,175 @@ class MultivariateJacobiOPE:
 
                 tol = 5e-2
                 X_ = np.linspace(-1 + tol, 1 - tol, 200)[:, None]
-                ax_main.plot(X_,
-                             0.5 * stats.beta(0.5, 0.5).pdf(0.5 * (1 - X_)),
-                             c='orange', ls='-', lw=3,
-                             label=r'$a = b = -0.5$')
+                ax_main.plot(
+                    X_,
+                    0.5 * stats.beta(0.5, 0.5).pdf(0.5 * (1 - X_)),
+                    c="orange",
+                    ls="-",
+                    lw=3,
+                    label=r"$a = b = -0.5$",
+                )
 
-            ax_main.legend(fontsize=15,
-                           loc='center',
-                           bbox_to_anchor=(0.5, -0.15 if weighted else -0.17),
-                           labelspacing=0.1,
-                           frameon=False)
+            ax_main.legend(
+                fontsize=15,
+                loc="center",
+                bbox_to_anchor=(0.5, -0.15 if weighted else -0.17),
+                labelspacing=0.1,
+                frameon=False,
+            )
 
         elif self.dim == 2:
 
             # Create Fig and gridspec
             fig = plt.figure(figsize=(6, 6))
-            grid = plt.GridSpec(6, 6, hspace=0., wspace=0.)
+            grid = plt.GridSpec(6, 6, hspace=0.0, wspace=0.0)
 
-            ax_main = fig.add_subplot(grid[1:, :-1],
-                                      xticks=ticks_pos, xticklabels=ticks_labs,
-                                      yticks=ticks_pos, yticklabels=ticks_labs)
+            ax_main = fig.add_subplot(
+                grid[1:, :-1],
+                xticks=ticks_pos,
+                xticklabels=ticks_labs,
+                yticks=ticks_pos,
+                yticklabels=ticks_labs,
+            )
 
-            ax_main.tick_params(axis='both', which='major', labelsize=18)
+            ax_main.tick_params(axis="both", which="major", labelsize=18)
 
-            if weighted == 'EZ':
+            if weighted == "EZ":
                 weights *= 100
                 w_geq_0 = weights >= 0
-                ax_main.scatter(sample[w_geq_0, 0],
-                                sample[w_geq_0, 1],
-                                s=weights[w_geq_0], alpha=0.7)
+                ax_main.scatter(
+                    sample[w_geq_0, 0],
+                    sample[w_geq_0, 1],
+                    s=weights[w_geq_0],
+                    alpha=0.7,
+                )
 
-                ax_main.scatter(sample[~w_geq_0, 0],
-                                sample[~w_geq_0, 1],
-                                s=-weights[~w_geq_0], alpha=0.7)
+                ax_main.scatter(
+                    sample[~w_geq_0, 0],
+                    sample[~w_geq_0, 1],
+                    s=-weights[~w_geq_0],
+                    alpha=0.7,
+                )
             else:
                 weights *= 20
-                ax_main.scatter(sample[:, 0],
-                                sample[:, 1],
-                                s=weights, alpha=0.8)
+                ax_main.scatter(sample[:, 0], sample[:, 1], s=weights, alpha=0.8)
 
             x_lim = ax_main.get_xlim()
             y_lim = ax_main.get_ylim()
 
             # Top plot
-            ax_top = fig.add_subplot(grid[0, :-1],
-                                     xticks=ticks_pos, xticklabels=[],
-                                     yticks=[], yticklabels=[],
-                                     frameon=False)
+            ax_top = fig.add_subplot(
+                grid[0, :-1],
+                xticks=ticks_pos,
+                xticklabels=[],
+                yticks=[],
+                yticklabels=[],
+                frameon=False,
+            )
             ax_top.set_xlim(x_lim)
 
             # Top histogram
-            ax_top.hist(sample[:, 0],
-                        bins=10,
-                        weights=np.abs(weights),
-                        density=True,
-                        orientation='vertical',
-                        alpha=0.5)
+            ax_top.hist(
+                sample[:, 0],
+                bins=10,
+                weights=np.abs(weights),
+                density=True,
+                orientation="vertical",
+                alpha=0.5,
+            )
 
             # Top densities
             X_ = np.linspace(-1 + tols[0, 1], 1 - tols[0, 0], 200)[:, None]
-            l_top, = ax_top.plot(X_,
-                                 0.5 * stats.beta(*(1 + self.jacobi_params[0])).pdf(0.5 * (1 - X_)),
-                                 ls='--', c='red', lw=3, alpha=0.7)
+            (l_top,) = ax_top.plot(
+                X_,
+                0.5 * stats.beta(*(1 + self.jacobi_params[0])).pdf(0.5 * (1 - X_)),
+                ls="--",
+                c="red",
+                lw=3,
+                alpha=0.7,
+            )
 
             # Right plot
-            ax_right = fig.add_subplot(grid[1:, -1],
-                                       xticks=[], xticklabels=[],
-                                       yticks=ticks_pos, yticklabels=[],
-                                       frameon=False)
+            ax_right = fig.add_subplot(
+                grid[1:, -1],
+                xticks=[],
+                xticklabels=[],
+                yticks=ticks_pos,
+                yticklabels=[],
+                frameon=False,
+            )
             ax_right.set_ylim(y_lim)
 
             # Right histogram
-            ax_right.hist(sample[:, 1],
-                          bins=10,
-                          weights=np.abs(weights),
-                          density=True,
-                          orientation='horizontal',
-                          alpha=0.5)
+            ax_right.hist(
+                sample[:, 1],
+                bins=10,
+                weights=np.abs(weights),
+                density=True,
+                orientation="horizontal",
+                alpha=0.5,
+            )
 
             # Right densities
             X_ = np.linspace(-1 + tols[1, 1], 1 - tols[1, 0], 200)[:, None]
-            l_right, = ax_right.plot(0.5 * stats.beta(*(1 + self.jacobi_params[1])).pdf(0.5 * (1 - X_)),
-                                     X_,
-                                     ls='--', c='green', lw=3, alpha=0.7)
+            (l_right,) = ax_right.plot(
+                0.5 * stats.beta(*(1 + self.jacobi_params[1])).pdf(0.5 * (1 - X_)),
+                X_,
+                ls="--",
+                c="green",
+                lw=3,
+                alpha=0.7,
+            )
 
             leg_axes = [l_top, l_right]
-            leg_text = [', '.join([r'$a_{} = {:.2f}$'.format(i+1, jac_par[0]),
-                                   r'$b_{} = {:.2f}$'.format(i+1, jac_par[1])])
-                        for i, jac_par in enumerate(self.jacobi_params)]
+            leg_text = [
+                ", ".join(
+                    [
+                        r"$a_{} = {:.2f}$".format(i + 1, jac_par[0]),
+                        r"$b_{} = {:.2f}$".format(i + 1, jac_par[1]),
+                    ]
+                )
+                for i, jac_par in enumerate(self.jacobi_params)
+            ]
 
             if not weighted:
 
                 tol = 5e-2
                 X_ = np.linspace(-1 + tol, 1 - tol, 200)[:, None]
-                l_arcsine, = ax_top.plot(X_,
-                                         0.5 * stats.beta(0.5, 0.5).pdf(0.5 * (1 - X_)),
-                                         c='orange', ls='-', lw=3)
-                ax_right.plot(0.5 * stats.beta(0.5, 0.5).pdf(0.5 * (1 - X_)),
-                              X_,
-                              c='orange', ls='-', lw=3)
+                (l_arcsine,) = ax_top.plot(
+                    X_,
+                    0.5 * stats.beta(0.5, 0.5).pdf(0.5 * (1 - X_)),
+                    c="orange",
+                    ls="-",
+                    lw=3,
+                )
+                ax_right.plot(
+                    0.5 * stats.beta(0.5, 0.5).pdf(0.5 * (1 - X_)),
+                    X_,
+                    c="orange",
+                    ls="-",
+                    lw=3,
+                )
 
                 leg_axes.append(l_arcsine)
-                leg_text.append(r'$a = b = -0.5$')
+                leg_text.append(r"$a = b = -0.5$")
 
-            ax_main.legend(leg_axes,
-                           leg_text,
-                           fontsize=15,
-                           loc='center',
-                           bbox_to_anchor=(0.5, -0.15 if weighted else -0.18),
-                           labelspacing=0.1,
-                           frameon=False)
+            ax_main.legend(
+                leg_axes,
+                leg_text,
+                fontsize=15,
+                loc="center",
+                bbox_to_anchor=(0.5, -0.15 if weighted else -0.18),
+                labelspacing=0.1,
+                frameon=False,
+            )
 
 
 def compute_ordering(N, d):
-    """ Compute the ordering of the multi-indices :math:`\\in\\mathbb{N}^d` defining the order between the multivariate monomials as described in Section 2.1.3 of :cite:`BaHa16`.
+    """Compute the ordering of the multi-indices :math:`\\in\\mathbb{N}^d` defining the order between the multivariate monomials as described in Section 2.1.3 of :cite:`BaHa16`.
 
     :param N:
-        Number of polynomials :math:`(P_k)` considered to build the kernel :py:meth:`~dppy.multivariate_jacobi_ope.MultivariateJacobiOPE.K` (number of points of the corresponding :py:class:`MultivariateJacobiOPE`)
+        Number of polynomials :math:`(P_k)` considered to build the kernel :py:meth:`~dppy.continuous.jacobi.JacobiProjectionDPP.K` (number of points of the corresponding :py:class:`JacobiProjectionDPP`)
     :type N:
         int
 
@@ -655,18 +720,31 @@ def compute_ordering(N, d):
 
     .. code:: python
 
-        [(0, 0), (0, 1), (1, 0), (1, 1), (0, 2), (1, 2), (2, 0), (2, 1), (2, 2), (0, 3), (1, 3), (2, 3)]
+        [
+            (0, 0),
+            (0, 1),
+            (1, 0),
+            (1, 1),
+            (0, 2),
+            (1, 2),
+            (2, 0),
+            (2, 1),
+            (2, 2),
+            (0, 3),
+            (1, 3),
+            (2, 3),
+        ]
 
     .. seealso::
 
         - :cite:`BaHa16` Section 2.1.3
     """
-    layer_max = np.floor(N**(1.0 / d)).astype(np.int16)
+    layer_max = np.floor(N ** (1.0 / d)).astype(np.int16)
 
     ordering = itt.chain.from_iterable(
-                filter(lambda x: m in x,
-                       itt.product(range(m + 1), repeat=d))
-                for m in range(layer_max + 1))
+        filter(lambda x: m in x, itt.product(range(m + 1), repeat=d))
+        for m in range(layer_max + 1)
+    )
 
     return list(ordering)[:N]
 
@@ -720,8 +798,9 @@ def compute_norms_1D_polynomials(jacobi_params, deg_max):
         # |P_0|^2 = pi
         # |P_n|^2 = 1/2 (Gamma(n+1/2)/n!)^2 otherwise
         square_norms[0, arcsine] = np.pi
-        square_norms[1:, arcsine] =\
-            0.5 * np.exp(2 * (gammaln(n + 0.5) - gammaln(n + 1)))
+        square_norms[1:, arcsine] = 0.5 * np.exp(
+            2 * (gammaln(n + 0.5) - gammaln(n + 1))
+        )
         # 0.5 * (gamma(n + 0.5) / factorial(n))**2
 
     non_arcsine = np.any(jacobi_params != -0.5, axis=1)
@@ -732,14 +811,16 @@ def compute_norms_1D_polynomials(jacobi_params, deg_max):
         a = jacobi_params[non_arcsine, 0]
         b = jacobi_params[non_arcsine, 1]
 
-        square_norms[0, non_arcsine] = 2**(a + b + 1) * beta(a + 1, b + 1)
+        square_norms[0, non_arcsine] = 2 ** (a + b + 1) * beta(a + 1, b + 1)
 
-        square_norms[1:, non_arcsine] = np.exp((a + b + 1) * np.log(2)
-                                               + gammaln(n + 1 + a)
-                                               + gammaln(n + 1 + b)
-                                               - gammaln(n + 1)
-                                               - np.log(2 * n + 1 + a + b)
-                                               - gammaln(n + 1 + a + b))
+        square_norms[1:, non_arcsine] = np.exp(
+            (a + b + 1) * np.log(2)
+            + gammaln(n + 1 + a)
+            + gammaln(n + 1 + b)
+            - gammaln(n + 1)
+            - np.log(2 * n + 1 + a + b)
+            - gammaln(n + 1 + a + b)
+        )
 
     return np.sqrt(square_norms)
 
@@ -886,20 +967,21 @@ def compute_rejection_bounds(jacobi_params, ordering, log_scale=True):
         mode = (b - a) / (a + b + 1)
 
         if log_scale:
-            log_square_norm_P_0 =\
-                (a + b + 1) * np.log(2) + betaln(a + 1, b + 1)
-            bounds[0, non_arcsine] =\
-                np.log(np.pi)\
-                + (0.5 + a) * np.log(1 - mode)\
-                + (0.5 + b) * np.log(1 + mode)\
+            log_square_norm_P_0 = (a + b + 1) * np.log(2) + betaln(a + 1, b + 1)
+            bounds[0, non_arcsine] = (
+                np.log(np.pi)
+                + (0.5 + a) * np.log(1 - mode)
+                + (0.5 + b) * np.log(1 + mode)
                 - log_square_norm_P_0
+            )
         else:
-            square_norm_P_0 = 2**(a + b + 1) * beta(a + 1, b + 1)
-            bounds[0, non_arcsine] =\
-                np.pi\
-                * (1 - mode)**(0.5 + a)\
-                * (1 + mode)**(0.5 + b)\
+            square_norm_P_0 = 2 ** (a + b + 1) * beta(a + 1, b + 1)
+            bounds[0, non_arcsine] = (
+                np.pi
+                * (1 - mode) ** (0.5 + a)
+                * (1 + mode) ** (0.5 + b)
                 / square_norm_P_0
+            )
 
         # bounds[1:, non_arcsine] =
         #   2 * Gamma(n + 1 + a + b) Gamma(n + 1 + max(a,b))
@@ -910,21 +992,23 @@ def compute_rejection_bounds(jacobi_params, ordering, log_scale=True):
         n = np.arange(1, deg_max + 1)[:, None]
 
         if log_scale:
-            bounds[1:, non_arcsine] =\
-                np.log(2)\
-                + gammaln(n + 1 + a + b)\
-                + gammaln(n + 1 + max_a_b)\
-                - gammaln(n + 1)\
-                - 2 * max_a_b * np.log(n + 0.5 * (a + b + 1))\
+            bounds[1:, non_arcsine] = (
+                np.log(2)
+                + gammaln(n + 1 + a + b)
+                + gammaln(n + 1 + max_a_b)
+                - gammaln(n + 1)
+                - 2 * max_a_b * np.log(n + 0.5 * (a + b + 1))
                 - gammaln(n + 1 + min_a_b)
+            )
         else:
-            bounds[1:, non_arcsine] =\
-                2\
-                * gamma(n + 1 + a + b)\
-                * gamma(n + 1 + max_a_b)\
-                / factorial(n)\
-                / (n + 0.5 * (a + b + 1))**(2 * max_a_b)\
+            bounds[1:, non_arcsine] = (
+                2
+                * gamma(n + 1 + a + b)
+                * gamma(n + 1 + max_a_b)
+                / factorial(n)
+                / (n + 0.5 * (a + b + 1)) ** (2 * max_a_b)
                 / gamma(n + 1 + min_a_b)
+            )
 
     if log_scale:
         return np.exp(np.sum(bounds[ordering, range(dim)], axis=1))
@@ -933,8 +1017,7 @@ def compute_rejection_bounds(jacobi_params, ordering, log_scale=True):
 
 
 def compute_degrees_1D_polynomials(max_degrees):
-    """ deg[i, j] = i if i <= max_degrees[j] else 0
-    """
+    """deg[i, j] = i if i <= max_degrees[j] else 0"""
 
     max_deg, dim = max(max_degrees), len(max_degrees)
     degrees = np.tile(np.arange(max_deg + 1)[:, None], (1, dim))

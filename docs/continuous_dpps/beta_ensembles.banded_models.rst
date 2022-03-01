@@ -309,7 +309,7 @@ That is to say,
 	- :ref:`Full matrix model <jacobi_full_matrix_model>` for Jacobi ensemble
 	- :py:class:`~dppy.beta_ensembles.JacobiEnsemble` in API
 	- :ref:`multivariate_jacobi_ope`
-	- :py:class:`~dppy.multivariate_jacobi_ope.MultivariateJacobiOPE` in API
+	- :py:class:`~dppy.continuous.jacobi.JacobiProjectionDPP` in API
 
 .. _circular_banded_matrix_model:
 
