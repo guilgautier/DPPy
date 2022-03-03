@@ -4,19 +4,17 @@
 - :class:`TestAdequationOfBetaEnsembleSamplers` to check that for a large enough number of points, the empirical distribution of the rescaled points is close to the expected limiting (equilibrium) distribution
 """
 
+import sys
 import unittest
 
 import numpy as np
-
 from scipy.integrate import quad
 from scipy.stats import chisquare
 
-import sys
-
 sys.path.append("..")
 
+import dppy.beta_ensembles.beta_ensembles as be
 import dppy.random_matrices as rm
-import dppy.beta_ensembles as be
 
 
 class TestAdequationOfBetaEnsembleSamplers(unittest.TestCase):
@@ -85,7 +83,7 @@ class TestAdequationOfBetaEnsembleSamplers(unittest.TestCase):
 
     def test_semi_circle_for_hermite_ensemble(self):
 
-        point_process = be.HermiteEnsemble
+        point_process = be.HermiteBetaEnsemble
 
         limiting_distribution = rm.semi_circle_law
         support = [-2.0, 2.0]
@@ -105,7 +103,7 @@ class TestAdequationOfBetaEnsembleSamplers(unittest.TestCase):
 
     def test_marcenko_pastur_for_laguerre_ensemble(self):
 
-        point_process = be.LaguerreEnsemble
+        point_process = be.LaguerreBetaEnsemble
 
         N, M = self.N, 2 * self.N
 
@@ -129,7 +127,7 @@ class TestAdequationOfBetaEnsembleSamplers(unittest.TestCase):
 
     def test_wachter_for_jacobi_ensemble(self):
 
-        point_process = be.JacobiEnsemble
+        point_process = be.JacobiBetaEnsemble
 
         N, M_1, M_2 = self.N, 2 * self.N, 3 * self.N
 
@@ -156,7 +154,7 @@ class TestAdequationOfBetaEnsembleSamplers(unittest.TestCase):
 
     def test_uniformity_of_angles_for_circular_ensemble(self):
 
-        point_process = be.CircularEnsemble
+        point_process = be.CircularBetaEnsemble
 
         def limiting_distribution(theta):
             return 1.0 / 2 * np.pi

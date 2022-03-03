@@ -1,18 +1,16 @@
 import numpy as np
-
-from scipy.optimize import newton, brentq
-from scipy.special import logsumexp, airy
+from scipy.optimize import brentq, newton
+from scipy.special import airy, logsumexp
 
 from dppy.utils import check_random_state
 
 
 def shift_pol(P, x0):
-    """ Return polynomial P(x-x0) as poly1d object
-    """
+    """Return polynomial P(x-x0) as poly1d object"""
 
     X_x0 = np.poly1d([1, -x0])
 
-    return sum(X_x0**n * c_n for n, c_n in enumerate(P.coeffs[::-1]))
+    return sum(X_x0 ** n * c_n for n, c_n in enumerate(P.coeffs[::-1]))
 
 
 def log_pdf_convex_quartic(x, P):
@@ -27,7 +25,7 @@ def log_pdf_convex_quartic(x, P):
 
 
 def find_mode_convex_quartic(P):
-    """ Compute mode of :math:`\\pi \\propto \\exp^{-P(x)}`,
+    """Compute mode of :math:`\\pi \\propto \\exp^{-P(x)}`,
     with :math:`P` convex polynomial.
     """
 
@@ -37,7 +35,7 @@ def find_mode_convex_quartic(P):
 
 
 def find_b_a_convex_quartic(P, mode):
-    """ Compute :math:`b < 0 < a` solutions of :math:`\\pi(m+x)=\\frac{\\pi(m)}{4}`
+    """Compute :math:`b < 0 < a` solutions of :math:`\\pi(m+x)=\\frac{\\pi(m)}{4}`
     where :math:`\\pi \\propto \\exp^{-P(x)}` with :math:`P` convex polynomial.
 
     .. math::
@@ -64,7 +62,7 @@ def log_pdf_convex_gen_gamma(x, shape, P):
 
 
 def find_mode_convex_gen_gamma(shape, P):
-    """ Compute mode of :math:`\\pi \\propto x^{a-1} \\exp^{-P(x)}`,
+    """Compute mode of :math:`\\pi \\propto x^{a-1} \\exp^{-P(x)}`,
     with :math:`a>1` and :math:`P` convex polynomial.
 
     .. math::
@@ -101,7 +99,7 @@ def find_a_b_convex_gen_gamma(shape, P, mode):
         return (shape - 1.0) * np.log(1.0 + x / mode) - pol(x)
 
     # Find b < 0 by bisection
-    x0_b_left = - (1 - 1e-13) * mode
+    x0_b_left = -(1 - 1e-13) * mode
     x0_b_right = 0.0
 
     if np.sign(f(x0_b_left)) != np.sign(f(x0_b_right)):
@@ -121,7 +119,7 @@ def find_a_b_convex_gen_gamma(shape, P, mode):
         return (shape - 1.0) / (mode + x) - d1_pol(x)
 
     def d2_f(x):
-        return -(shape - 1.0) / (mode + x)**2 - d2_pol(x)
+        return -(shape - 1.0) / (mode + x) ** 2 - d2_pol(x)
 
     a = newton(f, x0_a, fprime=d1_f, fprime2=d2_f)
 
@@ -140,8 +138,12 @@ def trunc_gaussian_sampler(b, mu, var, random_state=None):
         if (np.log(U) < -(b - mu) * (X - b) / var) and (X > b):
             break
     else:  # if no acceptation
-        print('gen_gamma with alpha=1 not accepted\
-                after {} iterations'.format(it))
+        print(
+            "gen_gamma with alpha=1 not accepted\
+                after {} iterations".format(
+                it
+            )
+        )
         X = 1e-7
 
     return X, it
@@ -156,12 +158,16 @@ def gen_gamma_alpha_lt_1_sampler(shape, P, random_state=None):
 
         X = rng.gamma(shape=shape, scale=1 / P[1], size=1)
         U = rng.rand()
-        if np.log(U) < -P[2] * X**2:
+        if np.log(U) < -P[2] * X ** 2:
             break
 
     else:
-        print('gen_gamma with alpha<1 not accepted\
-                after {} iterations'.format(it))
+        print(
+            "gen_gamma with alpha<1 not accepted\
+                after {} iterations".format(
+                it
+            )
+        )
         pass
         # X = ...
 
@@ -211,15 +217,13 @@ def sampler_exact_convex_quartic(P, shape=None, random_state=None):
 
         else:
             if shape < 1.0:  # x^(shape-1) exp(-(beta x^2 + gamma x)): no mode
-                return gen_gamma_alpha_lt_1_sampler(shape, P,
-                                                    random_state=rng)
+                return gen_gamma_alpha_lt_1_sampler(shape, P, random_state=rng)
 
             elif shape == 1.0 and P[2]:
                 # x^0 exp(-(beta x^2 + gamma x)) = truncated Gaussian [0, oo]
-                return trunc_gaussian_sampler(b=0.0,
-                                              mu=-0.5 * P[1] / P[2],
-                                              var=0.5 / P[2],
-                                              random_state=rng)
+                return trunc_gaussian_sampler(
+                    b=0.0, mu=-0.5 * P[1] / P[2], var=0.5 / P[2], random_state=rng
+                )
 
         # else there exists a mode, use [Dev12] domination
         mode = find_mode_convex_gen_gamma(shape, P)
@@ -232,8 +236,9 @@ def sampler_exact_convex_quartic(P, shape=None, random_state=None):
     _2b, _b, _a, _2a = 2 * b, b, a, 2 * a
     abs_b = abs(b)  # -b since b<0
 
-    log_f_2b, log_f_b, log_f_0, log_f_a, log_f_2a =\
-        log_f(np.array([_2b, _b, 0.0, _a, _2a]))
+    log_f_2b, log_f_b, log_f_0, log_f_a, log_f_2a = log_f(
+        np.array([_2b, _b, 0.0, _a, _2a])
+    )
     log_f_b_2b, log_f_a_2a = log_f_b - log_f_2b, log_f_a - log_f_2a
 
     # Dominating function h(x) >= f(x)
@@ -306,13 +311,12 @@ def sampler_exact_convex_quartic(P, shape=None, random_state=None):
             return X + mode, iter_
 
     else:
-        print('Dev12 not accepted after {} iterations!'.format(iter_))
+        print("Dev12 not accepted after {} iterations!".format(iter_))
         return X + mode, iter_
 
 
 def sampler_mala(x, V, sigma=0.01, nb_steps=20, random_state=None):
-    """ Sample from :math:`\\pi(x) \\propto \\exp(-V(x))` with :math:`V` polynomial using Metropolis Adjusted Langevin Algorithm (MALA)
-    """
+    """Sample from :math:`\\pi(x) \\propto \\exp(-V(x))` with :math:`V` polynomial using Metropolis Adjusted Langevin Algorithm (MALA)"""
 
     rng = check_random_state(random_state)
 
@@ -322,14 +326,19 @@ def sampler_mala(x, V, sigma=0.01, nb_steps=20, random_state=None):
     for _ in range(nb_steps):
 
         Vx, grad_Vx = V(x_), d1_V(x_)
-        y = x_ - 0.5 * sigma**2 * grad_Vx + sigma * rng.randn()
+        y = x_ - 0.5 * sigma ** 2 * grad_Vx + sigma * rng.randn()
         Vy, grad_Vy = V(y), d1_V(y)
 
-        acceptance = Vx - Vy\
-                    + 0.5\
-                        / sigma**2\
-                        * ((x_ - y + 0.5 * sigma**2 * grad_Vy)**2
-                            - (y - x_ + 0.5 * sigma**2 * grad_Vx)**2)
+        acceptance = (
+            Vx
+            - Vy
+            + 0.5
+            / sigma ** 2
+            * (
+                (x_ - y + 0.5 * sigma ** 2 * grad_Vy) ** 2
+                - (y - x_ + 0.5 * sigma ** 2 * grad_Vx) ** 2
+            )
+        )
 
         if np.log(rng.rand()) < acceptance:
             x_ = y
@@ -340,74 +349,82 @@ def sampler_mala(x, V, sigma=0.01, nb_steps=20, random_state=None):
 def polynomial_in_negative_log_conditional_a_coef(i, a, b, V):
 
     if len(V) > 7:
-        str_ = ['Polynomial potentials V are allowed up to degree 6',
-                'Given\n',
-                ' '.join(['g_{}={}'.format(n, g_n)
-                          for n, g_n in enumerate(V)])]
-        raise ValueError(' '.join(str_))
+        str_ = [
+            "Polynomial potentials V are allowed up to degree 6",
+            "Given\n",
+            " ".join(["g_{}={}".format(n, g_n) for n, g_n in enumerate(V)]),
+        ]
+        raise ValueError(" ".join(str_))
 
     P = np.poly1d(0.0)
     i_2 = max(0, i - 2)
 
     if V[1]:
-        P += V[1]\
-            * np.poly1d(
-                [1.0,  # X
-                 0.0])  # 1
+        P += V[1] * np.poly1d([1.0, 0.0])  # X  # 1
 
     if V[2]:
-        P += V[2]\
-            * np.poly1d(
-                [1.0,  # X^2
-                 0.0,  # X
-                 0.0])  # 1
+        P += V[2] * np.poly1d([1.0, 0.0, 0.0])  # X^2  # X  # 1
 
     if V[3]:
-        P += V[3]\
-            * np.poly1d(
-                [1.0,  # X^3
-                 0.0,  # X^2
-                 3 * (b[i-1] + b[i]),  # X
-                 0.0])  # 1
+        P += V[3] * np.poly1d(
+            [1.0, 0.0, 3 * (b[i - 1] + b[i]), 0.0]  # X^3  # X^2  # X
+        )  # 1
 
     if V[4]:
-        P += V[4]\
-            * np.poly1d(
-                [1.0,  # X^4
-                 0.0,  # X^3
-                 4 * (b[i-1] + b[i]),  # X^2
-                 4 * (a[i-1] * b[i-1] + a[i+1] * b[i]),  # X
-                 0.0])  # 1
+        P += V[4] * np.poly1d(
+            [
+                1.0,  # X^4
+                0.0,  # X^3
+                4 * (b[i - 1] + b[i]),  # X^2
+                4 * (a[i - 1] * b[i - 1] + a[i + 1] * b[i]),  # X
+                0.0,
+            ]
+        )  # 1
 
     if V[5]:
-        P += V[5]\
-            * np.poly1d(
-                [1.0,  # X^5
-                 0.0,  # X^4
-                 5 * (b[i-1] + b[i]),  # X^3
-                 5 * (a[i-1] * b[i-1] + a[i+1] * b[i]),  # X^2
-                 5 * (b[i-1] * (a[i-1]**2 + b[i_2])
-                        + (b[i-1] + b[i])**2
-                        + b[i] * (a[i+1]**2 + b[i+1])),  # X
-                 0.0])  # 1
+        P += V[5] * np.poly1d(
+            [
+                1.0,  # X^5
+                0.0,  # X^4
+                5 * (b[i - 1] + b[i]),  # X^3
+                5 * (a[i - 1] * b[i - 1] + a[i + 1] * b[i]),  # X^2
+                5
+                * (
+                    b[i - 1] * (a[i - 1] ** 2 + b[i_2])
+                    + (b[i - 1] + b[i]) ** 2
+                    + b[i] * (a[i + 1] ** 2 + b[i + 1])
+                ),  # X
+                0.0,
+            ]
+        )  # 1
 
     if V[6]:
-        P += V[6]\
-            * np.poly1d(
-                [1.0,  # X^6
-                 0.0,  # X^5
-                 6 * (b[i-1] + b[i]),  # X^4
-                 6 * (a[i-1] * b[i-1] + a[i+1] * b[i]),  # X^3
-                 3 * (2 * b[i-1] * (a[i-1]**2 + b[i_2])
-                        + 3 * (b[i-1] + b[i])**2
-                        + 2 * b[i] * (a[i+1]**2 + b[i+1])),  # X^2
-                 6 * (a[i_2] * b[i_2] * b[i-1]
-                        + a[i-1] * b[i-1]
-                                 * (a[i-1]**2 + 2*(b[i_2] + b[i-1] + b[i]))
-                        + a[i+1] * b[i]
-                                 * (a[i+1]**2 + 2*(b[i-1] + b[i] + b[i+1]))
-                        + a[i+2] * b[i] * b[i+1]),  # X
-                 0.0])  # 1
+        P += V[6] * np.poly1d(
+            [
+                1.0,  # X^6
+                0.0,  # X^5
+                6 * (b[i - 1] + b[i]),  # X^4
+                6 * (a[i - 1] * b[i - 1] + a[i + 1] * b[i]),  # X^3
+                3
+                * (
+                    2 * b[i - 1] * (a[i - 1] ** 2 + b[i_2])
+                    + 3 * (b[i - 1] + b[i]) ** 2
+                    + 2 * b[i] * (a[i + 1] ** 2 + b[i + 1])
+                ),  # X^2
+                6
+                * (
+                    a[i_2] * b[i_2] * b[i - 1]
+                    + a[i - 1]
+                    * b[i - 1]
+                    * (a[i - 1] ** 2 + 2 * (b[i_2] + b[i - 1] + b[i]))
+                    + a[i + 1]
+                    * b[i]
+                    * (a[i + 1] ** 2 + 2 * (b[i - 1] + b[i] + b[i + 1]))
+                    + a[i + 2] * b[i] * b[i + 1]
+                ),  # X
+                0.0,
+            ]
+        )  # 1
 
     return P
 
@@ -415,66 +432,97 @@ def polynomial_in_negative_log_conditional_a_coef(i, a, b, V):
 def polynomial_in_negative_log_conditional_b_coef(i, a, b, V):
 
     if len(V) > 7:
-        str_ = ['Polynomial potentials V are allowed up to degree 6',
-                'Given\n',
-                ' '.join(['g_{}={}'.format(n, g_n)
-                          for n, g_n in enumerate(V)])]
-        raise ValueError(' '.join(str_))
+        str_ = [
+            "Polynomial potentials V are allowed up to degree 6",
+            "Given\n",
+            " ".join(["g_{}={}".format(n, g_n) for n, g_n in enumerate(V)]),
+        ]
+        raise ValueError(" ".join(str_))
 
     P = np.poly1d(0.0)
 
     if V[2]:
-        P += V[2]\
-            * np.poly1d(
-                [2.0,  # X
-                 0.0])  # 1
+        P += V[2] * np.poly1d([2.0, 0.0])  # X  # 1
 
     if V[3]:
-        P += V[3]\
-            * np.poly1d(
-                [3 * (a[i] + a[i+1]),  # X
-                 0.0])  # 1
+        P += V[3] * np.poly1d([3 * (a[i] + a[i + 1]), 0.0])  # X  # 1
 
     if V[4]:
-        P += V[4]\
-            * np.poly1d(
-                [2.0,  # X^2
-                 4 * (a[i]**2 + a[i] * a[i+1] + a[i+1]**2
-                        + b[i-1] + b[i+1]),  # X
-                 0.0])  # 1
+        P += V[4] * np.poly1d(
+            [
+                2.0,  # X^2
+                4
+                * (
+                    a[i] ** 2 + a[i] * a[i + 1] + a[i + 1] ** 2 + b[i - 1] + b[i + 1]
+                ),  # X
+                0.0,
+            ]
+        )  # 1
 
     if V[5]:
-        P += V[5]\
-            * np.poly1d(
-                [5 * (a[i] + a[i+1]),  # X^2
-                 5 * (a[i]**3 + a[i]**2 * a[i+1] + a[i] * a[i+1]**2 + a[i+1]**3
-                        + b[i-1] * (a[i-1] + 2 * a[i] + a[i+1])
-                        + b[i+1] * (a[i] + 2 * a[i+1] + a[i+2])),  # X
-                 0.0])  # 1
+        P += V[5] * np.poly1d(
+            [
+                5 * (a[i] + a[i + 1]),  # X^2
+                5
+                * (
+                    a[i] ** 3
+                    + a[i] ** 2 * a[i + 1]
+                    + a[i] * a[i + 1] ** 2
+                    + a[i + 1] ** 3
+                    + b[i - 1] * (a[i - 1] + 2 * a[i] + a[i + 1])
+                    + b[i + 1] * (a[i] + 2 * a[i + 1] + a[i + 2])
+                ),  # X
+                0.0,
+            ]
+        )  # 1
 
     if V[6]:
-        P += V[6]\
-            * np.poly1d(
-                [2.0,  # X^3
-                 3 * (3 * a[i]**2 + 4 * a[i] * a[i+1] + 3 * a[i+1]**2
-                        + 2 * (b[i-1] + b[i+1])),  # X^2
-                 6 * (a[i]**4 + a[i]**3 * a[i+1] + a[i]**2 * a[i+1]**2
-                        + a[i] * a[i+1]**3 + a[i+1]**4
-                        + b[i-1] * (a[i-1]**2 + a[i-1] * a[i+1] + a[i+1]**2
-                                    + a[i] * (2*a[i-1]+ 3*a[i] + 2*a[i+1])
-                                    + b[i-2] + b[i-1] + b[i+1])
-                        + b[i+1] * (a[i]**2 + a[i]*a[i+2] + a[i+2]**2
-                                    + a[i+1] * (2*a[i]+ 3*a[i+1] + 2*a[i+2])
-                                    + b[i+1] + b[i+2])),  # X
-                 0.0])  # 1
+        P += V[6] * np.poly1d(
+            [
+                2.0,  # X^3
+                3
+                * (
+                    3 * a[i] ** 2
+                    + 4 * a[i] * a[i + 1]
+                    + 3 * a[i + 1] ** 2
+                    + 2 * (b[i - 1] + b[i + 1])
+                ),  # X^2
+                6
+                * (
+                    a[i] ** 4
+                    + a[i] ** 3 * a[i + 1]
+                    + a[i] ** 2 * a[i + 1] ** 2
+                    + a[i] * a[i + 1] ** 3
+                    + a[i + 1] ** 4
+                    + b[i - 1]
+                    * (
+                        a[i - 1] ** 2
+                        + a[i - 1] * a[i + 1]
+                        + a[i + 1] ** 2
+                        + a[i] * (2 * a[i - 1] + 3 * a[i] + 2 * a[i + 1])
+                        + b[i - 2]
+                        + b[i - 1]
+                        + b[i + 1]
+                    )
+                    + b[i + 1]
+                    * (
+                        a[i] ** 2
+                        + a[i] * a[i + 2]
+                        + a[i + 2] ** 2
+                        + a[i + 1] * (2 * a[i] + 3 * a[i + 1] + 2 * a[i + 2])
+                        + b[i + 1]
+                        + b[i + 2]
+                    )
+                ),  # X
+                0.0,
+            ]
+        )  # 1
 
     return P
 
-"""Equilibrium densities"""
-
 
 def equilibrium_x2_x4(g_2, g_4):
-    """ The equilibrium measure associated to the :math:`\\beta`-ensemble with potential
+    """The equilibrium measure associated to the :math:`\\beta`-ensemble with potential
 
     .. math::
 
@@ -496,22 +544,25 @@ def equilibrium_x2_x4(g_2, g_4):
 
     if g_2 > -4 * np.sqrt(g_4 / 4):
 
-        a2 = 2 / (3 * g_4) * (np.sqrt(g_2**2 + 12 * g_4) - g_2)
-        b2 = 1 / (3 * g_4) * (np.sqrt(g_2**2 + 12 * g_4) + 2 * g_2)
+        a2 = 2 / (3 * g_4) * (np.sqrt(g_2 ** 2 + 12 * g_4) - g_2)
+        b2 = 1 / (3 * g_4) * (np.sqrt(g_2 ** 2 + 12 * g_4) + 2 * g_2)
 
         def dmu(x):
-            return np.maximum(g_4 / (2 * np.pi)
-                                * (x**2 + b2)
-                                * np.sqrt(np.maximum(a2 - x**2, 0)),
-                              0)
+            return np.maximum(
+                g_4 / (2 * np.pi) * (x ** 2 + b2) * np.sqrt(np.maximum(a2 - x ** 2, 0)),
+                0,
+            )
 
     else:
         b2, a2 = (-g_2 + 4 * np.sqrt(g_4 / 4) * np.array([-1, 1])) / g_4
 
         def dmu(x):
-            return g_4 / (2 * np.pi)\
-                       * np.abs(x)\
-                       * np.sqrt(np.maximum((a2 - x**2)*(x**2 - b2), 0))
+            return (
+                g_4
+                / (2 * np.pi)
+                * np.abs(x)
+                * np.sqrt(np.maximum((a2 - x ** 2) * (x ** 2 - b2), 0))
+            )
 
     support = np.sqrt(a2) * np.array([-1, 1])
 
@@ -519,17 +570,17 @@ def equilibrium_x2_x4(g_2, g_4):
 
 
 def cdf_equilibrium_x2_x4(g_2, g_4):
-    """ Cumulative distribution function of the equilibrium distribution associated to the :math:`\\beta`-ensemble with potential
+    """Cumulative distribution function of the equilibrium distribution associated to the :math:`\\beta`-ensemble with potential
 
     .. math::
 
         V(x) = V_t(x) = \\frac{g_2}{2} x^2 + \\frac{g_4}{4} x^4
     """
 
-    a2 = 2 / (3 * g_4) * (np.sqrt(g_2**2 + 12 * g_4) - g_2)
+    a2 = 2 / (3 * g_4) * (np.sqrt(g_2 ** 2 + 12 * g_4) - g_2)
     a = np.sqrt(a2)
 
-    b2 = 1 / (3 * g_4) * (np.sqrt(g_2**2 + 12 * g_4) + 2 * g_2)
+    b2 = 1 / (3 * g_4) * (np.sqrt(g_2 ** 2 + 12 * g_4) + 2 * g_2)
 
     def cdf(x):
 
@@ -540,10 +591,16 @@ def cdf_equilibrium_x2_x4(g_2, g_4):
         #                                  - a2 * np.sin(4 * X) / 8
         #                                  + b2 * np.sin(2 * X))
 
-        return g_4 * a2 / (8 * np.pi)\
-                * ((a2 + 4 * b2) / 2 * (X + np.pi / 2)
-                   + b2 * np.sin(2 * X)
-                   - a2 / 8 * np.sin(4 * X))
+        return (
+            g_4
+            * a2
+            / (8 * np.pi)
+            * (
+                (a2 + 4 * b2) / 2 * (X + np.pi / 2)
+                + b2 * np.sin(2 * X)
+                - a2 / 8 * np.sin(4 * X)
+            )
+        )
 
     support = a * np.array([-1, 1])
 
@@ -551,7 +608,7 @@ def cdf_equilibrium_x2_x4(g_2, g_4):
 
 
 def equilibrium_x2m(m, g_2m):
-    """ The equilibrium measure associated to the :math:`\\beta`-ensemble with potential
+    """The equilibrium measure associated to the :math:`\\beta`-ensemble with potential
 
     .. math::
 
@@ -575,19 +632,18 @@ def equilibrium_x2m(m, g_2m):
 
     t = g_2m / (2 * m)
     c_prod = np.cumprod([(2 * l - 1) / (2 * l) for l in range(1, m + 1)])
-    a2 = 1 / (m * t * c_prod[-1])**(1 / m)
+    a2 = 1 / (m * t * c_prod[-1]) ** (1 / m)
 
     h1 = np.poly1d(0.0)
     h1[2 * (m - 1)] = 1.0
 
     if m > 1:
-        h1._coeffs[2::2] = a2**np.arange(1, m) * c_prod[:-1]
+        h1._coeffs[2::2] = a2 ** np.arange(1, m) * c_prod[:-1]
 
     def mu_eq(x):
-        return np.maximum(m * t / np.pi
-                            * np.sqrt(np.maximum(a2 - x**2, 0))
-                            * h1(x),
-                          0)
+        return np.maximum(
+            m * t / np.pi * np.sqrt(np.maximum(a2 - x ** 2, 0)) * h1(x), 0
+        )
 
     support = np.sqrt(a2) * np.array([-1, 1])
 
@@ -595,7 +651,7 @@ def equilibrium_x2m(m, g_2m):
 
 
 def cdf_equilibrium_x2m(m, g_2m):
-    """ Cumulative distribution function of the equilibrium distribution associated to the :math:`\\beta`-ensemble with potential
+    """Cumulative distribution function of the equilibrium distribution associated to the :math:`\\beta`-ensemble with potential
 
     .. math::
 
@@ -605,35 +661,47 @@ def cdf_equilibrium_x2m(m, g_2m):
 
     t = g_2m / (2 * m)
     c_prod = np.cumprod([(2 * l - 1) / (2 * l) for l in range(1, m + 1)])
-    a2 = 1 / (m * t * c_prod[-1])**(1 / m)
+    a2 = 1 / (m * t * c_prod[-1]) ** (1 / m)
 
     a = np.sqrt(a2)
 
     if m == 2:
+
         def cdf(x):
 
             x[x < -a] = -a
             x[x > a] = a
             X = np.arcsin(x / a)
-            return m * t * a**4 / (8 * np.pi) \
-                   * (3 * (X + np.pi / 2)
-                      + np.sin(2 * X)
-                      - 1 / 4 * np.sin(4 * X))
+            return (
+                m
+                * t
+                * a ** 4
+                / (8 * np.pi)
+                * (3 * (X + np.pi / 2) + np.sin(2 * X) - 1 / 4 * np.sin(4 * X))
+            )
 
     elif m == 3:
+
         def cdf(x):
 
             x[x < -a] = -a
             x[x > a] = a
             X = np.arcsin(x / a)
-            return m * t * a**6 / (16 * np.pi) \
-                   * (5 * (X + np.pi / 2)
-                      + 5 / 4 * np.sin(2 * X)
-                      - 1 / 2 * np.sin(4 * X)
-                      + 1 / 12 * np.sin(6 * X))
+            return (
+                m
+                * t
+                * a ** 6
+                / (16 * np.pi)
+                * (
+                    5 * (X + np.pi / 2)
+                    + 5 / 4 * np.sin(2 * X)
+                    - 1 / 2 * np.sin(4 * X)
+                    + 1 / 12 * np.sin(6 * X)
+                )
+            )
 
     else:
-        raise NotImplementedError('m != 2, 3')
+        raise NotImplementedError("m != 2, 3")
 
     support = a * np.array([-1, 1])
 
@@ -656,7 +724,7 @@ def equilibrium_ClItKr10():
     """
 
     def mu_eq(x):
-        return 1 / (10 * np.pi) * np.sqrt(np.maximum((x + 2) * (2 - x)**5, 0))
+        return 1 / (10 * np.pi) * np.sqrt(np.maximum((x + 2) * (2 - x) ** 5, 0))
 
     support = 2.0 * np.array([-1, 1])
 
@@ -664,12 +732,13 @@ def equilibrium_ClItKr10():
 
 
 class TracyWidom(object):
-    """ Implements computation of the cumulative distribution function (CDF) of the Tracy Widom 2 distribution based on the work of Bornemann [2010] https://arxiv.org/pdf/0804.2543.pdf
+    """Implements computation of the cumulative distribution function (CDF) of the Tracy Widom 2 distribution based on the work of Bornemann [2010] https://arxiv.org/pdf/0804.2543.pdf
 
     .. seealso::
 
         :ref:`another implementation <https://gist.github.com/yymao/7282002>`
     """
+
     def __init__(self):
         self.quad_order = None
         self.x_quad, self.w_quad = None, None
@@ -684,13 +753,12 @@ class TracyWidom(object):
             return np.atleast_1d(s)[:, None] + 10 * np.tan(0.5 * np.pi * x)
 
         def d_phi(x):
-            return 10 * np.pi / 2 * (1 + np.tan(0.5 * np.pi * x)**2)
+            return 10 * np.pi / 2 * (1 + np.tan(0.5 * np.pi * x) ** 2)
 
         return phi, d_phi
 
     def kernel(self, s):  # , old_implem=False):
-        """ operator is restricted to L^2(0,1), so you need to change variables first
-        """
+        """operator is restricted to L^2(0,1), so you need to change variables first"""
         phi, d_phi = self.change_of_variable(s)
 
         # if old_implem:
@@ -714,7 +782,7 @@ class TracyWidom(object):
             # y = x
             A_y, dA_y = A_x, dA_x
 
-            outer = 'ki, kj -> kij'
+            outer = "ki, kj -> kij"
             K_xy = np.einsum(outer, A_x, dA_y) - np.einsum(outer, dA_x, A_y)
 
             # divide upper triangular part and symmetrize
@@ -750,9 +818,9 @@ class TracyWidom(object):
             self.quad_order = quad_order
             self.x_quad, self.w_quad = self.compute_quadrature(quad_order)
 
-        return self.fredholm_determinant(self.kernel(x),
-                                         self.x_quad,
-                                         self.w_quad)  # , old_implem)
+        return self.fredholm_determinant(
+            self.kernel(x), self.x_quad, self.w_quad
+        )  # , old_implem)
 
     @staticmethod
     def airy_kernel(x, y, eps_xy=1e-5):
@@ -770,14 +838,14 @@ class TracyWidom(object):
         return (Ai_x * dAi_y - Ai_y * dAi_x) / (x - y)
 
     @staticmethod
-    def compute_quadrature(order, type='Legendre'):
+    def compute_quadrature(order, type="Legendre"):
 
         x, w = np.polynomial.legendre.leggauss(order)
         return 0.5 * (x + 1), 0.5 * w
 
     @staticmethod
     def fredholm_determinant(kernel, x_quad, w_quad):  # , old_implem):
-        """ This implements the numerical evaluation of Fredholm determinants as in [Bornemann, 2010] Equation 6.1
+        """This implements the numerical evaluation of Fredholm determinants as in [Bornemann, 2010] Equation 6.1
 
         .. math::
 

@@ -92,7 +92,7 @@ That is to say,
 
 	- :cite:`DuEd02` II-C
 	- :ref:`Full matrix model <hermite_full_matrix_model>` for Hermite ensemble
-	- :py:class:`~dppy.beta_ensembles.HermiteEnsemble` in API
+	- :py:class:`~dppy.beta_ensembles.beta_ensembles.HermiteBetaEnsemble` in API
 
 .. _laguerre_banded_matrix_model:
 
@@ -190,7 +190,7 @@ That is to say,
 
 	- :cite:`DuEd02` III-B
 	- :ref:`Full matrix model <laguerre_full_matrix_model>` for Laguerre ensemble
-	- :py:class:`~dppy.beta_ensembles.LaguerreEnsemble` in API
+	- :py:class:`~dppy.beta_ensembles.beta_ensembles.LaguerreBetaEnsemble` in API
 
 .. _jacobi_banded_matrix_model:
 
@@ -307,7 +307,7 @@ That is to say,
 
 	- :cite:`KiNe04` Theorem 2
 	- :ref:`Full matrix model <jacobi_full_matrix_model>` for Jacobi ensemble
-	- :py:class:`~dppy.beta_ensembles.JacobiEnsemble` in API
+	- :py:class:`~dppy.beta_ensembles.beta_ensembles.JacobiBetaEnsemble` in API
 	- :ref:`multivariate_jacobi_ope`
 	- :py:class:`~dppy.continuous.jacobi.JacobiProjectionDPP` in API
 
@@ -380,4 +380,4 @@ and where
 
 	- :cite:`KiNe04` Theorem 1
 	- :ref:`Full matrix model <circular_full_matrix_model>` for Circular ensemble
-	- :py:class:`~dppy.beta_ensembles.CircularEnsemble` in API
+	- :py:class:`~dppy.beta_ensembles.beta_ensembles.CircularBetaEnsemble` in API

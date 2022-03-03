@@ -1,6 +1,6 @@
-from dppy.beta_ensembles import CircularEnsemble
+from dppy.beta_ensembles.beta_ensembles import CircularBetaEnsemble
 
-circular = CircularEnsemble(beta=2)  # beta must be >=0 integer, default beta=2
+circular = CircularBetaEnsemble(beta=2)  # beta must be >=0 integer, default beta=2
 
 # See the cristallization of the configuration as beta increases
 for b in [0, 1, 5, 10]:
