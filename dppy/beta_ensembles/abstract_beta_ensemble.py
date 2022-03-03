@@ -63,17 +63,5 @@ class AbstractBetaEnsemble(metaclass=ABCMeta):
         """
 
     @abstractmethod
-    def plot(self):
-        """Display last realization of the underlying :math:`\\beta`-Ensemble.
-        For some :math:`\\beta`-Ensembles, a normalization argument is available to display the limiting (or equilibrium) distribution and scale the points accordingly.
-        """
-
-    @abstractmethod
-    def hist(self):
-        """Display histogram of the last realization of the underlying :math:`\\beta`-Ensemble.
-        For some :math:`\\beta`-Ensembles, a normalization argument is available to display the limiting (or equilibrium) distribution and scale the points accordingly.
-        """
-
-    @abstractmethod
     def normalize_points(self):
         """Normalize points ormalization argument is available to display the limiting (or equilibrium) distribution and scale the points accordingly."""
