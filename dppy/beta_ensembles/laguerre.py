@@ -20,22 +20,22 @@ class LaguerreBetaEnsemble(AbstractBetaEnsemble):
 
         super().__init__(beta=beta)
 
-        params = {"shape": 0.0, "scale": 2.0, "size_N": 10, "size_M": None}
+        params = {"shape": 0.0, "scale": 2.0, "N": 10, "M": None}
         self.params.update(params)
 
-    def sample_full_model(self, size_N=10, size_M=100, random_state=None):
+    def sample_full_model(self, N=10, M=100, random_state=None):
         """Sample from :ref:`full matrix model <Laguerre_full_matrix_model>` associated to the Laguerre ensemble. Only available for :py:attr:`beta` :math:`\\in\\{1, 2, 4\\}` and the degenerate case :py:attr:`beta` :math:`=0` corresponding to i.i.d. points from the :math:`\\Gamma(k,\\theta)` reference measure
 
-        :param size_N:
+        :param N:
             Number :math:`N` of points, i.e., size of the matrix to be diagonalized.
             First dimension of the matrix used to form the covariance matrix to be diagonalized, see :ref:`full matrix model <laguerre_full_matrix_model>`.
-        :type size_N:
+        :type N:
             int, default :math:`10`
 
-        :param size_M:
+        :param M:
             Second dimension :math:`M` of the matrix used to form the covariance matrix to be diagonalized, see :ref:`full matrix model <laguerre_full_matrix_model>`.
 
-        :type size_M:
+        :type M:
             int, default :math:`100`
 
         .. note::
@@ -43,7 +43,7 @@ class LaguerreBetaEnsemble(AbstractBetaEnsemble):
             The reference measure associated with the :ref:`full matrix model <laguerre_full_matrix_model>` is :math:`\\Gamma\\left(\\frac{\\beta}{2}(M-N+1), 2\\right)`.
             For this reason, in the :py:attr:`sampling_params`, the values of the parameters are set to ``shape``:math:`=\\frac{\\beta}{2}(M-N+1)` and ``scale``:math:`=2`.
 
-            To compare :py:meth:`sample_banded_model` with :py:meth:`sample_full_model` simply use the ``size_N`` and ``size_M`` parameters.
+            To compare :py:meth:`sample_banded_model` with :py:meth:`sample_full_model` simply use the ``N`` and ``M`` parameters.
 
         .. seealso::
 
@@ -54,27 +54,27 @@ class LaguerreBetaEnsemble(AbstractBetaEnsemble):
 
         self.sampling_mode = "full"
 
-        if size_M >= size_N:
+        if M >= N:
             # Define the parameters of the associated Gamma distribution
-            shape, scale = 0.5 * self.beta * (size_M - size_N + 1), 2.0
+            shape, scale = 0.5 * self.beta * (M - N + 1), 2.0
         else:
             err_print = (
                 "Must have M >= N.",
-                "Given: M={} < N={}".format(size_M, size_N),
+                "Given: M={} < N={}".format(M, N),
             )
             raise ValueError(" ".join(err_print))
 
-        params = {"shape": shape, "scale": scale, "size_N": size_N, "size_M": size_M}
+        params = {"shape": shape, "scale": scale, "N": N, "M": M}
         self.params.update(params)
 
         if self.beta == 0:  # Answer issue #28 raised by @rbardenet
             # rng.gamma(shape=0,...) when doesn't return error! contrary to sp.stats.gamma(a=0).rvs(), see https://github.com/numpy/numpy/issues/12367
-            # sampl = stats.gamma.rvs(a=params['shape'], loc=0.0, scale=params['scale'],                                       size=params['size_N'])
+            # sampl = stats.gamma.rvs(a=params['shape'], loc=0.0, scale=params['scale'],                                       size=params['N'])
             if params["shape"] > 0:
                 sampl = rng.gamma(
                     shape=self.params["shape"],
                     scale=self.params["scale"],
-                    size=self.params["size_N"],
+                    size=self.params["N"],
                 )
             else:
                 err_print = ("shape<=0.", "Here beta=0, hence shape=beta/2*(M-N+1)=0")
@@ -82,8 +82,8 @@ class LaguerreBetaEnsemble(AbstractBetaEnsemble):
 
         else:  # if beta > 0
             sampl = rm.laguerre_sampler_full(
-                M=self.params["size_M"],
-                N=self.params["size_N"],
+                M=self.params["M"],
+                N=self.params["N"],
                 beta=self.beta,
                 random_state=rng,
             )
@@ -92,7 +92,7 @@ class LaguerreBetaEnsemble(AbstractBetaEnsemble):
         return sampl
 
     def sample_banded_model(
-        self, shape=1.0, scale=2.0, size_N=10, size_M=None, random_state=None
+        self, shape=1.0, scale=2.0, N=10, M=None, random_state=None
     ):
         """Sample from :ref:`tridiagonal matrix model <Laguerre_banded_matrix_model>` associated to the Laguerre ensemble. Available for :py:attr:`beta` :math:`>0` and the degenerate case :py:attr:`beta` :math:`=0` corresponding to i.i.d. points from the :math:`\\Gamma(k,\\theta)` reference measure
 
@@ -106,25 +106,25 @@ class LaguerreBetaEnsemble(AbstractBetaEnsemble):
         :type scale:
             float, default :math:`2.0`
 
-        :param size_N:
+        :param N:
             Number :math:`N` of points, i.e., size of the matrix to be diagonalized.
             Equivalent to the first dimension :math:`N` of the matrix used to form the covariance matrix in the :ref:`full matrix model <laguerre_full_matrix_model>`.
-        :type size_N:
+        :type N:
             int, default :math:`10`
 
-        :param size_M:
+        :param M:
             Equivalent to the second dimension :math:`M` of the matrix used to form the covariance matrix in the :ref:`full matrix model <laguerre_full_matrix_model>`.
 
-        :type size_M:
+        :type M:
             int, default None
 
-        - If ``size_M`` is not provided:
+        - If ``M`` is not provided:
 
-            In the :py:attr:`sampling_params`, ``size_M`` is set to
-            ``size_M``:math:`= \\frac{2k}{\\beta} + N - 1`, to give an idea of the corresponding second dimension :math:`M`.
+            In the :py:attr:`sampling_params`, ``M`` is set to
+            ``M``:math:`= \\frac{2k}{\\beta} + N - 1`, to give an idea of the corresponding second dimension :math:`M`.
 
 
-        - If ``size_M`` is provided:
+        - If ``M`` is provided:
 
             In the :py:attr:`sampling_params`, ``shape`` and ``scale`` are set to:
             ``shape``:math:`=\\frac{1}{2} \\beta (M-N+1)` and ``scale``:math:`=2`
@@ -132,9 +132,9 @@ class LaguerreBetaEnsemble(AbstractBetaEnsemble):
 
         .. note::
 
-            The reference measure associated with the :ref:`full matrix model <laguerre_full_matrix_model>` is :math:`\\Gamma\\left(\\frac{\\beta}{2}(M-N+1), 2\\right)`. This explains the role of the ``size_M`` parameter.
+            The reference measure associated with the :ref:`full matrix model <laguerre_full_matrix_model>` is :math:`\\Gamma\\left(\\frac{\\beta}{2}(M-N+1), 2\\right)`. This explains the role of the ``M`` parameter.
 
-            To compare :py:meth:`sample_banded_model` with :py:meth:`sample_full_model` simply use the ``size_N`` and ``size_M`` parameters
+            To compare :py:meth:`sample_banded_model` with :py:meth:`sample_full_model` simply use the ``N`` and ``M`` parameters
 
         .. seealso::
 
@@ -146,34 +146,34 @@ class LaguerreBetaEnsemble(AbstractBetaEnsemble):
 
         self.sampling_mode = "banded"
 
-        if not size_M:  # Default setting
+        if not M:  # Default setting
             if self.beta > 0:
-                size_M = 2 / self.beta * shape + size_N - 1
+                M = 2 / self.beta * shape + N - 1
             else:
-                size_M = np.inf
+                M = np.inf
 
-        elif size_M >= size_N:
+        elif M >= N:
             # define the parameters of the associated Gamma distribution
-            shape, scale = 0.5 * self.beta * (size_M - size_N + 1), 2.0
+            shape, scale = 0.5 * self.beta * (M - N + 1), 2.0
 
         else:
             err_print = (
                 "Must have M >= N.",
-                "Given: M={} < N={}".format(size_M, size_N),
+                "Given: M={} < N={}".format(M, N),
             )
             raise ValueError(" ".join(err_print))
 
-        params = {"shape": shape, "scale": scale, "size_N": size_N, "size_M": size_M}
+        params = {"shape": shape, "scale": scale, "N": N, "M": M}
         self.params.update(params)
 
         if self.beta == 0:  # Answer issue #28 raised by @rbardenet
             # rng.gamma(shape=0,...) when doesn't return error! contrary to sp.stats.gamma(a=0).rvs(), see https://github.com/numpy/numpy/issues/12367
-            # sampl = stats.gamma.rvs(a=params['shape'], loc=0.0, scale=params['scale'], size=params['size_N'])
+            # sampl = stats.gamma.rvs(a=params['shape'], loc=0.0, scale=params['scale'], size=params['N'])
             if params["shape"] > 0:
                 sampl = rng.gamma(
                     shape=self.params["shape"],
                     scale=self.params["scale"],
-                    size=self.params["size_N"],
+                    size=self.params["N"],
                 )
             else:
                 err_print = ("shape<=0.", "Here beta=0, hence shape=beta/2*(M-N+1)=0")
@@ -184,7 +184,7 @@ class LaguerreBetaEnsemble(AbstractBetaEnsemble):
                 shape=self.params["shape"],
                 scale=self.params["scale"],
                 beta=self.beta,
-                size=self.params["size_N"],
+                size=self.params["N"],
                 random_state=rng,
             )
 
@@ -235,7 +235,7 @@ class LaguerreBetaEnsemble(AbstractBetaEnsemble):
 
         if self.beta > 0:
             # Normalize to fit the Marcenko-Pastur distribution
-            points /= self.beta * self.params["size_M"]
+            points /= self.beta * self.params["M"]
         else:
             pass
             # set a warning, won't concentrate as semi-circle, they are i.i.d.
@@ -251,7 +251,7 @@ class LaguerreBetaEnsemble(AbstractBetaEnsemble):
             if normalization:
                 points = self.normalize_points(points)
 
-        N, M = [self.params[key] for key in ["size_N", "size_M"]]
+        N, M = [self.params[key] for key in ["N", "M"]]
 
         fig, ax = plt.subplots(1, 1)
         # Title

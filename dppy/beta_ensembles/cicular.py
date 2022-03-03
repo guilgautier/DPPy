@@ -21,15 +21,15 @@ class CircularBetaEnsemble(AbstractBetaEnsemble):
             raise ValueError("`beta` must be int >0. Given: {}".format(beta))
         super().__init__(beta=beta)
 
-        params = {"size_N": 10}
+        params = {"N": 10}
         self.params.update(params)
 
-    def sample_full_model(self, size_N=10, haar_mode="Hermite", random_state=None):
+    def sample_full_model(self, N=10, haar_mode="Hermite", random_state=None):
         """Sample from :ref:`tridiagonal matrix model <Circular_full_matrix_model>` associated to the Circular ensemble. Only available for :py:attr:`beta` :math:`\\in\\{1, 2, 4\\}` and the degenerate case :py:attr:`beta` :math:`=0` corresponding to i.i.d. uniform points on the unit circle
 
-        :param size_N:
+        :param N:
             Number :math:`N` of points, i.e., size of the matrix to be diagonalized
-        :type size_N:
+        :type N:
             int, default :math:`10`
 
         :param haar_mode:
@@ -47,15 +47,15 @@ class CircularBetaEnsemble(AbstractBetaEnsemble):
         rng = check_random_state(random_state)
 
         self.sampling_mode = "full"
-        params = {"size_N": size_N, "haar_mode": haar_mode}
+        params = {"N": N, "haar_mode": haar_mode}
         self.params.update(params)
 
         if self.beta == 0:  # i.i.d. points uniformly on the circle
             # Answer issue #28 raised by @rbardenet
-            sampl = np.exp(2 * 1j * np.pi * rng.rand(params["size_N"]))
+            sampl = np.exp(2 * 1j * np.pi * rng.rand(params["N"]))
         else:
             sampl = rm.circular_sampler_full(
-                N=self.params["size_N"],
+                N=self.params["N"],
                 beta=self.beta,
                 haar_mode=self.params["haar_mode"],
                 random_state=rng,
@@ -64,18 +64,18 @@ class CircularBetaEnsemble(AbstractBetaEnsemble):
         self.list_of_samples.append(sampl)
         return sampl
 
-    def sample_banded_model(self, size_N=10, random_state=None):
+    def sample_banded_model(self, N=10, random_state=None):
         """Sample from :ref:`Quindiagonal matrix model <Circular_banded_matrix_model>` associated to the Circular Ensemble.
         Available for :py:attr:`beta` :math:`\\in\\mathbb{N}^*`, and the degenerate case :py:attr:`beta` :math:`=0` corresponding to i.i.d. uniform points on the unit circle
 
-        :param size_N:
+        :param N:
             Number :math:`N` of points, i.e., size of the matrix to be diagonalized
-        :type size_N:
+        :type N:
             int, default :math:`10`
 
         .. note::
 
-            To compare :py:meth:`sample_banded_model` with :py:meth:`sample_full_model` simply use the ``size_N`` parameter.
+            To compare :py:meth:`sample_banded_model` with :py:meth:`sample_full_model` simply use the ``N`` parameter.
 
         .. seealso::
 
@@ -85,15 +85,15 @@ class CircularBetaEnsemble(AbstractBetaEnsemble):
         rng = check_random_state(random_state)
 
         self.sampling_mode = "banded"
-        params = {"size_N": size_N}
+        params = {"N": N}
         self.params.update(params)
 
         if self.beta == 0:  # i.i.d. points uniformly on the circle
             # Answer issue #28 raised by @rbardenet
-            sampl = np.exp(2 * 1j * np.pi * rng.rand(params["size_N"]))
+            sampl = np.exp(2 * 1j * np.pi * rng.rand(params["N"]))
         else:
             sampl = rm.mu_ref_unif_unit_circle_sampler_quindiag(
-                beta=self.beta, size=self.params["size_N"], random_state=rng
+                beta=self.beta, size=self.params["N"], random_state=rng
             )
 
         self.list_of_samples.append(sampl)

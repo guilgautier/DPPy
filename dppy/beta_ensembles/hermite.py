@@ -22,17 +22,17 @@ class HermiteBetaEnsemble(AbstractBetaEnsemble):
 
         # Default parameters for ``loc`` and ``scale`` correspond to the
         # reference measure N(0,2) in the full matrix model
-        params = {"loc": 0.0, "scale": np.sqrt(2.0), "size_N": 10}
+        params = {"loc": 0.0, "scale": np.sqrt(2.0), "N": 10}
         self.params.update(params)
 
-    def sample_full_model(self, size_N=10, random_state=None):
+    def sample_full_model(self, N=10, random_state=None):
         """Sample from :ref:`full matrix model <Hermite_full_matrix_model>` associated to the Hermite ensemble.
         Only available for :py:attr:`beta` :math:`\\in\\{1, 2, 4\\}`
         and the degenerate case :py:attr:`beta` :math:`=0` corresponding to i.i.d. points from the Gaussian :math:`\\mathcal{N}(\\mu,\\sigma^2)` reference measure
 
-        :param size_N:
+        :param N:
             Number :math:`N` of points, i.e., size of the matrix to be diagonalized
-        :type size_N:
+        :type N:
             int, default :math:`10`
 
         .. note::
@@ -40,7 +40,7 @@ class HermiteBetaEnsemble(AbstractBetaEnsemble):
             The reference measure associated with the :ref:`full matrix model <hermite_full_matrix_model>` is :math:`\\mathcal{N}(0,2)`.
             For this reason, in the :py:attr:`sampling_params` attribute, the values of the parameters are set to ``loc``:math:`=0` and ``scale``:math:`=\\sqrt{2}`.
 
-            To compare :py:meth:`sample_banded_model` with :py:meth:`sample_full_model` simply use the ``size_N`` parameter.
+            To compare :py:meth:`sample_banded_model` with :py:meth:`sample_full_model` simply use the ``N`` parameter.
 
         .. seealso::
 
@@ -50,7 +50,7 @@ class HermiteBetaEnsemble(AbstractBetaEnsemble):
         rng = check_random_state(random_state)
 
         self.sampling_mode = "full"
-        params = {"loc": 0.0, "scale": np.sqrt(2.0), "size_N": size_N}
+        params = {"loc": 0.0, "scale": np.sqrt(2.0), "N": N}
         self.params.update(params)
 
         if self.beta == 0:  # Answer issue #28 raised by @rbardenet
@@ -58,19 +58,17 @@ class HermiteBetaEnsemble(AbstractBetaEnsemble):
             sampl = rng.normal(
                 loc=self.params["loc"],
                 scale=self.params["scale"],
-                size=self.params["size_N"],
+                size=self.params["N"],
             )
         else:  # if beta > 0
             sampl = rm.hermite_sampler_full(
-                N=self.params["size_N"], beta=self.beta, random_state=rng
+                N=self.params["N"], beta=self.beta, random_state=rng
             )
 
         self.list_of_samples.append(sampl)
         return sampl
 
-    def sample_banded_model(
-        self, loc=0.0, scale=np.sqrt(2.0), size_N=10, random_state=None
-    ):
+    def sample_banded_model(self, loc=0.0, scale=np.sqrt(2.0), N=10, random_state=None):
         """Sample from :ref:`tridiagonal matrix model <hermite_banded_matrix_model>` associated to the Hermite Ensemble.
         Available for :py:attr:`beta` :math:`>0` and the degenerate case :py:attr:`beta` :math:`=0` corresponding to i.i.d. points from the Gaussian :math:`\\mathcal{N}(\\mu,\\sigma^2)` reference measure
 
@@ -84,9 +82,9 @@ class HermiteBetaEnsemble(AbstractBetaEnsemble):
         :type scale:
             float, default :math:`\\sqrt{2}`
 
-        :param size_N:
+        :param N:
             Number :math:`N` of points, i.e., size of the matrix to be diagonalized
-        :type size_N:
+        :type N:
             int, default :math:`10`
 
         .. note::
@@ -94,7 +92,7 @@ class HermiteBetaEnsemble(AbstractBetaEnsemble):
             The reference measure associated with the :ref:`full matrix model <hermite_full_matrix_model>` is :math:`\\mathcal{N}(0,2)`.
             For this reason, in the :py:attr:`sampling_params` attribute, the default values are set to ``loc``:math:`=0` and ``scale``:math:`=\\sqrt{2}`.
 
-            To compare :py:meth:`sample_banded_model` with :py:meth:`sample_full_model` simply use the ``size_N`` parameter.
+            To compare :py:meth:`sample_banded_model` with :py:meth:`sample_full_model` simply use the ``N`` parameter.
 
         .. seealso::
 
@@ -105,7 +103,7 @@ class HermiteBetaEnsemble(AbstractBetaEnsemble):
         rng = check_random_state(random_state)
 
         self.sampling_mode = "banded"
-        params = {"loc": loc, "scale": scale, "size_N": size_N}
+        params = {"loc": loc, "scale": scale, "N": N}
         self.params.update(params)
 
         if self.beta == 0:  # Answer issue #28 raised by @rbardenet
@@ -113,14 +111,14 @@ class HermiteBetaEnsemble(AbstractBetaEnsemble):
             sampl = rng.normal(
                 loc=self.params["loc"],
                 scale=self.params["scale"],
-                size=self.params["size_N"],
+                size=self.params["N"],
             )
         else:  # if beta > 0
             sampl = rm.mu_ref_normal_sampler_tridiag(
                 loc=self.params["loc"],
                 scale=self.params["scale"],
                 beta=self.beta,
-                size=self.params["size_N"],
+                size=self.params["N"],
                 random_state=rng,
             )
 
@@ -171,7 +169,7 @@ class HermiteBetaEnsemble(AbstractBetaEnsemble):
 
         if self.beta > 0:
             # Normalize to fit the semi-circle distribution
-            points /= np.sqrt(self.beta * self.params["size_N"])
+            points /= np.sqrt(self.beta * self.params["N"])
         else:
             pass
 

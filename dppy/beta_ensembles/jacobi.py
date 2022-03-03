@@ -20,28 +20,26 @@ class JacobiBetaEnsemble(AbstractBetaEnsemble):
 
         super().__init__(beta=beta)
 
-        params = {"a": 1.0, "b": 1.0, "size_N": 10, "size_M1": None, "size_M2": None}
+        params = {"a": 1.0, "b": 1.0, "N": 10, "M1": None, "M2": None}
         self.params.update(params)
 
-    def sample_full_model(
-        self, size_N=100, size_M1=150, size_M2=200, random_state=None
-    ):
+    def sample_full_model(self, N=100, M1=150, M2=200, random_state=None):
         """Sample from :ref:`full matrix model <Jacobi_full_matrix_model>` associated to the Jacobi ensemble. Only available for :py:attr:`beta` :math:`\\in\\{1, 2, 4\\}` and the degenerate case :py:attr:`beta` :math:`=0` corresponding to i.i.d. points from the :math:`\\operatorname{Beta}(a,b)` reference measure
 
-        :param size_N:
+        :param N:
             Number :math:`N` of points, i.e., size of the matrix to be diagonalized.
             First dimension of the matrix used to form the covariance matrix to be diagonalized, see :ref:`full matrix model <jacobi_full_matrix_model>`.
-        :type size_N:
+        :type N:
             int, default :math:`100`
 
-        :param size_M1:
+        :param M1:
             Second dimension :math:`M_1` of the first matrix used to form the matrix to be diagonalized, see :ref:`full matrix model <jacobi_full_matrix_model>`.
-        :type size_M1:
+        :type M1:
             int, default :math:`150`
 
-        :param size_M2:
+        :param M2:
             Second dimension :math:`M_2` of the second matrix used to form the matrix to be diagonalized, see :ref:`full matrix model <jacobi_full_matrix_model>`.
-        :type size_M2:
+        :type M2:
             int, default :math:`200`
 
         .. note::
@@ -54,7 +52,7 @@ class JacobiBetaEnsemble(AbstractBetaEnsemble):
 
             For this reason, in the :py:attr:`sampling_params` attribute, the values of the parameters are set to ``a``:math:`=\\frac{\\beta}{2}(M_1-N+1)` and ``b``:math:`=\\frac{\\beta}{2}(M_2-N+1)`.
 
-            To compare :py:meth:`sample_banded_model` with :py:meth:`sample_full_model` simply use the ``size_N``, ``size_M2`` and ``size_M2`` parameters.
+            To compare :py:meth:`sample_banded_model` with :py:meth:`sample_full_model` simply use the ``N``, ``M2`` and ``M2`` parameters.
 
         .. seealso::
 
@@ -65,37 +63,37 @@ class JacobiBetaEnsemble(AbstractBetaEnsemble):
 
         self.sampling_mode = "full"
 
-        if (size_M1 >= size_N) and (size_M2 >= size_N):
-            # all([var >= size_N for var in [size_M1, size_M2]]
-            a = 0.5 * self.beta * (size_M1 - size_N + 1)
-            b = 0.5 * self.beta * (size_M2 - size_N + 1)
+        if (M1 >= N) and (M2 >= N):
+            # all([var >= N for var in [M1, M2]]
+            a = 0.5 * self.beta * (M1 - N + 1)
+            b = 0.5 * self.beta * (M2 - N + 1)
 
         else:
             err_print = (
                 "Must have M1, M2 >= N.",
-                "Given: M1={}, M2={} and N={}".format(size_M1, size_M2, size_N),
+                "Given: M1={}, M2={} and N={}".format(M1, M2, N),
             )
             raise ValueError(" ".join(err_print))
 
         params = {
             "a": a,
             "b": b,
-            "size_N": size_N,
-            "size_M1": size_M1,
-            "size_M2": size_M2,
+            "N": N,
+            "M1": M1,
+            "M2": M2,
         }
         self.params.update(params)
 
         if self.beta == 0:  # Answer issue #28 raised by @rbardenet
-            # Sample i.i.d. Beta(a,b) if size_M1,2 were used a,b = beta/2 (M_1,2 - N + 1) = 0 => ERROR
+            # Sample i.i.d. Beta(a,b) if M1,2 were used a,b = beta/2 (M_1,2 - N + 1) = 0 => ERROR
             sampl = rng.beta(
-                a=self.params["a"], b=self.params["b"], size=self.params["size_N"]
+                a=self.params["a"], b=self.params["b"], size=self.params["N"]
             )
         else:
             sampl = rm.jacobi_sampler_full(
-                M_1=self.params["size_M1"],
-                M_2=self.params["size_M2"],
-                N=self.params["size_N"],
+                M_1=self.params["M1"],
+                M_2=self.params["M2"],
+                N=self.params["N"],
                 beta=self.beta,
                 random_state=rng,
             )
@@ -104,7 +102,7 @@ class JacobiBetaEnsemble(AbstractBetaEnsemble):
         return sampl
 
     def sample_banded_model(
-        self, a=1.0, b=2.0, size_N=10, size_M1=None, size_M2=None, random_state=None
+        self, a=1.0, b=2.0, N=10, M1=None, M2=None, random_state=None
     ):
         """Sample from :ref:`tridiagonal matrix model <Jacobi_banded_matrix_model>` associated to the Jacobi ensemble. Available for :py:attr:`beta` :math:`>0` and the degenerate case :py:attr:`beta` :math:`=0` corresponding to i.i.d. points from the :math:`\\operatorname{Beta}(a,b)` reference measure
 
@@ -118,20 +116,20 @@ class JacobiBetaEnsemble(AbstractBetaEnsemble):
         :type scale:
             float, default :math:`2.0`
 
-        :param size_N:
+        :param N:
             Number :math:`N` of points, i.e., size of the matrix to be diagonalized.
             Equivalent to the first dimension :math:`N` of the matrices used in the :ref:`full matrix model <jacobi_full_matrix_model>`.
-        :type size_N:
+        :type N:
             int, default :math:`10`
 
-        :param size_M1:
+        :param M1:
             Equivalent to the second dimension :math:`M_1` of the first matrix used in the :ref:`full matrix model <jacobi_full_matrix_model>`.
-        :type size_M1:
+        :type M1:
             int
 
-        :param size_M2:
+        :param M2:
             Equivalent to the second dimension :math:`M_2` of the second matrix used in the :ref:`full matrix model <jacobi_full_matrix_model>`.
-        :type size_M2:
+        :type M2:
             int
 
         .. note::
@@ -144,14 +142,14 @@ class JacobiBetaEnsemble(AbstractBetaEnsemble):
 
             For this reason, in the :py:attr:`sampling_params` attribute, the values of the parameters are set to ``a``:math:`=\\frac{\\beta}{2}(M_1-N+1)` and ``b``:math:`=\\frac{\\beta}{2}(M_2-N+1)`.
 
-            To compare :py:meth:`sample_banded_model` with :py:meth:`sample_full_model` simply use the ``size_N``, ``size_M2`` and ``size_M2`` parameters.
+            To compare :py:meth:`sample_banded_model` with :py:meth:`sample_full_model` simply use the ``N``, ``M2`` and ``M2`` parameters.
 
-        - If ``size_M1`` and ``size_M2`` are not provided:
+        - If ``M1`` and ``M2`` are not provided:
 
-            In the :py:attr:`sampling_params` attribute, ``size_M1,2`` are set to
-            ``size_M1``:math:`= \\frac{2a}{\\beta} + N - 1` and ``size_M2``:math:`= \\frac{2b}{\\beta} + N - 1`, to give an idea of the corresponding second dimensions :math:`M_{1,2}`.
+            In the :py:attr:`sampling_params` attribute, ``M1,2`` are set to
+            ``M1``:math:`= \\frac{2a}{\\beta} + N - 1` and ``M2``:math:`= \\frac{2b}{\\beta} + N - 1`, to give an idea of the corresponding second dimensions :math:`M_{1,2}`.
 
-        - If ``size_M1`` and ``size_M2`` are provided:
+        - If ``M1`` and ``M2`` are provided:
 
             In the :py:attr:`sampling_params` attribute, ``a`` and ``b`` are set to:
             ``a``:math:`=\\frac{\\beta}{2}(M_1-N+1)` and
@@ -167,48 +165,48 @@ class JacobiBetaEnsemble(AbstractBetaEnsemble):
 
         self.sampling_mode = "banded"
 
-        if not (size_M1 and size_M2):  # default setting
+        if not (M1 and M2):  # default setting
 
             if self.beta > 0:
-                size_M1 = 2 / self.beta * a + size_N - 1
-                size_M2 = 2 / self.beta * b + size_N - 1
+                M1 = 2 / self.beta * a + N - 1
+                M2 = 2 / self.beta * b + N - 1
 
             else:
-                size_M1, size_M2 = np.inf, np.inf
+                M1, M2 = np.inf, np.inf
 
-        elif (size_M1 >= size_N) and (size_M2 >= size_N):
-            # all([var >= size_N for var in [size_M1, size_M2]]
-            a = 0.5 * self.beta * (size_M1 - size_N + 1)
-            b = 0.5 * self.beta * (size_M2 - size_N + 1)
+        elif (M1 >= N) and (M2 >= N):
+            # all([var >= N for var in [M1, M2]]
+            a = 0.5 * self.beta * (M1 - N + 1)
+            b = 0.5 * self.beta * (M2 - N + 1)
 
         else:
             err_print = (
                 "Must have M1, M2 >= N.",
-                "Given: M1={}, M2={} and N={}".format(size_M1, size_M2, size_N),
+                "Given: M1={}, M2={} and N={}".format(M1, M2, N),
             )
             raise ValueError(" ".join(err_print))
 
         params = {
             "a": a,
             "b": b,
-            "size_N": size_N,
-            "size_M1": size_M1,
-            "size_M2": size_M2,
+            "N": N,
+            "M1": M1,
+            "M2": M2,
         }
         self.params.update(params)
 
         if self.beta == 0:  # Answer issue #28 raised by @rbardenet
             # Sample i.i.d. Beta(a,b)
-            # If size_M1,2 is used a, b = beta/2 (M1,2 - N + 1) = 0 => ERROR
+            # If M1,2 is used a, b = beta/2 (M1,2 - N + 1) = 0 => ERROR
             sampl = rng.beta(
-                a=self.params["a"], b=self.params["b"], size=self.params["size_N"]
+                a=self.params["a"], b=self.params["b"], size=self.params["N"]
             )
         else:
             sampl = rm.mu_ref_beta_sampler_tridiag(
                 a=self.params["a"],
                 b=self.params["b"],
                 beta=self.beta,
-                size=self.params["size_N"],
+                size=self.params["N"],
                 random_state=rng,
             )
 
@@ -226,7 +224,7 @@ class JacobiBetaEnsemble(AbstractBetaEnsemble):
         else:
             points = self.list_of_samples[-1].copy()  # Pick last sample
 
-        N, M_1, M_2 = [self.params[key] for key in ["size_N", "size_M1", "size_M2"]]
+        N, M_1, M_2 = [self.params[key] for key in ["N", "M1", "M2"]]
 
         fig, ax = plt.subplots(1, 1)
         # Title, answers Issue #33 raised by @adrienhardy

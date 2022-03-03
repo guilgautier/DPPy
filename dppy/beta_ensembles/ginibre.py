@@ -24,15 +24,15 @@ class GinibreEnsemble(AbstractBetaEnsemble):
             raise ValueError(" ".join(err_print))
         super().__init__(beta=beta)
 
-        params = {"size_N": 10}
+        params = {"N": 10}
         self.params.update(params)
 
-    def sample_full_model(self, size_N=10, random_state=None):
+    def sample_full_model(self, N=10, random_state=None):
         """Sample from :ref:`full matrix model <Ginibre_full_matrix_model>` associated to the Ginibre ensemble. Only available for :py:attr:`beta` :math:`=2`
 
-        :param size_N:
+        :param N:
             Number :math:`N` of points, i.e., size of the matrix to be diagonalized
-        :type size_N:
+        :type N:
             int, default :math:`10`
 
         .. seealso::
@@ -41,8 +41,8 @@ class GinibreEnsemble(AbstractBetaEnsemble):
         """
         rng = check_random_state(random_state)
 
-        self.params.update({"size_N": size_N})
-        sampl = rm.ginibre_sampler_full(N=self.params["size_N"], random_state=rng)
+        self.params.update({"N": N})
+        sampl = rm.ginibre_sampler_full(N=self.params["N"], random_state=rng)
 
         self.list_of_samples.append(sampl)
         return sampl
@@ -66,7 +66,7 @@ class GinibreEnsemble(AbstractBetaEnsemble):
             - :py:meth:`hist`
         """
 
-        return points / np.sqrt(self.params["size_N"])
+        return points / np.sqrt(self.params["N"])
 
     def __display_and_normalization(self, display_type, normalization):
 

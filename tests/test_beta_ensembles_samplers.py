@@ -90,7 +90,7 @@ class TestAdequationOfBetaEnsembleSamplers(unittest.TestCase):
 
         list_of_beta = [1, 2, 4]
 
-        sampler_params = {"size_N": self.N}
+        sampler_params = {"N": self.N}
         dict_sampler_param = {"full": sampler_params, "banded": sampler_params}
 
         self.run_adequation_test(
@@ -114,7 +114,7 @@ class TestAdequationOfBetaEnsembleSamplers(unittest.TestCase):
 
         list_of_beta = [1, 2, 4]
 
-        sampler_params = {"size_N": N, "size_M": M}
+        sampler_params = {"N": N, "M": M}
         dict_sampler_param = {"full": sampler_params, "banded": sampler_params}
 
         self.run_adequation_test(
@@ -141,7 +141,7 @@ class TestAdequationOfBetaEnsembleSamplers(unittest.TestCase):
 
         list_of_beta = [1, 2, 4]
 
-        sampler_params = {"size_N": N, "size_M1": M_1, "size_M2": M_2}
+        sampler_params = {"N": N, "M1": M_1, "M2": M_2}
         dict_sampler_param = {"full": sampler_params, "banded": sampler_params}
 
         self.run_adequation_test(
@@ -162,7 +162,7 @@ class TestAdequationOfBetaEnsembleSamplers(unittest.TestCase):
         support = [0, 2 * np.pi]
 
         list_of_beta = [1, 2, 4]
-        sampler_params = {"size_N": self.N}
+        sampler_params = {"N": self.N}
         dict_sampler_param = {"full": sampler_params, "banded": sampler_params}
 
         self.run_adequation_test(
@@ -184,7 +184,7 @@ class TestAdequationOfBetaEnsembleSamplers(unittest.TestCase):
         support = [0.0, 1.0]
 
         list_of_beta = [2]
-        sampler_params = {"size_N": self.N}
+        sampler_params = {"N": self.N}
         dict_sampler_param = {"full": sampler_params}
 
         self.run_adequation_test(

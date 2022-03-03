@@ -26,7 +26,7 @@ class AbstractBetaEnsemble(metaclass=ABCMeta):
 
         # Split object name at uppercase
         self.name = " ".join(findall("[A-Z][^A-Z]*", self.__class__.__name__))
-        self.params = {"size_N": 10}  # Number of points and ref measure params
+        self.params = {"N": 10}  # Number of points and ref measure params
 
         self.sampling_mode = ""
         self.list_of_samples = []
@@ -34,7 +34,7 @@ class AbstractBetaEnsemble(metaclass=ABCMeta):
     @property
     def _str_title(self):
         return r"Realization of {} points of {} with $\beta={}$".format(
-            self.params["size_N"], self.name, self.beta
+            self.params["N"], self.name, self.beta
         )
 
     def __str__(self):

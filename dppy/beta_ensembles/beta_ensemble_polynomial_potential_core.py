@@ -774,7 +774,7 @@ class TracyWidom(object):
             # Compute K[x, y]_{x, y \in X}
             # K_xy = (A_x * dA_y - dA_x * A_y) / (x - y)
             X = np.ravel(X)
-            size_X = len(X)
+            X = len(X)
 
             x = phi(X)
             sqrt_dphi_x = np.sqrt(d_phi(X))
@@ -797,7 +797,7 @@ class TracyWidom(object):
             # set y = x - eps
             # K_xx = (A_x * dA_x-eps - dA_x * A_x-eps) / eps
             A_y, dA_y, _, _ = airy(x - eps_xy)
-            diag = range(size_X)
+            diag = range(X)
             K_xy[:, diag, diag] = (A_x * dA_y - dA_x * A_y) / eps_xy
 
             return sqrt_dphi_x[:, None] * K_xy * sqrt_dphi_x
