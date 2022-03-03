@@ -130,5 +130,6 @@ Documentation contents
 
   finite_dpps/index
   continuous_dpps/index
+  beta_ensembles/index
   exotic_dpps/index
   bibliography/index
