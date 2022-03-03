@@ -1,192 +1,125 @@
-import matplotlib.pyplot as plt
 import numpy as np
+import scipy.linalg as la
+import scipy.sparse as sp
 
-import dppy.random_matrices as rm
-from dppy.beta_ensembles.abstract_beta_ensemble import AbstractBetaEnsemble
 from dppy.utils import check_random_state
 
 
-class CircularBetaEnsemble(AbstractBetaEnsemble):
-    """Circular Ensemble object
+def sampler_circular_full(beta, n, random_state=None):
+    r"""Generate a sample from the Circular ``beta=1, 2`` ensemble by computing the eigenvalues of a random :math:`n \times n` orthogonal (\beta=1), resp. unitary (\beta=2) matrix of size :math:`n \times n` drawn from the Haar measure on the associate group.
+
+    The output sample :math:`x=\left(e^{i \theta_{1}}, \dots, e^{i \theta_{n}} \right)` has joint density proportional to
+
+    .. math::
+
+        \Delta(e^{i \theta_{1}}, \dots, e^{i \theta_{n})^{\beta}
+        \\prod_{n=1}^{n}
+            1_{[0, 2\pi]}(\theta_i)
+
+    The equivalent banded model :py:func:`~dppy.beta_ensembles.jacobi.sampler_circular_quindiagonal` can be called as
+    ``sampler_circular_quindiagonal(beta=beta, size=n)``.
+
+    :param beta: :math:`\beta \in \{1, 2, 4\}` parameter of the ensemble.
+    :type beta: int
+
+    :param n: Size :math:`n` of the output sample, i.e., size of the matrix to be diagonalized.
+    :type n: int
+
+    :param random_state: _description_, defaults to None
+    :type random_state: _type_, optional
+
+    :return: Vector of size :math:`n` representing the output sample.
+    :rtype: numpy.ndarray
 
     .. seealso::
 
         - :ref:`Full matrix model <circular_full_matrix_model>` associated to the Circular ensemble
+        - :cite:`Mez06` Section 5
+    """
+    rng = check_random_state(random_state)
+
+    if beta not in [1, 2]:
+        raise ValueError("beta argument must be 1 or 2.")
+
+    A = np.zeros((n, n), dtype=float if beta == 1 else complex)
+    if beta == 1:  # COE
+        A[:, :] = rng.randn(n, n)
+
+    elif beta == 2:  # CUE
+        A.real = rng.randn(n, n)
+        A.imag = rng.randn(n, n)
+
+    Q, R = la.qr(A, pivoting=False)
+    d = np.diagonal(R)
+    U = np.multiply(Q, d / np.abs(d))
+
+    return la.eigvals(U)
+
+
+def sampler_circular_quindiagonal(beta, size, random_state=None):
+    r"""Generate a sample from the Circular ``beta \geq 0`` ensemble by computing the eigenvalues of a random quindiagonal :math:`n \times n` matrix.
+
+    The output sample :math:`x=\left(e^{i \theta_{1}}, \dots, e^{i \theta_{n}} \right)` has joint density proportional to
+
+    .. math::
+
+        \Delta(e^{i \theta_{1}}, \dots, e^{i \theta_{n})^{\beta}
+        \\prod_{n=1}^{n}
+            1_{[0, 2\pi]}(\theta_i)
+
+    :param beta: :math:`\beta \geq 0` parameter of the ensemble.
+    :type beta: int
+
+    :param n: Size :math:`n` of the output sample, i.e., size of the matrix to be diagonalized.
+    :type n: int
+
+    :param random_state: _description_, defaults to None
+    :type random_state: _type_, optional
+
+    :return: Vector of size :math:`n` representing the output sample.
+    :rtype: numpy.ndarray
+
+    .. seealso::
+
         - :ref:`Quindiagonal matrix model <circular_banded_matrix_model>` associated to the Circular ensemble
+        - :cite:`KiNe04` Theorem 1
     """
 
-    def __init__(self, beta=2):
+    rng = check_random_state(random_state)
 
-        if not isinstance(beta, int):
-            raise ValueError("`beta` must be int >0. Given: {}".format(beta))
-        super().__init__(beta=beta)
+    if not (isinstance(beta, int) and (beta >= 0)):
+        raise ValueError("beta argument must be non negative (beta >= 0).")
 
-        params = {"N": 10}
-        self.params.update(params)
+    if beta == 0:  # Answer issue #28 raised by @rbardenet
+        # i.i.d. points uniformly on the circle
+        theta = rng.uniform(0.0, 2 * np.pi, size=size)
+        return np.exp(1j * theta)
 
-    def sample_full_model(self, N=10, haar_mode="Hermite", random_state=None):
-        """Sample from :ref:`tridiagonal matrix model <Circular_full_matrix_model>` associated to the Circular ensemble. Only available for :py:attr:`beta` :math:`\\in\\{1, 2, 4\\}` and the degenerate case :py:attr:`beta` :math:`=0` corresponding to i.i.d. uniform points on the unit circle
+    alpha = np.zeros(size, dtype=complex)
 
-        :param N:
-            Number :math:`N` of points, i.e., size of the matrix to be diagonalized
-        :type N:
-            int, default :math:`10`
+    # nu = 1 + beta*(N-1, N-2, ..., 0)
+    for i, nu in enumerate(1 + beta * np.arange(size - 1, -1, step=-1)):
+        gauss_vec = rng.randn(nu + 1)
+        alpha[i] = (gauss_vec[0] + 1j * gauss_vec[1]) / la.norm(gauss_vec)
 
-        :param haar_mode:
-            Sample Haar measure i.e. uniformly on the orthogonal/unitary/symplectic group using:
-            - 'QR',
-            - 'Hermite'
-        :type haar_mode:
-            str, default 'hermite'
+    rho = np.sqrt(1 - np.abs(alpha[:-1]) ** 2)
 
-        .. seealso::
+    xi = np.zeros((size - 1, 2, 2), dtype=complex)  # xi[0,..,N-1]
+    xi[:, 0, 0], xi[:, 0, 1] = alpha[:-1].conj(), rho
+    xi[:, 1, 0], xi[:, 1, 1] = rho, -alpha[:-1]
 
-            - :ref:`Full matrix model <circular_full_matrix_model>` associated to the Circular ensemble
-            - :py:meth:`sample_banded_model`
-        """
-        rng = check_random_state(random_state)
+    # L = diag(xi_0, xi_2, ...)
+    # M = diag(1, xi_1, x_3, ...)
+    # xi[N-1] = alpha[N-1].conj()
+    if size % 2 == 0:  # even
+        L = sp.block_diag(xi[::2, :, :], dtype=complex)
+        M = sp.block_diag([1.0, *xi[1::2, :, :], alpha[-1].conj()], dtype=complex)
+    else:  # odd
+        L = sp.block_diag([*xi[::2, :, :], alpha[-1].conj()], dtype=complex)
+        M = sp.block_diag([1.0, *xi[1::2, :, :]], dtype=complex)
 
-        self.sampling_mode = "full"
-        params = {"N": N, "haar_mode": haar_mode}
-        self.params.update(params)
+    return la.eigvals(L.dot(M).toarray())
 
-        if self.beta == 0:  # i.i.d. points uniformly on the circle
-            # Answer issue #28 raised by @rbardenet
-            sampl = np.exp(2 * 1j * np.pi * rng.rand(params["N"]))
-        else:
-            sampl = rm.circular_sampler_full(
-                N=self.params["N"],
-                beta=self.beta,
-                haar_mode=self.params["haar_mode"],
-                random_state=rng,
-            )
 
-        self.list_of_samples.append(sampl)
-        return sampl
-
-    def sample_banded_model(self, N=10, random_state=None):
-        """Sample from :ref:`Quindiagonal matrix model <Circular_banded_matrix_model>` associated to the Circular Ensemble.
-        Available for :py:attr:`beta` :math:`\\in\\mathbb{N}^*`, and the degenerate case :py:attr:`beta` :math:`=0` corresponding to i.i.d. uniform points on the unit circle
-
-        :param N:
-            Number :math:`N` of points, i.e., size of the matrix to be diagonalized
-        :type N:
-            int, default :math:`10`
-
-        .. note::
-
-            To compare :py:meth:`sample_banded_model` with :py:meth:`sample_full_model` simply use the ``N`` parameter.
-
-        .. seealso::
-
-            - :ref:`Quindiagonal matrix model <circular_banded_matrix_model>` associated to the Circular ensemble
-            - :py:meth:`sample_full_model`
-        """
-        rng = check_random_state(random_state)
-
-        self.sampling_mode = "banded"
-        params = {"N": N}
-        self.params.update(params)
-
-        if self.beta == 0:  # i.i.d. points uniformly on the circle
-            # Answer issue #28 raised by @rbardenet
-            sampl = np.exp(2 * 1j * np.pi * rng.rand(params["N"]))
-        else:
-            sampl = rm.mu_ref_unif_unit_circle_sampler_quindiag(
-                beta=self.beta, size=self.params["N"], random_state=rng
-            )
-
-        self.list_of_samples.append(sampl)
-        return sampl
-
-    def normalize_points(self, points):
-        """No need to renormalize the points"""
-        return points
-
-    def __display_and_normalization(self, display_type, normalization):
-
-        if not self.list_of_samples:
-            raise ValueError("Empty `list_of_samples`, sample first!")
-        else:
-            points = self.list_of_samples[-1].copy()  # Pick last sample
-
-        fig, ax = plt.subplots(1, 1)
-
-        # Title
-        samp_mod = ""
-
-        if self.beta == 0:
-            samp_mod = r"i.i.d samples from $\mathcal{U}_{[0,2\pi]}$"
-        elif self.sampling_mode == "full":
-            samp_mod = "full matrix model with haar_mode={}".format(
-                self.params["haar_mode"]
-            )
-        else:  # self.sampling_mode == 'banded':
-            samp_mod = "quindiag model"
-
-        title = "\n".join([self._str_title, "using {}".format(samp_mod)])
-        plt.title(title)
-
-        if display_type == "scatter":
-
-            if normalization:
-                # Draw unit circle
-                unit_circle = plt.Circle((0, 0), 1, color="r", fill=False)
-                ax.add_artist(unit_circle)
-
-            ax.set_xlim([-1.3, 1.3])
-            ax.set_ylim([-1.3, 1.3])
-            ax.set_aspect("equal")
-            ax.scatter(points.real, points.imag, c="blue", label="sample")
-
-        elif display_type == "hist":
-            points = np.angle(points)
-
-            if normalization:
-                # Uniform distribution on [0, 2pi]
-                ax.axhline(y=1 / (2 * np.pi), color="r", label=r"$\frac{1}{2\pi}$")
-
-            ax.hist(
-                points, bins=30, density=1, facecolor="blue", alpha=0.5, label="hist"
-            )
-        else:
-            pass
-
-        plt.legend(loc="best", frameon=False)
-
-    def plot(self, normalization=True):
-        """Display the last realization of the :class:`CircularBetaEnsemble` object.
-
-        :param normalization:
-            When ``True``, the unit circle is displayed
-
-        :type normalization:
-            bool, default ``True``
-
-        .. seealso::
-
-            - :py:meth:`sample_full_model`, :py:meth:`sample_banded_model`
-            - :py:meth:`hist`
-            - :ref:`Full matrix model <circular_full_matrix_model>` associated to the Circular ensemble
-            - :ref:`Quindiagonal matrix model <circular_banded_matrix_model>` associated to the Circular ensemble
-        """
-
-        self.__display_and_normalization("scatter", normalization)
-
-    def hist(self, normalization=True):
-        """Display the histogram of the angles :math:`\\theta_{1}, \\dots, \\theta_{N}` associated to the last realization :math:`\\left\\{ e^{i \\theta_{1}}, \\dots, e^{i \\theta_{N}} \\right\\}`of the :class:`CircularBetaEnsemble` object.
-
-        :param normalization:
-            When ``True``, the limiting distribution of the angles, i.e., the uniform distribution in :math:`[0, 2\\pi]` is displayed
-
-        :type normalization:
-            bool, default ``True``
-
-        .. seealso::
-
-            - :py:meth:`sample_full_model`, :py:meth:`sample_banded_model`
-            - :py:meth:`plot`
-            - :ref:`Full matrix model <circular_full_matrix_model>` associated to the Circular ensemble
-            - :ref:`Quindiagonal matrix model <circular_banded_matrix_model>` associated to the Circular ensemble
-        """
-        self.__display_and_normalization("hist", normalization)
+def uniform_unit_circle_density(self, x):
+    return np.where(la.norm(x, axis=-1) == 1, 0.5 / np.pi, 0.0)

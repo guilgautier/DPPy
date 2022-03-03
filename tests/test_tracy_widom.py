@@ -6,9 +6,7 @@ import unittest
 import numpy as np
 
 sys.path.append("..")
-from dppy.beta_ensemblesbeta_ensembles.beta_ensemble_polynomial_potential_core import (
-    TracyWidom,
-)
+from dppy.beta_ensembles.beta_ensemble_polynomial_potential_core import TracyWidom
 
 
 class TestTracyWidom(unittest.TestCase):

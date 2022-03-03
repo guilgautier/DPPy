@@ -5,19 +5,19 @@ import numpy as np
 import scipy.linalg as la
 from numpy.polynomial.chebyshev import poly2cheb  # cf rescale_largest_eig_val
 
-from dppy.beta_ensemblesbeta_ensembles.beta_ensemble_polynomial_potential_core import (
+from dppy.beta_ensembles.beta_ensemble_polynomial_potential_core import (
     check_random_state,
     equilibrium_ClItKr10,
     equilibrium_x2_x4,
     equilibrium_x2m,
 )
-from dppy.beta_ensemblesbeta_ensembles.beta_ensemble_polynomial_potential_core import (
+from dppy.beta_ensembles.beta_ensemble_polynomial_potential_core import (
     polynomial_in_negative_log_conditional_a_coef as P_a_cond,
 )
-from dppy.beta_ensemblesbeta_ensembles.beta_ensemble_polynomial_potential_core import (
+from dppy.beta_ensembles.beta_ensemble_polynomial_potential_core import (
     polynomial_in_negative_log_conditional_b_coef as P_b_cond,
 )
-from dppy.beta_ensemblesbeta_ensembles.beta_ensemble_polynomial_potential_core import (
+from dppy.beta_ensembles.beta_ensemble_polynomial_potential_core import (
     sampler_exact_convex_quartic,
     sampler_mala,
 )

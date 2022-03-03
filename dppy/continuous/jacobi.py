@@ -11,10 +11,10 @@ from matplotlib import pyplot as plt
 from scipy import stats
 from scipy.special import betaln, eval_jacobi, gammaln
 
+from dppy.beta_ensembles.jacobi import sampler_jacobi_tridiagonal
 from dppy.continuous.abstract_continuous_dpp import (
     AbstractSpectralContinuousProjectionDPP,
 )
-from dppy.random_matrices import mu_ref_beta_sampler_tridiag as jacobi_tridiagonal_model
 from dppy.utils import check_random_state
 
 
@@ -179,7 +179,7 @@ class JacobiProjectionDPP(AbstractSpectralContinuousProjectionDPP):
         dim = self.d
 
         if dim == 1:
-            x = jacobi_tridiagonal_model(
+            x = sampler_jacobi_tridiagonal(
                 a=a + 1.0,
                 b=b + 1.0,
                 size=self.N,

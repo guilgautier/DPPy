@@ -1,283 +1,113 @@
-import matplotlib.pyplot as plt
 import numpy as np
-from scipy import stats
+import scipy.linalg as la
+from scipy.stats import semicircular
 
-import dppy.random_matrices as rm
-from dppy.beta_ensembles.abstract_beta_ensemble import AbstractBetaEnsemble
 from dppy.utils import check_random_state
 
 
-class HermiteBetaEnsemble(AbstractBetaEnsemble):
-    """Hermite Ensemble object
+def sampler_hermite_full(beta, n, random_state=None):
+    r"""Generate a sample from the Hermite ``beta=1, 2, 4`` ensemble of size :math:`n`, by computing the eigenvalues of the **symmetric full** random  matrix model :math:`\frac{1}{\sqrt{2}}(A + A^*)`.
+
+    The output sample :math:`x=\left(x_{1}, \dots, x_{n}\right)` has joint density proportional to
+
+    .. math::
+
+        \Delta(x_{1}, \dots, x_{n})^{\beta}
+        \prod_{i=1}^{n} \exp( -\frac{x_i^2}{4} ).
+
+    See :py:func:`~dppy.beta_ensembles.hermite.sampler_hermite_tridiagonal` (with the default arguments) for the tridiagonal counter part.
+
+    :param beta: :math:`\beta \in \{1, 2, 4\}` parameter of the ensemble.
+    :type beta: int
+    :param n: Size :math:`n` of the output sample, i.e., size of the matrix to be diagonalized.
+    :type n: int
+
+    :param random_state: _description_, defaults to None
+    :type random_state: _type_, optional
+
+    :return: Vector of size :math:`n` representing the output sample.
+    :rtype: numpy.ndarray
+
+    .. note::
+
+        The rescaled version :math:`\frac{x}{\sqrt{\beta n}}` of the sample has limiting distribution the semicircle distribution supported on :math:`[-2, 2]`.
 
     .. seealso::
 
-        - :ref:`Full matrix model <hermite_full_matrix_model>` associated to the Hermite ensemble
-        - :ref:`Tridiagonal matrix model <hermite_banded_matrix_model>` associated to the Hermite ensemble
+        :cite:`DuEd02` II-C
     """
+    rng = check_random_state(random_state)
 
-    def __init__(self, beta=2):
-
-        super().__init__(beta=beta)
-
-        # Default parameters for ``loc`` and ``scale`` correspond to the
-        # reference measure N(0,2) in the full matrix model
-        params = {"loc": 0.0, "scale": np.sqrt(2.0), "N": 10}
-        self.params.update(params)
-
-    def sample_full_model(self, N=10, random_state=None):
-        """Sample from :ref:`full matrix model <Hermite_full_matrix_model>` associated to the Hermite ensemble.
-        Only available for :py:attr:`beta` :math:`\\in\\{1, 2, 4\\}`
-        and the degenerate case :py:attr:`beta` :math:`=0` corresponding to i.i.d. points from the Gaussian :math:`\\mathcal{N}(\\mu,\\sigma^2)` reference measure
-
-        :param N:
-            Number :math:`N` of points, i.e., size of the matrix to be diagonalized
-        :type N:
-            int, default :math:`10`
-
-        .. note::
-
-            The reference measure associated with the :ref:`full matrix model <hermite_full_matrix_model>` is :math:`\\mathcal{N}(0,2)`.
-            For this reason, in the :py:attr:`sampling_params` attribute, the values of the parameters are set to ``loc``:math:`=0` and ``scale``:math:`=\\sqrt{2}`.
+    if beta == 1:
+        A = rng.randn(n, n)
+        A += A.T
 
-            To compare :py:meth:`sample_banded_model` with :py:meth:`sample_full_model` simply use the ``N`` parameter.
+    elif beta == 2:
+        A = rng.randn(n, n) + 1j * rng.randn(n, n)
+        A += A.conj().T
 
-        .. seealso::
+    elif beta == 4:
+        X = rng.randn(n, n) + 1j * rng.randn(n, n)
+        Y = rng.randn(n, n) + 1j * rng.randn(n, n)
+        A = np.block([[X, Y], [-Y.conj(), X.conj()]])
+        A += A.conj().T
 
-            - :ref:`Full matrix model <hermite_full_matrix_model>` associated to the Hermite ensemble
-            - :py:meth:`sample_banded_model`
-        """
-        rng = check_random_state(random_state)
+    else:
+        raise ValueError("beta argument must be 0, 1, 2 or 4.")
 
-        self.sampling_mode = "full"
-        params = {"loc": 0.0, "scale": np.sqrt(2.0), "N": N}
-        self.params.update(params)
+    return la.eigvalsh(A) / np.sqrt(2.0)
 
-        if self.beta == 0:  # Answer issue #28 raised by @rbardenet
-            # Sample N i.i.d. gaussian N(0,2)
-            sampl = rng.normal(
-                loc=self.params["loc"],
-                scale=self.params["scale"],
-                size=self.params["N"],
-            )
-        else:  # if beta > 0
-            sampl = rm.hermite_sampler_full(
-                N=self.params["N"], beta=self.beta, random_state=rng
-            )
 
-        self.list_of_samples.append(sampl)
-        return sampl
+def sampler_hermite_tridiagonal(
+    beta, size, loc=0.0, scale=np.sqrt(2), random_state=None
+):
+    r"""Generate a sample from the Hermite ``beta`` ensemble of size :math:`n` equal to ``size``, with reference measure :math:`\mathcal{n}(\mu, \sigma^2)` or equivalently with potential :math:`V(x) = -\frac{(x_i-\mu)^2}{2\sigma^2}`. The default arguments make the correspondence with :py:func:`~dppy.beta_ensembles.hermite.sampler_hermite_full`.
 
-    def sample_banded_model(self, loc=0.0, scale=np.sqrt(2.0), N=10, random_state=None):
-        """Sample from :ref:`tridiagonal matrix model <hermite_banded_matrix_model>` associated to the Hermite Ensemble.
-        Available for :py:attr:`beta` :math:`>0` and the degenerate case :py:attr:`beta` :math:`=0` corresponding to i.i.d. points from the Gaussian :math:`\\mathcal{N}(\\mu,\\sigma^2)` reference measure
+    This is done by computing the eigenvalues of a **symmetric tridiagonal** random matrix. The output sample :math:`x=\left(x_{1}, \dots, x_{n}\right)` has joint density proportional to
 
-        :param loc:
-            Mean :math:`\\mu` of the Gaussian :math:`\\mathcal{N}(\\mu, \\sigma^2)`
-        :type loc:
-            float, default :math:`0`
+    .. math::
 
-        :param scale:
-            Standard deviation :math:`\\sigma` of the Gaussian :math:`\\mathcal{N}(\\mu, \\sigma^2)`
-        :type scale:
-            float, default :math:`\\sqrt{2}`
+        \Delta(x_{1}, \dots, x_{n})^{\beta}
+        \prod_{i=1}^{n} \exp( -\frac{(x_i-\mu)^2}{2\sigma^2} ).
 
-        :param N:
-            Number :math:`N` of points, i.e., size of the matrix to be diagonalized
-        :type N:
-            int, default :math:`10`
+    :param beta: :math:`\beta \geq 0` parameter of the ensemble.
+    :type beta: int
+    :param n: Size :math:`n` of the output sample, i.e., size of the matrix to be diagonalized.
+    :type n: int
+    :param loc: Mean :math:`\mu` of the Gaussian reference distribution, defaults to 0.0
+    :type loc: float, optional
+    :param scale: Standard deviation :math:`\sigma` of the Gaussian reference distribution, defaults to np.sqrt(2)
+    :type scale: float, optional
 
-        .. note::
+    :param random_state: _description_, defaults to None
+    :type random_state: _type_, optional
 
-            The reference measure associated with the :ref:`full matrix model <hermite_full_matrix_model>` is :math:`\\mathcal{N}(0,2)`.
-            For this reason, in the :py:attr:`sampling_params` attribute, the default values are set to ``loc``:math:`=0` and ``scale``:math:`=\\sqrt{2}`.
+    :return: Vector of size :math:`n` representing the output sample.
+    :rtype: numpy.ndarray
 
-            To compare :py:meth:`sample_banded_model` with :py:meth:`sample_full_model` simply use the ``N`` parameter.
+    .. note::
 
-        .. seealso::
+        The rescaled version :math:`\frac{1}{\sqrt{\beta n}} \frac{\sqrt{2} (x - \mu)}{\sigma}` of the sample has limiting distribution the semicircle distribution supported on :math:`[-2, 2]`.
 
-            - :ref:`Tridiagonal matrix model <hermite_banded_matrix_model>` associated to the Hermite ensemble
-            - :cite:`DuEd02` II-C
-            - :py:meth:`sample_full_model`
-        """
-        rng = check_random_state(random_state)
+    .. seealso::
 
-        self.sampling_mode = "banded"
-        params = {"loc": loc, "scale": scale, "N": N}
-        self.params.update(params)
-
-        if self.beta == 0:  # Answer issue #28 raised by @rbardenet
-            # Sample N i.i.d. gaussian N(mu, sigma^2)
-            sampl = rng.normal(
-                loc=self.params["loc"],
-                scale=self.params["scale"],
-                size=self.params["N"],
-            )
-        else:  # if beta > 0
-            sampl = rm.mu_ref_normal_sampler_tridiag(
-                loc=self.params["loc"],
-                scale=self.params["scale"],
-                beta=self.beta,
-                size=self.params["N"],
-                random_state=rng,
-            )
-
-        self.list_of_samples.append(sampl)
-        return sampl
-
-    def normalize_points(self, points):
-        """Normalize points obtained after sampling to fit the limiting distribution, i.e., the semi-circle
-
-        .. math::
-
-            f(x) = \\frac{1}{2\\pi} \\sqrt{4-x^2}
-
-        :param points:
-            A sample from Hermite ensemble, accessible through the :py:attr:`list_of_samples` attribute
-        :type points:
-            array_like
-
-        - If sampled using :py:meth:`sample_banded_model` with reference measure :math:`\\mathcal{N}(\\mu,\\sigma^2)`
-
-            1. Normalize the points to fit the p.d.f. of :math:`\\mathcal{N}(0,2)` reference measure of the :ref:`full matrix model <hermite_full_matrix_model>`
-
-                .. math::
-
-                    x \\mapsto \\sqrt{2}\\frac{x-\\mu}{\\sigma}
-
-            2. If :py:attr:`beta` :math:`>0`, normalize the points to fit the semi-circle distribution
-
-                .. math::
-
-                    x \\mapsto \\frac{x}{\\beta N}
+        :cite:`DuEd02` II-C
+    """
+    if not (beta >= 0):
+        raise ValueError("beta must be non-negative (beta >= 0).")
 
-                Otherwise if :py:attr:`beta` :math:`=0` do nothing more
-
-        - If sampled using :py:meth:`sample_full_model`, apply 2. above
-
-        .. note::
-
-            This method is called in :py:meth:`plot` and :py:meth:`hist` when ``normalization=True``
-        """
+    rng = check_random_state(random_state)
 
-        if self.sampling_mode == "banded":
-            # Normalize to fit N(0,2) ref measure of the full matrix model
-            points -= self.params["loc"]
-            points /= np.sqrt(0.5) * self.params["scale"]
-        else:  # 'full'
-            pass
+    if beta == 0:  # Answer issue #28 raised by @rbardenet
+        return rng.normal(loc=loc, scale=scale, size=size)
 
-        if self.beta > 0:
-            # Normalize to fit the semi-circle distribution
-            points /= np.sqrt(self.beta * self.params["N"])
-        else:
-            pass
+    alpha_coef = rng.normal(loc=loc, scale=scale, size=size)
+    # beta/2*[n-1, n-2, ..., 1]
+    b_2_Ni = 0.5 * beta * np.arange(size - 1, 0, step=-1)
+    beta_coef = rng.gamma(shape=b_2_Ni, scale=scale ** 2)
 
-        return points
+    return la.eigvalsh_tridiagonal(alpha_coef, np.sqrt(beta_coef))
 
-    def __display_and_normalization(self, display_type, normalization):
 
-        if not self.list_of_samples:
-            raise ValueError("Empty `list_of_samples`,sample first!")
-        else:
-            points = self.list_of_samples[-1].copy()  # Pick last sample
-            if normalization:
-                points = self.normalize_points(points)
-
-        fig, ax = plt.subplots(1, 1)
-        # Title
-        str_beta = "" if self.beta > 0 else "with i.i.d. draws"
-        title = "\n".join([self._str_title, str_beta])
-        plt.title(title)
-
-        if self.beta == 0:
-            if normalization:
-                # Display N(0,2) reference measure of the full matrix model
-                mu, sigma = 0.0, np.sqrt(2.0)
-                x = mu + 3.5 * sigma * np.linspace(-1, 1, 100)
-                ax.plot(
-                    x,
-                    stats.norm.pdf(x, mu, sigma),
-                    "r-",
-                    lw=2,
-                    alpha=0.6,
-                    label=r"$\mathcal{{N}}(0,2)$",
-                )
-            else:
-                pass
-
-        else:  # self.beta > 0
-            if normalization:
-                # Display the limiting distribution: semi-circle law
-                x = np.linspace(-2, 2, 100)
-                ax.plot(
-                    x,
-                    rm.semi_circle_law(x),
-                    "r-",
-                    lw=2,
-                    alpha=0.6,
-                    label=r"$f_{semi-circle}$",
-                )
-            else:
-                pass
-
-        if display_type == "scatter":
-            ax.scatter(points, np.zeros_like(points), c="blue", label="sample")
-
-        elif display_type == "hist":
-            ax.hist(
-                points, bins=30, density=1, facecolor="blue", alpha=0.5, label="hist"
-            )
-        else:
-            pass
-
-        plt.legend(loc="best", frameon=False)
-
-    def plot(self, normalization=True):
-        """Display the last realization of the :class:`HermiteBetaEnsemble` object
-
-        :param normalization:
-            When ``True``, the points are first normalized (see :py:meth:`normalize_points`) so that they concentrate as
-
-            - If :py:attr:`beta` :math:`=0`, the :math:`\\mathcal{N}(0, 2)` reference measure associated to full :ref:`full matrix model <hermite_full_matrix_model>`
-            - If :py:attr:`beta` :math:`>0`, the limiting distribution, i.e., the semi-circle distribution
-
-            in both cases, the corresponding p.d.f. is displayed
-
-        :type normalization:
-            bool, default ``True``
-
-        .. seealso::
-
-            - :py:meth:`sample_full_model`, :py:meth:`sample_banded_model`
-            - :py:meth:`normalize_points`
-            - :py:meth:`hist`
-            - :ref:`Full matrix model <hermite_full_matrix_model>` associated to the Hermite ensemble
-            - :ref:`Tridiagonal matrix model <hermite_banded_matrix_model>` associated to the Hermite ensemble
-        """
-
-        self.__display_and_normalization("scatter", normalization)
-
-    def hist(self, normalization=True):
-        """Display the histogram of the last realization of the :class:`HermiteBetaEnsemble` object.
-
-        :param normalization:
-            When ``True``, the points are first normalized (see :py:meth:`normalize_points`) so that they concentrate as
-
-            - If :py:attr:`beta` :math:`=0`, the :math:`\\mathcal{N}(0, 2)` reference measure associated to full :ref:`full matrix model <hermite_full_matrix_model>`
-            - If :py:attr:`beta` :math:`>0`, the limiting distribution, i.e., the semi-circle distribution
-
-            in both cases, the corresponding p.d.f. is displayed
-
-        :type normalization:
-            bool, default ``True``
-
-        .. seealso::
-
-            - :py:meth:`sample_full_model`, :py:meth:`sample_banded_model`
-            - :py:meth:`normalize_points`
-            - :py:meth:`plot`
-            - :ref:`Full matrix model <hermite_full_matrix_model>` associated to the Hermite ensemble
-            - :ref:`Tridiagonal matrix model <hermite_banded_matrix_model>` associated to the Hermite ensemble
-        """
-        self.__display_and_normalization("hist", normalization)
+def semi_circle_density(x, loc=0.0, scale=1.0):
+    return semicircular.pdf(x, loc=loc, scale=scale)

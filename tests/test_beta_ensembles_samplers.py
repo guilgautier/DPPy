@@ -85,7 +85,7 @@ class TestAdequationOfBetaEnsembleSamplers(unittest.TestCase):
 
         point_process = be.HermiteBetaEnsemble
 
-        limiting_distribution = rm.semi_circle_law
+        limiting_distribution = rm.semi_circle_density
         support = [-2.0, 2.0]
 
         list_of_beta = [1, 2, 4]
@@ -108,7 +108,7 @@ class TestAdequationOfBetaEnsembleSamplers(unittest.TestCase):
         N, M = self.N, 2 * self.N
 
         def limiting_distribution(x):
-            return rm.marcenko_pastur_law(x, M, N)
+            return rm.marcenko_pastur_density(x, M, N)
 
         support = (1 + np.array([-1, 1]) * np.sqrt(N / M)) ** 2
 
@@ -132,7 +132,7 @@ class TestAdequationOfBetaEnsembleSamplers(unittest.TestCase):
         N, M_1, M_2 = self.N, 2 * self.N, 3 * self.N
 
         def limiting_distribution(x):
-            return rm.wachter_law(x, M_1, M_2, N)
+            return rm.wachter_density(x, M_1, M_2, N)
 
         a, b = M_1 / N, M_2 / N
         support = np.sqrt(a * (a + b - 1)) + np.array([-1, 1]) * np.sqrt(b)
