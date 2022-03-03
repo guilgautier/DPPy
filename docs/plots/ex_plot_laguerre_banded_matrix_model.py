@@ -1,4 +1,4 @@
-from dppy.beta_ensembles.beta_ensembles import LaguerreBetaEnsemble
+from dppy.beta_ensembles.laguerre import HermiteBetaEnsemble
 
 laguerre = LaguerreBetaEnsemble(beta=2.98)  # beta can be >=0, default beta=2
 # Reference measure is Gamma(k, theta)

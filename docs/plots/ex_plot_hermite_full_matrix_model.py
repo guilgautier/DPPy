@@ -1,4 +1,4 @@
-from dppy.beta_ensembles.beta_ensembles import HermiteBetaEnsemble
+from dppy.beta_ensembles.hermite import HermiteBetaEnsemble
 
 hermite = HermiteBetaEnsemble(beta=4)  # beta in {0,1,2,4}, default beta=2
 hermite.sample_full_model(size_N=500)

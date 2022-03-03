@@ -1,4 +1,4 @@
-from dppy.beta_ensembles.beta_ensembles import LaguerreBetaEnsemble
+from dppy.beta_ensembles.laguerre import HermiteBetaEnsemble
 
 laguerre = LaguerreBetaEnsemble(beta=1)  # beta in {0,1,2,4}, default beta=2
 laguerre.sample_full_model(size_N=500, size_M=800)  # M >= N

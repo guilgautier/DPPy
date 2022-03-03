@@ -1,4 +1,4 @@
-from dppy.beta_ensembles.beta_ensembles import HermiteBetaEnsemble
+from dppy.beta_ensembles.hermite import HermiteBetaEnsemble
 
 hermite = HermiteBetaEnsemble(beta=5.43)  # beta can be >=0, default beta=2
 # Reference measure is N(mu, sigma^2)

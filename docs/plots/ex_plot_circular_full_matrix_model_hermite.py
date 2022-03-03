@@ -1,4 +1,4 @@
-from dppy.beta_ensembles.beta_ensembles import CircularBetaEnsemble
+from dppy.beta_ensembles.circular import HermiteBetaEnsemble
 
 circular = CircularBetaEnsemble(beta=2)  # beta in {0,1,2,4}, default beta=2
 

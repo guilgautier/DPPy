@@ -1,4 +1,4 @@
-from dppy.beta_ensembles.beta_ensembles import JacobiBetaEnsemble
+from dppy.beta_ensembles.jacobi import HermiteBetaEnsemble
 
 jacobi = JacobiBetaEnsemble(beta=3.14)  # beta can be >=0, default beta=2
 # Reference measure is Beta(a,b)

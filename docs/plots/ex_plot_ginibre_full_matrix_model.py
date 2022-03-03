@@ -1,4 +1,4 @@
-from dppy.beta_ensembles.beta_ensembles import GinibreEnsemble
+from dppy.beta_ensembles.ginibre import GinibreEnsemble
 
 ginibre = GinibreEnsemble()  # beta must be 2 (default)
 
