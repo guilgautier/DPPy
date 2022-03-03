@@ -13,7 +13,7 @@ from scipy.stats import chisquare
 
 sys.path.append("..")
 
-import dppy.beta_ensembles.beta_ensembles as be
+import dppy.beta_ensembles.abstract_beta_ensemble as be
 import dppy.random_matrices as rm
 
 

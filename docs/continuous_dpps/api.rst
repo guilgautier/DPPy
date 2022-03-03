@@ -3,7 +3,7 @@
 API
 ###
 
-.. automodule:: dppy.beta_ensembles.beta_ensembles
+.. automodule:: dppy.beta_ensembles.abstract_beta_ensemble
     :members:
     :inherited-members:
     :show-inheritance:

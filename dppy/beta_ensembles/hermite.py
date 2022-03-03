@@ -3,7 +3,7 @@ import numpy as np
 from scipy import stats
 
 import dppy.random_matrices as rm
-from dppy.beta_ensembles.beta_ensembles import AbstractBetaEnsemble
+from dppy.beta_ensembles.abstract_beta_ensemble import AbstractBetaEnsemble
 from dppy.utils import check_random_state
 
 
