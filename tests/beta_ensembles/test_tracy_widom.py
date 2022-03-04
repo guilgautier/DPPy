@@ -1,11 +1,9 @@
 # coding: utf8
 
-import sys
 import unittest
 
 import numpy as np
 
-sys.path.append("..")
 from dppy.beta_ensembles.beta_ensemble_polynomial_potential_core import TracyWidom
 
 
