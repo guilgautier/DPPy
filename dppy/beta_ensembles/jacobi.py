@@ -135,23 +135,3 @@ def sampler_jacobi_tridiagonal(beta, size, a=1.0, b=1.0, random_state=None):
     beta_coef = xi_odd[:-1] * xi_even[1:]
 
     return la.eigvalsh_tridiagonal(alpha_coef, np.sqrt(beta_coef))
-
-
-def wachter_density(x, n, m1, m2):
-    """
-    .. seealso::
-
-        :cite:`DuEd15` Table 1
-    """
-    assert min(m1, m2) >= n
-    a, b = m1 / n, m2 / n
-
-    Lm = ((np.sqrt(a * (a + b - 1)) - np.sqrt(b)) / (a + b)) ** 2
-    Lp = ((np.sqrt(a * (a + b - 1)) + np.sqrt(b)) / (a + b)) ** 2
-
-    out = np.maximum((Lp - x) * (x - Lm), 0.0, dtype=float)
-    np.sqrt(out, out=out)
-    np.divide(out, x * (1 - x), out=out)
-    out *= (a + b) / (2 * np.pi)
-
-    return out

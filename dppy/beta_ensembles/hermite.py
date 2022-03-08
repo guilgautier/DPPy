@@ -1,6 +1,5 @@
 import numpy as np
 import scipy.linalg as la
-from scipy.stats import semicircular
 
 from dppy.utils import check_random_state
 
@@ -107,7 +106,3 @@ def sampler_hermite_tridiagonal(
     beta_coef = rng.gamma(shape=b_2_Ni, scale=scale ** 2)
 
     return la.eigvalsh_tridiagonal(alpha_coef, np.sqrt(beta_coef))
-
-
-def semi_circle_density(x, loc=0.0, scale=1.0):
-    return semicircular.pdf(x, loc=loc, scale=scale)

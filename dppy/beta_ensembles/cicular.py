@@ -88,7 +88,7 @@ def sampler_circular_quindiagonal(beta, size, random_state=None):
     rng = check_random_state(random_state)
 
     if not (isinstance(beta, int) and (beta >= 0)):
-        raise ValueError("beta argument must be non negative (beta >= 0).")
+        raise ValueError("beta argument must be non negative integer.")
 
     if beta == 0:  # Answer issue #28 raised by @rbardenet
         # i.i.d. points uniformly on the circle
@@ -119,7 +119,3 @@ def sampler_circular_quindiagonal(beta, size, random_state=None):
         M = sp.block_diag([1.0, *xi[1::2, :, :]], dtype=complex)
 
     return la.eigvals(L.dot(M).toarray())
-
-
-def uniform_unit_circle_density(self, x):
-    return np.where(la.norm(x, axis=-1) == 1, 0.5 / np.pi, 0.0)

@@ -30,7 +30,3 @@ def ginibre_sampler_full(n, random_state=None):
     rng = check_random_state(random_state)
     A = rng.randn(n, n) + 1j * rng.randn(n, n)
     return la.eigvals(A) / np.sqrt(2.0)
-
-
-def uniform_unit_disk_density(x):
-    return np.where(la.norm(x, axis=-1) <= 1, 1.0 / np.pi, 0.0)
