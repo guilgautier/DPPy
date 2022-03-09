@@ -152,7 +152,7 @@ def compute_loglikelihood(dpp, sample, k_dpp=False):
         L = dpp.compute_likelihood_kernel()
         L_eig_vals = eigvalsh(L)
         N, k = L_eig_vals.size, len(X)
-        ek = elementary_symmetric_polynomials(L_eig_vals, k)
+        ek = elementary_symmetric_polynomials(k, L_eig_vals)
         log_Z = np.log(ek[k, N])
         return slogdet(L[np.ix_(X, X)])[1] - log_Z
     K = dpp.compute_correlation_kernel()
@@ -389,7 +389,7 @@ def example_eval_L_min_kern(X, Y=None):
     return np.minimum(np.repeat(X, Y.size, axis=1), np.repeat(Y.T, X.size, axis=0))
 
 
-def elementary_symmetric_polynomials(x, k):
+def elementary_symmetric_polynomials(k, x):
     """Evaluate the `elementary symmetric polynomials <https://en.wikipedia.org/wiki/Elementary_symmetric_polynomial>`_ :math:`[e_i(x_1, \\dots, x_m)]_{i=0, m=1}^{k, n}`.
 
     :param x:

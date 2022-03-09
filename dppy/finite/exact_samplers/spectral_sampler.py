@@ -268,7 +268,7 @@ def compute_spectral_sampler_parameters_k_dpp_step(dpp, size):
         # Precompute elementary symmetric polynomials
         if not dpp.projection:
             if dpp.esp is None or dpp.size_k_dpp < size:
-                dpp.esp = elementary_symmetric_polynomials(dpp.L_eig_vals, size)
+                dpp.esp = elementary_symmetric_polynomials(size, dpp.L_eig_vals)
         return False
 
     elif dpp.K_eig_vals is not None:
@@ -367,7 +367,7 @@ def select_eigen_vectors_k_dpp(eig_vals, eig_vecs, size, esp=None, random_state=
         raise ValueError("size k={} > rank(L)={}".format(size, rank))
 
     if esp is None:
-        esp = elementary_symmetric_polynomials(eig_vals, size)
+        esp = elementary_symmetric_polynomials(size, eig_vals)
 
     mask_idx = np.zeros(size, dtype=int)
     k = size
