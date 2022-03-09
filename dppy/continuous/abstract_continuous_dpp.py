@@ -41,8 +41,18 @@ class AbstractSpectralContinuousProjectionDPP:
         assert multi_indices.ndim == 2 and multi_indices.dtype == int
 
         self.multi_indices = multi_indices
-        self.N, self.d = self.multi_indices.shape
         self.dtype_kernel = dtype_kernel
+
+    def __len__(self):
+        return self.multi_indices.shape[0]
+
+    @property
+    def N(self):
+        return len(self)
+
+    @property
+    def dimension(self):
+        return self.multi_indices.shape[1]
 
     def reference_density(self, x):
         """Evaluate the reference density :math:`w(x)`.
@@ -79,7 +89,7 @@ class AbstractSpectralContinuousProjectionDPP:
         )
 
     def eigen_function(self, idx, x):
-        r"""Evaluate the eigenfunction :math:`\phi_{k}(x) = \prod_{i=1}^{d} \phi_{k_i}^{(i)}(x_i)` where :math:`k=\mathfrak{b}` ``idx``.
+        r"""Evaluate the eigenfunction :math:`\phi_{k}(x) = \prod_{i=1}^{d} \phi_{k_i}^{(i)}(x_i)` where :math:`k=\mathfrak{b}` ``(idx)``.
 
         The multi-index :math:`k` is extracted from the attribute :py:attr:`~dppy.continuous.abstract_continuous_dpp.AbstractSpectralContinuousProjectionDPP.multi_indices` ``[idx]``.
 
@@ -93,13 +103,12 @@ class AbstractSpectralContinuousProjectionDPP:
         return self.eigen_function_multiD(multi_idx, x)
 
     def feature_vector(self, x):
-        r"""Evaluate the feature vector :math:`\Phi(x) = \left(P_{\mathfrak{b}^{-1}(0)}(x), \dots, P_{\mathfrak{b}^{-1}(N-1)}(x) \right)^{\top}` such that
-        :math:`K(x, y) = \Phi(x)^{*} \Phi(y)`.
+        r"""Evaluate the feature vector :math:`\Phi(x) = \left(P_{\mathfrak{b}^{-1}(0)}(x), \dots, P_{\mathfrak{b}^{-1}(N-1)}(x) \right)^{\top}` such that :math:`K(x, y) = \Phi(x)^{*} \Phi(y)`.
 
         :param x: Point
         :type x: array_like
 
-        :return: evalutation of the feature vector :math:`\Phi(p)`.
+        :return: Array of size :math:`N` representing the feature vector :math:`\Phi(x)`.
         :rtype: array_like
 
         .. seealso::
@@ -125,8 +134,7 @@ class AbstractSpectralContinuousProjectionDPP:
         - :math:`\Phi(x) = \left(P_{\mathfrak{b}^{-1}(0)}(x), \dots, P_{\mathfrak{b}^{-1}(N-1)}(x) \right)`, see :py:meth:`~dppy.continuous.abstract_continuous_dpp.AbstractSpectralContinuousProjectionDPP.feature_vector`.
 
         :param X: Points
-        :type X:
-            array_like
+        :type X: array_like
 
         :param Y: Points
         :type Y: array_like
@@ -141,7 +149,7 @@ class AbstractSpectralContinuousProjectionDPP:
 
         n, dx = X.shape
         m, dy = Y.shape
-        assert dx == dy == self.d
+        assert dx == dy == self.dimension
 
         phi = self.feature_vector
         K = np.zeros((n, m), dtype=self.dtype_kernel)
@@ -230,7 +238,7 @@ class AbstractSpectralContinuousProjectionDPP:
         """
         rng = check_random_state(random_state)
 
-        N, d = self.N, self.d
+        N, d = self.N, self.dimension
         sample = np.zeros((N, d))
         phi = np.zeros((N, N), dtype=self.dtype_kernel)
 
