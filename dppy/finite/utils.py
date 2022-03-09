@@ -1,3 +1,4 @@
+from dppy.finite.dpp import FiniteDPP
 from dppy.utils import (
     is_equal_to_O_or_1,
     is_orthonormal_columns,
@@ -115,3 +116,22 @@ def check_parameters_validity(dpp):
         assert callable(dpp.eval_L)
     if dpp.X_data is not None:
         assert dpp.X_data.ndim == 2 and dpp.X_data.size
+
+
+def ground_set_size(dpp):
+    assert isinstance(dpp, FiniteDPP)
+    if dpp.K is not None:
+        return dpp.K.shape[0]
+    if dpp.L is not None:
+        return dpp.L.shape[0]
+    if dpp.L_gram_factor is not None:
+        return dpp.L_gram_factor.shape[1]
+    if dpp.eig_vecs is not None:
+        return dpp.eig_vecs.shape[0]
+    if dpp.X_data is not None:
+        return dpp.X_data.shape[0]
+    if dpp.A_zono is not None:
+        return dpp.A_zono.shape[1]
+    raise ValueError(
+        "The size of the ground set of the finite 'dpp' cannot be computed from the current parametrization"
+    )

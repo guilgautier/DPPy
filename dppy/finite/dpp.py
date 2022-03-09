@@ -29,7 +29,11 @@ from dppy.finite.mcmc_samplers.select_samplers import (
     select_sampler_mcmc_dpp,
     select_sampler_mcmc_k_dpp,
 )
-from dppy.finite.utils import check_arguments_coherence, check_parameters_validity
+from dppy.finite.utils import (
+    check_arguments_coherence,
+    check_parameters_validity,
+    ground_set_size,
+)
 from dppy.utils import check_random_state
 
 
@@ -128,6 +132,9 @@ class FiniteDPP:
         self.esp = None  # evaluation of the elementary symmetric polynomials
         ## vfx and alpha samplers
         self.intermediate_sample_info = None
+
+    def __len__(self):
+        return ground_set_size(self)
 
     def flush_samples(self):
         """Empty the :py:attr:`~dpp.finite.dpp.FiniteDPP.list_of_samples` attribute.
