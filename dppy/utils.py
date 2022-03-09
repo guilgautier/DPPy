@@ -164,9 +164,8 @@ def compute_loglikelihood(dpp, sample, k_dpp=False):
 def check_square(matrix):
     if matrix is None:
         return None
-    shape = matrix.shape
-    if len(shape) != 2 or len(set(shape)) != 1:
-        raise ValueError("matrix is not 2D square: shape={}".format(shape))
+    if matrix.shape != (matrix.shape[0],) * 2:
+        raise ValueError("matrix is not 2D square")
 
 
 def check_hermitian(matrix, indices=None):
