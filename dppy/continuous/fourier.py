@@ -30,8 +30,14 @@ class FourierProjectionDPP(AbstractSpectralContinuousProjectionDPP):
         """
         super().__init__(multi_indices, dtype_kernel=complex)
 
+    def __repr__(self):
+        return f"{self.__class__.__name__}(multi_indices={self.multi_indices.tolist()})"
+
+    def new_multi_indices(self, multi_indices):
+        return self.__class__(multi_indices)
+
     def reference_density(self, x):
-        return 1.0
+        return np.ones_like(x, dtype=float)
 
     def eigen_function_1D(self, n, dim, x):
         # phi_n(x) = exp(2 j pi n x)
@@ -52,7 +58,7 @@ class FourierProjectionDPP(AbstractSpectralContinuousProjectionDPP):
         return self.eigen_function_multiD(self.multi_indices, x)
 
     def correlation_kernel(self, x, y=None):
-        if (y is None or y is x) and x.shape == (self.d,):
+        if (y is None or y is x) and x.shape == (self.dimension,):
             return float(self.N)
 
         phi = self.feature_vector
@@ -62,4 +68,4 @@ class FourierProjectionDPP(AbstractSpectralContinuousProjectionDPP):
 
     def sample_marginal(self, random_state=None):
         rng = check_random_state(random_state)
-        return rng.rand(self.d)
+        return rng.rand(self.dimension)

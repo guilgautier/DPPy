@@ -69,31 +69,29 @@ class JacobiProjectionDPP(AbstractSpectralContinuousProjectionDPP):
         if not (np.all(a > -1) and np.all(b > -1)):
             raise ValueError(f"Jacobi parameters must be > -1. Given a={a}, b={b}.")
 
-        dim = self.d
+        dim = self.dimension
         self.a = a if a.size == dim else np.full(dim, a[0], dtype=float)
         self.b = b if b.size == dim else np.full(dim, b[0], dtype=float)
 
-        self._norm_multiD_jacobi = np.prod(
-            [
-                [norm_jacobi(kn, an, bn) for (kn, an, bn) in zip(k, a, b)]
-                for k in self.multi_indices
-            ],
-            axis=-1,
+        self._norm_multiD_jacobi = _norm_multiD_jacobi(
+            self.multi_indices, self.a, self.b
         )
 
-        self._rejection_bounds = np.prod(
-            [
-                [bound_jacobi(kn, an, bn) for (kn, an, bn) in zip(k, a, b)]
-                for k in self.multi_indices
-            ],
-            axis=-1,
+        self._rejection_bounds = _rejection_bounds_jacobi(
+            self.multi_indices, self.a, self.b
         )
+
+    def __repr__(self):
+        return f"{self.__class__.__name__}(multi_indices={self.multi_indices.tolist()}, a={self.a.tolist()}, b={self.b.tolist()})"
+
+    def new_multi_indices(self, multi_indices):
+        return self.__class__(multi_indices, self.a, self.b)
 
     def reference_density(self, x):
-        # w(x) = (1 - x)^a (1 + x)^b
-        x = np.asarray(x)
+        # w(x) = (1 - x)^a (1 + x)^b 1_[-1, 1]
         a, b = self.a, self.b
-        return np.prod((1.0 - x) ** a * (1.0 + x) ** b, axis=-1)
+        y = np.clip(x, -1.0, 1.0)
+        return np.prod((1.0 - y) ** a * (1.0 + y) ** b, axis=-1)
 
     def eigen_function_1D(self, n, dim, x):
         a, b = self.a[dim], self.b[dim]
@@ -134,7 +132,7 @@ class JacobiProjectionDPP(AbstractSpectralContinuousProjectionDPP):
         """
         # Propose x ~ w_eq(x) = \prod_{i=1}^{d} 1/pi 1/sqrt(1-(x_i)^2)
         rng = check_random_state(random_state)
-        d = self.d
+        d = self.dimension
         # rng.beta defined as beta(a, b) propto x^(a-1) (1-x)^(b-1)
         sample = 1.0 - 2.0 * rng.beta(0.5, 0.5, size=d)
         likelihood = np.prod(np.sqrt(1.0 - sample ** 2))
@@ -161,7 +159,7 @@ class JacobiProjectionDPP(AbstractSpectralContinuousProjectionDPP):
         proposal = self._sample_marginal_proposal
         rej_bound = self._rejection_bounds[idx]
 
-        nb_proposals = 3 * 2 ** self.d
+        nb_proposals = 3 * 2 ** self.dimension
         for it in range(nb_proposals):
             x, proposal_x = proposal(random_state=rng)
             target_x = target(x)
@@ -176,13 +174,14 @@ class JacobiProjectionDPP(AbstractSpectralContinuousProjectionDPP):
     def sample(self, random_state=None):
         rng = check_random_state(random_state)
         a, b = self.a, self.b
-        dim = self.d
+        dim = self.dimension
 
         if dim == 1:
             x = sampler_jacobi_tridiagonal(
+                beta=2,
+                size=self.N,
                 a=a + 1.0,
                 b=b + 1.0,
-                size=self.N,
                 random_state=rng,
             )
             return 1.0 - 2.0 * x
@@ -196,11 +195,11 @@ class JacobiProjectionDPP(AbstractSpectralContinuousProjectionDPP):
 
     def plot(self, sample, weighted=""):
 
-        if self.d >= 3:
+        if self.dimension >= 3:
             raise NotImplementedError("Visualizations in d>=3 not implemented")
 
-        tols = 5e-2 * np.ones((self.d, 2))
-        # tols = np.zeros((self.d, 2))
+        tols = 5e-2 * np.ones((self.dimension, 2))
+        # tols = np.zeros((self.dimension, 2))
         tols[1, 0] = 8e-2
 
         weights = np.ones(len(sample))
@@ -229,7 +228,7 @@ class JacobiProjectionDPP(AbstractSpectralContinuousProjectionDPP):
         ticks_pos = [-1, 0, 1]
         ticks_labs = list(map(str, ticks_pos))
 
-        if self.d == 1:
+        if self.dimension == 1:
 
             fig, ax_main = plt.subplots(figsize=(6, 4))
 
@@ -287,7 +286,7 @@ class JacobiProjectionDPP(AbstractSpectralContinuousProjectionDPP):
                 frameon=False,
             )
 
-        elif self.d == 2:
+        elif self.dimension == 2:
 
             # Create Fig and gridspec
             fig = plt.figure(figsize=(6, 6))
@@ -517,3 +516,23 @@ def bound_jacobi(n, a, b, log_scale=False):
             )
 
     return log_bound if log_scale else np.exp(log_bound)
+
+
+def _norm_multiD_jacobi(multi_indices, a, b):
+    return np.prod(
+        [
+            [norm_jacobi(kn, an, bn) for (kn, an, bn) in zip(k, a, b)]
+            for k in multi_indices
+        ],
+        axis=-1,
+    )
+
+
+def _rejection_bounds_jacobi(multi_indices, a, b):
+    return np.prod(
+        [
+            [bound_jacobi(kn, an, bn) for (kn, an, bn) in zip(k, a, b)]
+            for k in multi_indices
+        ],
+        axis=-1,
+    )
