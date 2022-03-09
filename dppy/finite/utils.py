@@ -1,9 +1,9 @@
 from dppy.finite.dpp import FiniteDPP
 from dppy.utils import (
-    is_equal_to_O_or_1,
-    is_orthonormal_columns,
-    is_projection,
-    is_symmetric,
+    check_equal_to_O_or_1,
+    check_hermitian,
+    check_orthonormal_columns,
+    check_projection,
 )
 
 VALID_DPP_KERNEL_PARAMS = {
@@ -98,19 +98,19 @@ def check_parameters_validity(dpp):
 
     if dpp.kernel_type == "correlation":
         if dpp.projection:
-            is_equal_to_O_or_1(dpp.K_eig_vals)
-            is_projection(dpp.K)
+            check_equal_to_O_or_1(dpp.K_eig_vals)
+            check_projection(dpp.K)
         if dpp.hermitian:
-            is_symmetric(dpp.K)
-            is_orthonormal_columns(dpp.eig_vecs)
+            check_hermitian(dpp.K)
+            check_orthonormal_columns(dpp.eig_vecs)
 
     if dpp.kernel_type == "likelihood":
         if dpp.projection:
-            is_equal_to_O_or_1(dpp.L_eig_vals)
-            is_projection(dpp.L)
+            check_equal_to_O_or_1(dpp.L_eig_vals)
+            check_projection(dpp.L)
         if dpp.hermitian:
-            is_symmetric(dpp.L)
-            is_orthonormal_columns(dpp.eig_vecs)
+            check_hermitian(dpp.L)
+            check_orthonormal_columns(dpp.eig_vecs)
 
     if dpp.eval_L is not None:
         assert callable(dpp.eval_L)

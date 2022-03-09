@@ -161,124 +161,91 @@ def compute_loglikelihood(dpp, sample, k_dpp=False):
     return slogdet(K - I_Xc)[1]
 
 
-def is_square(array):
-
-    if array is None:
+def check_square(matrix):
+    if matrix is None:
         return None
-
-    shape = array.shape
-    if len(shape) == 2 and len(set(shape)) == 1:
-        return array
-    else:
-        raise ValueError("array not 2D square: shape={}".format(shape))
+    shape = matrix.shape
+    if len(shape) != 2 or len(set(shape)) != 1:
+        raise ValueError("matrix is not 2D square: shape={}".format(shape))
 
 
-def is_symmetric(array):
-    # Cheap test to check symmetry M^T = M
-
-    if array is None:
+def check_hermitian(matrix, indices=None):
+    """Cheap test to check hermitianity M^* = M"""
+    check_square(matrix)
+    if matrix is None:
         return None
-
-    array = is_square(array)
-
-    idx = np.arange(min(20, array.shape[0]))
-    M = array[np.ix_(idx, idx)]
-    if np.allclose(M.T, M):
-        return array
-    else:
-        raise ValueError("array not symmetric: M.T != M")
+    idx = range(min(10, matrix.shape[0])) if indices is None else indices
+    M = matrix[np.ix_(idx, idx)]
+    if not np.allclose(M.conj().T, M):
+        raise ValueError("matrix is not hermitian: M.conj().T != M")
 
 
-def is_projection(array, col_idx=None):
-    # Cheap test to check reproducing property: M^2 = M
-
-    if array is None:
+def check_projection(matrix, indices=None):
+    """Cheap test to check reproducing property: M^2 = M"""
+    check_square(matrix)
+    if matrix is None:
         return None
-
-    array = is_square(array)
-
-    if col_idx is None:
-        col_idx = np.arange(min(20, array.shape[0]))
-
-    M_j = array[:, col_idx]
-    Mjj = array[col_idx, col_idx]
-
-    if np.allclose(inner1d(M_j), Mjj):
-        return array
-    else:
-        raise ValueError("array not seem to be a projection: M^2 != M")
+    M = matrix
+    idx = range(min(10, matrix.shape[0])) if indices is None else indices
+    if not np.allclose(M[idx, :].dot(M[:, idx]), M[np.ix_(idx, idx)]):
+        raise ValueError("matrix is not a projection: M^2 != M")
 
 
-def is_orthonormal_columns(array, col_idx=None):
-    # Cheap test for checking orthonormality of columns of array: M.T M = I
-
-    if array is None:
+def check_orthonormal_columns(matrix, indices=None):
+    """Cheap test for checking orthonormality of columns of array: M.T M = I"""
+    if matrix is None:
         return None
-
-    if col_idx is None:
-        col_idx = np.arange(np.min([5, array.shape[1]]))
-
-    U = array[:, col_idx]
-
-    if np.allclose(U.T.dot(U), np.eye(len(col_idx))):
-        return array
-    else:
-        raise ValueError("array does not seem orthonormal: M.T M != I")
+    idx = range(min(10, matrix.shape[1])) if indices is None else indices
+    U = matrix[:, idx]
+    if not np.allclose(U.T.dot(U), np.eye(len(idx))):
+        raise ValueError("array  M.T M != I")
 
 
-def is_equal_to_O_or_1(array, tol=1e-8):
+def check_equal_to_O_or_1(array, tol=1e-8):
     """Check if entries are **all** in :math:`\\{0, 1\\}`, for a given tolerance"""
-
     if array is None:
         return None
 
-    equal_0 = np.abs(array) <= tol
-    equal_1 = np.abs(1 - array) <= tol
-    equal_0_or_1 = equal_0 ^ equal_1  # ^ = xor
-
-    if np.all(equal_0_or_1):
-        return array
-    else:
+    eq_0_or_1 = np.abs(array) <= tol
+    np.logical_xor(eq_0_or_1, np.abs(1 - array) <= tol, out=eq_0_or_1)
+    if not np.all(eq_0_or_1):
         raise ValueError("array with entries not all in {0,1}")
 
 
 def check_in_01(array, tol=1e-8):
     """Check if entries are **all** in :math:`[0, 1]`, for a given tolerance"""
-
     if array is None:
         return
-    if np.all((-tol <= array) & (array <= 1.0 + tol)):
-        return
 
-    raise ValueError("array with entries not all in [0,1]")
+    in_01 = -tol <= array
+    np.logical_and(in_01, array <= 1.0 + tol, out=in_01)
+    if not np.all(in_01):
+        raise ValueError("array with entries not all in [0,1]")
 
 
 def check_geq_0(array, tol=1e-8):
-    """Check if entries are **all** :math:`\\geq0`, for a given tolerance"""
-
+    r"""Check if entries are **all** :math:`\geq0`, for a given tolerance"""
     if array is None:
         return
-    if np.all(array >= -tol):
-        return
 
-    raise ValueError("array with entries not all >= 0")
+    if not np.all(array >= -tol):
+        raise ValueError("array entries not all >= 0")
 
 
-def is_full_row_rank(array):
+def check_full_row_rank(matrix):
     # Check rank(M) = #rows
-
-    if array is None:
+    if matrix is None:
         return None
 
-    d, N = array.shape
+    d, N = matrix.shape
     err_print = "array (size = dxN) is not full row rank"
 
     if d > N:
         raise ValueError(err_print + "d(={}) > N(={})".format(d, N))
     else:
-        rank = matrix_rank(array)
+        rank = matrix_rank(matrix)
         if rank == d:
-            return array
+            return matrix
         else:
             raise ValueError(err_print + "d(={}) != rank(={})".format(d, rank))
 
