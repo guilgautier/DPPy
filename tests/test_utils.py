@@ -10,43 +10,11 @@ import numpy as np
 import numpy.linalg as la
 import numpy.random as rndm
 
-from dppy.utils import (
-    det_ST,
-    eval_kernel_diagonal,
-    inner1d,
-    kernel_linear,
-    kernel_minimum,
-)
+from dppy.utils import det_ST, eval_kernel_diagonal, kernel_linear, kernel_minimum
 
 
 class TestUtils(unittest.TestCase):
     """Test"""
-
-    def test_inner1D_to_compute_inner_product_and_square_norms(self):
-
-        shape = (10, 20, 30, 40)
-        X = rndm.rand(*shape)
-        Y = rndm.rand(*shape)
-
-        for ax in range(len(shape)):
-            with self.subTest(axis=ax):
-
-                for test_inner1D in ["inner_prod", "sq_norm"]:
-                    with self.subTest(test_inner1D=test_inner1D):
-
-                        if test_inner1D == "inner_prod":
-
-                            self.assertTrue(
-                                np.allclose(
-                                    inner1d(X, Y, axis=ax), (X * Y).sum(axis=ax)
-                                )
-                            )
-
-                        if test_inner1D == "sq_norm":
-
-                            self.assertTrue(
-                                np.allclose(inner1d(X, axis=ax), (X ** 2).sum(axis=ax))
-                            )
 
     def test_det_ST(self):
         """Test determinant

@@ -1,5 +1,3 @@
-from string import ascii_lowercase
-
 import numpy as np
 from numpy.linalg import det, matrix_rank
 from scipy.special import betaln
@@ -38,48 +36,6 @@ def log_binom(r, k):
     if r == k:
         return 0.0
     return -(np.log(r + 1) + betaln(r - k + 1, k + 1))
-
-
-def inner1d(arr1, arr2=None, axis=0):
-    """Efficient equivalent to ``(arr1**2).sum(axis)`` or ``(arr1*arr2).sum(axis)`` for ``arr1.shape == arr2.shape``.
-    Expected to be used with arrays of same shape and mainly with 1D or 2D arrays but works for upto 26D arrays...
-
-    If ``arr1.shape == arr2.shape``, then ``inner1d(arr1, arr2, arr1.ndim)`` replaces ``numpy.core.umath_tests.inner1d(arr1, arr2)``
-
-    Examples:
-    - To compute square norm of vector i.e. 1D array
-    inner1d(arr) = np.einsum('i,i->', arr, arr)
-                 = np.dot(arr, arr)
-                 = (arr**2).sum()
-
-    - To compute vector inner product i.e. 2 1D arrays
-    inner1d(arr1, arr2) = np.einsum('i,i->', arr1, arr2)
-                        = np.dot(arr1, arr2)
-                        = (arr1*arr2).sum()
-
-    - To compute square norm of cols/rows of 2D array
-    inner1d(arr, axis=0/1)
-        = np.einsum('ij,ij->j/i', arr, arr)
-        = (arr**2).sum(axis=0/1)
-
-    - To compute inner product between cols/rows of 2 arrays
-    inner1d(arr1, arr2, axis=0/1)
-        = np.einsum('ij,ij->j/i', arr1, arr2)
-        = (arr1*arr2).sum(axis=0/1)
-    """
-
-    # if (arr2 is not None) and (arr1.shape != arr2.shape):
-    #     raise ValueError('...with shapes {} {}'
-    #                      .format(arr1.shape, arr2.shape))
-
-    ndim = arr1.ndim
-    sym = ascii_lowercase[:ndim]
-    subscripts = sym + "," + sym + "->" + sym.replace(sym[axis], "")
-
-    if arr2 is None:
-        return np.einsum(subscripts, arr1, arr1)
-    else:
-        return np.einsum(subscripts, arr1, arr2)
 
 
 def det_ST(array, S, T=None):
