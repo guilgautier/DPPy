@@ -30,7 +30,7 @@ import numpy as np
 
 from dppy.utils import (
     check_random_state,
-    evaluate_L_diagonal,
+    eval_kernel_diagonal,
     get_progress_bar,
     stable_invert_root,
 )
@@ -61,7 +61,7 @@ def estimate_rls_bless(D, X, eval_L, lam_new):
         array_like
     """
 
-    diag_norm = evaluate_L_diagonal(eval_L, X)
+    diag_norm = eval_kernel_diagonal(eval_L, X)
 
     # (m x n) kernel matrix between samples in dictionary and dataset X
     K_DU = eval_L(D.X, X)
@@ -134,7 +134,7 @@ def reduce_lambda(
     if red_ratio < 1.0:
         raise ValueError(str(red_ratio))
 
-    diag = np.asarray(evaluate_L_diagonal(eval_L, X_data))
+    diag = np.asarray(eval_kernel_diagonal(eval_L, X_data))
 
     # compute upper confidence bound on RLS of each sample, overestimate (oversample) by a rls_oversample factor
     # to boost success probability at the expenses of a larger sample (dictionary)
@@ -253,7 +253,7 @@ def bless(
     if nb_iter_bless is None:
         nb_iter_bless = np.ceil(np.log(n)).astype("int")
 
-    diag_norm = np.asarray(evaluate_L_diagonal(eval_L, X_data))
+    diag_norm = np.asarray(eval_kernel_diagonal(eval_L, X_data))
     lam_init = n
     ucb_init = rls_oversample_param * diag_norm / (diag_norm + lam_init)
     while ucb_init.sum() <= 10:
@@ -365,7 +365,7 @@ def bless_size(
 
     n, d = X_data.shape
 
-    diag_norm = np.asarray(evaluate_L_diagonal(eval_L, X_data))
+    diag_norm = np.asarray(eval_kernel_diagonal(eval_L, X_data))
 
     lam_init = diag_norm.sum() / (size_final - 1.0)
     lam_max = lam_init

@@ -1,4 +1,3 @@
-from dppy.finite.dpp import FiniteDPP
 from dppy.utils import (
     check_equal_to_O_or_1,
     check_hermitian,
@@ -119,7 +118,6 @@ def check_parameters_validity(dpp):
 
 
 def ground_set_size(dpp):
-    assert isinstance(dpp, FiniteDPP)
     if dpp.K is not None:
         return dpp.K.shape[0]
     if dpp.L is not None:

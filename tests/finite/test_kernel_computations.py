@@ -5,7 +5,7 @@ import numpy.random as rndm
 import scipy.linalg as la
 
 from dppy.finite.dpp import FiniteDPP
-from dppy.utils import example_eval_L_linear, example_eval_L_min_kern
+from dppy.utils import kernel_linear, kernel_minimum
 
 
 class TestFiniteDppInstantiationFromCorrelationKernel(unittest.TestCase):
@@ -134,11 +134,11 @@ class TestFiniteDppInstantiationFromLikelihoodKernel(unittest.TestCase):
 
     # From kernel function L(x, y) and data
     X_data_randn = rndm.rand(N, rank)
-    L_linear_X_randn = example_eval_L_linear(X_data_randn)
+    L_linear_X_randn = kernel_linear(X_data_randn)
     K_linear_X_randn = L_to_K_generic(L_linear_X_randn)
 
     X_data_unif01 = rndm.rand(N, 1)
-    L_min_X_unif01 = example_eval_L_min_kern(X_data_unif01)
+    L_min_X_unif01 = kernel_minimum(X_data_unif01)
     K_min_X_unif01 = L_to_K_generic(L_min_X_unif01)
 
     params_expected_kernels = [
@@ -195,7 +195,7 @@ class TestFiniteDppInstantiationFromLikelihoodKernel(unittest.TestCase):
         },
         {
             "params": {
-                "L_eval_X_data": (example_eval_L_linear, X_data_randn),
+                "L_eval_X_data": (kernel_linear, X_data_randn),
                 "projection": False,
                 "hermitian": True,
             },
@@ -204,7 +204,7 @@ class TestFiniteDppInstantiationFromLikelihoodKernel(unittest.TestCase):
         },
         {
             "params": {
-                "L_eval_X_data": (example_eval_L_min_kern, X_data_unif01),
+                "L_eval_X_data": (kernel_minimum, X_data_unif01),
                 "projection": False,
                 "hermitian": True,
             },

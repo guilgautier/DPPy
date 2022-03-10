@@ -13,12 +13,7 @@ import scipy.linalg as la
 from scipy.stats import chisquare
 
 from dppy.finite.dpp import FiniteDPP
-from dppy.utils import (
-    compute_loglikelihood,
-    det_ST,
-    example_eval_L_linear,
-    example_eval_L_min_kern,
-)
+from dppy.utils import compute_loglikelihood, det_ST, kernel_linear, kernel_minimum
 
 
 class Configuration(object):
@@ -468,12 +463,12 @@ class TestAdequationOfFiniteDppSamplers(unittest.TestCase):
             {
                 "kernel_type": "likelihood",
                 "projection": False,
-                "L_eval_X_data": (example_eval_L_linear, rndm.rand(N, 6)),
+                "L_eval_X_data": (kernel_linear, rndm.rand(N, 6)),
             },
             {
                 "kernel_type": "likelihood",
                 "projection": False,
-                "L_eval_X_data": (example_eval_L_min_kern, rndm.rand(N, 1)),
+                "L_eval_X_data": (kernel_minimum, rndm.rand(N, 1)),
             },
         ]
         sampler_method_params = {

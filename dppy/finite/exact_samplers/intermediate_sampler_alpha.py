@@ -33,7 +33,7 @@ from scipy.optimize import brentq
 from dppy.finite.bless import bless, bless_size, reduce_lambda
 from dppy.utils import (
     check_random_state,
-    evaluate_L_diagonal,
+    eval_kernel_diagonal,
     get_progress_bar,
     stable_filter,
 )
@@ -197,7 +197,7 @@ def estimate_rls_from_weighted_dict_eigendecomp(
             )
         )
 
-    diag_L_to_estimate = evaluate_L_diagonal(eval_L, X_to_estimate)
+    diag_L_to_estimate = eval_kernel_diagonal(eval_L, X_to_estimate)
     L_DX = eval_L(dict_alphadpp.X, X_to_estimate)
     L_DX *= W_sqrt
     E = eigvec.T.dot(L_DX)
@@ -303,7 +303,7 @@ def alpha_dpp_sampling_precompute_constants(
     :rtype:
         _IntermediateSampleInfoAlphaRescale
     """
-    diag_L = evaluate_L_diagonal(eval_L, X_data)
+    diag_L = eval_kernel_diagonal(eval_L, X_data)
 
     # Phase 0: compute initial dictionary D_bless with small rls_oversample_bless
     # D_bless is used only to estimate all RLS

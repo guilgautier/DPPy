@@ -5,7 +5,7 @@ import numpy.random as rndm
 import scipy.linalg as la
 
 from dppy.finite.dpp import FiniteDPP
-from dppy.utils import example_eval_L_linear, example_eval_L_min_kern
+from dppy.utils import kernel_linear, kernel_minimum
 
 
 class TestFiniteDppInstantiationFromCorrelationKernel(unittest.TestCase):
@@ -80,12 +80,12 @@ class TestFiniteDppInstantiationFromLikelihoodKernel(unittest.TestCase):
         {"L_gram_factor": Phi, "projection": False, "hermitian": True},
         {"L_gram_factor": Phi.T, "projection": False, "hermitian": True},
         {
-            "L_eval_X_data": (example_eval_L_linear, X_data_randn),
+            "L_eval_X_data": (kernel_linear, X_data_randn),
             "projection": False,
             "hermitian": True,
         },
         {
-            "L_eval_X_data": (example_eval_L_min_kern, X_data_in_01),
+            "L_eval_X_data": (kernel_minimum, X_data_in_01),
             "projection": False,
             "hermitian": True,
         },

@@ -33,7 +33,7 @@ from scipy.optimize import brentq
 from dppy.finite.bless import bless, reduce_lambda
 from dppy.utils import (
     check_random_state,
-    evaluate_L_diagonal,
+    eval_kernel_diagonal,
     get_progress_bar,
     stable_invert_root,
 )
@@ -257,7 +257,7 @@ def vfx_sampling_precompute_constants(
 
     :rtype: _IntermediateSampleInfo
     """
-    diag_L = evaluate_L_diagonal(eval_L, X_data)
+    diag_L = eval_kernel_diagonal(eval_L, X_data)
     trace_L = diag_L.sum()
 
     # Phase 0: compute initial dictionary D_bless with small rls_oversample_bless

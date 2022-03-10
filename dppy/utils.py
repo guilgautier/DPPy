@@ -344,48 +344,35 @@ def get_progress_bar(total=-1, disable=False, **kwargs):
     return progress_bar
 
 
-def evaluate_L_diagonal(eval_L, X):
+def eval_kernel_diagonal(eval_L, X):
     """Helper function to evaluate a likelihood function on a set of points (i.e. compute the diagonal of the L matrix)"""
     diag_eval = getattr(eval_L, "diag", None)
     if callable(diag_eval):
         return diag_eval(X)
+
+    # inspired by sklearn.gaussian_process.kernels.PairwiseKernel
+    return np.apply_along_axis(eval_L, axis=1, arr=X).ravel()
+
+
+def kernel_linear(x, y=None):
+    x = np.atleast_2d(x)
+    y = x if y is None else np.atleast_2d(y)
+    return x.dot(y.T)
+
+
+def kernel_polynomial(x, y=None, p=2):
+    kernel_xy = kernel_linear(x, y)
+    np.power(kernel_xy, p, out=kernel_xy)
+    return kernel_xy
+
+
+def kernel_minimum(x, y=None):
+    check_in_01(x)
+    if y is None:
+        y = x
     else:
-        # inspired by sklearn.gaussian_process.kernels.PairwiseKernel
-        return np.apply_along_axis(eval_L, 1, X).ravel()
-
-
-def example_eval_L_linear(X, Y=None):
-    X = np.atleast_2d(X)
-    if Y is None:
-        return X.dot(X.T)
-    else:
-        Y = np.atleast_2d(Y)
-        return X.dot(Y.T)
-
-
-def example_eval_L_polynomial(X, Y=None, p=2):
-    if Y is None:
-        ret = example_eval_L_linear(X)
-        np.power(ret, p, out=ret)
-        return ret
-    else:
-        ret = example_eval_L_linear(X, Y)
-        np.power(ret, p, out=ret)
-        return ret
-
-
-def example_eval_L_min_kern(X, Y=None):
-
-    X = np.atleast_2d(X)
-    assert X.shape[1] == 1 and np.all((0 <= X) & (X <= 1))
-
-    if Y is None:
-        Y = X
-    else:
-        Y = np.atleast_2d(Y)
-        assert Y.shape[1] == 1 and np.all((0 <= Y) & (Y <= 1))
-
-    return np.minimum(np.repeat(X, Y.size, axis=1), np.repeat(Y.T, X.size, axis=0))
+        check_in_01(y)
+    return np.minimum.outer(x.ravel(), y.ravel())
 
 
 def elementary_symmetric_polynomials(k, x):

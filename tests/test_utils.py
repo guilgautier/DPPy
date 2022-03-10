@@ -12,10 +12,10 @@ import numpy.random as rndm
 
 from dppy.utils import (
     det_ST,
-    evaluate_L_diagonal,
-    example_eval_L_linear,
-    example_eval_L_min_kern,
+    eval_kernel_diagonal,
     inner1d,
+    kernel_linear,
+    kernel_minimum,
 )
 
 
@@ -95,15 +95,15 @@ class TestUtils(unittest.TestCase):
         X = rndm.randn(100, 20)
 
         np.testing.assert_almost_equal(
-            np.diag(example_eval_L_linear(X)),
-            evaluate_L_diagonal(example_eval_L_linear, X),
+            np.diag(kernel_linear(X)),
+            eval_kernel_diagonal(kernel_linear, X),
         )
 
         X = rndm.rand(100, 1)
 
         np.testing.assert_almost_equal(
-            np.diag(example_eval_L_min_kern(X)),
-            evaluate_L_diagonal(example_eval_L_min_kern, X),
+            np.diag(kernel_minimum(X)),
+            eval_kernel_diagonal(kernel_minimum, X),
         )
 
 
