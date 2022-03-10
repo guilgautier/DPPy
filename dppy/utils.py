@@ -34,31 +34,6 @@ def check_random_state(seed: object) -> np.random.RandomState:
     )
 
 
-def uniform_permutation(n, random_state=None):
-    r"""Draw a permutation :math:`\sigma \in \mathfrak{S}_n` uniformly at random using ``numpy.xxx.permutation(n)``.
-
-    .. seealso::
-
-        - `Fisher–Yates <https://en.wikipedia.org/wiki/Fisher%E2%80%93Yates_shuffle>_ algorithm.
-    """
-    rng = check_random_state(random_state)
-    sigma = rng.permutation(n)
-    return sigma
-
-    # sigma = np.arange(n)
-    # for i in range(n - 1, 0, -1):  # reversed(range(1, n))
-    #     j = rng.randint(0, i + 1)
-    #     if j == i:
-    #         continue
-    #     sigma[j], sigma[i] = sigma[i], sigma[j]
-
-    # for i in range(n - 1):
-    #     j = rng.randint(i, n)
-    #     sigma[j], sigma[i] = sigma[i], sigma[j]
-
-    # return sigma
-
-
 def log_binom(r, k):
     if r == k:
         return 0.0

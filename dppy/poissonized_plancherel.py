@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib import collections as mc
 
-from dppy.utils import check_random_state, uniform_permutation
+from dppy.utils import check_random_state
 
 
 class PoissonizedPlancherel:
@@ -44,8 +44,8 @@ class PoissonizedPlancherel:
         """
         rng = check_random_state(random_state)
 
-        N = rng.poisson(self.theta)
-        sigma = uniform_permutation(N, random_state=rng)
+        size = rng.poisson(self.theta)
+        sigma = rng.permutation(size)
         P, _ = RSK(sigma)
 
         sample = np.array([len(row) - i - 0.5 for i, row in enumerate(P)])

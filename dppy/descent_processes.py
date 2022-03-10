@@ -9,7 +9,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-from dppy.utils import check_random_state, uniform_permutation
+from dppy.utils import check_random_state
 
 
 class AbstractDescent:
@@ -155,7 +155,7 @@ class DescentProcess(AbstractDescent):
         :rtype: np.ndarray
         """
         rng = check_random_state(random_state)
-        sigma = uniform_permutation(size, random_state=rng)
+        sigma = rng.permutation(size)
         descent = np.zeros_like(sigma, dtype=bool)
         descent[1:] = sigma[1:] < sigma[:-1]
         return descent
@@ -199,7 +199,7 @@ class VirtualDescentProcess(AbstractDescent):
         """
 
         rng = check_random_state(random_state)
-        sigma = uniform_permutation(size, random_state=rng)
+        sigma = rng.permutation(size)
         X = sigma[1:] < sigma[:-1]  # Record the descents in permutation
         Y = rng.binomial(n=2, p=self.x0, size=size) != 1
         virtual_descent = np.zeros_like(Y, dtype=bool)
