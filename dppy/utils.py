@@ -100,12 +100,12 @@ def check_projection(matrix, indices=None):
 
 
 def check_orthonormal_columns(matrix, indices=None):
-    """Cheap test for checking orthonormality of columns of array: M.T M = I"""
+    """Cheap test for checking orthonormality of columns of array: M^* M = I"""
     if matrix is None:
         return None
     idx = range(min(10, matrix.shape[1])) if indices is None else indices
     U = matrix[:, idx]
-    if not np.allclose(U.T.dot(U), np.eye(len(idx))):
+    if not np.allclose(U.conj().T.dot(U), np.eye(len(idx))):
         raise ValueError("array  M.T M != I")
 
 

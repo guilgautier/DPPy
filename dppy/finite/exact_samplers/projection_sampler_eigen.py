@@ -147,7 +147,7 @@ def projection_sampler_eigen_gs(
     Q = eig_vecs
     is_complex = np.iscomplexobj(Q)
 
-    R = np.zeros((size, N))
+    R = np.zeros((size, N), dtype=Q.dtype)
     d2 = np.linalg.norm(Q, axis=1) ** 2
 
     items = np.arange(N)
@@ -164,7 +164,7 @@ def projection_sampler_eigen_gs(
             break
 
         R[i, Xc] = Q[Xc, :].dot(Q[xi, :].conj())
-        R[i, Xc] -= R[:i, xi].dot(R[:i, Xc])
+        R[i, Xc] -= R[:i, xi].conj().dot(R[:i, Xc])
         R[i, Xc] /= R[i, xi]
 
         if is_complex:
@@ -233,7 +233,7 @@ def projection_sampler_eigen_gs_perm(
 
         I1, I2 = slice(0, i), slice(i + 1, N)
         R[i, I2] = Q[I2, :].dot(Q[i, :].conj())
-        R[i, I2] -= R[I1, i].dot(R[I1, I2])
+        R[i, I2] -= R[I1, i].conj().dot(R[I1, I2])
         R[i, I2] /= R[i, i]
 
         if is_complex:
