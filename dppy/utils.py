@@ -1,8 +1,7 @@
 from string import ascii_lowercase
 
 import numpy as np
-from numpy.linalg import det, matrix_rank, slogdet
-from scipy.linalg import eigvalsh
+from numpy.linalg import det, matrix_rank
 from scipy.special import betaln
 
 
@@ -138,27 +137,6 @@ def det_ST(array, S, T=None):
 
     else:  # det M_ST, numpy deals with det M_[][] = 1.0
         return det(array[np.ix_(S, T)])
-
-
-def compute_loglikelihood(dpp, sample, k_dpp=False):
-    X = sample
-    if dpp.kernel_type == "correlation" and dpp.projection:
-        K = dpp.compute_correlation_kernel()
-        rank = np.rint(np.trace(dpp.K)).astype(int)
-        if len(X) != rank:
-            return -np.inf
-        return slogdet(K[np.ix_(X, X)])[1]
-    if k_dpp:
-        L = dpp.compute_likelihood_kernel()
-        L_eig_vals = eigvalsh(L)
-        N, k = L_eig_vals.size, len(X)
-        ek = elementary_symmetric_polynomials(k, L_eig_vals)
-        log_Z = np.log(ek[k, N])
-        return slogdet(L[np.ix_(X, X)])[1] - log_Z
-    K = dpp.compute_correlation_kernel()
-    I_Xc = np.eye(*K.shape)
-    I_Xc[X, X] = 0.0
-    return slogdet(K - I_Xc)[1]
 
 
 def check_square(matrix):

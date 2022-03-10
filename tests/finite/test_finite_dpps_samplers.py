@@ -13,7 +13,8 @@ import scipy.linalg as la
 from scipy.stats import chisquare
 
 from dppy.finite.dpp import FiniteDPP
-from dppy.utils import compute_loglikelihood, det_ST, kernel_linear, kernel_minimum
+from dppy.finite.utils import loglikelihood
+from dppy.utils import det_ST, kernel_linear, kernel_minimum
 
 
 class Configuration(object):
@@ -150,7 +151,7 @@ def log_likelihood_adequation(dpp, samples, k_dpp=False, **kwargs):
     log_lik_theo = np.zeros(len(samples))
     for i, (X, log_likelihood) in enumerate(samples):
         log_lik_emp[i] = log_likelihood
-        log_lik_theo[i] = compute_loglikelihood(dpp, X, k_dpp=k_dpp)
+        log_lik_theo[i] = loglikelihood(dpp, X, k_dpp=k_dpp)
 
     adeq = np.allclose(log_lik_emp, log_lik_theo)
     msg = "{}".format(np.vstack((log_lik_emp, log_lik_theo)))

@@ -1,8 +1,13 @@
+import numpy as np
+from numpy.linalg import slogdet
+from scipy.linalg import eigvalsh
+
 from dppy.utils import (
     check_equal_to_O_or_1,
     check_hermitian,
     check_orthonormal_columns,
     check_projection,
+    elementary_symmetric_polynomials,
 )
 
 VALID_DPP_KERNEL_PARAMS = {
@@ -133,3 +138,24 @@ def ground_set_size(dpp):
     raise ValueError(
         "The size of the ground set of the finite 'dpp' cannot be computed from the current parametrization"
     )
+
+
+def loglikelihood(dpp, sample, k_dpp=False):
+    X = sample
+    if dpp.kernel_type == "correlation" and dpp.projection:
+        K = dpp.compute_correlation_kernel()
+        rank = np.rint(np.trace(dpp.K)).astype(int)
+        if len(X) != rank:
+            return -np.inf
+        return slogdet(K[np.ix_(X, X)])[1]
+    if k_dpp:
+        L = dpp.compute_likelihood_kernel()
+        L_eig_vals = eigvalsh(L)
+        N, k = L_eig_vals.size, len(X)
+        ek = elementary_symmetric_polynomials(k, L_eig_vals)
+        log_Z = np.log(ek[k, N])
+        return slogdet(L[np.ix_(X, X)])[1] - log_Z
+    K = dpp.compute_correlation_kernel()
+    I_Xc = np.eye(*K.shape)
+    I_Xc[X, X] = 0.0
+    return slogdet(K - I_Xc)[1]
