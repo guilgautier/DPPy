@@ -65,6 +65,17 @@ def test_ordering_BardenetHardy(expected):
     np.testing.assert_array_equal(computed, expected)
 
 
+def norm_jacobi_quad(n, a, b):
+    w = lambda x: (1 - x) ** a * (1 + x) ** b
+    P = lambda x: eval_jacobi(n, a, b, x)
+    norm2 = quad(lambda x: w(x) * P(x) ** 2, -1, 1)[0]
+    return np.sqrt(norm2)
+
+
+@pytest.mark.parametrize(
+    "n",
+    range(50),
+)
 @pytest.mark.parametrize(
     "a, b",
     [
@@ -73,18 +84,7 @@ def test_ordering_BardenetHardy(expected):
         (-0.3, 0.4),
     ],
 )
-def test_norm_of_multiD_jacobi_polynomials(a, b):
-
-    w = lambda x, a, b: (1 - x) ** a * (1 + x) ** b
-    P = lambda n, a, b, x: eval_jacobi(n, a, b, x)
-
-    def norm_quad(k, a, b):
-        norm2 = quad(lambda x: w(x, a, b) * P(k, a, b, x) ** 2, -1, 1)[0]
-        return np.sqrt(norm2)
-
-    orders = np.arange(100)
-
-    computed = [norm_jacobi(n, a, b) for n in orders]
-    expected = [norm_quad(n, a, b) for n in orders]
-
-    np.testing.assert_array_almost_equal(computed, expected)
+def test_norm_of_jacobi_polynomials(a, b, n):
+    computed = norm_jacobi(n, a, b)
+    expected = norm_jacobi_quad(n, a, b)
+    np.testing.assert_almost_equal(computed, expected, decimal=5)
