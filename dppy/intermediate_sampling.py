@@ -268,7 +268,7 @@ def vfx_sampling_precompute_constants(X_data,
 
         alpha_star, opt_result = brentq(
                                 temp_func_with_root_in_desired_expected_size,
-                                a=10.0 * np.finfo(np.float).eps,
+                                a=10.0 * np.finfo(float).eps,
                                 b=1.0,
                                 full_output=True)
 
@@ -619,7 +619,7 @@ def alpha_dpp_sampling_precompute_constants(X_data,
             return np.sum(1.0 - 1.0 / (x * eigvals_L_hat + 1.0)) - desired_expected_size
 
         alpha_hat, opt_result = brentq(temp_func_with_root_in_desired_expected_size,
-                                       a=10.0 * np.finfo(np.float).eps,
+                                       a=10.0 * np.finfo(float).eps,
                                        b=4.0,
                                        full_output=True)
 
