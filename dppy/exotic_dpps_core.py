@@ -118,7 +118,7 @@ def ust_sampler_aldous_broder(list_of_neighbors, root=None,
     visited[n0] = True
     nb_nodes_in_tree = 1
 
-    tree_edges = np.zeros((nb_nodes - 1, 2), dtype=np.int)
+    tree_edges = np.zeros((nb_nodes - 1, 2), dtype=int)
 
     while nb_nodes_in_tree < nb_nodes:
 

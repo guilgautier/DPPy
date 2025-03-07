@@ -42,7 +42,7 @@ class TestAdequationOfBetaEnsembleSamplers(unittest.TestCase):
         f_th = [quad(limiting_distribution, a, b)[0]
                   for a, b in zip(bins[:-1], bins[1:])]
 
-        _, pval = chisquare(f_obs=f_emp, f_exp=f_th)
+        _, pval = chisquare(f_obs=f_emp, f_exp=f_th, sum_check=False)
 
         msg = 'pval = {}'.format(pval)
 
