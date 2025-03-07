@@ -334,7 +334,7 @@ def mu_ref_unif_unit_circle_sampler_quindiag(beta=2, size=10,
         raise ValueError('`beta` must be positive integer.\
                          Given: {}'.format(beta))
 
-    alpha = np.zeros(size, dtype=np.complex_)
+    alpha = np.zeros(size, dtype=np.complex128)
 
     # nu = 1 + beta*(N-1, N-2, ..., 0)
     for i, nu in enumerate(1 + beta * np.arange(size - 1, -1, step=-1)):
@@ -343,7 +343,7 @@ def mu_ref_unif_unit_circle_sampler_quindiag(beta=2, size=10,
 
     rho = np.sqrt(1 - np.abs(alpha[:-1])**2)
 
-    xi = np.zeros((size - 1, 2, 2), dtype=np.complex_)  # xi[0,..,N-1]
+    xi = np.zeros((size - 1, 2, 2), dtype=np.complex128)  # xi[0,..,N-1]
     xi[:, 0, 0], xi[:, 0, 1] = alpha[:-1].conj(), rho
     xi[:, 1, 0], xi[:, 1, 1] = rho, -alpha[:-1]
 
@@ -352,14 +352,14 @@ def mu_ref_unif_unit_circle_sampler_quindiag(beta=2, size=10,
     # xi[N-1] = alpha[N-1].conj()
     if size % 2 == 0:  # even
         L = sp.block_diag(xi[::2, :, :],
-                          dtype=np.complex_)
+                          dtype=np.complex128)
         M = sp.block_diag([1.0, *xi[1::2, :, :], alpha[-1].conj()],
-                          dtype=np.complex_)
+                          dtype=np.complex128)
     else:  # odd
         L = sp.block_diag([*xi[::2, :, :], alpha[-1].conj()],
-                          dtype=np.complex_)
+                          dtype=np.complex128)
         M = sp.block_diag([1.0, *xi[1::2, :, :]],
-                          dtype=np.complex_)
+                          dtype=np.complex128)
 
     return la.eigvals(L.dot(M).toarray())
 
