@@ -90,7 +90,9 @@ class TestAdequationOfFiniteDppSamplers(unittest.TestCase):
                       for doubl in doubletons]
             marginal_emp = np.array(counts) / len(samples)
 
-            _, pval = chisquare(f_obs=marginal_emp, f_exp=marginal_th)
+            _, pval = chisquare(f_obs=marginal_emp,
+                                f_exp=marginal_th,
+                                sum_check=False)
 
             msg = 'pval = {}, emp = {}, th = {}'.format(pval,
                                                         marginal_emp,
